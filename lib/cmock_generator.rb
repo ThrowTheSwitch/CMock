@@ -2,7 +2,7 @@ $here = File.dirname __FILE__
 
 class CMockGenerator
 
-  attr_accessor :module_name, :module_name, parsed_stuff
+  attr_accessor :module_name
 
   require 'ftools'
 
@@ -50,7 +50,7 @@ class CMockGenerator
       create_mock_header_externs(header, parsed_stuff)
       parsed_stuff[:functions].each do |function|
         
-        function[:args_string_without_varargs] = function[:args_string].gsub(/\,\s*.../,'')
+        function[:args_string_without_varargs] = function[:args_string].gsub(/\,[a-zA-Z0-9_\*\s]*\.\.\./,'')
         create_mock_header_function_declaration(header, function)
       end
       create_mock_header_footer(header)
@@ -66,12 +66,12 @@ class CMockGenerator
       create_mock_verify_function(file, parsed_stuff[:functions])
       create_mock_init_function(file)
       create_mock_destroy_function(file, parsed_stuff[:functions])
-      @parser.nondefine_functions.each do |function|
+      parsed_stuff[:functions].each do |function|
         create_mock_implementation(file, function)
         create_mock_function_expectation(file, function)
         create_mock_function_expectation_with_throw(file, function) if (@use_cexception)
         create_mock_function_ignore(file, function) if (@allow_ignore_mock)
-        end
+      end
     end
     update_file(@mock_imp_file_path, @mock_imp_temp)
   end
@@ -177,7 +177,7 @@ class CMockGenerator
         file << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_HeadTail;\n"
       end
 
-      functions[:args].each do |arg|
+      function[:args].each do |arg|
         type = arg[:type].sub(/const/, '').strip
         file << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]};\n"
         file << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Head;\n"
@@ -248,11 +248,11 @@ class CMockGenerator
     file << "}\n\n"
   end
   
-  def create_mock_argument_verifier(file, func_name, argument_string, arguments)
-    file << "void AssertParameters_#{func_name}(#{argument_string})\n{\n"
-    arguments.each do |arg|
+  def create_mock_argument_verifier(file, function)
+    file << "void AssertParameters_#{function[:name]}(#{function[:args_string]})\n{\n"
+    function[:args].each do |arg|
       type = arg[:type].sub(/const/, '').strip
-      file << make_handle_expected(func_name, type, arg[:name])
+      file << make_handle_expected(function, type, arg[:name])
     end
     file << "}\n\n"
   end
@@ -263,7 +263,7 @@ class CMockGenerator
     
     # Create mock argument verifier, if necessary
     unless function[:args].empty?
-      create_mock_argument_verifier(file, function[:name], function[:args_string_without_varargs], function[:args])
+      create_mock_argument_verifier(file, function)
     end
           
     # Create mock function
@@ -289,11 +289,11 @@ class CMockGenerator
     
     # Create call to argument verifier, if necessary
     unless function[:args].empty?
-      file << "#{newtab}AssertParameters_#{function[:name]}(#{function[:args_string]});\n"
+      file << "#{newtab}AssertParameters_#{function[:name]}(#{create_call_list(function[:args])});\n"
     end
     
     # Throw exception, if appropriate
-    file << make_handle_throw(function[:name], @throw_type) if (@use_cexception)
+    file << make_handle_throw(function, @throw_type) if (@use_cexception)
 
     # end ignore block
     if (@allow_ignore_mock)
@@ -302,7 +302,7 @@ class CMockGenerator
     
     # Return expected value, if necessary
     if function[:rettype] != "void"
-      file << make_handle_return(function[:name], function[:rettype])
+      file << make_handle_return(function)
     end
     
     # Close out the function
@@ -332,9 +332,9 @@ class CMockGenerator
       # Create parameter expectation function
       file << "void ExpectParameters_#{function[:name]}(#{function[:args_string_without_varargs]})\n"
       file << "{\n"
-      args.each do |arg|
+      function[:args].each do |arg|
         type = arg[:type].sub(/const/, '').strip
-        file << make_add_new_expected(function[:name], type, arg[:name])
+        file << make_add_new_expected(function, type, arg[:name])
       end
       file << "}\n\n"
       
@@ -343,13 +343,13 @@ class CMockGenerator
         file << "void #{function[:name]}_Expect(#{function[:args_string_without_varargs]})\n"
         file << "{\n"
         file << "#{@tab}Mock.#{function[:name]}_CallsExpected++;\n"
-        file << "#{@tab}ExpectParameters_#{function[:name]}(#{function[:args_string_without_varargs]});\n"
+        file << "#{@tab}ExpectParameters_#{function[:name]}(#{create_call_list(function[:args])});\n"
         file << "}\n\n"
       # Function has non-void return type with arguments
       else
         file << "void #{function[:name]}_ExpectAndReturn(#{function[:args_string_without_varargs]}, #{function[:rettype]} toReturn)\n{\n"
         file << "#{@tab}Mock.#{function[:name]}_CallsExpected++;\n"
-        file << "#{@tab}ExpectParameters_#{function[:name]}(#{function[:args_string_without_varargs]});\n"
+        file << "#{@tab}ExpectParameters_#{function[:name]}(#{create_call_list(function[:args])});\n"
         file << make_expand_array(function[:rettype], "Mock.#{function[:name]}_Return_Head", "toReturn")
         file << "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n"
         file << "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
@@ -382,7 +382,7 @@ class CMockGenerator
       file << make_expand_array(@throw_type, "Mock.#{function[:name]}_ThrowValue_Head", "toThrow")
       file << "#{@tab}Mock.#{function[:name]}_ThrowValue = Mock.#{function[:name]}_ThrowValue_Head;\n"      
       file << "#{@tab}Mock.#{function[:name]}_ThrowValue += Mock.#{function[:name]}_CallCount;\n"
-      file << "#{@tab}ExpectParameters_#{function[:name]}(#{function[:args_string_without_varargs]});\n"
+      file << "#{@tab}ExpectParameters_#{function[:name]}(#{create_call_list(function[:args])});\n"
       file << "}\n\n"
     end
   end
@@ -404,6 +404,18 @@ class CMockGenerator
       file << "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
       file << "}\n\n"
     end
+  end
+  
+  def create_call_list(args)
+    call_list = ""
+    args.each do |arg|
+      if call_list.empty?
+        call_list = arg[:name]
+      else
+        call_list += ", " + arg[:name]
+      end
+    end
+    return call_list
   end
   
   def make_expand_array(type, array, newValue)
@@ -433,10 +445,11 @@ class CMockGenerator
 EOS
   end
 
-  def make_handle_throw(method, throw_type)
+  def make_handle_throw(function, throw_type)
   
     newtab = "#{@tab}"
-  
+    method = function[:name]
+    
     if (@allow_ignore_mock)
       newtab = "#{@tab}#{@tab}"
     end
@@ -458,13 +471,14 @@ EOS
 EOS
   end
     
-  def make_handle_return(method, return_type)
+  def make_handle_return(function)
   
-      return_block = <<EOS
+    method = function[:name]
+    return_block = <<EOS
 
 #{@tab}if(Mock.#{method}_Return != Mock.#{method}_Return_HeadTail)
 #{@tab}{
-#{@tab}#{@tab}#{return_type} toReturn = *Mock.#{method}_Return;
+#{@tab}#{@tab}#{function[:rettype]} toReturn = *Mock.#{method}_Return;
 #{@tab}#{@tab}Mock.#{method}_Return++;
 #{@tab}#{@tab}return toReturn;
 #{@tab}}
@@ -476,14 +490,16 @@ EOS
     return return_block
   end
 
-  def make_add_new_expected(method, type, expected)
+  def make_add_new_expected(function, type, expected)
+    method = function[:name]
     array = make_expand_array(type, "Mock.#{method}_Expected_#{expected}_Head", expected)
     array = "#{array}" + "#{@tab}Mock.#{method}_Expected_#{expected} = Mock.#{method}_Expected_#{expected}_Head;\n"
     return "#{array}" + "#{@tab}Mock.#{method}_Expected_#{expected} += Mock.#{function[:name]}_CallCount;\n"
   end
 
-  def make_handle_expected(method, type, actual)
+  def make_handle_expected(function, type, actual)
 
+    method = function[:name]
     if (type == "char*" || type == "const char*")
       code_block = <<EOS
 

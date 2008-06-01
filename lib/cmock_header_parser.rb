@@ -115,17 +115,17 @@ class CMockHeaderParser
     args = $4
     #remove default parameter statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
-    decl_args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
-    decl_args.strip!
-    decl[:args_string] = decl_args
-    decl[:args] = parse_args(decl_args)
+    args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
+    args.strip!
+    decl[:args_string] = args
+    decl[:args] = parse_args(args)
       
-    if decl[:return].nil? or decl[;function].nil? or decl[:args].nil?
+    if decl[:rettype].nil? or decl[:name].nil? or decl[:args].nil?
       raise "Declaration parse failed!\n" +
         "  declaration: #{declaration}\n" +
         "  modifier: #{decl[:modifier]}\n" +
-        "  return: #{decl[:return]}\n" +
-        "  function: #{decl[:function]}\n" +
+        "  return: #{decl[:rettype]}\n" +
+        "  function: #{decl[:name]}\n" +
         "  args:#{decl[:args]}\n"
     end
     

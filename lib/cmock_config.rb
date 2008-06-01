@@ -2,6 +2,7 @@
 class CMockConfig
 
   attr_accessor :src_path, :mock_path, :tab, :includes, :use_cexception, :allow_ignore_mock, :call_count_type, :ignore_bool_type
+  attr_accessor :throw_type
   
   def initialize(src_path='src', mock_path='mocks', includes=[], use_cexception=true, allow_ignore_mock=false, tab='    ')
     @src_path = src_path

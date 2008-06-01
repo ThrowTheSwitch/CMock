@@ -31,7 +31,7 @@ class CMockSetup
     cmg = CMockGenerator.new(cmc, name)
     
     puts "Creating mock for #{name}..."
-    flush
+    
     parsed_stuff = cmp.parse
     cmg.create_mock(parsed_stuff)
   end
