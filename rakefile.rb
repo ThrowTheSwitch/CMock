@@ -5,5 +5,5 @@ require 'rake/clean'
 require 'rake/testtask'
 
 task :default do
-  sh 'spec test'
+  sh 'spec.cmd test\unit'
 end

@@ -1,5 +1,5 @@
 $here = File.dirname(__FILE__)
-require "#{$here}/../config/environment"
+require "#{$here}/../../config/environment"
 require 'cmock'
 
 describe CMock do
