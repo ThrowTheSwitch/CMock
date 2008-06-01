@@ -4,6 +4,24 @@ require 'rake'
 require 'rake/clean'
 require 'rake/testtask'
 
-task :default do
-  sh 'spec.cmd test\unit'
+
+task :default => [ 'tests:all' ]
+
+namespace :tests do
+
+  desc "Run unit and system tests"
+  task :all => [ 'units', 'system' ]
+
+  Rake::TestTask.new('units') do |t|
+  	t.pattern = 'test//unit/*_test.rb'
+  	t.verbose = true
+  end
+  
+  Rake::TestTask.new('system') do |t|
+  	t.pattern = 'test//system/*_test.rb'
+  	t.verbose = true
+  end
+
 end
+
+
