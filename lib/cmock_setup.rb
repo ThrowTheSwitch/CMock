@@ -1,5 +1,7 @@
 $here = File.dirname __FILE__
+require "#{$here}/cmock_header_parser"
 require "#{$here}/cmock_generator"
+require "#{$here}/cmock_config"
 
 class CMockSetup
 
@@ -23,9 +25,14 @@ class CMockSetup
   def generate_mock(src)
     name = File.basename(src, '.h')
     path = File.dirname(src)
-    cmg = CMockGenerator.new(name, path, @mocks_path, @includes, @use_cexception, @allow_ignore_mock)
-    $stderr.puts "Creating mock for #{name}..."
-    $stderr.flush
-    cmg.create_mock
+    
+    cmc = CMockConfig.new(path, @mocks_path, @includes, @use_cexception, @allow_ignore_mock)
+    cmp = CMockHeaderParser.new(File.read(src))
+    cmg = CMockGenerator.new(cmc, name)
+    
+    puts "Creating mock for #{name}..."
+    flush
+    parsed_stuff = cmp.parse
+    cmg.create_mock(parsed_stuff)
   end
 end
