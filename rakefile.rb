@@ -4,8 +4,9 @@ require 'rake'
 require 'rake/clean'
 require 'rake/testtask'
 
+CLEAN.include('test/system/build/' + '*.*')
 
-task :default => [ 'tests:all' ]
+task :default => [ :clobber, 'tests:all' ]
 
 namespace :tests do
 
