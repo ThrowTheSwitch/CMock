@@ -1,4 +1,5 @@
-class CFileParser
+class CMockHeaderParser
+
   attr_accessor :match_type, :attribute_match, :decl_modifier, :decl_return, :decl_function, :decl_args
 
   def initialize(source, match_type=/\w+\**/, attributes=['static', '__monitor', '__ramfunc', '__irq', '__fiq'])
@@ -13,10 +14,21 @@ class CFileParser
     @match_type = match_type
     @c_attributes = attributes
     @declaration_parse_matcher = /(\w*\s+)*([^\s]+)\s+(\w+)\s*\(([^\)]*)\)/
-    @attribute_match = Regexp.compile(%|(#{@c_attributes.join('|')}\s+)*|)
     @included = nil
     @var_args_ellipsis = '...'
   end
+  
+  def parse
+    mod = {:includes => nil, :externs => nil, :functions => []}
+    mod[:includes] = included_files
+    mod[:externs] = externs
+    functions.each do |decl|
+      mod[:functions] << parse_declaration(decl)
+    end
+    return mod
+  end
+  
+  private
 
   def c_attributes=(value)
     @c_attributes = value
@@ -32,7 +44,7 @@ class CFileParser
         end
       end
     end
-    @included
+    return @included
   end
 
   def externs
@@ -51,7 +63,7 @@ class CFileParser
         end
       end
     end
-    @externs
+    return @externs
   end
 
   def functions
@@ -70,20 +82,11 @@ class CFileParser
         end
       end
     end
-    @functions
-  end
-
-  def nonstatic_functions
-    @nonstatic_functions ||= functions.reject do |func|
-      func =~ /\bstatic\b/
-    end
-  end
-
-  def nondefine_functions
-    @nondefine_functions ||= functions.reject do |func|
+    #eliminate define functions
+    @functions ||= functions.reject do |func|
       func =~ /\bdefine\b/
     end
-    @nondefine_functions
+    return @functions
   end
   
   def parse_args(arg_list)
@@ -93,10 +96,7 @@ class CFileParser
       return args if ((arg == @var_args_ellipsis) || (arg == 'void'))
       arg_match = arg.match /^(.+)\s+(\w+)$/
       raise "Failed parsing argument list at argument: '#{arg}'" if arg_match.nil?
-      type = ''
-      name = arg_match[-1]
-      type = arg_match[1]
-      args << {:name => name, :type => type}
+      args << {:type => arg_match[1], :name => arg_match[-1]}
     end
     return args
   end
@@ -109,33 +109,24 @@ class CFileParser
     modifier = $1 
     modifier = '' if modifier.nil?
     decl[:modifier] = modifier.strip
-    
-    decl[:return] = $2
-    
-    decl[:function] = $3
+    decl[:rettype] = $2
+    decl[:name] = $3
     
     args = $4
     #remove default parameter statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
     decl_args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
     decl_args.strip!
-    decl[:args] = decl_args
-    
-    # ignore variable arguments at end of parameter list
-    if (decl_args == @var_args_ellipsis)
-      decl[:args_no_var_args] = 'void'
-    else
-      decl[:args_no_var_args] = decl_args.sub(/,\s*\.\.\./, '')    
-    end
+    decl[:args_string] = decl_args
+    decl[:args] = parse_args(decl_args)
       
     if decl[:return].nil? or decl[;function].nil? or decl[:args].nil?
       raise "Declaration parse failed!\n" +
         "  declaration: #{declaration}\n" +
-      "  modifier: #{decl[:modifier]}\n" +
-      "  return: #{decl[:return]}\n" +
-      "  function: #{decl[:function]}\n" +
-      "  args:#{decl[:args]}\n" +
-      "  args_no_var_args:#{decl[:args_no_var_args]}"
+        "  modifier: #{decl[:modifier]}\n" +
+        "  return: #{decl[:return]}\n" +
+        "  function: #{decl[:function]}\n" +
+        "  args:#{decl[:args]}\n"
     end
     
     return decl
