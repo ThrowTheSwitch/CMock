@@ -24,10 +24,22 @@ class CMockGenerator
 
   def create_mock(parsed_stuff)
     update_vars
+    create_shortcuts(parsed_stuff)
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
 
+  def create_shortcuts(parsed_stuff)
+    parsed_stuff[:functions].each do |function|
+      function[:args_string_without_varargs] = function[:args_string].gsub(/\,[a-zA-Z0-9_\*\s]*\.\.\./,'')
+      if (function[:modifier].empty?)
+        function[:mod_and_rettype] = function[:rettype] 
+      else
+        function[:mod_and_rettype] = function[:modifier] + ' ' + function[:rettype] 
+      end
+    end
+  end
+  
   def update_vars
     @mock_name = "Mock" + @module_name
     @mock_header_name_dest = @mock_name + ".h"
@@ -49,8 +61,6 @@ class CMockGenerator
       create_mock_header_header(header, @mock_header_name_dest.gsub(/\.h/, "_h").upcase)
       create_mock_header_externs(header, parsed_stuff)
       parsed_stuff[:functions].each do |function|
-        
-        function[:args_string_without_varargs] = function[:args_string].gsub(/\,[a-zA-Z0-9_\*\s]*\.\.\./,'')
         create_mock_header_function_declaration(header, function)
       end
       create_mock_header_footer(header)
@@ -141,7 +151,9 @@ class CMockGenerator
     file << "#include <setjmp.h>\n"
     file << "#include \"unity.h\"\n"
     file << "#include \"Exception.h\"\n" if (@use_cexception) ####MSV : REMOVE ME
-    include_files.each {|include| file << "#include \"#{include}\"\n"}
+    
+    #(@includes + include_files).uniq.each {|include| file << "#include \"#{include}\"\n"}  #### MSV This is what the comments said in original version, but it wasnt actually doing this
+    @includes.each {|include| file << "#include \"#{include}\"\n"}
     file << "#include \"#{@mock_header_name_dest}\"\n\n"
   end
   
@@ -249,7 +261,7 @@ class CMockGenerator
   end
   
   def create_mock_argument_verifier(file, function)
-    file << "void AssertParameters_#{function[:name]}(#{function[:args_string]})\n{\n"
+    file << "void AssertParameters_#{function[:name]}(#{function[:args_string_without_varargs]})\n{\n"
     function[:args].each do |arg|
       type = arg[:type].sub(/const/, '').strip
       file << make_handle_expected(function, type, arg[:name])
@@ -268,7 +280,7 @@ class CMockGenerator
           
     # Create mock function
     file << "#{function[:attributes]} " if (!function[:attributes].nil? && function[:attributes].length > 0)
-    file << "#{function[:rettype]} #{function[:name]}(#{function[:args_string]})\n"
+    file << "#{function[:mod_and_rettype]} #{function[:name]}(#{function[:args_string]})\n"
     file << "{\n"
     
     # start ignore block

@@ -4,12 +4,12 @@ class CMockHeaderParser
 
   def initialize(source, match_type=/\w+\**/, attributes=['static', '__monitor', '__ramfunc', '__irq', '__fiq'])
     source = source.gsub(/\/\/.*$/, '') #remove line comments
-    source = source.gsub(/\#define.*$/, '')  #remove defines
     source = source.gsub(/\/\*.*?\*\//m, '') #remove block comments
     @lines = source.split(/(^\s*\#.*$)  # Treat preprocessor directives as a logical line
                             | (;|\{|\}) /x) # Match ;, {, and } as end of lines
     @lines.delete_if {|line| line =~ /\\\n/} #ignore lines that contain continuation lines
     @lines.delete_if {|line| line =~ /typedef/} #ignore lines that contain typedef statements
+    @lines.delete_if {|line| line =~ /\#define/}  #remove defines
     
     @functions = nil
     @match_type = match_type
