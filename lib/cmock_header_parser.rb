@@ -4,6 +4,7 @@ class CMockHeaderParser
 
   def initialize(source, match_type=/\w+\**/, attributes=['static', '__monitor', '__ramfunc', '__irq', '__fiq'])
     source = source.gsub(/\/\/.*$/, '') #remove line comments
+    source = source.gsub(/\#define.*$/, '')  #remove defines
     source = source.gsub(/\/\*.*?\*\//m, '') #remove block comments
     @lines = source.split(/(^\s*\#.*$)  # Treat preprocessor directives as a logical line
                             | (;|\{|\}) /x) # Match ;, {, and } as end of lines
@@ -94,8 +95,15 @@ class CMockHeaderParser
     arg_list.split(',').each do |arg|
       arg = arg.strip
       return args if ((arg == @var_args_ellipsis) || (arg == 'void'))
-      arg_match = arg.match /^(.+)\s+(\w+)$/
+      arg_match = arg.match /^(.+)\s+(\*?\w+)$/
       raise "Failed parsing argument list at argument: '#{arg}'" if arg_match.nil?
+      
+      #put the asterix with the type (where it belongs)
+      if (arg_match[-1][0] == '*')
+        arg_match[1] << '*'
+        arg_match[-1].slice!(0)
+      end
+      
       args << {:type => arg_match[1], :name => arg_match[-1]}
     end
     return args
