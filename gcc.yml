@@ -1,0 +1,4 @@
+compiler: 'gcc'
+linker: 'gcc'
+compile_flags: '-c'
+link_flags: ''
