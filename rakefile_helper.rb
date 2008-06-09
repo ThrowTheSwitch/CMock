@@ -1,3 +1,4 @@
+require 'yaml'
 
 def Kernel.is_windows?
   processor, platform, *rest = RUBY_PLATFORM.split("-")
@@ -55,20 +56,22 @@ module RakefileHelpers
   end
   
   def compile(config, file)
-    cmd_str = 
-      "#{config["path"]}#{config["compiler"]} #{config["compile_flags"]} " +
-      "-B#{config["path"]} " +
-      (SYSTEST_INCLUDE_DIRS.map{|dir|"-I#{dir} "}).join +
+    cmd_str = "#{config["path"]}#{config["compiler"]} #{config["compile_flags"]} "
+    if !config["path"].nil?
+      cmd_str += "-B#{config["path"]} "
+    end
+    cmd_str += (SYSTEST_INCLUDE_DIRS.map{|dir|"-I#{dir} "}).join +
       "#{file} " +
       "-o #{SYSTEST_BUILD_DIR}#{File.basename(file, C_EXTENSION)}#{OBJ_EXTENSION}"
     execute(cmd_str)
   end
   
   def link(config, exe_name, obj_list)
-    cmd_str = 
-      "#{config["path"]}#{config["linker"]} " +
-      "-B#{config["path"]} " +
-      (obj_list.map{|obj|"#{SYSTEST_BUILD_DIR}#{obj} "}).join +
+    cmd_str = "#{config["path"]}#{config["linker"]} "
+    if !config["path"].nil?
+      cmd_str += "-B#{config["path"]} "
+    end
+    cmd_str += (obj_list.map{|obj|"#{SYSTEST_BUILD_DIR}#{obj} "}).join +
       "-o #{SYSTEST_BUILD_DIR}#{exe_name}#{EXE_EXTENSION}"
     execute(cmd_str)      
   end
