@@ -1,6 +1,7 @@
 $here = File.dirname __FILE__
 require "#{$here}/cmock_header_parser"
 require "#{$here}/cmock_generator"
+require "#{$here}/cmock_file_writer"
 require "#{$here}/cmock_config"
 
 class CMockSetup
@@ -28,7 +29,8 @@ class CMockSetup
     
     cmc = CMockConfig.new(path, @mocks_path, @includes, @use_cexception, @allow_ignore_mock)
     cmp = CMockHeaderParser.new(File.read(src))
-    cmg = CMockGenerator.new(cmc, name)
+    cmf = CMockFileWriter.new(cmc)
+    cmg = CMockGenerator.new(cmc, name, cmf)
     
     puts "Creating mock for #{name}..."
     
