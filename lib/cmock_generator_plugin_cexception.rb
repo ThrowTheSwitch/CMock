@@ -11,7 +11,7 @@ class CMockGeneratorPluginCException
     return "#include \"Exception.h\"\n"
   end
   
-  def instance_structure(function_name)
+  def instance_structure(function_name, function_args_as_array, function_return_type)
     lines = []
     lines << "#{@tab}#{@config.call_count_type} *#{function_name}_ThrowOnCallCount;\n"
     lines << "#{@tab}#{@config.call_count_type} *#{function_name}_ThrowOnCallCount_Head;\n"
@@ -33,7 +33,7 @@ class CMockGeneratorPluginCException
     []
   end
   
-  def mock_implementation(function_name)
+  def mock_implementation(function_name, function_args_as_array)
     lines = ["\n"]
     lines << "#{@tab}if((Mock.#{function_name}_ThrowOnCallCount != Mock.#{function_name}_ThrowOnCallCount_HeadTail) &&\n"
     lines << "#{@tab}#{@tab}(Mock.#{function_name}_ThrowValue != Mock.#{function_name}_ThrowValue_HeadTail))\n"
@@ -65,7 +65,11 @@ class CMockGeneratorPluginCException
     lines << "}\n\n"
   end
   
-  def mock_destroy(function_name)
+  def mock_verify(function_name)
+    []
+  end
+  
+  def mock_destroy(function_name, function_args_as_array, function_return_type)
     lines = []
     lines << "#{@tab}if(Mock.#{function_name}_ThrowOnCallCount_Head)\n"
     lines << "#{@tab}{\n"

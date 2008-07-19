@@ -11,7 +11,7 @@ class CMockGeneratorPluginIgnore
     []
   end
   
-  def instance_structure(function_name)
+  def instance_structure(function_name, function_args_as_array, function_return_type)
     return "#{@tab}#{@config.ignore_bool_type} #{function_name}_IgnoreBool;\n"
   end
   
@@ -31,7 +31,7 @@ class CMockGeneratorPluginIgnore
     lines << "#{@tab}}\n"  
   end
   
-  def mock_implementation(function_name)
+  def mock_implementation(function_name, function_args_as_array)
     []
   end
   
@@ -54,7 +54,11 @@ class CMockGeneratorPluginIgnore
     return lines
   end
   
-  def mock_destroy(function_name)
+  def mock_verify(function_name)
+    []
+  end
+  
+  def mock_destroy(function_name, function_args_as_array, function_return_type)
     []
   end
 end

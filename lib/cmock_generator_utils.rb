@@ -56,4 +56,25 @@ class CMockGeneratorUtils
     lines << "#{indent}#{@tab}return *Mock.#{function_name}_Return_Head;\n"
     lines << "#{indent}}\n"
   end
+  
+  def make_add_new_expected(function_name, arg_type, expected)
+    lines = []
+    lines << make_expand_array(arg_type, "Mock.#{function_name}_Expected_#{expected}_Head", expected)
+    lines << "#{@tab}Mock.#{function_name}_Expected_#{expected} = Mock.#{function_name}_Expected_#{expected}_Head;\n"
+    lines << "#{@tab}Mock.#{function_name}_Expected_#{expected} += Mock.#{function_name}_CallCount;\n"
+  end
+  
+  def make_handle_expected(function_name, arg_type, actual)
+    lines = ["\n"]
+    lines << "#{@tab}if(Mock.#{function_name}_Expected_#{actual} != Mock.#{function_name}_Expected_#{actual}_HeadTail)\n"
+    lines << "#{@tab}{\n"
+    lines << "#{@tab}#{@tab}#{arg_type}* p_expected = Mock.#{function_name}_Expected_#{actual};\n"
+    lines << "#{@tab}#{@tab}Mock.#{function_name}_Expected_#{actual}++;\n"
+    if (arg_type == "char*" || arg_type == "const char*")
+      lines << "#{@tab}#{@tab}TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, #{actual}, \"Function '#{function_name}' called with unexpected string for parameter '#{actual}'.\");\n"
+    else
+      lines << "#{@tab}#{@tab}TEST_ASSERT_EQUAL_MESSAGE(*p_expected, #{actual}, \"Function '#{function_name}' called with unexpected value for parameter '#{actual}'.\");\n"
+    end
+    lines << "#{@tab}}\n"
+  end
 end
