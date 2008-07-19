@@ -1,24 +1,15 @@
 $here = File.dirname __FILE__
 
-require "#{$here}/cmock_generator_utils.rb"
-require "#{$here}/cmock_generator_plugin_ignore.rb"
-require "#{$here}/cmock_generator_plugin_cexception.rb"
-
 class CMockGenerator
 
-  attr_accessor :module_name
-
-  def initialize(config, module_name, file_writer)
+  def initialize(config, module_name, file_writer, utils, plugins=[])
     @config = config
     @file_writer = file_writer
     @tab = @config.tab
     @module_name = module_name
     @mock_name = "Mock" + @module_name
-	
-    @utils = CMockGeneratorUtils.new( @config )
-  	@plugins = []
-  	@plugins << CMockGeneratorPluginCException.new( @config, @utils ) if @config.use_cexception
-  	@plugins << CMockGeneratorPluginIgnore.new( @config, @utils ) if @config.allow_ignore_mock
+    @utils = utils
+    @plugins = plugins
   end
 
   def create_mock(parsed_stuff)
