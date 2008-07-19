@@ -1,6 +1,7 @@
 $here = File.dirname __FILE__
 
 require "#{$here}/cmock_generator_utils.rb"
+require "#{$here}/cmock_generator_plugin_ignore.rb"
 require "#{$here}/cmock_generator_plugin_cexception.rb"
 
 class CMockGenerator
@@ -17,6 +18,7 @@ class CMockGenerator
     @utils = CMockGeneratorUtils.new( @config )
   	@plugins = []
   	@plugins << CMockGeneratorPluginCException.new( @config, @utils ) if @config.use_cexception
+  	@plugins << CMockGeneratorPluginIgnore.new( @config, @utils ) if @config.allow_ignore_mock
   end
 
   def create_mock(parsed_stuff)
@@ -50,8 +52,7 @@ class CMockGenerator
       parsed_stuff[:functions].each do |function|
         create_mock_implementation(file, function)
         create_mock_function_expectation(file, function)
-        @plugins.each { |plugin| file << plugin.mock_interfaces( function[:name], function[:args_string_without_varargs], function[:args]) }
-        create_mock_function_ignore(file, function) if (@config.allow_ignore_mock)
+        @plugins.each { |plugin| file << plugin.mock_interfaces( function[:name], function[:args_string_without_varargs], function[:args], function[:rettype]) }
       end
     end
   end
@@ -95,15 +96,8 @@ class CMockGenerator
       end
     end
 
-	@plugins.each { |plugin| header << plugin.mock_function_declarations(function[:name], function[:args_string_without_varargs]) }
+	  @plugins.each { |plugin| header << plugin.mock_function_declarations(function[:name], function[:args_string_without_varargs], function[:rettype]) }
 
-    if (@config.allow_ignore_mock)
-      if (function[:args].empty?)
-        header << "void #{function[:name]}_Ignore(void);\n"
-      else        
-        header << "void #{function[:name]}_IgnoreAndReturn(#{function[:rettype]} toReturn);\n"
-      end    
-    end
   end
   
   def create_mock_header_footer(header)
@@ -117,7 +111,7 @@ class CMockGenerator
     file << "#include <stdlib.h>\n"
     file << "#include <setjmp.h>\n"
     file << "#include \"unity.h\"\n"
-    file << "#include \"Exception.h\"\n" if (@config.use_cexception) ####MSV : REMOVE ME
+    @plugins.each { |plugin| file << plugin.include_files }
     
     #(@config.includes + include_files).uniq.each {|include| file << "#include \"#{include}\"\n"}  #### MSV This is what the comments said in original version, but it wasnt actually doing this
     @config.includes.each {|include| file << "#include \"#{include}\"\n"}
@@ -138,12 +132,9 @@ class CMockGenerator
     
       file << "#{@tab}#{@config.call_count_type} #{function[:name]}_CallCount;\n"
       file << "#{@tab}#{@config.call_count_type} #{function[:name]}_CallsExpected;\n"
-      
-      if (@config.allow_ignore_mock)
-        file << "#{@tab}#{@config.ignore_bool_type} #{function[:name]}_IgnoreBool;\n"
-      end
+  
 	  
-	  @plugins.each { |plugin| file << plugin.instance_structure( function[:name] ) }
+	    @plugins.each { |plugin| file << plugin.instance_structure( function[:name] ) }
 
       if (function[:rettype] != "void")
         file << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return;\n"
@@ -240,12 +231,7 @@ class CMockGenerator
     file << "#{function_mod_and_rettype} #{function[:name]}(#{function[:args_string]})\n"
     file << "{\n"
     
-    # start ignore block
-    if (@config.allow_ignore_mock)
-      newtab = "#{@tab}#{@tab}"
-      file << "#{@tab}if (!Mock.#{function[:name]}_IgnoreBool)\n"
-      file << "#{@tab}{\n"    
-    end
+    @plugins.each { |plugin| file << plugin.mock_implementation_prefix(function[:name], function[:rettype]) }
     
     file << "#{newtab}Mock.#{function[:name]}_CallCount++;\n"
     
@@ -261,16 +247,11 @@ class CMockGenerator
       file << "#{newtab}AssertParameters_#{function[:name]}(#{@utils.create_call_list(function[:args])});\n"
     end
     
-	@plugins.each { |plugin| file << plugin.mock_implementation(function[:name]) }
-
-    # end ignore block
-    if (@config.allow_ignore_mock)
-      file << "#{@tab}}\n"    
-    end
+	  @plugins.each { |plugin| file << plugin.mock_implementation(function[:name]) }
     
     # Return expected value, if necessary
-    if function[:rettype] != "void"
-      file << make_handle_return(function)
+    if (function[:rettype] != "void")
+      file << @utils.make_handle_return(function[:name], function[:rettype], "#{@tab}")
     end
     
     # Close out the function
@@ -324,46 +305,6 @@ class CMockGenerator
         file << "}\n\n"
       end
     end
-  end
-  
-  def create_mock_function_ignore(file, function)
-    # Function has void return type with no arguments
-    if function[:rettype] == "void"
-      file << "void #{function[:name]}_Ignore(void)\n"
-      file << "{\n"
-      file << "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n"
-      file << "}\n\n"
-    # Function has non-void return type with no arguments
-    else
-      file << "void #{function[:name]}_IgnoreAndReturn(#{function[:rettype]} toReturn)\n"
-      file << "{\n"
-      file << "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n"
-      file << @utils.make_expand_array(function[:rettype], "Mock.#{function[:name]}_Return_Head", "toReturn")
-      file << "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n"
-      file << "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
-      file << "}\n\n"
-    end
-  end
-  
-
-    
-  def make_handle_return(function)
-  
-    method = function[:name]
-    return_block = <<EOS
-
-#{@tab}if(Mock.#{method}_Return != Mock.#{method}_Return_HeadTail)
-#{@tab}{
-#{@tab}#{@tab}#{function[:rettype]} toReturn = *Mock.#{method}_Return;
-#{@tab}#{@tab}Mock.#{method}_Return++;
-#{@tab}#{@tab}return toReturn;
-#{@tab}}
-#{@tab}else
-#{@tab}{
-#{@tab}#{@tab}return *Mock.#{method}_Return_Head;
-#{@tab}}
-EOS
-    return return_block
   end
 
   def make_add_new_expected(function, type, expected)

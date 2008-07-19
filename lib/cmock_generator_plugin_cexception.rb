@@ -7,6 +7,10 @@ class CMockGeneratorPluginCException
     @utils = utils
   end
   
+  def include_files
+    return "#include \"Exception.h\"\n"
+  end
+  
   def instance_structure(function_name)
     lines = []
     lines << "#{@tab}#{@config.call_count_type} *#{function_name}_ThrowOnCallCount;\n"
@@ -17,12 +21,16 @@ class CMockGeneratorPluginCException
     lines << "#{@tab}#{@config.throw_type} *#{function_name}_ThrowValue_HeadTail;\n"
   end
   
-  def mock_function_declarations(function_name, function_args)
+  def mock_function_declarations(function_name, function_args, function_return_type)
     if (function_args == "void")
 	    return "void #{function_name}_ExpectAndThrow(int toThrow);\n"
     else        
 	    return "void #{function_name}_ExpectAndThrow(#{function_args}, #{@config.throw_type} toThrow);\n"
     end
+  end
+  
+  def mock_implementation_prefix(function_name, function_return_type)
+    []
   end
   
   def mock_implementation(function_name)
@@ -41,7 +49,7 @@ class CMockGeneratorPluginCException
     lines << "#{@tab}}\n"
   end
   
-  def mock_interfaces(function_name, function_args, function_args_as_array)
+  def mock_interfaces(function_name, function_args, function_args_as_array, function_return_type)
     arg_insert = (function_args == "void") ? "" : "#{function_args}, "
     lines = []
     lines << "void #{function_name}_ExpectAndThrow(#{arg_insert}#{@config.throw_type} toThrow)\n"

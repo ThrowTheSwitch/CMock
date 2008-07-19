@@ -42,4 +42,18 @@ class CMockGeneratorUtils
     lines << "#{@tab}#{@tab}#{array}Tail = &#{array}[sz+1];\n"
     lines << "#{@tab}}\n"
   end
+  
+  def make_handle_return(function_name, function_return_type, indent)
+    lines = ["\n"]
+    lines << "#{indent}if(Mock.#{function_name}_Return != Mock.#{function_name}_Return_HeadTail)\n"
+    lines << "#{indent}{\n"
+    lines << "#{indent}#{@tab}#{function_return_type} toReturn = *Mock.#{function_name}_Return;\n"
+    lines << "#{indent}#{@tab}Mock.#{function_name}_Return++;\n"
+    lines << "#{indent}#{@tab}return toReturn;\n"
+    lines << "#{indent}}\n"
+    lines << "#{indent}else\n"
+    lines << "#{indent}{\n"
+    lines << "#{indent}#{@tab}return *Mock.#{function_name}_Return_Head;\n"
+    lines << "#{indent}}\n"
+  end
 end
