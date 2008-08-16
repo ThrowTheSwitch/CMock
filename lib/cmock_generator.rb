@@ -13,10 +13,6 @@ class CMockGenerator
   end
 
   def create_mock(parsed_stuff)
-    parsed_stuff[:functions].each do |function|
-      function[:args_string_without_varargs] = function[:args_string].gsub(/\,[a-zA-Z0-9_\*\s]*\.\.\./,'')
-    end
-    
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
@@ -26,7 +22,7 @@ class CMockGenerator
       create_mock_header_header(file, filename)
       create_mock_header_externs(file, parsed_stuff)
       parsed_stuff[:functions].each do |function|
-        @plugins.each { |plugin| file << plugin.mock_function_declarations(function[:name], function[:args_string_without_varargs], function[:rettype]) }
+        @plugins.each { |plugin| file << plugin.mock_function_declarations(function[:name], function[:args_string], function[:rettype]) }
       end
       create_mock_header_footer(file)
     end
@@ -42,7 +38,7 @@ class CMockGenerator
       create_mock_destroy_function(file, parsed_stuff[:functions])
       parsed_stuff[:functions].each do |function|
         create_mock_implementation(file, function)
-        @plugins.each { |plugin| file << plugin.mock_interfaces( function[:name], function[:args_string_without_varargs], function[:args], function[:rettype]) }
+        @plugins.each { |plugin| file << plugin.mock_interfaces( function[:name], function[:args_string], function[:args], function[:rettype]) }
       end
     end
   end
@@ -145,9 +141,12 @@ class CMockGenerator
       function_mod_and_rettype = function[:modifier] + ' ' + function[:rettype] 
     end
     
+    args_string = function[:args_string]
+    args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
+    
     # Create mock function
     file << "#{function[:attributes]} " if (!function[:attributes].nil? && function[:attributes].length > 0)
-    file << "#{function_mod_and_rettype} #{function[:name]}(#{function[:args_string]})\n"
+    file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
     
     @plugins.each { |plugin| file << plugin.mock_implementation_prefix(function[:name], function[:rettype]) }

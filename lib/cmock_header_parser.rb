@@ -124,6 +124,19 @@ class CMockHeaderParser
     #remove default parameter statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
+    
+    #check for var args
+    if (args =~ /\.\.\./)
+      decl[:var_arg] = args.match( /[\w\s]*\.\.\./ ).to_s
+      if (args =~ /\,[\w\s]*\.\.\./)
+        args = args.gsub!(/\,[\w\s]*\.\.\./,'')
+      else
+        args = 'void'
+      end
+    else
+      decl[:var_arg] = nil
+    end
+    
     args.strip!
     decl[:args_string] = args
     decl[:args] = parse_args(args)
