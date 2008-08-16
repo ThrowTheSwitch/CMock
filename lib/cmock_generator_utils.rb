@@ -1,6 +1,8 @@
 
 class CMockGeneratorUtils
 
+  attr_reader :config, :tab
+
   def initialize(config)
     @config = config
 	  @tab = @config.tab

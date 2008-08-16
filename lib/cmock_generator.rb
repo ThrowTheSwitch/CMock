@@ -2,6 +2,8 @@ $here = File.dirname __FILE__
 
 class CMockGenerator
 
+  attr_reader :config, :file_writer, :tab, :module_name, :mock_name, :utils, :plugins
+  
   def initialize(config, module_name, file_writer, utils, plugins=[])
     @config = config
     @file_writer = file_writer
@@ -16,7 +18,9 @@ class CMockGenerator
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
-
+  
+  private ##############################
+  
   def create_mock_header_file(parsed_stuff)
     @file_writer.create_file(@mock_name + ".h") do |file, filename|
       create_mock_header_header(file, filename)
@@ -42,8 +46,6 @@ class CMockGenerator
       end
     end
   end
-  
-  private ##############################
   
   def create_mock_header_header(file, filename) 
     define_name   = filename.gsub(/\.h/, "_h").upcase
@@ -132,8 +134,7 @@ class CMockGenerator
     file << "}\n\n"
   end
   
-  def create_mock_implementation(file, function)
-         
+  def create_mock_implementation(file, function)        
     # create return value combo         
     if (function[:modifier].empty?)
       function_mod_and_rettype = function[:rettype] 

@@ -1,6 +1,8 @@
 
 class CMockGeneratorPluginIgnore
 
+  attr_reader :config, :utils, :tab
+  
   def initialize(config, utils)
     @config = config
 	  @tab = @config.tab

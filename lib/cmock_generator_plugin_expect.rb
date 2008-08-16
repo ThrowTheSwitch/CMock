@@ -1,6 +1,8 @@
 
 class CMockGeneratorPluginExpect
 
+  attr_reader :config, :utils, :tab
+
   def initialize(config, utils)
     @config = config
 	  @tab = @config.tab
@@ -12,9 +14,10 @@ class CMockGeneratorPluginExpect
   end
   
   def instance_structure(function_name, function_args_as_array, function_return_type)
+    call_count_type = @config.call_count_type
     lines = []
-    lines << "#{@tab}#{@config.call_count_type} #{function_name}_CallCount;\n"
-    lines << "#{@tab}#{@config.call_count_type} #{function_name}_CallsExpected;\n"
+    lines << "#{@tab}#{call_count_type} #{function_name}_CallCount;\n"
+    lines << "#{@tab}#{call_count_type} #{function_name}_CallsExpected;\n"
       
     if (function_return_type != "void")
       lines << "#{@tab}#{function_return_type} *#{function_name}_Return;\n"
