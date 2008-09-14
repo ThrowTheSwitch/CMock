@@ -62,8 +62,8 @@ class CMockGeneratorPluginExpect
     lines << "#{@tab}#{@tab}TEST_THROW(\"#{function_name} Called More Times Than Expected\");\n"
     lines << "#{@tab}}\n"
     function_args_as_array.each do |arg|
-      function_return_type = arg[:type].sub(/const/, '').strip
-      lines << @utils.make_handle_expected(function_name, function_return_type, arg[:name])
+      arg_return_type = arg[:type].sub(/const/, '').strip
+      lines << @utils.make_handle_expected(function_name, arg_return_type, arg[:name])
     end
     lines
   end

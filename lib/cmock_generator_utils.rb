@@ -60,8 +60,7 @@ class CMockGeneratorUtils
   end
   
   def make_add_new_expected(function_name, arg_type, expected)
-    lines = []
-    lines << make_expand_array(arg_type, "Mock.#{function_name}_Expected_#{expected}_Head", expected)
+    lines = make_expand_array(arg_type, "Mock.#{function_name}_Expected_#{expected}_Head", expected)
     lines << "#{@tab}Mock.#{function_name}_Expected_#{expected} = Mock.#{function_name}_Expected_#{expected}_Head;\n"
     lines << "#{@tab}Mock.#{function_name}_Expected_#{expected} += Mock.#{function_name}_CallCount;\n"
   end

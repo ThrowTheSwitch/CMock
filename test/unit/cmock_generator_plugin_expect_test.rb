@@ -132,5 +132,156 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     assert_equal([], @cmock_generator_plugin_expect.mock_implementation_prefix(function_name, function_return_type))
   end
   
-  ####NEXT UP: Mock Implementation
+  should "add mock function implementation for functions of style 'void func(void)'" do
+    function_name = "Apple"
+    function_args = []
+    function_return_type = "void"
+    
+    expected = ["  Mock.Apple_CallCount++;\n",
+                "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
+                "  {\n",
+                "    TEST_THROW(\"Apple Called More Times Than Expected\");\n",
+                "  }\n"
+               ]
+    returned = @cmock_generator_plugin_expect.mock_implementation(function_name, function_args)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock function implementation for functions of style 'int func(int veal, unsigned int sushi)'" do
+    function_name = "Cherry"
+    function_args = [ { :type => "int", :name => "veal" }, { :type => "unsigned int", :name => "sushi" } ]
+    function_return_type = "int"
+    
+    @utils.expect.make_handle_expected(function_name, function_args[0][:type], function_args[0][:name]).returns("mocked_retval_1")
+    @utils.expect.make_handle_expected(function_name, function_args[1][:type], function_args[1][:name]).returns("mocked_retval_2")
+    
+    expected = ["  Mock.Cherry_CallCount++;\n",
+                "  if (Mock.Cherry_CallCount > Mock.Cherry_CallsExpected)\n",
+                "  {\n",
+                "    TEST_THROW(\"Cherry Called More Times Than Expected\");\n",
+                "  }\n",
+                "mocked_retval_1",
+                "mocked_retval_2"
+               ]
+    returned = @cmock_generator_plugin_expect.mock_implementation(function_name, function_args)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock interfaces for functions of style 'void func(void)'" do
+    function_name = "Pear"
+    function_args = "void"
+    function_args_as_array = []
+    function_return_type = "void"
+    
+    expected = ["void Pear_Expect(void)\n",
+                "{\n",
+                "  Mock.Pear_CallsExpected++;\n",
+                "}\n\n"
+               ]
+    returned = @cmock_generator_plugin_expect.mock_interfaces(function_name, function_args, function_args_as_array, function_return_type)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock interfaces for functions of style 'unsigned short func(void)'" do
+    function_name = "Orange"
+    function_args = "void"
+    function_args_as_array = []
+    function_return_type = "unsigned short"
+    
+    @utils.expect.make_expand_array(function_return_type, "Mock.Orange_Return_Head","toReturn").returns("mock_retval_1")
+    
+    expected = ["void Orange_ExpectAndReturn(unsigned short toReturn)\n",
+                "{\n",
+                "  Mock.Orange_CallsExpected++;\n",
+                "mock_retval_1",
+                "  Mock.Orange_Return = Mock.Orange_Return_Head;\n",
+                "  Mock.Orange_Return += Mock.Orange_CallCount;\n",
+                "}\n\n"
+               ]
+    returned = @cmock_generator_plugin_expect.mock_interfaces(function_name, function_args, function_args_as_array, function_return_type)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock interfaces for functions of style 'int func(char* pescado)'" do
+    function_name = "Lemon"
+    function_args = "char* pescado"
+    function_args_as_array = [{ :type => "char*", :name => "pescado"}]
+    function_return_type = "int"
+    
+    @utils.expect.make_add_new_expected(function_name, "char*", "pescado").returns("mock_retval_2")
+    @utils.expect.create_call_list(function_args_as_array).returns("mock_retval_3")
+    @utils.expect.make_expand_array(function_return_type, "Mock.Lemon_Return_Head","toReturn").returns("mock_retval_1")
+    
+    expected = ["void ExpectParameters_Lemon(char* pescado)\n",
+                "{\n",
+                "mock_retval_2",
+                "}\n\n",
+                "void Lemon_ExpectAndReturn(char* pescado, int toReturn)\n",
+                "{\n",
+                "  Mock.Lemon_CallsExpected++;\n",
+                "  ExpectParameters_Lemon(mock_retval_3);\n",
+                "mock_retval_1",
+                "  Mock.Lemon_Return = Mock.Lemon_Return_Head;\n",
+                "  Mock.Lemon_Return += Mock.Lemon_CallCount;\n",
+                "}\n\n"
+               ]
+    returned = @cmock_generator_plugin_expect.mock_interfaces(function_name, function_args, function_args_as_array, function_return_type)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock verify lines" do
+    function_name = "Banana" 
+  
+    expected = "  TEST_ASSERT_EQUAL_MESSAGE(Mock.Banana_CallsExpected, Mock.Banana_CallCount, \"Function 'Banana' called unexpected number of times.\");\n"
+    returned = @cmock_generator_plugin_expect.mock_verify(function_name)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock destroy for functions of style 'void func(void)'" do
+    function_name = "Peach"
+    function_args_as_array = []
+    function_return_type = "void"
+    
+    expected = []
+    returned = @cmock_generator_plugin_expect.mock_destroy(function_name, function_args_as_array, function_return_type)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock destroy for functions of style 'char func(void)'" do
+    function_name = "Palm"
+    function_args_as_array = []
+    function_return_type = "char"
+    
+    expected = ["  if (Mock.Palm_Return_Head)\n",
+                "  {\n",
+                "    free(Mock.Palm_Return_Head);\n",
+                "    Mock.Palm_Return_Head=NULL;\n",
+                "    Mock.Palm_Return_HeadTail=NULL;\n",
+                "  }\n"
+               ]
+    returned = @cmock_generator_plugin_expect.mock_destroy(function_name, function_args_as_array, function_return_type)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock destroy for functions of style 'int func(uint32 grease)'" do
+    function_name = "Coconut"
+    function_args_as_array = [{ :type => "uint32", :name => "grease"}]
+    function_return_type = "int"
+    
+    expected = ["  if (Mock.Coconut_Return_Head)\n",
+                "  {\n",
+                "    free(Mock.Coconut_Return_Head);\n",
+                "    Mock.Coconut_Return_Head=NULL;\n",
+                "    Mock.Coconut_Return_HeadTail=NULL;\n",
+                "  }\n",
+                "  if (Mock.Coconut_Expected_grease_Head)\n",
+                "  {\n",
+                "    free(Mock.Coconut_Expected_grease_Head);\n",
+                "    Mock.Coconut_Expected_grease_Head=NULL;\n",
+                "    Mock.Coconut_Expected_grease_HeadTail=NULL;\n",
+                "  }\n"
+               ]
+    returned = @cmock_generator_plugin_expect.mock_destroy(function_name, function_args_as_array, function_return_type)
+    assert_equal(expected, returned)
+  end
 end
