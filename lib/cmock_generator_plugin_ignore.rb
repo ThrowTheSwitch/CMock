@@ -18,7 +18,7 @@ class CMockGeneratorPluginIgnore
   end
   
   def mock_function_declarations(function_name, function_args, function_return_type)
-    if (function_args == "void")
+    if (function_return_type == "void")
       return "void #{function_name}_Ignore(void);\n"
     else        
       return "void #{function_name}_IgnoreAndReturn(#{function_return_type} toReturn);\n"
