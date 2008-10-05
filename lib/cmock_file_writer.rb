@@ -2,6 +2,7 @@
 class CMockFileWriter
 
   require 'ftools'
+  attr_reader :config
 
   def initialize(config)
     @config = config
