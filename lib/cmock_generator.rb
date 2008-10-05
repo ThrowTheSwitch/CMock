@@ -19,7 +19,7 @@ class CMockGenerator
     create_mock_source_file(parsed_stuff)
   end
   
-  private ##############################
+  private unless $ThisIsOnlyATest ##############################
   
   def create_mock_header_file(parsed_stuff)
     @file_writer.create_file(@mock_name + ".h") do |file, filename|
@@ -81,7 +81,7 @@ class CMockGenerator
     file << "#include \"unity.h\"\n"
     @plugins.each { |plugin| file << plugin.include_files }
     
-    #(@config.includes + include_files).uniq.each {|include| file << "#include \"#{include}\"\n"}  #### MSV This is what the comments said in original version, but it wasnt actually doing this
+    #(@config.includes + include_files).uniq.each {|include| file << "#include \"#{include}\"\n"}  #### This is what the comments said in original version, but it wasnt actually doing this
     @config.includes.each {|include| file << "#include \"#{include}\"\n"}
     file << "#include \"#{header_file}\"\n\n"
   end
@@ -104,7 +104,7 @@ class CMockGenerator
   
   def create_extern_declarations(file, externs)
     externs.each do |extern|
-      file << extern.gsub(/extern/,'') << ";\n"
+      file << extern.gsub(/extern\s*/,'') << ";\n"
     end
     file << "extern jmp_buf AbortFrame;\n"
     file << "\n"
