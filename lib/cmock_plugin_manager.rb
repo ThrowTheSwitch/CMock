@@ -5,6 +5,8 @@ require "#{$here}/cmock_generator_plugin_cexception.rb"
 
 class CMockPluginManager
 
+  attr_reader :config, :utils
+
   def initialize(config, utils)
     @config = config
     @utils = utils
@@ -18,5 +20,3 @@ class CMockPluginManager
     return @plugins
   end
 end
-
-#!!!!!!!!!!!!!!!!!!!!!!!!!  eventually I plan to scan a plugin directory to pull in all this stuff, and maybe check the yaml file after that to see what is currently allowed.  that sounds swank, no?
