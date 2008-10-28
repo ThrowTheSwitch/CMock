@@ -1,0 +1,33 @@
+CMock Generated Mock Module Summary
+===================================
+
+
+CMock will generate expect functions as follows:
+
+Original Function   => Generated Mock Function
+----------------------------------------------
+void func(void)     => void func_Expect(void)
+void func(params)   => void func_Expect(expected_params)
+retval func(void)   => void func_ExpectAndReturn(retval_to_return)
+retval func(params) => void func_ExpectAndReturn(expected_params, retval_to_return)
+
+
+CMock will generate the following expect functions, in addition to those above, if the CException plugin is used:
+
+Original Function   => Generated Mock Function
+----------------------------------------------
+void func(void)     => void func_ExpectAndThrow(value_to_throw)
+void func(params)   => void func_ExpectAndThrow(expected_params, value_to_throw)
+retval func(void)   => void func_ExpectAndThrow(value_to_throw)
+retval func(params) => void func_ExpectAndThrow(expected_params, value_to_throw)
+
+
+CMock will generate the following expect functions, in addition to those above, if the CIgnore plugin is used:
+
+Original Function   => Generated Mock Function
+----------------------------------------------
+void func(void)     => void func_Ignore(void)
+void func(params)   => void func_Ignore(void)
+retval func(void)   => void func_IgnoreAndReturn(retval_to_return)
+retval func(params) => void func_IgnoreAndReturn(retval_to_return)
+
