@@ -23,8 +23,8 @@ namespace :tests do
   task :all => [ 'units', 'system' ]
 
   Rake::TestTask.new('units') do |t|
-  	t.pattern = 'test//unit/*_test.rb'
-  	t.verbose = true
+    t.pattern = 'test//unit/*_test.rb'
+    t.verbose = true
   end
   
   desc "Run system tests"
@@ -35,28 +35,3 @@ namespace :tests do
   end
   
 end
-
-
-
-def run_systests(config, test_files)
-
-  test_files.each do |test|
-    obj_list = []
-    test_base = File.basename(test, C_EXTENSION)
-    headers = extract_headers(test)
-  
-    headers.each do |header|
-      compile(config, find_source_file(header))
-      obj_list << header.ext(OBJ_EXTENSION)
-    end
-    
-    compile(config, test)
-    obj_list << test_base.ext(OBJ_EXTENSION)
-    
-    link(config, test_base, obj_list)
-    
-    execute(SYSTEST_BUILD_DIR + test_base + EXE_EXTENSION)
-  end
-
-end
-
