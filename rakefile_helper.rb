@@ -1,5 +1,6 @@
 require 'yaml'
 require 'lib/cmock'
+require 'auto/generate_test_runner'
 
 def Kernel.is_windows?
   processor, platform, *rest = RUBY_PLATFORM.split("-")
@@ -116,6 +117,15 @@ module RakefileHelpers
         obj_list << header.ext(OBJ_EXTENSION)
       end
       
+      # Generate and build the test runner
+      runner_name = test_base + '_Runner.c'
+      runner_path = SYSTEST_BUILD_DIR + runner_name
+      test_gen = UnityTestRunnerGenerator.new
+      test_gen.run(test, runner_path)
+      compile(config, runner_path)
+      obj_list << runner_name.ext(OBJ_EXTENSION)
+      
+      # Build the test file
       compile(config, test)
       obj_list << test_base.ext(OBJ_EXTENSION)
       

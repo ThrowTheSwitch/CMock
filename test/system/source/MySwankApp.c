@@ -4,7 +4,9 @@
 
 int main(void)
 {
-  printf("Hello world!\n");
+  int a = 123, b = 456;
+  printf("What is %d + %d?\n", a, b);
   Add(123, 456);
+  printf("Now that's swankadelic!\n");
   return 0;
 }
