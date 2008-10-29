@@ -15,12 +15,19 @@ COMPILER_CONFIGS = FileList.new('*.yml')
 CLEAN.include(SYSTEST_BUILD_DIR + '*.*')
 CLEAN.include(SYSTEST_MOCKS_DIR + '*.*')
 
-task :default => [ :clobber, 'tests:all' ]
+task :default => [ :clobber, 'tests:all', :app ]
+
+desc "Build and run application"
+task :app do
+  COMPILER_CONFIGS.each do |cfg_file|
+    build_and_run_application(yaml_read(cfg_file), 'MySwankApp')
+  end
+end
 
 namespace :tests do
 
   desc "Run unit and system tests"
-  task :all => [ 'units', 'system' ]
+  task :all => ['units', 'system', 'app']
 
   Rake::TestTask.new('units') do |t|
     t.pattern = 'test//unit/*_test.rb'

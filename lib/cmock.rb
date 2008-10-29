@@ -8,7 +8,7 @@ require "#{$here}/cmock_generator_utils"
 
 class CMock
 
-  def initialize(mocks_path='mocks', includes=[], use_cexception=true, allow_ignore_mock=false)
+  def initialize(mocks_path='mocks', includes=[], use_cexception=false, allow_ignore_mock=false)
     @mocks_path = mocks_path
     @includes = includes
     @use_cexception = use_cexception

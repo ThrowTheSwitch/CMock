@@ -1,4 +1,5 @@
 require 'yaml'
+require 'lib/cmock'
 
 def Kernel.is_windows?
   processor, platform, *rest = RUBY_PLATFORM.split("-")
@@ -103,6 +104,14 @@ module RakefileHelpers
       headers = extract_headers(test)
     
       headers.each do |header|
+      
+        if header =~ /^Mock(.*)\.h/i
+          module_name = $1
+          report "Generating mock for module #{module_name}..."
+          cmock = CMock.new(mocks_path='test/system/mocks')
+          cmock.setup_mocks("test/system/source/#{module_name}.h")
+        end
+      
         compile(config, find_source_file(header))
         obj_list << header.ext(OBJ_EXTENSION)
       end
@@ -114,6 +123,34 @@ module RakefileHelpers
       
       execute(SYSTEST_BUILD_DIR + test_base + EXE_EXTENSION)
     end
+  end
+  
+  def build_and_run_application(config, main)
+    obj_list = []
+    main_path = SYSTEST_SOURCE_DIR + main + '.c'
+    executable_path = SYSTEST_BUILD_DIR + main + EXE_EXTENSION
+    main_base = File.basename(main_path, C_EXTENSION)
+    headers = extract_headers(main_path)
+  
+    headers.each do |header|
+    
+      if header =~ /^Mock(.*)\.h/i
+        module_name = $1
+        report "Generating mock for module #{module_name}..."
+        cmock = CMock.new(mocks_path='test/system/mocks')
+        cmock.setup_mocks("test/system/source/#{module_name}.h")
+      end
+    
+      compile(config, find_source_file(header))
+      obj_list << header.ext(OBJ_EXTENSION)
+    end
+    
+    compile(config, main_path)
+    obj_list << main_base.ext(OBJ_EXTENSION)
+    
+    link(config, main_base, obj_list)
+    
+    execute(SYSTEST_BUILD_DIR + main_base + EXE_EXTENSION)
   end
   
 end
