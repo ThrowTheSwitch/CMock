@@ -1,5 +1,0 @@
-compiler: 'gcc.exe'
-linker: 'gcc.exe'
-path: 'c:/mingw/bin/'
-compile_flags: '-c'
-link_flags: ''

@@ -1,6 +1,7 @@
 require 'yaml'
 require 'lib/cmock'
-require 'auto/generate_test_runner'
+require 'vendor/unity/auto/generate_test_runner'
+require 'vendor/unity/auto/unity_test_summary'
 
 def Kernel.is_windows?
   processor, platform, *rest = RUBY_PLATFORM.split("-")
@@ -21,7 +22,7 @@ module RakefileConstants
   UNITY_DIR = 'vendor/unity/src/'
 
   SYSTEST_BASE = 'test/system/'
-  SYSTEST_SOURCE_DIR = SYSTEST_BASE + 'source/'
+  SYSTEST_SOURCE_DIR = SYSTEST_BASE + 'src/'
   SYSTEST_TEST_DIR   = SYSTEST_BASE + 'test/'
   SYSTEST_MOCKS_DIR  = SYSTEST_BASE + 'mocks/'
   SYSTEST_BUILD_DIR  = SYSTEST_BASE + 'build/'
@@ -54,11 +55,14 @@ module RakefileHelpers
         return src_file
       end
     end
-    return ''
+    return nil
   end
   
-  def compile(config, file)
+  def compile(config, file, defines=[])
     cmd_str = "#{config["path"]}#{config["compiler"]} #{config["compile_flags"]} "
+    if !defines.nil? and defines.length > 0
+      defines.each { |define| cmd_str += "-D#{define} " }
+    end
     if !config["path"].nil?
       cmd_str += "-B#{config["path"]} "
     end
@@ -98,44 +102,66 @@ module RakefileHelpers
     return output
   end
   
+  def report_summary
+    summary = UnityTestSummary.new
+    summary.set_root_path($here)
+    summary.set_targets(Dir["#{SYSTEST_BUILD_DIR}*.test*"])
+    summary.run
+  end
+  
   def run_systests(config, test_files)
+    puts 'Running system tests...'
+    test_defines = ['TEST']
     test_files.each do |test|
       obj_list = []
       test_base = File.basename(test, C_EXTENSION)
       headers = extract_headers(test)
     
       headers.each do |header|
-      
         if header =~ /^Mock(.*)\.h/i
           module_name = $1
           report "Generating mock for module #{module_name}..."
-          cmock = CMock.new(mocks_path='test/system/mocks')
-          cmock.setup_mocks("test/system/source/#{module_name}.h")
+          cmock = CMock.new(SYSTEST_MOCKS_DIR, ['Types.h'])
+          cmock.setup_mocks("#{SYSTEST_SOURCE_DIR}#{module_name}.h")
         end
       
-        compile(config, find_source_file(header))
-        obj_list << header.ext(OBJ_EXTENSION)
+        src_file = find_source_file(header)
+        if !src_file.nil?
+          compile(config, src_file, test_defines)
+          obj_list << header.ext(OBJ_EXTENSION)
+        end
       end
       
       # Generate and build the test runner
       runner_name = test_base + '_Runner.c'
       runner_path = SYSTEST_BUILD_DIR + runner_name
       test_gen = UnityTestRunnerGenerator.new
-      test_gen.run(test, runner_path)
-      compile(config, runner_path)
+      test_gen.run(test, runner_path, ['Types'])
+      compile(config, runner_path, test_defines)
       obj_list << runner_name.ext(OBJ_EXTENSION)
       
       # Build the test file
-      compile(config, test)
+      compile(config, test, test_defines)
       obj_list << test_base.ext(OBJ_EXTENSION)
       
       link(config, test_base, obj_list)
       
-      execute(SYSTEST_BUILD_DIR + test_base + EXE_EXTENSION)
+      # Run test and generate results file
+      output = execute(SYSTEST_BUILD_DIR + test_base + EXE_EXTENSION)
+      test_results = SYSTEST_BUILD_DIR + test_base
+      if output.match(/OK$/m).nil?
+        test_results += '.testfail'
+      else
+        test_results += '.testpass'
+      end
+      File.open(test_results, 'w') do |f|
+        f.print output
+      end
+      
     end
   end
   
-  def build_and_run_application(config, main)
+  def build_application(config, main)
     obj_list = []
     main_path = SYSTEST_SOURCE_DIR + main + '.c'
     executable_path = SYSTEST_BUILD_DIR + main + EXE_EXTENSION
@@ -143,24 +169,17 @@ module RakefileHelpers
     headers = extract_headers(main_path)
   
     headers.each do |header|
-    
-      if header =~ /^Mock(.*)\.h/i
-        module_name = $1
-        report "Generating mock for module #{module_name}..."
-        cmock = CMock.new(mocks_path='test/system/mocks')
-        cmock.setup_mocks("test/system/source/#{module_name}.h")
+      src_file = find_source_file(header)
+      if !src_file.nil?
+        compile(config, src_file)
+        obj_list << header.ext(OBJ_EXTENSION)
       end
-    
-      compile(config, find_source_file(header))
-      obj_list << header.ext(OBJ_EXTENSION)
     end
     
     compile(config, main_path)
     obj_list << main_base.ext(OBJ_EXTENSION)
     
     link(config, main_base, obj_list)
-    
-    execute(SYSTEST_BUILD_DIR + main_base + EXE_EXTENSION)
   end
   
 end

@@ -1,4 +1,4 @@
-$here = File.dirname(__FILE__)
+$here = File.expand_path(File.dirname(__FILE__))
 
 require 'rake'
 require 'rake/clean'
@@ -8,7 +8,7 @@ require 'rakefile_helper'
 include RakefileConstants
 include RakefileHelpers
 
-SYSTEST_TEST_FILES = FileList.new(SYSTEST_TEST_DIR + '*Test' + C_EXTENSION)
+SYSTEST_TEST_FILES = FileList.new(SYSTEST_TEST_DIR + 'Test*' + C_EXTENSION)
 
 COMPILER_CONFIGS = FileList.new('*.yml')
 
@@ -20,14 +20,14 @@ task :default => [ :clobber, 'tests:all', :app ]
 desc "Build and run application"
 task :app do
   COMPILER_CONFIGS.each do |cfg_file|
-    build_and_run_application(yaml_read(cfg_file), 'MySwankApp')
+    build_application(yaml_read(cfg_file), 'Main')
   end
 end
 
 namespace :tests do
 
   desc "Run unit and system tests"
-  task :all => ['units', 'system', 'app']
+  task :all => [:clean, 'units', 'system', 'app']
 
   Rake::TestTask.new('units') do |t|
     t.pattern = 'test//unit/*_test.rb'
@@ -35,9 +35,10 @@ namespace :tests do
   end
   
   desc "Run system tests"
-  task :system do
+  task :system => [:clean] do
     COMPILER_CONFIGS.each do |cfg_file|
-       run_systests(yaml_read(cfg_file), SYSTEST_TEST_FILES)
+     run_systests(yaml_read(cfg_file), SYSTEST_TEST_FILES)
+     report_summary
     end
   end
   
