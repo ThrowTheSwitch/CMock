@@ -10,30 +10,30 @@ void Timer_EnablePeripheralClocks(void)
 void Timer_Reset(void)
 {
   uint32 dummy;
-  TIMER0_BASE->TC_CCR = AT91C_TC_CLKDIS;
-  TIMER0_BASE->TC_IDR = 0xffffffff;
-  dummy = TIMER0_BASE->TC_SR;
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
+  AT91C_BASE_TC0->TC_IDR = 0xffffffff;
+  dummy = AT91C_BASE_TC0->TC_SR;
   dummy = dummy;
 }
 
 void Timer_ConfigureMode(void)
 {
-  TIMER0_BASE->TC_CMR = 0x000CC004; // ACPC=toggle TIOA on RC compare; mode=WAVE; WAVE_SEL=UP w/auto-trigger on RC compare; clock=MCK/1024
+  AT91C_BASE_TC0->TC_CMR = 0x000CC004; // ACPC=toggle TIOA on RC compare; mode=WAVE; WAVE_SEL=UP w/auto-trigger on RC compare; clock=MCK/1024
 }
 
 void Timer_ConfigurePeriod(void)
 {
-  TIMER0_BASE->TC_RC = 469; // 10ms period for timer clock source of MCK/1024 with MCK=48054857
+  AT91C_BASE_TC0->TC_RC = 469; // 10ms period for timer clock source of MCK/1024 with MCK=48054857
 }
 
 void Timer_EnableOutputPin(void)
 {
-  PIOB_BASE->PIO_PDR = TIOA0_PIN_MASK;
+  AT91C_BASE_PIOB->PIO_PDR = TIOA0_PIN_MASK;
 }
 
 void Timer_Enable(void)
 {
-  TIMER0_BASE->TC_CCR = AT91C_TC_CLKEN;
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKEN;
 }
 
 void Timer_ConfigureInterruptHandler(void)
@@ -46,6 +46,6 @@ void Timer_ConfigureInterruptHandler(void)
 
 void Timer_Start(void)
 {
-  TIMER0_BASE->TC_CCR = AT91C_TC_SWTRG;
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_SWTRG;
 }
 

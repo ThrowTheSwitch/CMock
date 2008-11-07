@@ -51,5 +51,5 @@ static inline void ClearInterrupt(void)
 
 static inline void EnableCompareInterruptForRegisterC(void)
 {
-  TIMER0_BASE->TC_IER = AT91C_TC_CPCS;
+  AT91C_BASE_TC0->TC_IER = AT91C_TC_CPCS;
 }

@@ -8,68 +8,12 @@
 #endif
 
 // Peripheral Helper Definitions
-
-//#define USART_DEBUG
-#define USART_0
-
-// Debug USART
-#ifdef USART_DEBUG
-#define USART_CLOCK_ENABLE  (AT91C_ID_SYS)
-#define USART_TX_PIN        (AT91C_PA28_DTXD)
-#ifdef TEST
-extern AT91S_USART UsartPeripheral;
-#define USART_BASE          ((AT91PS_USART)     &UsartPeripheral)
-#else
-#define USART_BASE          ((AT91PS_USART)     AT91C_BASE_DBGU)
-#endif // TEST
-#endif // USART_DEBUG
-
-
-// USART 0
-#ifdef USART_0
-#define USART_CLOCK_ENABLE  (AT91C_ID_US0)
-#define USART_TX_PIN        (AT91C_PA1_TXD0)
-#ifdef TEST
-extern AT91S_USART UsartPeripheral;
-#define USART_BASE          ((AT91PS_USART)     &UsartPeripheral)
-#else
-#define USART_BASE          ((AT91PS_USART)     AT91C_BASE_US0)
-#endif // TEST
-#endif // USART_0
-
-
-// Timer/Counter 0
+#define USART0_CLOCK_ENABLE (AT91C_ID_US0)
+#define USART0_TX_PIN       (AT91C_PA1_TXD0)
 #define TIMER0_CLOCK_ENABLE (((uint32)0x1) << AT91C_ID_TC0)
-#ifdef TEST
-extern AT91S_TC Timer0Peripheral;
-#define TIMER0_BASE         ((AT91PS_TC)        &Timer0Peripheral)
-#else
-#define TIMER0_BASE         ((AT91PS_TC)        AT91C_BASE_TC0)
-#endif // TEST
-
-
-// Parallel I/O Bank A
 #define PIOA_CLOCK_ENABLE   (((uint32)0x1) << AT91C_ID_PIOA)
-#ifdef TEST
-extern AT91S_PIO PioAPeripheral;
-#define PIOA_BASE           ((AT91PS_PIO)       &PioAPeripheral)
-#else
-#define PIOA_BASE           ((AT91PS_PIO)       AT91C_BASE_PIOA)
-#endif // TEST
-
-
-// Parallel I/O Bank B
 #define PIOB_CLOCK_ENABLE   (((uint32)0x1) << AT91C_ID_PIOB)
-#ifdef TEST
-extern AT91S_PIO PioBPeripheral;
-#define PIOB_BASE           ((AT91PS_PIO)       &PioBPeripheral)
-#else
-#define PIOB_BASE           ((AT91PS_PIO)       AT91C_BASE_PIOB)
-#endif // TEST
-
-// Timer/Counter Output Pin Assignment
-#define TIOA0_PIN_MASK      (((uint32)0x1) << 23)
-
+#define TIOA0_PIN_MASK      (((uint32)0x1) << 23) // Timer/Counter Output Pin
 
 // Application Type Definitions
 typedef unsigned int uint32;
@@ -79,7 +23,6 @@ typedef short int16;
 typedef unsigned char uint8;
 typedef char int8;  
 typedef char bool;
-
 
 // Application Special Value Definitions
 #ifndef TRUE
@@ -92,7 +35,6 @@ typedef char bool;
 #define NULL      (0)
 #endif // NULL
 #define DONT_CARE (0)
-
 
 // MIN/MAX Definitions for Standard Types
 #define INT8_MAX 127

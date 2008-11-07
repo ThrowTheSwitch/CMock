@@ -16,7 +16,7 @@ __monitor uint32 Timer_GetSystemTime(void)
 
 void Timer_InterruptHandler(void)
 {
-  uint32 status = TIMER0_BASE->TC_SR;
+  uint32 status = AT91C_BASE_TC0->TC_SR;
   if (status & AT91C_TC_CPCS)
   {
     systemTime += 10;

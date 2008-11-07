@@ -5,7 +5,7 @@
 #include "MockTimerInterruptConfigurator.h"
 
 AT91S_PMC PmcPeripheral;
-AT91S_TC  Timer0Peripheral;
+AT91S_TC  TimerCounter0Peripheral;
 AT91S_PIO PioBPeripheral;
 
 void setUp(void)
@@ -36,62 +36,62 @@ void testEnablePeripheralClocksShouldEnableClockToPIOBPeripheral(void)
 
 void testResetShouldSetTimer0ClockDisableBit_DisableTimer0Interrupts_ClearStatusRegister(void)
 {
-  TIMER0_BASE->TC_CCR = 0;
-  TIMER0_BASE->TC_IDR = 0;
-  TIMER0_BASE->TC_SR = 0xFFFFFFFF;
+  AT91C_BASE_TC0->TC_CCR = 0;
+  AT91C_BASE_TC0->TC_IDR = 0;
+  AT91C_BASE_TC0->TC_SR = 0xFFFFFFFF;
   Timer_Reset();
-  TEST_ASSERT_EQUAL(0x00000002, TIMER0_BASE->TC_CCR);
-  TEST_ASSERT_EQUAL(0xffffffff, TIMER0_BASE->TC_IDR);
-  // CANNOT BE VERIFIED!! TEST_ASSERT_EQUAL(0X00000000, TIMER0_BASE->TC_SR);
+  TEST_ASSERT_EQUAL(0x00000002, AT91C_BASE_TC0->TC_CCR);
+  TEST_ASSERT_EQUAL(0xffffffff, AT91C_BASE_TC0->TC_IDR);
+  // CANNOT BE VERIFIED!! TEST_ASSERT_EQUAL(0X00000000, AT91C_BASE_TC0->TC_SR);
 }
 
 void testEnableOutputPinShouldEnable_TIOA0_DigitalOutput(void)
 {
-  PIOB_BASE->PIO_PDR = 0;
+  AT91C_BASE_PIOB->PIO_PDR = 0;
   Timer_EnableOutputPin();
-  TEST_ASSERT_EQUAL(TIOA0_PIN_MASK, PIOB_BASE->PIO_PDR);
+  TEST_ASSERT_EQUAL(TIOA0_PIN_MASK, AT91C_BASE_PIOB->PIO_PDR);
 }
 
 void testConfigureModeShouldConfigureTimer0ClockSourceForMasterClockDividedBy1024(void)
 {
-  TIMER0_BASE->TC_CMR = 0;
+  AT91C_BASE_TC0->TC_CMR = 0;
   Timer_ConfigureMode();
-  TEST_ASSERT_EQUAL(0x00000004, TIMER0_BASE->TC_CMR & 0x00000007);
+  TEST_ASSERT_EQUAL(0x00000004, AT91C_BASE_TC0->TC_CMR & 0x00000007);
 }
 
 void testConfigureModeShouldConfigureTimer0ForWaveGeneration(void)
 {
-  TIMER0_BASE->TC_CMR = 0;
+  AT91C_BASE_TC0->TC_CMR = 0;
   Timer_ConfigureMode();
-  TEST_ASSERT_EQUAL(0x00008000, TIMER0_BASE->TC_CMR & 0x00008000);
+  TEST_ASSERT_EQUAL(0x00008000, AT91C_BASE_TC0->TC_CMR & 0x00008000);
 }
 
 void testConfigureModeShouldConfigureTimer0ForUpModeWithAutomaticTriggerOnRCCompare(void)
 {
-  TIMER0_BASE->TC_CMR = 0;
+  AT91C_BASE_TC0->TC_CMR = 0;
   Timer_ConfigureMode();
-  TEST_ASSERT_EQUAL(0x00004000, TIMER0_BASE->TC_CMR & 0x00006000);
+  TEST_ASSERT_EQUAL(0x00004000, AT91C_BASE_TC0->TC_CMR & 0x00006000);
 }
 
 void testConfigureModeShouldConfigureTimer0ToToggleTIOAOnRCCompare(void)
 {
-  TIMER0_BASE->TC_CMR = 0;
+  AT91C_BASE_TC0->TC_CMR = 0;
   Timer_ConfigureMode();
-  TEST_ASSERT_EQUAL(0x000C0000, TIMER0_BASE->TC_CMR & 0x000C0000);
+  TEST_ASSERT_EQUAL(0x000C0000, AT91C_BASE_TC0->TC_CMR & 0x000C0000);
 }
 
 void testConfigurePeriodShouldConfigureRegisterCFor10msInterval(void)
 {
-  TIMER0_BASE->TC_RC = 0;
+  AT91C_BASE_TC0->TC_RC = 0;
   Timer_ConfigurePeriod();
-  TEST_ASSERT_EQUAL(469, TIMER0_BASE->TC_RC);
+  TEST_ASSERT_EQUAL(469, AT91C_BASE_TC0->TC_RC);
 }
 
 void testEnableShouldSetEnableFlagForTimer0(void)
 {
-  TIMER0_BASE->TC_CCR = 0;
+  AT91C_BASE_TC0->TC_CCR = 0;
   Timer_Enable();
-  TEST_ASSERT_EQUAL_INT(1, TIMER0_BASE->TC_CCR);
+  TEST_ASSERT_EQUAL_INT(1, AT91C_BASE_TC0->TC_CCR);
 }
 
 void testConfigureInterruptHandler(void)
@@ -106,7 +106,7 @@ void testConfigureInterruptHandler(void)
 
 void testStartShouldSetSoftwareTriggerFlag(void)
 {
-  TIMER0_BASE->TC_CCR = 0;
+  AT91C_BASE_TC0->TC_CCR = 0;
   Timer_Start();
-  TEST_ASSERT_EQUAL(0x04, TIMER0_BASE->TC_CCR);
+  TEST_ASSERT_EQUAL(0x04, AT91C_BASE_TC0->TC_CCR);
 }

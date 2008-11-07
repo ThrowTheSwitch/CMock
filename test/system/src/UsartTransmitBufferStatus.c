@@ -3,5 +3,5 @@
 
 bool Usart_ReadyToTransmit(void)
 {
-  return (USART_BASE->US_CSR & AT91C_US_TXRDY) > 0;
+  return (AT91C_BASE_US0->US_CSR & AT91C_US_TXRDY) > 0;
 }

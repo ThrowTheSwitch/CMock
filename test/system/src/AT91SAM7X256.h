@@ -2464,22 +2464,34 @@ typedef struct _AT91S_ADC {
 
 #ifdef TEST
 extern AT91S_AIC AicPeripheral;
-#define AT91C_BASE_AIC       ((AT91PS_AIC)      &AicPeripheral) // (AIC) Base Address
+#define AT91C_BASE_AIC       ((AT91PS_AIC)      &AicPeripheral)
 #else
-#define AT91C_BASE_AIC       ((AT91PS_AIC)      0xFFFFF000)     // (AIC) Base Address
-#endif
+#define AT91C_BASE_AIC       ((AT91PS_AIC)      0xFFFFF000) // (AIC) Base Address
+#endif // TEST
 
 #define AT91C_BASE_PDC_DBGU  ((AT91PS_PDC)      0xFFFFF300) // (PDC_DBGU) Base Address
 #define AT91C_BASE_DBGU      ((AT91PS_DBGU)     0xFFFFF200) // (DBGU) Base Address
+
+#ifdef TEST
+extern AT91S_PIO PioAPeripheral;
+#define AT91C_BASE_PIOA      ((AT91PS_PIO)      &PioAPeripheral)
+#else
 #define AT91C_BASE_PIOA      ((AT91PS_PIO)      0xFFFFF400) // (PIOA) Base Address
+#endif // TEST
+
+#ifdef TEST
+extern AT91S_PIO PioBPeripheral;
+#define AT91C_BASE_PIOB      ((AT91PS_PIO)      &PioBPeripheral)
+#else
 #define AT91C_BASE_PIOB      ((AT91PS_PIO)      0xFFFFF600) // (PIOB) Base Address
+#endif // TEST
 
 #ifdef TEST
 extern AT91S_PMC PmcPeripheral;
-#define AT91C_BASE_PMC       ((AT91PS_PMC)      &PmcPeripheral) // (PMC) Base Address
+#define AT91C_BASE_PMC       ((AT91PS_PMC)      &PmcPeripheral)
 #else
-#define AT91C_BASE_PMC       ((AT91PS_PMC)      0xFFFFFC00)     // (PMC) Base Address
-#endif
+#define AT91C_BASE_PMC       ((AT91PS_PMC)      0xFFFFFC00) // (PMC) Base Address
+#endif // TEST
 
 #define AT91C_BASE_CKGR      ((AT91PS_CKGR)     0xFFFFFC20) // (CKGR) Base Address
 #define AT91C_BASE_RSTC      ((AT91PS_RSTC)     0xFFFFFD00) // (RSTC) Base Address
@@ -2495,7 +2507,14 @@ extern AT91S_PMC PmcPeripheral;
 #define AT91C_BASE_PDC_US1   ((AT91PS_PDC)      0xFFFC4100) // (PDC_US1) Base Address
 #define AT91C_BASE_US1       ((AT91PS_USART)    0xFFFC4000) // (US1) Base Address
 #define AT91C_BASE_PDC_US0   ((AT91PS_PDC)      0xFFFC0100) // (PDC_US0) Base Address
+
+#ifdef TEST
+extern AT91S_USART Usart0Peripheral;
+#define AT91C_BASE_US0       ((AT91PS_USART)    &Usart0Peripheral)
+#else
 #define AT91C_BASE_US0       ((AT91PS_USART)    0xFFFC0000) // (US0) Base Address
+#endif // TEST
+
 #define AT91C_BASE_PDC_SSC   ((AT91PS_PDC)      0xFFFD4100) // (PDC_SSC) Base Address
 #define AT91C_BASE_SSC       ((AT91PS_SSC)      0xFFFD4000) // (SSC) Base Address
 #define AT91C_BASE_TWI       ((AT91PS_TWI)      0xFFFB8000) // (TWI) Base Address
@@ -2505,7 +2524,14 @@ extern AT91S_PMC PmcPeripheral;
 #define AT91C_BASE_PWMC_CH0  ((AT91PS_PWMC_CH)  0xFFFCC200) // (PWMC_CH0) Base Address
 #define AT91C_BASE_PWMC      ((AT91PS_PWMC)     0xFFFCC000) // (PWMC) Base Address
 #define AT91C_BASE_UDP       ((AT91PS_UDP)      0xFFFB0000) // (UDP) Base Address
+
+#ifdef TEST
+extern AT91S_TC TimerCounter0Peripheral;
+#define AT91C_BASE_TC0       ((AT91PS_TC)       &TimerCounter0Peripheral)
+#else
 #define AT91C_BASE_TC0       ((AT91PS_TC)       0xFFFA0000) // (TC0) Base Address
+#endif // TEST
+
 #define AT91C_BASE_TC1       ((AT91PS_TC)       0xFFFA0040) // (TC1) Base Address
 #define AT91C_BASE_TC2       ((AT91PS_TC)       0xFFFA0080) // (TC2) Base Address
 #define AT91C_BASE_TCB       ((AT91PS_TCB)      0xFFFA0000) // (TCB) Base Address

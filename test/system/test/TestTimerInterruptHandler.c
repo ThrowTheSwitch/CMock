@@ -3,7 +3,7 @@
 #include "TimerInterruptHandler.h"
 #include "AT91SAM7X256.h"
 
-AT91S_TC  Timer0Peripheral;
+AT91S_TC  TimerCounter0Peripheral;
 
 void setUp(void)
 {
@@ -28,22 +28,22 @@ void testSetAndGetSystemTime(void)
 void testInterruptHandlerShouldIncrementSystemTimeOnlyIfStatusHasCompareRegisterCOverflowBitSet(void)
 {
   Timer_SetSystemTime(0);
-  TIMER0_BASE->TC_SR = 0;
+  AT91C_BASE_TC0->TC_SR = 0;
   Timer_InterruptHandler();
   TEST_ASSERT_EQUAL(0, Timer_GetSystemTime());
 
   Timer_SetSystemTime(0);
-  TIMER0_BASE->TC_SR = ~AT91C_TC_CPCS;
+  AT91C_BASE_TC0->TC_SR = ~AT91C_TC_CPCS;
   Timer_InterruptHandler();
   TEST_ASSERT_EQUAL(0, Timer_GetSystemTime());
 
   Timer_SetSystemTime(0);
-  TIMER0_BASE->TC_SR = AT91C_TC_CPCS;
+  AT91C_BASE_TC0->TC_SR = AT91C_TC_CPCS;
   Timer_InterruptHandler();
   TEST_ASSERT(Timer_GetSystemTime() > 0);
 
   Timer_SetSystemTime(0);
-  TIMER0_BASE->TC_SR = 0xffffffff;
+  AT91C_BASE_TC0->TC_SR = 0xffffffff;
   Timer_InterruptHandler();
   TEST_ASSERT(Timer_GetSystemTime() > 0);
 }
@@ -51,16 +51,16 @@ void testInterruptHandlerShouldIncrementSystemTimeOnlyIfStatusHasCompareRegister
 void testInterruptHandlerShouldIncrementSystemTimerBy_10(void)
 {
   Timer_SetSystemTime(0);
-  TIMER0_BASE->TC_SR = AT91C_TC_CPCS;
+  AT91C_BASE_TC0->TC_SR = AT91C_TC_CPCS;
   Timer_InterruptHandler();
   TEST_ASSERT_EQUAL(10, Timer_GetSystemTime());
 
-  TIMER0_BASE->TC_SR = AT91C_TC_CPCS;
+  AT91C_BASE_TC0->TC_SR = AT91C_TC_CPCS;
   Timer_InterruptHandler();
   TEST_ASSERT_EQUAL(20, Timer_GetSystemTime());
 
   Timer_SetSystemTime(39426857);
-  TIMER0_BASE->TC_SR = AT91C_TC_CPCS;
+  AT91C_BASE_TC0->TC_SR = AT91C_TC_CPCS;
   Timer_InterruptHandler();
   TEST_ASSERT_EQUAL(39426867, Timer_GetSystemTime());
 }

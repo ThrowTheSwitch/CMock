@@ -11,7 +11,7 @@ void Usart_PutChar(char data)
 #ifdef SIMULATE
   printf("%c", data);
 #else
-  USART_BASE->US_THR = data;
+  AT91C_BASE_US0->US_THR = data;
 #endif
 }
 

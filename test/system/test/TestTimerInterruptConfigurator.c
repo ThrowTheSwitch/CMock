@@ -5,7 +5,7 @@
 #include "AT91SAM7X256.h"
 
 AT91S_AIC AicPeripheral;
-AT91S_TC  Timer0Peripheral;
+AT91S_TC  TimerCounter0Peripheral;
 
 void setUp(void)
 {
@@ -65,9 +65,9 @@ void testConfigureInterruptShouldClearTimer0InterruptOnTheInterruptController(vo
 
 void testConfigureInterruptShouldEnableCompareInterruptForRegisterC(void)
 {
-  TIMER0_BASE->TC_IER = 0;
+  AT91C_BASE_TC0->TC_IER = 0;
   Timer_ConfigureInterrupt();
-  TEST_ASSERT_EQUAL(AT91C_TC_CPCS, TIMER0_BASE->TC_IER);
+  TEST_ASSERT_EQUAL(AT91C_TC_CPCS, AT91C_BASE_TC0->TC_IER);
 }
 
 void testEnableInterruptShouldEnableTimer0InterruptsInInterruptCotroller(void)
