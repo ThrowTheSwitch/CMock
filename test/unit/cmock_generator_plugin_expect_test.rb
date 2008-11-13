@@ -140,7 +140,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = ["  Mock.Apple_CallCount++;\n",
                 "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
                 "  {\n",
-                "    TEST_THROW(\"Apple Called More Times Than Expected\");\n",
+                "    TEST_FAIL(\"Apple Called More Times Than Expected\");\n",
                 "  }\n"
                ]
     returned = @cmock_generator_plugin_expect.mock_implementation(function_name, function_args)
@@ -158,7 +158,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = ["  Mock.Cherry_CallCount++;\n",
                 "  if (Mock.Cherry_CallCount > Mock.Cherry_CallsExpected)\n",
                 "  {\n",
-                "    TEST_THROW(\"Cherry Called More Times Than Expected\");\n",
+                "    TEST_FAIL(\"Cherry Called More Times Than Expected\");\n",
                 "  }\n",
                 "mocked_retval_1",
                 "mocked_retval_2"

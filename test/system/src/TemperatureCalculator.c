@@ -10,6 +10,11 @@ float TemperatureCalculator_Calculate(uint16 millivolts)
   const double coefficient_B = -0.1382009;
   double sensor_voltage = ((double)millivolts / 1000);
   double resistance;
+  
+  if (millivolts == 0)
+  {
+    return -INFINITY;
+  }
 
   // Series resistor is 5k Ohms; Reference voltage is 3.0V
   // R(t) = A * e^(B*t); R is resistance of thermisor; t is temperature in C

@@ -55,15 +55,15 @@ void testShouldWeightEachSubsequentValueBy25PercentAfterInitialValue(void)
 void setInvalidTemperatureAndVerifyReinitialized(float invalidTemperature)
 {
   TemperatureFilter_Init();
-  TEST_WRAP(setValueAndVerifyResponse(100.0f, 100.0f));
-  TEST_WRAP(setValueAndVerifyResponse(invalidTemperature, -INFINITY));
-  TEST_WRAP(setValueAndVerifyResponse(14.3f, 14.3f));
+  setValueAndVerifyResponse(100.0f, 100.0f);
+  setValueAndVerifyResponse(invalidTemperature, -INFINITY);
+  setValueAndVerifyResponse(14.3f, 14.3f);
 }
 
 void testShouldResetAverageIfPassedInfinityOrInvalidValue(void)
 {
-  TEST_WRAP(setInvalidTemperatureAndVerifyReinitialized(-INFINITY));
-  TEST_WRAP(setInvalidTemperatureAndVerifyReinitialized(+INFINITY));
-  TEST_WRAP(setInvalidTemperatureAndVerifyReinitialized(+NAN));
-  TEST_WRAP(setInvalidTemperatureAndVerifyReinitialized(-NAN));
+  setInvalidTemperatureAndVerifyReinitialized(-INFINITY);
+  setInvalidTemperatureAndVerifyReinitialized(+INFINITY);
+  setInvalidTemperatureAndVerifyReinitialized(+NAN);
+  setInvalidTemperatureAndVerifyReinitialized(-NAN);
 }

@@ -59,7 +59,7 @@ class CMockGeneratorPluginExpect
     lines << "#{@tab}Mock.#{function_name}_CallCount++;\n"
     lines << "#{@tab}if (Mock.#{function_name}_CallCount > Mock.#{function_name}_CallsExpected)\n"
     lines << "#{@tab}{\n"
-    lines << "#{@tab}#{@tab}TEST_THROW(\"#{function_name} Called More Times Than Expected\");\n"
+    lines << "#{@tab}#{@tab}TEST_FAIL(\"#{function_name} Called More Times Than Expected\");\n"
     lines << "#{@tab}}\n"
     function_args_as_array.each do |arg|
       arg_return_type = arg[:type].sub(/const/, '').strip

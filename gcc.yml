@@ -1,4 +1,34 @@
-compiler: 'gcc'
-linker: 'gcc'
-compile_flags: '-c'
-link_flags: ''
+compiler:
+  path: gcc
+  source_path:    'test/system/src/'
+  unit_tests_path: &unit_tests_path 'test/system/test/'
+  mocks_path:     'test/system/mocks/'
+  build_path:     &build_path 'test/system/build/'
+  options:
+    - -c
+  includes:
+    prefix: '-I'
+    items:
+      - 'test/system/src/'
+      - *unit_tests_path
+      - 'test/system/mocks/'
+      - 'vendor/unity/src/'
+  defines:
+    prefix: '-D'
+    items:
+  object_files:
+    prefix: '-o'
+    extension: '.o'
+    destination: *build_path
+linker:
+  path: gcc
+  options:
+  includes:
+    prefix: '-I'
+  object_files:
+    path: *build_path
+    extension: '.o'
+  bin_files:
+    prefix: '-o'
+    extension: '.exe'
+    destination: *build_path
