@@ -29,7 +29,7 @@
 #include "AdcModel.h"
 
 int AppMain(void)
-{  
+{
   Executor_Init();
 
   while(Executor_Run());

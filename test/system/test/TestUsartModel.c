@@ -36,5 +36,5 @@ void testShouldReturnErrorMessageUponInvalidTemperatureValue(void)
 
 void testShouldReturnWakeupMessage(void)
 {
-  TEST_ASSERT_EQUAL_STRING("It's Awesome Time!", UsartModel_GetWakeupMessage());
+  TEST_ASSERT_EQUAL_STRING("It's Awesome Time!\n", UsartModel_GetWakeupMessage());
 }

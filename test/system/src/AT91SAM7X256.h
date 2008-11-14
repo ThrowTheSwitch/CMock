@@ -2485,8 +2485,8 @@ extern AT91S_ADC    AdcPeripheral;
 #define PIOA_ADDR   0xFFFFF400
 #define PIOB_ADDR   0xFFFFF600
 #define PMC_ADDR    0xFFFFFC00
-#define US0_ADDR    0xFFFFFC00
-#define TC0_ADDR    0xFFFFFC00
+#define US0_ADDR    0xFFFC0000
+#define TC0_ADDR    0xFFFA0000
 #define ADC_ADDR    0xFFFD8000
 
 #endif // TEST

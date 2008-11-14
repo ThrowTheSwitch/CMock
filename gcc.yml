@@ -3,7 +3,7 @@ compiler:
   source_path:    'test/system/src/'
   unit_tests_path: &unit_tests_path 'test/system/test/'
   mocks_path:     'test/system/mocks/'
-  build_path:     &build_path 'test/system/build/'
+  build_path:      &build_path 'test/system/build/'
   options:
     - -c
   includes:

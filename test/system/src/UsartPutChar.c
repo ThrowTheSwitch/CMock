@@ -14,4 +14,3 @@ void Usart_PutChar(char data)
   AT91C_BASE_US0->US_THR = data;
 #endif
 }
-
