@@ -8,15 +8,15 @@ require 'rakefile_helper'
 
 include RakefileHelpers
 
+#load_configuration('gcc.yml') # Uncomment this line to enable GCC
+load_configuration('iar.yml') # Uncomment this line to enable IAR Embedded Workbench
 configure_clean
 
 task :default => [ :clobber, 'tests:all', :app ]
 
 desc "Build application"
 task :app do
-  COMPILER_CONFIGS.each do |cfg_file|
-    build_application(yaml_read(cfg_file), 'Main')
-  end
+  build_application('Main')
 end
 
 namespace :tests do
@@ -31,12 +31,10 @@ namespace :tests do
   
   desc "Run system tests"
   task :system => [:clean] do
-    COMPILER_CONFIGS.each do |cfg_file|
-      config = yaml_read(cfg_file)
-      systest_test_files = get_unit_test_files(config)
-      run_systests(config, systest_test_files)
-      report_summary(config)
-    end
+    systest_test_files = get_unit_test_files
+    run_systests(systest_test_files)
+    report_summary
   end
   
 end
+
