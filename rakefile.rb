@@ -19,7 +19,7 @@ task :app do
   build_application('Main')
 end
 
-namespace :tests do
+namespace :test do
 
   desc "Run unit and system tests"
   task :all => [:clean, :units, :system, :app]
@@ -34,6 +34,18 @@ namespace :tests do
     systest_test_files = get_unit_test_files
     run_systests(systest_test_files)
     report_summary
+  end
+  
+  get_unit_test_files.each do |test_file|
+    file_name = File.basename(test_file)
+    module_name = file_name.sub(/Test/,'')
+    task file_name do
+      run_systests(test_file)
+    end
+    desc "Test #{module_name}"
+    task module_name do
+      run_systests(test_file)
+    end
   end
   
 end
