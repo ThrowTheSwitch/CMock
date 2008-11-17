@@ -8,8 +8,8 @@ require 'rakefile_helper'
 
 include RakefileHelpers
 
-#load_configuration('gcc.yml') # Uncomment this line to enable GCC
-load_configuration('iar.yml') # Uncomment this line to enable IAR Embedded Workbench
+load_configuration('gcc.yml') # Uncomment this line to enable GCC
+#load_configuration('iar.yml') # Uncomment this line to enable IAR Embedded Workbench
 configure_clean
 
 task :default => [ :clobber, 'test:all', :app ]
