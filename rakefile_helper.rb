@@ -24,6 +24,11 @@ module RakefileHelpers
     CLEAN.include($cfg['compiler']['build_path'] + '*.*') unless $cfg['compiler']['mocks_path'].nil?
   end
   
+  def configure_toolchain(config_file)
+    load_configuration(config_file)
+    configure_clean
+  end
+  
   def get_unit_test_files
     path = $cfg['compiler']['unit_tests_path'] + 'Test*' + C_EXTENSION
     path.gsub!(/\\/, '/')
@@ -152,7 +157,7 @@ module RakefileHelpers
   
   def report_summary
     summary = UnityTestSummary.new
-    summary.set_root_path($here)
+    summary.set_root_path(HERE)
     results_glob = "#{$cfg['compiler']['build_path']}*.test*"
     results_glob.gsub!(/\\/, '/')
     results = Dir[results_glob]

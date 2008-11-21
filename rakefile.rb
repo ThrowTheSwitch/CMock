@@ -1,6 +1,6 @@
-$here = File.expand_path(File.dirname(__FILE__))
+HERE = File.expand_path(File.dirname(__FILE__)) + '/'
 
-require $here + '/config/environment'
+require HERE + 'config/environment'
 require 'rake'
 require 'rake/clean'
 require 'rake/testtask'
@@ -8,17 +8,22 @@ require 'rakefile_helper'
 
 include RakefileHelpers
 
-load_configuration('gcc.yml') # Uncomment this line to enable GCC
-#load_configuration('iar_v4.yml') # Uncomment this line to enable IAR Embedded Workbench v4
-#load_configuration('iar_v5.yml') # Uncomment this line to enable IAR Embedded Workbench v5
+DEFAULT_CONFIG_FILE = 'gcc.yml'
 
-configure_clean
+configure_toolchain(DEFAULT_CONFIG_FILE)
 
-task :default => [ :clobber, 'test:all', :app ]
+task :default => [:clobber, 'test:all', :app]
 
 desc "Build application"
 task :app do
   build_application('Main')
+end
+
+desc "Load configuration"
+task :config, :config_file do |t, args|
+  args = {:config_file => DEFAULT_CONFIG_FILE} if args[:config_file].nil?
+  args = {:config_file => args[:config_file] + '.yml'} unless args[:config_file] =~ /\.yml$/i
+  configure_toolchain(args[:config_file])
 end
 
 namespace :test do
@@ -35,7 +40,8 @@ namespace :test do
   task :example => [:clean] do
     systest_test_files = get_unit_test_files
     run_systests(systest_test_files)
-    report_summary
+    tests_failed = report_summary
+    raise "Unit tests failed." if (tests_failed > 0)
   end
   
   get_unit_test_files.each do |test_file|
