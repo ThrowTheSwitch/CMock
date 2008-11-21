@@ -75,15 +75,17 @@ module RakefileHelpers
 
   def build_compiler_fields
     command  = tackit($cfg['compiler']['path'])
-    defines  = ''
-    defines  = squash($cfg['compiler']['defines']['prefix'],
-                      $cfg['compiler']['defines']['items']) unless $cfg['compiler']['defines']['items'].nil?
+    if $cfg['compiler']['defines']['items'].nil?
+      defines  = ''
+    else
+      defines  = squash($cfg['compiler']['defines']['prefix'], $cfg['compiler']['defines']['items'])
+    end
     options  = squash('', $cfg['compiler']['options'])
     includes = squash($cfg['compiler']['includes']['prefix'], $cfg['compiler']['includes']['items'])
     includes = includes.gsub(/\\ /, ' ').gsub(/\\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
     return {:command => command, :defines => defines, :options => options, :includes => includes}
   end
-  
+
   def compile(file, defines=[])
     compiler = build_compiler_fields
     cmd_str = "#{compiler[:command]}#{compiler[:defines]}#{compiler[:options]}#{compiler[:includes]} #{file} " +
@@ -94,11 +96,16 @@ module RakefileHelpers
   
   def build_linker_fields
     command  = tackit($cfg['linker']['path'])
-    options  = ''
-    options  += squash('', $cfg['linker']['options']) unless $cfg['linker']['options'].nil?
-    includes = ''
-    includes += squash($cfg['linker']['includes']['prefix'],
-                       $cfg['linker']['includes']['items']) unless $cfg['linker']['includes']['items'].nil?
+    if $cfg['linker']['options'].nil?
+      options  = ''
+    else
+      options  = squash('', $cfg['linker']['options'])
+    end
+    if ($cfg['linker']['includes'].nil? || $cfg['linker']['includes']['items'].nil?)
+      includes = ''
+    else
+      includes = squash($cfg['linker']['includes']['prefix'], $cfg['linker']['includes']['items'])
+    end
     includes = includes.gsub(/\\ /, ' ').gsub(/\\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
     return {:command => command, :options => options, :includes => includes}
   end
@@ -115,15 +122,24 @@ module RakefileHelpers
   
   def build_simulator_fields
     return nil if $cfg['simulator'].nil?
-    command = ''
-    command += (tackit($cfg['simulator']['path']) + ' ') unless $cfg['simulator']['path'].nil?
-    pre_support = ''
-    pre_support = squash('', $cfg['simulator']['pre_support']) unless $cfg['simulator']['pre_support'].nil?
-    post_support = ''
-    post_support = squash('', $cfg['simulator']['post_support']) unless $cfg['simulator']['post_support'].nil?
+    if $cfg['simulator']['path'].nil?
+      command = ''
+    else
+      command = (tackit($cfg['simulator']['path']) + ' ')
+    end
+    if $cfg['simulator']['pre_support'].nil?
+      pre_support = ''
+    else
+      pre_support = squash('', $cfg['simulator']['pre_support'])
+    end
+    if $cfg['simulator']['post_support'].nil?
+      post_support = ''
+    else
+      post_support = squash('', $cfg['simulator']['post_support'])
+    end
     return {:command => command, :pre_support => pre_support, :post_support => post_support}
   end
-
+  
   def execute(command_string, verbose=true)
     report command_string
     output = `#{command_string}`.chomp
@@ -137,7 +153,10 @@ module RakefileHelpers
   def report_summary
     summary = UnityTestSummary.new
     summary.set_root_path($here)
-    summary.set_targets(Dir["#{$cfg['compiler']['build_path']}*.test*"])
+    results_glob = "#{$cfg['compiler']['build_path']}*.test*"
+    results_glob.gsub!(/\\/, '/')
+    results = Dir[results_glob]
+    summary.set_targets(results)
     summary.run
   end
   
@@ -163,7 +182,6 @@ module RakefileHelpers
         # Generate mock if a mock was included
         if header =~ /^Mock(.*)\.h/i
           module_name = $1
-          report "Generating mock for module #{module_name}..."
           cmock = CMock.new($cfg['compiler']['mocks_path'], ['Types.h'])
           cmock.setup_mocks("#{$cfg['compiler']['source_path']}#{module_name}.h")
         end
