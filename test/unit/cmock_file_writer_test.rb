@@ -23,15 +23,18 @@ class CMockFileWriterTest < Test::Unit::TestCase
   end
   
   should "create a file when requested and put a block of data in it" do
-    @config.expect.mock_path.returns("C:\\")
-    @config.expect.mock_path.returns("C:\\")
-  
-    @cmock_file_writer.create_file("test.txt") do |file, filename|
-      file << "VICTORY!"
+    begin
+      File.delete('test/unit/tmp/test.txt')
+    rescue
     end
+  
+    @config.expect.mock_path.returns("test/unit/tmp/")
+    @config.expect.mock_path.returns("test/unit/tmp/")
     
-    retval = File.open("C:\\test.txt", 'r').readlines[0]
-    assert_equal "VICTORY!", retval
+    @cmock_file_writer.create_file("test.txt") { |file, filename| file << 'VICTORY!' }
+    
+    retval = File.open('test/unit/tmp/test.txt', 'r').readlines[0]
+    assert_equal 'VICTORY!', retval
   end
   
 end
