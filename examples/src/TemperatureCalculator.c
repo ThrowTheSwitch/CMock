@@ -1,6 +1,6 @@
 #include "Types.h"
 #include "TemperatureCalculator.h"
-#include "math.h"
+#include <math.h>
 
 float TemperatureCalculator_Calculate(uint16 millivolts)
 {
