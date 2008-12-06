@@ -13,6 +13,7 @@ DEFAULT_CONFIG_FILE = 'gcc.yml'
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
 task :default => [:clobber, 'test:all', :app]
+task :cruise => [:default]
 
 desc "Build application"
 task :app do
