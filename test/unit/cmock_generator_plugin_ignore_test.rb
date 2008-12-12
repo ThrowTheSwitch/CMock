@@ -53,14 +53,28 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "add required code to implementation prefix" do
+  should "add required code to implementation prefix with void function" do
     function_name = "Mold"
     function_args = "void"
     function_return_type = "void"
+    
+    expected = ["  if (Mock.Mold_IgnoreBool)\n",
+                "  {\n",
+                "    return;\n",
+                "  }\n"
+               ]
+    returned = @cmock_generator_plugin_ignore.mock_implementation_prefix(function_name, function_return_type)
+    assert_equal(expected, returned)
+  end
+  
+  should "add required code to implementation prefix with return functions" do
+    function_name = "Mold"
+    function_args = "void"
+    function_return_type = "int"
   
     @utils.expect.make_handle_return(function_name, function_return_type, "    ").returns("    mock_return_1")
     
-    expected = ["  if (!Mock.Mold_IgnoreBool)\n",
+    expected = ["  if (Mock.Mold_IgnoreBool)\n",
                 "  {\n",
                 "    mock_return_1",
                 "  }\n"

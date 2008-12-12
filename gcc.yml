@@ -32,3 +32,9 @@ linker:
     prefix: '-o'
     extension: '.exe'
     destination: *build_path
+cmock:
+  mock_path: 'examples/mocks/'
+  includes:
+    - 'Types.h'
+  plugins:
+    - 'ignore'

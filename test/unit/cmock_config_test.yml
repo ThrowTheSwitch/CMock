@@ -1,0 +1,5 @@
+cmock:
+  plugins:
+    - 'soda'
+    - 'pizza'
+  cexception_throw_type: 'uint32'

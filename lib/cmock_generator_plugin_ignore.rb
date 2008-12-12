@@ -27,9 +27,13 @@ class CMockGeneratorPluginIgnore
   
   def mock_implementation_prefix(function_name, function_return_type)
     lines = []
-    lines << "#{@tab}if (!Mock.#{function_name}_IgnoreBool)\n"
+    lines << "#{@tab}if (Mock.#{function_name}_IgnoreBool)\n"
     lines << "#{@tab}{\n"  
-    lines << @utils.make_handle_return(function_name, function_return_type, "#{@tab}#{@tab}")
+    if (function_return_type == "void")
+      lines << "#{@tab}#{@tab}return;\n"
+    else
+      lines << @utils.make_handle_return(function_name, function_return_type, "#{@tab}#{@tab}")
+    end
     lines << "#{@tab}}\n"  
   end
   

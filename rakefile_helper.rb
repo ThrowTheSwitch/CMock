@@ -187,7 +187,7 @@ module RakefileHelpers
         # Generate mock if a mock was included
         if header =~ /^Mock(.*)\.h/i
           module_name = $1
-          cmock = CMock.new($cfg['compiler']['mocks_path'], ['Types.h'])
+          cmock = CMock.new($cfg_file)
           cmock.setup_mocks("#{$cfg['compiler']['source_path']}#{module_name}.h")
         end
         # Compile corresponding source file if it exists

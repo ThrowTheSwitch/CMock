@@ -19,6 +19,14 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   
   should "include the cexception library" do 
     expected = "#include \"Exception.h\"\n"
+    @config.expect.cexception_include.returns(nil)
+    returned = @cmock_generator_plugin_cexception.include_files
+    assert_equal(expected, returned)
+  end
+  
+  should "include the cexception library with a custom path if specified" do 
+    expected = "#include \"../cexception/lib/Exception.h\"\n"
+    @config.expect.cexception_include.returns("../cexception/lib/Exception.h")
     returned = @cmock_generator_plugin_cexception.include_files
     assert_equal(expected, returned)
   end

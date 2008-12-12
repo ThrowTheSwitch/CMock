@@ -73,3 +73,9 @@ simulator:
     - [*tools_root, 'arm\config\debugger\Atmel\ioat91sam7X256.ddf']
     - -d
     - sim
+cmock:
+  mock_path: 'examples/mocks/'
+  includes:
+    - 'Types.h'
+  plugins:
+    - 'ignore'

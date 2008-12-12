@@ -7,12 +7,9 @@ require "#{$here}/cmock_plugin_manager"
 require "#{$here}/cmock_generator_utils"
 
 class CMock
-
-  def initialize(mocks_path='mocks', includes=[], use_cexception=false, allow_ignore_mock=false)
-    @mocks_path = mocks_path
-    @includes = includes
-    @use_cexception = use_cexception
-    @allow_ignore_mock = allow_ignore_mock
+  
+  def initialize(options=nil)
+    @cfg = CMockConfig.new(options)
   end
   
   def setup_mocks(files)
@@ -26,13 +23,13 @@ class CMock
   def generate_mock(src)
     name = File.basename(src, '.h')
     path = File.dirname(src)
+    @cfg.set_path(path)
     
-    cm_config      = CMockConfig.new(path, @mocks_path, @includes, @use_cexception, @allow_ignore_mock)
     cm_parser      = CMockHeaderParser.new(File.read(src))
-    cm_writer      = CMockFileWriter.new(cm_config)
-    cm_gen_utils   = CMockGeneratorUtils.new(cm_config)
-    cm_gen_plugins = CMockPluginManager.new(cm_config, cm_gen_utils).get_generator_plugins
-    cm_generator   = CMockGenerator.new(cm_config, name, cm_writer, cm_gen_utils, cm_gen_plugins)
+    cm_writer      = CMockFileWriter.new(@cfg)
+    cm_gen_utils   = CMockGeneratorUtils.new(@cfg)
+    cm_gen_plugins = CMockPluginManager.new(@cfg, cm_gen_utils).get_generator_plugins
+    cm_generator   = CMockGenerator.new(@cfg, name, cm_writer, cm_gen_utils, cm_gen_plugins)
     
     puts "Creating mock for #{name}..."
     

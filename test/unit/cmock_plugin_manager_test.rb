@@ -17,8 +17,7 @@ class CMockPluginManagerTest < Test::Unit::TestCase
   
   should "return all plugins by default" do
     @config.stubs!(:tab).returns("  ")
-    @config.expect.use_cexception.returns(true)
-    @config.expect.allow_ignore_mock.returns(true)
+    @config.expect.plugins.returns(['cexception','ignore'])
     test_plugins = @cmock_plugins.get_generator_plugins
     contained = { :expect => false, :ignore => false, :cexception => false }
     test_plugins.each do |plugin|
@@ -33,8 +32,7 @@ class CMockPluginManagerTest < Test::Unit::TestCase
   
   should "return restricted plugins based on config" do
     @config.stubs!(:tab).returns("  ")
-    @config.expect.use_cexception.returns(false)
-    @config.expect.allow_ignore_mock.returns(false)
+    @config.expect.plugins.returns([])
     test_plugins = @cmock_plugins.get_generator_plugins
     contained = { :expect => false, :ignore => false, :cexception => false }
     test_plugins.each do |plugin|

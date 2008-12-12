@@ -10,7 +10,9 @@ class CMockGeneratorPluginCException
   end
   
   def include_files
-    return "#include \"Exception.h\"\n"
+    include = @config.cexception_include
+    include = "Exception.h" if (include.nil?)
+    return "#include \"#{include}\"\n"
   end
   
   def instance_structure(function_name, function_args_as_array, function_return_type)
