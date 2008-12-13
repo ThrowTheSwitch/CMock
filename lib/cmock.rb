@@ -37,3 +37,24 @@ class CMock
     cm_generator.create_mock(parsed_stuff)
   end
 end
+
+if ($0 == __FILE__)
+  usage = "usage: ruby #{__FILE__} (-oOptionsFile) File(s)ToMock"
+  
+  if (!ARGV[0])
+    puts usage
+    exit 1
+  end
+  
+  options = nil
+  filelist = []
+  ARGV.each do |arg|
+    if (arg =~ /^-o(\w*)/)
+      options = arg.gsub(/^-o/,'')
+    else
+      filelist << arg
+    end
+  end
+  
+  CMock.new(options).setup_mocks(filelist)
+end
