@@ -2,6 +2,10 @@
 #include "TemperatureCalculator.h"
 #include <math.h>
 
+#ifndef logl
+#define logl log
+#endif
+
 float TemperatureCalculator_Calculate(uint16 millivolts)
 {
   const double supply_voltage = 3.0;
