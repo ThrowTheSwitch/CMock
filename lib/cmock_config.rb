@@ -1,9 +1,6 @@
 
 class CMockConfig
 
-  attr_accessor :src_path, :mock_path, :tab, :includes, :plugins, :call_count_type, :ignore_bool_type, :cexception_include
-  attr_accessor :throw_type
-  
   CMockDefaultOptions = 
   {
     'mock_path' => 'mocks',
@@ -17,22 +14,14 @@ class CMockConfig
   }
   
   def initialize(options=nil)
-  
     case(options)
       when NilClass then options = CMockDefaultOptions.clone 
       when String   then options = CMockDefaultOptions.clone.merge(load_config_file_from_yaml(options))
       when Hash     then options = CMockDefaultOptions.clone.merge(options)
-      else               raise "If you specify parameters, it should be a filename or a hash of options"
+      else          raise "If you specify parameters, it should be a filename or a hash of options"
     end
-    
-    @mock_path          = options['mock_path']
-    @tab                = options['tab']
-    @includes           = options['includes']
-    @plugins            = options['plugins']
-    @call_count_type    = options['expect_call_count_type']
-    @ignore_bool_type   = options['ignore_bool_type']
-    @cexception_include = options['cexception_include']
-    @throw_type         = options['cexception_throw_type']
+    @options = options
+    @options.each_key { |key| eval("def #{key}() return @options['#{key}'] end") }
   end
   
   def load_config_file_from_yaml yaml_filename

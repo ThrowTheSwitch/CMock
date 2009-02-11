@@ -116,8 +116,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "#include \"ConfigRequiredHeader2.h\"\n",
                  "#include \"MockPoutPoutFish.h\"\n\n"
                ]
-    pluginhelper = MockedPluginHelper.new("#include \"PluginRequiredHeader.h\"\n")
-    @plugins.expect.each.yields(pluginhelper)
+    @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
     @config.expect.includes.returns(["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"])
   
     @cmock_generator.create_source_header_section(output, "MockPoutPoutFish.c", [])
@@ -137,7 +136,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     
     @cmock_generator.create_instance_structure(output, functions)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create the instance structure where it is needed when functions required" do 
@@ -154,15 +153,12 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  Dos_Second(bool Smarty, char)",
                  "} Mock;\n\n"
                ]
-
-    pluginhelper1 = MockedPluginHelper.new("Uno")
-    pluginhelper2 = MockedPluginHelper.new("Dos")
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
+    @plugins.expect.run(:instance_structure, functions[0]).returns(["  Uno_First(int Candy, int)","  Dos_First(int Candy, int)"])
+    @plugins.expect.run(:instance_structure, functions[1]).returns(["  Uno_Second(bool Smarty, char)","  Dos_Second(bool Smarty, char)"])
     
     @cmock_generator.create_instance_structure(output, functions)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create extern declarations for source file if no extra externs requested" do
@@ -172,17 +168,17 @@ class CMockGeneratorTest < Test::Unit::TestCase
     
     @cmock_generator.create_extern_declarations(output, externs)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create extern declarations for source file if extra externs requested" do
     externs = ["extern int whatever", "extern    short somethingelse"]
     output = []
-    expected = [ "int whatever",";\n", "short somethingelse",";\n", "extern jmp_buf AbortFrame;\n","\n"]
+    expected = [ "int whatever;\n", "short somethingelse;\n", "extern jmp_buf AbortFrame;\n","\n"]
     
     @cmock_generator.create_extern_declarations(output, externs)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create mock verify functions in source file when no functions specified" do
@@ -195,7 +191,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     
     @cmock_generator.create_mock_verify_function(output, functions)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create mock verify functions in source file when extra functions specified" do
@@ -211,15 +207,12 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  Dos_Second",
                  "}\n\n"
                ]
-    
-    pluginhelper1 = MockedPluginHelper.new("Uno")
-    pluginhelper2 = MockedPluginHelper.new("Dos")
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
+    @plugins.expect.run(:mock_verify, functions[0]).returns(["  Uno_First","  Dos_First"])
+    @plugins.expect.run(:mock_verify, functions[1]).returns(["  Uno_Second","  Dos_Second"])
     
     @cmock_generator.create_mock_verify_function(output, functions)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create mock init functions in source file" do
@@ -244,7 +237,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     
     @cmock_generator.create_mock_destroy_function(output, functions)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create mock destroy functions in source file when extra functions specified" do
@@ -260,15 +253,12 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  memset(&Mock, 0, sizeof(Mock));\n",
                  "}\n\n"
                ]
-    
-    pluginhelper1 = MockedPluginHelper.new("Uno")
-    pluginhelper2 = MockedPluginHelper.new("Dos")
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
+    @plugins.expect.run(:mock_destroy, functions[0]).returns(["  Uno_First(int Candy, int)","  Dos_First(int Candy, int)"])
+    @plugins.expect.run(:mock_destroy, functions[1]).returns(["  Uno_Second(bool Smarty, char)","  Dos_Second(bool Smarty, char)"])
     
     @cmock_generator.create_mock_destroy_function(output, functions)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create mock implementation functions in source file" do
@@ -291,16 +281,13 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  UtilsSupaFunction.bool",
                  "}\n\n"
                ]
-    
-    pluginhelper1 = MockedPluginHelper.new("Uno")
-    pluginhelper2 = MockedPluginHelper.new("Dos")
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
-    @utils.expect.make_handle_return("SupaFunction","bool","  ").returns("  UtilsSupaFunction.bool")
+    @plugins.expect.run(:mock_implementation_prefix, function).returns(["  PreSupaFunctionUno.bool","  PreSupaFunctionDos.bool"])
+    @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches, const char* named)","  MockSupaFunctionDos(uint32 sandwiches, const char* named)"])
+    @utils.expect.make_handle_return(function,"  ").returns("  UtilsSupaFunction.bool")
     
     @cmock_generator.create_mock_implementation(output, function)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
   
   should "create mock implementation functions in source file with different options" do
@@ -322,15 +309,12 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  UtilsSupaFunction.int",
                  "}\n\n"
                ]
-    
-    pluginhelper1 = MockedPluginHelper.new("Uno")
-    pluginhelper2 = MockedPluginHelper.new("Dos")
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
-	  @plugins.expect.each.yields(pluginhelper1, pluginhelper2)
-    @utils.expect.make_handle_return("SupaFunction","int","  ").returns("  UtilsSupaFunction.int")
+    @plugins.expect.run(:mock_implementation_prefix, function).returns(["  PreSupaFunctionUno.int","  PreSupaFunctionDos.int"])
+    @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches)","  MockSupaFunctionDos(uint32 sandwiches)"])
+    @utils.expect.make_handle_return(function,"  ").returns("  UtilsSupaFunction.int")
     
     @cmock_generator.create_mock_implementation(output, function)
     
-    assert_equal(expected, output)
+    assert_equal(expected, output.flatten)
   end
 end

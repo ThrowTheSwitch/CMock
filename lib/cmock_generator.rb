@@ -26,7 +26,7 @@ class CMockGenerator
       create_mock_header_header(file, filename)
       create_mock_header_externs(file, parsed_stuff)
       parsed_stuff[:functions].each do |function|
-        @plugins.each { |plugin| file << plugin.mock_function_declarations(function[:name], function[:args_string], function[:rettype]) }
+        file << @plugins.run(:mock_function_declarations, function)
       end
       create_mock_header_footer(file)
     end
@@ -42,7 +42,7 @@ class CMockGenerator
       create_mock_destroy_function(file, parsed_stuff[:functions])
       parsed_stuff[:functions].each do |function|
         create_mock_implementation(file, function)
-        @plugins.each { |plugin| file << plugin.mock_interfaces( function[:name], function[:args_string], function[:args], function[:rettype]) }
+        file << @plugins.run(:mock_interfaces, function)
       end
     end
   end
@@ -79,7 +79,7 @@ class CMockGenerator
     file << "#include <stdlib.h>\n"
     file << "#include <setjmp.h>\n"
     file << "#include \"unity.h\"\n"
-    @plugins.each { |plugin| file << plugin.include_files }
+    file << @plugins.run(:include_files)
     
     #(@config.includes + include_files).uniq.each {|include| file << "#include \"#{include}\"\n"}  #### This is what the comments said in original version, but it wasnt actually doing this
     @config.includes.each {|include| file << "#include \"#{include}\"\n"}
@@ -89,23 +89,16 @@ class CMockGenerator
   def create_instance_structure(file, functions)
     file << "static struct #{@mock_name}Instance\n"
     file << "{\n"
-    
     if (functions.size == 0)
       file << "#{@tab}unsigned char placeHolder;\n"
     end
-
     file << "#{@tab}unsigned char allocFailure;\n"
-
-    functions.each do |function|
-	    @plugins.each { |plugin| file << plugin.instance_structure( function[:name], function[:args], function[:rettype] ) }
-    end
+    file << functions.collect{|function| @plugins.run(:instance_structure, function)}.flatten
     file << "} Mock;\n\n"
   end
   
   def create_extern_declarations(file, externs)
-    externs.each do |extern|
-      file << extern.gsub(/extern\s*/,'') << ";\n"
-    end
+    file << externs.collect {|extern| extern.gsub(/extern\s*/,'') << ";\n"}.flatten
     file << "extern jmp_buf AbortFrame;\n"
     file << "\n"
   end
@@ -113,9 +106,7 @@ class CMockGenerator
   def create_mock_verify_function(file, functions)
     file << "void #{@mock_name}_Verify(void)\n{\n"
     file << "#{@tab}TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n"
-    functions.each do |function|
-      @plugins.each { |plugin| file << plugin.mock_verify(function[:name]) }
-    end
+    file << functions.collect {|function| @plugins.run(:mock_verify, function)}.flatten
     file << "}\n\n"
   end
   
@@ -127,9 +118,7 @@ class CMockGenerator
   
   def create_mock_destroy_function(file, functions)
     file << "void #{@mock_name}_Destroy(void)\n{\n"
-    functions.each do |function|
-	    @plugins.each { |plugin| file << plugin.mock_destroy(function[:name], function[:args], function[:rettype]) }
-    end
+    file << functions.collect {|function| @plugins.run(:mock_destroy, function) }.flatten
     file << "#{@tab}memset(&Mock, 0, sizeof(Mock));\n"
     file << "}\n\n"
   end
@@ -149,13 +138,12 @@ class CMockGenerator
     file << "#{function[:attributes]} " if (!function[:attributes].nil? && function[:attributes].length > 0)
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
-    
-    @plugins.each { |plugin| file << plugin.mock_implementation_prefix(function[:name], function[:rettype]) }
-	  @plugins.each { |plugin| file << plugin.mock_implementation(function[:name], function[:args]) }
+    file << @plugins.run(:mock_implementation_prefix, function)
+    file << @plugins.run(:mock_implementation, function)
     
     # Return expected value, if necessary
     if (function[:rettype] != "void")
-      file << @utils.make_handle_return(function[:name], function[:rettype], "#{@tab}")
+      file << @utils.make_handle_return(function, "#{@tab}")
     end
     
     # Close out the function

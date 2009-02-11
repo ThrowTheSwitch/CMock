@@ -5,6 +5,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
     @config.expect.tab.returns("  ")
+    @config.stubs!(:respond_to?).returns(true)
     @cmock_generator_plugin_cexception = CMockGeneratorPluginCException.new(@config, @utils)
   end
 
@@ -32,12 +33,9 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "add to control structure mock needs" do
-    function_name = "Oak"
-    function_args_as_array = []
-    function_return_type = "void"
-    
-    @config.expect.call_count_type.returns("uint32")
-    @config.expect.throw_type.returns("EXCEPTION_TYPE")
+    function = { :name => "Oak", :args => [], :rettype => "void" }
+    @config.expect.cexception_call_count_type.returns("uint32")
+    @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     
     expected = ["  uint32 *Oak_ThrowOnCallCount;\n",
                 "  uint32 *Oak_ThrowOnCallCount_Head;\n",
@@ -46,49 +44,35 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
                 "  EXCEPTION_TYPE *Oak_ThrowValue_Head;\n",
                 "  EXCEPTION_TYPE *Oak_ThrowValue_HeadTail;\n"
                ]
-    returned = @cmock_generator_plugin_cexception.instance_structure(function_name, function_args_as_array, function_return_type)
+    returned = @cmock_generator_plugin_cexception.instance_structure(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declarations for functions without arguments" do
-    function_name = "Spruce"
-    function_args_as_array = "void"
-    function_return_type = "void"
-    
-    @config.expect.throw_type.returns("EXCEPTION_TYPE")
+    function = { :name => "Spruce", :args_string => "void", :rettype => "void" }
+    @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     
     expected = "void Spruce_ExpectAndThrow(EXCEPTION_TYPE toThrow);\n"
-    returned = @cmock_generator_plugin_cexception.mock_function_declarations(function_name, function_args_as_array, function_return_type)
+    returned = @cmock_generator_plugin_cexception.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declarations for functions with arguments" do
-    function_name = "Spruce"
-    function_args_as_array = "const char* Petunia, uint32_t Lily"
-    function_return_type = "void"
-    
-    @config.expect.throw_type.returns("EXCEPTION_TYPE")
+    function = { :name => "Spruce", :args_string => "const char* Petunia, uint32_t Lily", :rettype => "void" }
+    @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
   
     expected = "void Spruce_ExpectAndThrow(const char* Petunia, uint32_t Lily, EXCEPTION_TYPE toThrow);\n"
-    returned = @cmock_generator_plugin_cexception.mock_function_declarations(function_name, function_args_as_array, function_return_type)
+    returned = @cmock_generator_plugin_cexception.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "add nothing during implementation prefix" do
-    function_name = "Pine"
-    function_return_type = "void"
-    
-    expected = []
-    returned = @cmock_generator_plugin_cexception.mock_implementation_prefix(function_name, function_return_type)
-    assert_equal(expected, returned)
+    assert(!@cmock_generator_plugin_cexception.respond_to?(:mock_implementation_prefix))
   end
   
   should "add a mock implementation" do
-    function_name = "Cherry"
-    function_args_as_array = []
-    function_return_type = "void"
-    
-    @config.expect.throw_type.returns("EXCEPTION_TYPE")
+    function = {:name => "Cherry", :args => [], :rettype => "void"}
+    @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
   
     expected = ["\n",
                 "  if((Mock.Cherry_ThrowOnCallCount != Mock.Cherry_ThrowOnCallCount_HeadTail) &&\n",
@@ -104,18 +88,14 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
                 "    }\n",
                 "  }\n"
                ]
-    returned = @cmock_generator_plugin_cexception.mock_implementation(function_name, function_args_as_array)
+    returned = @cmock_generator_plugin_cexception.mock_implementation(function)
     assert_equal(expected, returned)
   end
   
   should "add a mock interfaces for functions without arguments" do
-    function_name = "Pear"
-    function_args = "void"
-    function_args_as_array = []
-    function_return_type = "void"
-    
-    @config.expect.call_count_type.returns("uint32")
-    @config.expect.throw_type.returns("EXCEPTION_TYPE")
+    function = {:name => "Pear", :args_string => "void", :args => [], :rettype => "void"}
+    @config.expect.cexception_call_count_type.returns("uint32")
+    @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     @utils.expect.make_expand_array("uint32", "Mock.Pear_ThrowOnCallCount_Head", "Mock.Pear_CallsExpected").returns("mock_return_1")
     @utils.expect.make_expand_array("EXCEPTION_TYPE", "Mock.Pear_ThrowValue_Head", "toThrow").returns("mock_return_2")
   
@@ -130,21 +110,17 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
                 "  Mock.Pear_ThrowValue += Mock.Pear_CallCount;\n",
                 "}\n\n"
                ]
-    returned = @cmock_generator_plugin_cexception.mock_interfaces(function_name, function_args, function_args_as_array, function_return_type)
+    returned = @cmock_generator_plugin_cexception.mock_interfaces(function)
     assert_equal(expected, returned)
   end
   
   should "add a mock interfaces for functions with arguments" do
-    function_name = "Pear"
-    function_args = "int blah"
-    function_args_as_array = [{ :type => "int", :name => "blah" }]
-    function_return_type = "void"
-    
-    @config.expect.call_count_type.returns("uint32")
-    @config.expect.throw_type.returns("EXCEPTION_TYPE")
+    function = {:name => "Pear", :args_string => "int blah", :args => [{ :type => "int", :name => "blah" }], :rettype => "void"}
+    @config.expect.cexception_call_count_type.returns("uint32")
+    @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     @utils.expect.make_expand_array("uint32", "Mock.Pear_ThrowOnCallCount_Head", "Mock.Pear_CallsExpected").returns("mock_return_1")
     @utils.expect.make_expand_array("EXCEPTION_TYPE", "Mock.Pear_ThrowValue_Head", "toThrow").returns("mock_return_2")
-    @utils.expect.create_call_list(function_args_as_array).returns("mock_return_3")
+    @utils.expect.create_call_list(function).returns("mock_return_3")
     
     expected = ["void Pear_ExpectAndThrow(int blah, EXCEPTION_TYPE toThrow)\n",
                 "{\n",
@@ -158,19 +134,16 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
                 "  ExpectParameters_Pear(mock_return_3);\n",
                 "}\n\n"
                ]
-    returned = @cmock_generator_plugin_cexception.mock_interfaces(function_name, function_args, function_args_as_array, function_return_type)
+    returned = @cmock_generator_plugin_cexception.mock_interfaces(function)
     assert_equal(expected, returned)
   end
   
   should "have nothing to say about verifying" do
-    assert_equal([], @cmock_generator_plugin_cexception.mock_verify("Maple"))
+    assert(!@cmock_generator_plugin_cexception.respond_to?(:mock_verify))
   end
   
   should "add necessary baggage to destroy function" do
-    function_name = "Banana"
-    function_args_as_array = []
-    function_return_type = "void"
-  
+    function = {:name => "Banana", :args_string => "", :args => [], :rettype => "void"}
     expected = ["  if(Mock.Banana_ThrowOnCallCount_Head)\n",
                 "  {\n",
                 "    free(Mock.Banana_ThrowOnCallCount_Head);\n",
@@ -184,7 +157,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
                 "    Mock.Banana_ThrowValue_HeadTail=NULL;\n",
                 "  }\n"
                ]
-    returned = @cmock_generator_plugin_cexception.mock_destroy(function_name, function_args_as_array, function_return_type)
+    returned = @cmock_generator_plugin_cexception.mock_destroy(function)
     assert_equal(expected, returned)
   end
 end

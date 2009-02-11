@@ -14,10 +14,10 @@ class CMockConfigTest < Test::Unit::TestCase
     assert_equal(CMockConfig::CMockDefaultOptions['includes'],              config.includes)
     assert_equal(CMockConfig::CMockDefaultOptions['plugins'],               config.plugins)
     assert_equal(CMockConfig::CMockDefaultOptions['tab'],                   config.tab)
-    assert_equal(CMockConfig::CMockDefaultOptions['expect_call_count_type'],config.call_count_type)
+    assert_equal(CMockConfig::CMockDefaultOptions['expect_call_count_type'],config.expect_call_count_type)
     assert_equal(CMockConfig::CMockDefaultOptions['ignore_bool_type'],      config.ignore_bool_type)
     assert_equal(CMockConfig::CMockDefaultOptions['cexception_include'],    config.cexception_include)
-    assert_equal(CMockConfig::CMockDefaultOptions['cexception_throw_type'], config.throw_type)
+    assert_equal(CMockConfig::CMockDefaultOptions['cexception_throw_type'], config.cexception_throw_type)
   end
   
   should "replace only options specified in a hash" do
@@ -28,10 +28,10 @@ class CMockConfigTest < Test::Unit::TestCase
     assert_equal(test_includes,                                             config.includes)
     assert_equal(CMockConfig::CMockDefaultOptions['plugins'],               config.plugins)
     assert_equal(CMockConfig::CMockDefaultOptions['tab'],                   config.tab)
-    assert_equal(CMockConfig::CMockDefaultOptions['expect_call_count_type'],config.call_count_type)
+    assert_equal(CMockConfig::CMockDefaultOptions['expect_call_count_type'],config.expect_call_count_type)
     assert_equal(test_bool_type,                                            config.ignore_bool_type)
     assert_equal(CMockConfig::CMockDefaultOptions['cexception_include'],    config.cexception_include)
-    assert_equal(CMockConfig::CMockDefaultOptions['cexception_throw_type'], config.throw_type)
+    assert_equal(CMockConfig::CMockDefaultOptions['cexception_throw_type'], config.cexception_throw_type)
   end
   
   should "replace only options specified in a yaml file" do
@@ -42,9 +42,9 @@ class CMockConfigTest < Test::Unit::TestCase
     assert_equal(CMockConfig::CMockDefaultOptions['includes'],              config.includes)
     assert_equal(test_plugins,                                              config.plugins)
     assert_equal(CMockConfig::CMockDefaultOptions['tab'],                   config.tab)
-    assert_equal(CMockConfig::CMockDefaultOptions['expect_call_count_type'],config.call_count_type)
+    assert_equal(CMockConfig::CMockDefaultOptions['expect_call_count_type'],config.expect_call_count_type)
     assert_equal(CMockConfig::CMockDefaultOptions['ignore_bool_type'],      config.ignore_bool_type)
     assert_equal(CMockConfig::CMockDefaultOptions['cexception_include'],    config.cexception_include)
-    assert_equal(test_throw_type,                                           config.throw_type)
+    assert_equal(test_throw_type,                                           config.cexception_throw_type)
   end
 end

@@ -7,64 +7,52 @@ class CMockGeneratorPluginIgnore
     @config = config
 	  @tab = @config.tab
     @utils = utils
+
+    ["ignore_bool_type"].each do |req|
+      raise "'#{req}' needs to be defined in config" unless @config.respond_to?(req)
+    end
   end
   
-  def include_files
-    []
+  def instance_structure(function)
+    return "#{@tab}#{@config.ignore_bool_type} #{function[:name]}_IgnoreBool;\n"
   end
   
-  def instance_structure(function_name, function_args_as_array, function_return_type)
-    return "#{@tab}#{@config.ignore_bool_type} #{function_name}_IgnoreBool;\n"
-  end
-  
-  def mock_function_declarations(function_name, function_args, function_return_type)
-    if (function_return_type == "void")
-      return "void #{function_name}_Ignore(void);\n"
+  def mock_function_declarations(function)
+    if (function[:rettype] == "void")
+      return "void #{function[:name]}_Ignore(void);\n"
     else        
-      return "void #{function_name}_IgnoreAndReturn(#{function_return_type} toReturn);\n"
+      return "void #{function[:name]}_IgnoreAndReturn(#{function[:rettype]} toReturn);\n"
     end 
   end
   
-  def mock_implementation_prefix(function_name, function_return_type)
+  def mock_implementation_prefix(function)
     lines = []
-    lines << "#{@tab}if (Mock.#{function_name}_IgnoreBool)\n"
+    lines << "#{@tab}if (Mock.#{function[:name]}_IgnoreBool)\n"
     lines << "#{@tab}{\n"  
-    if (function_return_type == "void")
+    if (function[:rettype] == "void")
       lines << "#{@tab}#{@tab}return;\n"
     else
-      lines << @utils.make_handle_return(function_name, function_return_type, "#{@tab}#{@tab}")
+      lines << @utils.make_handle_return(function, "#{@tab}#{@tab}")
     end
     lines << "#{@tab}}\n"  
   end
   
-  def mock_implementation(function_name, function_args_as_array)
-    []
-  end
-  
-  def mock_interfaces(function_name, function_args, function_args_as_array, function_return_type)
+  def mock_interfaces(function)
     lines = []
-    if (function_return_type == "void")
-      lines << "void #{function_name}_Ignore(void)\n"
+    if (function[:rettype] == "void")
+      lines << "void #{function[:name]}_Ignore(void)\n"
       lines << "{\n"
-      lines << "#{@tab}Mock.#{function_name}_IgnoreBool = (unsigned char)1;\n"
+      lines << "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n"
       lines << "}\n\n"
     else
-      lines << "void #{function_name}_IgnoreAndReturn(#{function_return_type} toReturn)\n"
+      lines << "void #{function[:name]}_IgnoreAndReturn(#{function[:rettype]} toReturn)\n"
       lines << "{\n"
-      lines << "#{@tab}Mock.#{function_name}_IgnoreBool = (unsigned char)1;\n"
-      lines << @utils.make_expand_array(function_return_type, "Mock.#{function_name}_Return_Head", "toReturn")
-      lines << "#{@tab}Mock.#{function_name}_Return = Mock.#{function_name}_Return_Head;\n"
-      lines << "#{@tab}Mock.#{function_name}_Return += Mock.#{function_name}_CallCount;\n"
+      lines << "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n"
+      lines << @utils.make_expand_array(function[:rettype], "Mock.#{function[:name]}_Return_Head", "toReturn")
+      lines << "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n"
+      lines << "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
       lines << "}\n\n"
     end
     return lines
-  end
-  
-  def mock_verify(function_name)
-    []
-  end
-  
-  def mock_destroy(function_name, function_args_as_array, function_return_type)
-    []
   end
 end

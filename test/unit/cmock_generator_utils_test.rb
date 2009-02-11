@@ -17,26 +17,23 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
   
   should "set up an empty call list if no arguments passed" do
-    args = []
-    
+    function = {:args => []}
     expected = ""
-    returned = @cmock_generator_utils.create_call_list(args)
+    returned = @cmock_generator_utils.create_call_list(function)
     assert_equal(expected, returned)
   end
   
   should "set up a single call list if one arguments passed" do
-    args = [{ :type => "const char*", :name => "spoon"}]
-    
+    function = {:args => [{ :type => "const char*", :name => "spoon"}]}
     expected = "spoon"
-    returned = @cmock_generator_utils.create_call_list(args)
+    returned = @cmock_generator_utils.create_call_list(function)
     assert_equal(expected, returned)
   end
   
   should "set up a call list if multiple arguments passed" do
-    args = [{ :type => "const char*", :name => "spoon"}, { :type => "int", :name => "fork"}, { :type => "unsigned int", :name => "knife"}]
-    
+    function = {:args => [{ :type => "const char*", :name => "spoon"}, { :type => "int", :name => "fork"}, { :type => "unsigned int", :name => "knife"}] }
     expected = "spoon, fork, knife"
-    returned = @cmock_generator_utils.create_call_list(args)
+    returned = @cmock_generator_utils.create_call_list(function)
     assert_equal(expected, returned)
   end
   
@@ -72,10 +69,8 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
   
   should "make handle return" do 
-    func_name = "Spatula"
-    func_rettype = "uint64"
+    function = { :name => "Spatula", :rettype => "uint64"}
     indent = "[tab]"
-    
     expected = ["\n",
                 "[tab]if(Mock.Spatula_Return != Mock.Spatula_Return_HeadTail)\n",
                 "[tab]{\n",
@@ -88,12 +83,12 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "[tab]  return *Mock.Spatula_Return_Head;\n",
                 "[tab]}\n"
                ]
-    returned = @cmock_generator_utils.make_handle_return(func_name, func_rettype, indent)
+    returned = @cmock_generator_utils.make_handle_return(function, indent)
     assert_equal(expected, returned)
   end
   
   should "add new expected handler" do
-    func_name = "PizzaCutter"
+    function = { :name => "PizzaCutter", :rettype => "uint64"}
     var_type = "uint16"
     var_name = "Spork"
     
@@ -122,12 +117,12 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  Mock.PizzaCutter_Expected_Spork = Mock.PizzaCutter_Expected_Spork_Head;\n",
                 "  Mock.PizzaCutter_Expected_Spork += Mock.PizzaCutter_CallCount;\n"
                ]
-    returned = @cmock_generator_utils.make_add_new_expected(func_name, var_type, var_name)
+    returned = @cmock_generator_utils.make_add_new_expected(function, var_type, var_name)
     assert_equal(expected, returned)
   end
   
   should "make handle expected for non character strings" do
-    func_name = "CanOpener"
+    function = { :name => "CanOpener", :rettype => "uint64"}
     var_type = "uint16"
     var_name = "CorkScrew"
     
@@ -139,12 +134,12 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    TEST_ASSERT_EQUAL_MESSAGE(*p_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for parameter 'CorkScrew'.\");\n",
                 "  }\n"
                ]
-    returned = @cmock_generator_utils.make_handle_expected(func_name, var_type, var_name)
+    returned = @cmock_generator_utils.make_handle_expected(function, var_type, var_name)
     assert_equal(expected, returned)
   end
   
   should "make handle expected for character strings" do
-    func_name = "MeasureCup"
+    function = { :name => "MeasureCup", :rettype => "uint64"}
     var_type = "const char*"
     var_name = "TeaSpoon"
     
@@ -156,7 +151,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected string for parameter 'TeaSpoon'.\");\n",
                 "  }\n"
                ]
-    returned = @cmock_generator_utils.make_handle_expected(func_name, var_type, var_name)
+    returned = @cmock_generator_utils.make_handle_expected(function, var_type, var_name)
     assert_equal(expected, returned)
   end
 end

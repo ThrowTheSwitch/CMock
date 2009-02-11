@@ -28,7 +28,7 @@ class CMock
     cm_parser      = CMockHeaderParser.new(File.read(src))
     cm_writer      = CMockFileWriter.new(@cfg)
     cm_gen_utils   = CMockGeneratorUtils.new(@cfg)
-    cm_gen_plugins = CMockPluginManager.new(@cfg, cm_gen_utils).get_generator_plugins
+    cm_gen_plugins = CMockPluginManager.new(@cfg, cm_gen_utils)
     cm_generator   = CMockGenerator.new(@cfg, name, cm_writer, cm_gen_utils, cm_gen_plugins)
     
     puts "Creating mock for #{name}..."

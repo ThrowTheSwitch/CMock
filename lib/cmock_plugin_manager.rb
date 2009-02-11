@@ -5,19 +5,21 @@ require "#{$here}/cmock_generator_plugin_cexception.rb"
 
 class CMockPluginManager
 
-  attr_reader :config, :utils
-
+  attr_accessor :plugins
+  
   def initialize(config, utils)
-    @config = config
-    @utils = utils
+    plugins_to_load = config.plugins
+    @plugins = []
+    @plugins << CMockGeneratorPluginExpect.new( config, utils ) 
+    @plugins << CMockGeneratorPluginCException.new( config, utils ) if plugins_to_load.include? 'cexception'
+    @plugins << CMockGeneratorPluginIgnore.new( config, utils )     if plugins_to_load.include? 'ignore'
   end
   
-  def get_generator_plugins
-    plugins_to_load = @config.plugins
-  	@plugins = []
-  	@plugins << CMockGeneratorPluginExpect.new( @config, @utils ) 
-  	@plugins << CMockGeneratorPluginCException.new( @config, @utils ) if plugins_to_load.include? 'cexception'
-  	@plugins << CMockGeneratorPluginIgnore.new( @config, @utils )     if plugins_to_load.include? 'ignore'
-    return @plugins
+  def run(method, args=nil)
+    if args.nil?
+      return @plugins.collect{ |plugin| plugin.send(method) if plugin.respond_to?(method) }.flatten
+    else
+      return @plugins.collect{ |plugin| plugin.send(method, args) if plugin.respond_to?(method) }.flatten
+    end
   end
 end
