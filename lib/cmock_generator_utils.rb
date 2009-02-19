@@ -82,7 +82,7 @@ class CMockGeneratorUtils
     unity_msg  = (unity_func =~ /_MESSAGE/) ? ", #{msg}" : ''
     if (unity_func == "TEST_ASSERT_EQUAL_MEMORY_MESSAGE") 
       full_expected = (expected.strip[0] == 42) ? expected.slice(1..-1) : "&(#{expected})"
-      return "#{unity_func}(#{full_expected}, &(#{actual}), sizeof(#{c_type})#{unity_msg})"  
+      return "#{unity_func}((void*)#{full_expected}, (void*)&(#{actual}), sizeof(#{c_type})#{unity_msg})"  
     else
       return "#{unity_func}(#{expected}, #{actual}#{unity_msg})" 
     end  
