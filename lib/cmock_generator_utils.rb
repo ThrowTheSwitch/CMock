@@ -48,17 +48,16 @@ class CMockGeneratorUtils
   
   def code_handle_return_value(function, indent)
     lines = ["\n"]
-    lines << "#{indent}#{function[:rettype]} toReturn;\n"
-    lines << "#{indent}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_HeadTail)\n"
+    lines << "#{indent}if(Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_HeadTail)\n"
     lines << "#{indent}{\n"
-    lines << "#{indent}#{@tab}memcpy(&toReturn, Mock.#{function[:name]}_Return, sizeof(#{function[:rettype]}));\n"
+    lines << "#{indent}#{@tab}#{function[:rettype]} toReturn = *Mock.#{function[:name]}_Return;\n"
     lines << "#{indent}#{@tab}Mock.#{function[:name]}_Return++;\n"
+    lines << "#{indent}#{@tab}return toReturn;\n"
     lines << "#{indent}}\n"
     lines << "#{indent}else\n"
     lines << "#{indent}{\n"
-    lines << "#{indent}#{@tab}memcpy(&toReturn, Mock.#{function[:name]}_Return_Head, sizeof(#{function[:rettype]}));\n"
+    lines << "#{indent}#{@tab}return *Mock.#{function[:name]}_Return_Head;\n"
     lines << "#{indent}}\n"
-    lines << "#{indent}return toReturn;\n"
   end
   
   def code_add_an_arg_expectation(function, arg_type, expected)
