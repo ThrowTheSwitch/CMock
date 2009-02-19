@@ -202,7 +202,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    SOME_STRUCT* p_expected = Mock.Toaster_Expected_Bread;\n",
                 "    Mock.Toaster_Expected_Bread++;\n",
-                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE(p_expected, &(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for parameter 'Bread'.\");\n",
+                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)p_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for parameter 'Bread'.\");\n",
                 "  }\n"
                ]
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
