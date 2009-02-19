@@ -16,4 +16,3 @@ void Adc_EnableTemperatureChannel(void)
 {
   AT91C_BASE_ADC->ADC_CHER = 0x10;
 }
-

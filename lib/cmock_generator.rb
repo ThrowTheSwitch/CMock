@@ -143,7 +143,7 @@ class CMockGenerator
     
     # Return expected value, if necessary
     if (function[:rettype] != "void")
-      file << @utils.make_handle_return(function, "#{@tab}")
+      file << @utils.code_handle_return_value(function, "#{@tab}")
     end
     
     # Close out the function

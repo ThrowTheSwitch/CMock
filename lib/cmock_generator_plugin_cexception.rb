@@ -63,10 +63,10 @@ class CMockGeneratorPluginCException
     lines << "void #{function[:name]}_ExpectAndThrow(#{arg_insert}#{throw_type} toThrow)\n"
     lines << "{\n"
     lines << "#{@tab}Mock.#{function[:name]}_CallsExpected++;\n"
-    lines << @utils.make_expand_array(call_count_type, "Mock.#{function[:name]}_ThrowOnCallCount_Head", "Mock.#{function[:name]}_CallsExpected")
+    lines << @utils.code_insert_item_into_expect_array(call_count_type, "Mock.#{function[:name]}_ThrowOnCallCount_Head", "Mock.#{function[:name]}_CallsExpected")
     lines << "#{@tab}Mock.#{function[:name]}_ThrowOnCallCount = Mock.#{function[:name]}_ThrowOnCallCount_Head;\n"
     lines << "#{@tab}Mock.#{function[:name]}_ThrowOnCallCount += Mock.#{function[:name]}_CallCount;\n"
-    lines << @utils.make_expand_array(throw_type, "Mock.#{function[:name]}_ThrowValue_Head", "toThrow")
+    lines << @utils.code_insert_item_into_expect_array(throw_type, "Mock.#{function[:name]}_ThrowValue_Head", "toThrow")
     lines << "#{@tab}Mock.#{function[:name]}_ThrowValue = Mock.#{function[:name]}_ThrowValue_Head;\n"      
     lines << "#{@tab}Mock.#{function[:name]}_ThrowValue += Mock.#{function[:name]}_CallCount;\n"
     lines << "#{@tab}ExpectParameters_#{function[:name]}(#{@utils.create_call_list(function)});\n" if (function[:args_string] != "void")

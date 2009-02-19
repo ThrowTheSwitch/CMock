@@ -3,7 +3,7 @@ require File.expand_path(File.dirname(__FILE__)) + "/../../lib/cmock_generator_u
 
 class CMockGeneratorUtilsTest < Test::Unit::TestCase
   def setup
-    create_mocks :config
+    create_mocks :config, :unity_helper
     @config.expect.tab.returns("  ")
     @cmock_generator_utils = CMockGeneratorUtils.new(@config)
   end
@@ -14,6 +14,16 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_utils.config)
     assert_equal("  ",    @cmock_generator_utils.tab)
+    assert_equal({},      @cmock_generator_utils.helpers)
+  end
+  
+  should "have set up internal accessors correctly on init, complete with passed helpers" do
+    create_mocks :config
+    @config.expect.tab.returns("  ")
+    @cmock_generator_utils = CMockGeneratorUtils.new(@config, {:A, :B})
+    assert_equal(@config, @cmock_generator_utils.config)
+    assert_equal("  ",    @cmock_generator_utils.tab)
+    assert_equal({:A, :B},@cmock_generator_utils.helpers)
   end
   
   should "set up an empty call list if no arguments passed" do
@@ -64,7 +74,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    arrayTail = &array[sz+1];\n",
                 "  }\n"
                ]
-    returned = @cmock_generator_utils.make_expand_array(the_type, the_array, new_value)
+    returned = @cmock_generator_utils.code_insert_item_into_expect_array(the_type, the_array, new_value)
     assert_equal(expected, returned)
   end
   
@@ -72,18 +82,19 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => "Spatula", :rettype => "uint64"}
     indent = "[tab]"
     expected = ["\n",
-                "[tab]if(Mock.Spatula_Return != Mock.Spatula_Return_HeadTail)\n",
+                "[tab]uint64 toReturn;\n",
+                "[tab]if (Mock.Spatula_Return != Mock.Spatula_Return_HeadTail)\n",
                 "[tab]{\n",
-                "[tab]  uint64 toReturn = *Mock.Spatula_Return;\n",
+                "[tab]  memcpy(&toReturn, Mock.Spatula_Return, sizeof(uint64));\n",
                 "[tab]  Mock.Spatula_Return++;\n",
-                "[tab]  return toReturn;\n",
                 "[tab]}\n",
                 "[tab]else\n",
                 "[tab]{\n",
-                "[tab]  return *Mock.Spatula_Return_Head;\n",
-                "[tab]}\n"
+                "[tab]  memcpy(&toReturn, Mock.Spatula_Return_Head, sizeof(uint64));\n",
+                "[tab]}\n",
+                "[tab]return toReturn;\n"
                ]
-    returned = @cmock_generator_utils.make_handle_return(function, indent)
+    returned = @cmock_generator_utils.code_handle_return_value(function, indent)
     assert_equal(expected, returned)
   end
   
@@ -117,7 +128,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  Mock.PizzaCutter_Expected_Spork = Mock.PizzaCutter_Expected_Spork_Head;\n",
                 "  Mock.PizzaCutter_Expected_Spork += Mock.PizzaCutter_CallCount;\n"
                ]
-    returned = @cmock_generator_utils.make_add_new_expected(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_add_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
   
@@ -127,31 +138,74 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     var_name = "CorkScrew"
     
     expected = ["\n",
-                "  if(Mock.CanOpener_Expected_CorkScrew != Mock.CanOpener_Expected_CorkScrew_HeadTail)\n",
+                "  if (Mock.CanOpener_Expected_CorkScrew != Mock.CanOpener_Expected_CorkScrew_HeadTail)\n",
                 "  {\n",
                 "    uint16* p_expected = Mock.CanOpener_Expected_CorkScrew;\n",
                 "    Mock.CanOpener_Expected_CorkScrew++;\n",
                 "    TEST_ASSERT_EQUAL_MESSAGE(*p_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for parameter 'CorkScrew'.\");\n",
                 "  }\n"
                ]
-    returned = @cmock_generator_utils.make_handle_expected(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
-  
+
   should "make handle expected for character strings" do
     function = { :name => "MeasureCup", :rettype => "uint64"}
     var_type = "const char*"
     var_name = "TeaSpoon"
     
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_STRING_MESSAGE")
+    
     expected = ["\n",
-                "  if(Mock.MeasureCup_Expected_TeaSpoon != Mock.MeasureCup_Expected_TeaSpoon_HeadTail)\n",
+                "  if (Mock.MeasureCup_Expected_TeaSpoon != Mock.MeasureCup_Expected_TeaSpoon_HeadTail)\n",
                 "  {\n",
                 "    const char** p_expected = Mock.MeasureCup_Expected_TeaSpoon;\n",
                 "    Mock.MeasureCup_Expected_TeaSpoon++;\n",
-                "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected string for parameter 'TeaSpoon'.\");\n",
+                "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected value for parameter 'TeaSpoon'.\");\n",
                 "  }\n"
                ]
-    returned = @cmock_generator_utils.make_handle_expected(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    assert_equal(expected, returned)
+  end
+  
+  should "make handle expected for custom types" do
+    function = { :name => "TeaPot", :rettype => "uint64"}
+    var_type = "MANDELBROT_SET_T"
+    var_name = "TeaSpoon"
+    
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE")
+    
+    expected = ["\n",
+                "  if (Mock.TeaPot_Expected_TeaSpoon != Mock.TeaPot_Expected_TeaSpoon_HeadTail)\n",
+                "  {\n",
+                "    MANDELBROT_SET_T* p_expected = Mock.TeaPot_Expected_TeaSpoon;\n",
+                "    Mock.TeaPot_Expected_TeaSpoon++;\n",
+                "    TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE(*p_expected, TeaSpoon, \"Function 'TeaPot' called with unexpected value for parameter 'TeaSpoon'.\");\n",
+                "  }\n"
+               ]
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    assert_equal(expected, returned)
+  end
+
+  should "make handle default types with memory compares, which involves extra work" do
+    function = { :name => "Toaster", :rettype => "uint64"}
+    var_type = "SOME_STRUCT"
+    var_name = "Bread"
+    
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_MEMORY_MESSAGE")
+    
+    expected = ["\n",
+                "  if (Mock.Toaster_Expected_Bread != Mock.Toaster_Expected_Bread_HeadTail)\n",
+                "  {\n",
+                "    SOME_STRUCT* p_expected = Mock.Toaster_Expected_Bread;\n",
+                "    Mock.Toaster_Expected_Bread++;\n",
+                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE(p_expected, &(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for parameter 'Bread'.\");\n",
+                "  }\n"
+               ]
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
 end

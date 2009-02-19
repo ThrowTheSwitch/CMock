@@ -1,12 +1,13 @@
 
 class CMockGeneratorPluginExpect
 
-  attr_reader :config, :utils, :tab
+  attr_reader :config, :utils, :tab, :unity_helper
 
   def initialize(config, utils)
     @config = config
 	  @tab = @config.tab
     @utils = utils
+    @unity_helper = @utils.helpers[:unity_helper]
   end
   
   def instance_structure(function)
@@ -55,7 +56,7 @@ class CMockGeneratorPluginExpect
     lines << "#{@tab}}\n"
     function[:args].each do |arg|
       arg_return_type = arg[:type].sub(/const/, '').strip
-      lines << @utils.make_handle_expected(function, arg_return_type, arg[:name])
+      lines << @utils.code_verify_an_arg_expectation(function, arg_return_type, arg[:name])
     end
     lines
   end
@@ -69,7 +70,7 @@ class CMockGeneratorPluginExpect
       lines << "{\n"
       function[:args].each do |arg|
         type = arg[:type].sub(/const/, '').strip
-        lines << @utils.make_add_new_expected(function, type, arg[:name])
+        lines << @utils.code_add_an_arg_expectation(function, type, arg[:name])
       end
       lines << "}\n\n"
     end
@@ -92,7 +93,7 @@ class CMockGeneratorPluginExpect
     end
     
     if (function[:rettype] != "void")
-      lines << @utils.make_expand_array(function[:rettype], "Mock.#{function[:name]}_Return_Head", "toReturn")
+      lines << @utils.code_insert_item_into_expect_array(function[:rettype], "Mock.#{function[:name]}_Return_Head", "toReturn")
       lines << "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n"
       lines << "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
     end

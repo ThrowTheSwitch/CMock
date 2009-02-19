@@ -16,3 +16,12 @@ void AdcConductor_Run(void)
     AdcHardware_StartConversion();
   }
 }
+
+bool AdcConductor_JustHereToTest(void)
+{
+    EXAMPLE_STRUCT_T ExampleStruct;
+    ExampleStruct.x = 5;
+    ExampleStruct.y = 7;
+
+    return AdcModel_DoNothingExceptTestASpecialType(ExampleStruct);
+}

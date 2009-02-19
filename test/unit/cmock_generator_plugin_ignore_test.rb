@@ -58,7 +58,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   
   should "add required code to implementation prefix with return functions" do
     function = {:name => "Fungus", :args_string => "void", :rettype => "int"}
-    @utils.expect.make_handle_return(function, "    ").returns("    mock_return_1")
+    @utils.expect.code_handle_return_value(function, "    ").returns("    mock_return_1")
     
     expected = ["  if (Mock.Fungus_IgnoreBool)\n",
                 "  {\n",
@@ -86,7 +86,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   
   should "add a new mock interface for ignoring when function has return value" do
     function = {:name => "Slime", :args => [], :args_string => "void", :rettype => "uint32"}
-    @utils.expect.make_expand_array("uint32", "Mock.Slime_Return_Head", "toReturn").returns("mock_return_1")
+    @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Slime_Return_Head", "toReturn").returns("mock_return_1")
     
     expected = ["void Slime_IgnoreAndReturn(uint32 toReturn)\n",
                 "{\n",

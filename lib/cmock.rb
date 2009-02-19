@@ -5,6 +5,7 @@ require "#{$here}/cmock_file_writer"
 require "#{$here}/cmock_config"
 require "#{$here}/cmock_plugin_manager"
 require "#{$here}/cmock_generator_utils"
+require "#{$here}/cmock_unityhelper_parser"
 
 class CMock
   
@@ -26,8 +27,9 @@ class CMock
     @cfg.set_path(path)
     
     cm_parser      = CMockHeaderParser.new(File.read(src))
+    cm_unityhelper = CMockUnityHelperParser.new(@cfg)
     cm_writer      = CMockFileWriter.new(@cfg)
-    cm_gen_utils   = CMockGeneratorUtils.new(@cfg)
+    cm_gen_utils   = CMockGeneratorUtils.new(@cfg, {:unity_helper => cm_unityhelper})
     cm_gen_plugins = CMockPluginManager.new(@cfg, cm_gen_utils)
     cm_generator   = CMockGenerator.new(@cfg, name, cm_writer, cm_gen_utils, cm_gen_plugins)
     

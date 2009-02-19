@@ -74,8 +74,10 @@ simulator:
     - -d
     - sim
 cmock:
-  mock_path: 'examples/mocks/'
-  includes:
+  :mock_path: 'examples/mocks/'
+  :includes:
     - 'Types.h'
-  plugins:
+    - 'UnityHelper.h'
+  :plugins:
     - 'ignore'
+  :unity_helper: 'vendor/unity/src/UnityHelper.h'

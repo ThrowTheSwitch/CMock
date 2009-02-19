@@ -21,7 +21,7 @@ typedef int int32;
 typedef unsigned short uint16;
 typedef short int16;
 typedef unsigned char uint8;
-typedef char int8;  
+typedef char int8;
 typedef char bool;
 
 // Application Special Value Definitions
@@ -84,5 +84,11 @@ typedef char bool;
 #ifndef UINT32_MIN
 #define UINT32_MIN 0x00000000U
 #endif
+
+typedef struct _EXAMPLE_STRUCT_T
+{
+    int x;
+    int y;
+} EXAMPLE_STRUCT_T;
 
 #endif // _MYTYPES_H_

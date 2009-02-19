@@ -1,4 +1,5 @@
 #include "unity.h"
+#include "UnityHelper.h"
 #include "Types.h"
 #include "Types.h"
 #include "AdcConductor.h"
@@ -44,3 +45,37 @@ void testRunShouldGetLatestSampleFromAdcAndPassItToModelAndStartNewConversionWhe
 
   AdcConductor_Run();
 }
+
+void testJustHereToTest_Should_ProperlyPassAStructAndVerifyIt(void)
+{
+    EXAMPLE_STRUCT_T TestStruct;
+    TestStruct.x = 5;
+    TestStruct.y = 7;
+
+    AdcModel_DoNothingExceptTestASpecialType_ExpectAndReturn(TestStruct, TRUE);
+
+    TEST_ASSERT_TRUE(AdcConductor_JustHereToTest());
+}
+
+//void testJustHereToTest_Should_FailThisTestIfYouUncommentXIsBecauseItsWrong(void)
+//{
+//    EXAMPLE_STRUCT_T TestStruct;
+//    TestStruct.x = 6;
+//    TestStruct.y = 7;
+//
+//    AdcModel_DoNothingExceptTestASpecialType_ExpectAndReturn(TestStruct, TRUE);
+//
+//    TEST_ASSERT_TRUE(AdcConductor_JustHereToTest());
+//}
+//
+//void testJustHereToTest_Should_FailThisTestIfYouUncommentYIsBecauseItsWrong(void)
+//{
+//    EXAMPLE_STRUCT_T TestStruct;
+//    TestStruct.x = 5;
+//    TestStruct.y = 8;
+//
+//    AdcModel_DoNothingExceptTestASpecialType_ExpectAndReturn(TestStruct, TRUE);
+//
+//    TEST_ASSERT_TRUE(AdcConductor_JustHereToTest());
+//}
+
