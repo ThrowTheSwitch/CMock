@@ -105,16 +105,9 @@ class CMockHeaderParser
     arg_list.split(',').each do |arg|
       arg = arg.strip
       return args if ((arg == '...') || (arg == 'void'))
-      arg_match = arg.match /^(.+)\s+(\*?\w+)$/
-      raise "Failed parsing argument list at argument: '#{arg}'" if arg_match.nil?
-      
-      #put the asterisk with the type (where it belongs)
-      if (arg_match[-1][0] == '*')
-        arg_match[1] << '*'
-        arg_match[-1].slice!(0)
-      end
-      
-      args << {:type => arg_match[1], :name => arg_match[-1]}
+      arg_match = arg.match /^(.+\s+\*?)(\w+)$/
+      raise "Failed parsing argument list at argument: '#{arg}'" if arg_match.nil? 
+      args << {:type => arg_match[1].strip.gsub(/\s+\*/,'*'), :name => arg_match[-1].strip}
     end
     return args
   end

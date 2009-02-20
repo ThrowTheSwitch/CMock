@@ -9,7 +9,7 @@ class CMockConfig
       'HEX32' => ['unsigned int', 'unsigned long', 'uint32', 'uint32_t', 'UINT32','UINT32_T'],
       'HEX16' => ['unsigned short', 'uint16', 'uint16_t', 'UINT16', 'UINT16_T'],
       'HEX8'  => ['unsigned char', 'uint8', 'uint8_t', 'UINT8', 'UINT8_T'],
-      'STRING'=> ['char*', 'const char*', 'pCHAR', 'cstring', 'CSTRING']
+      'STRING'=> ['char*', 'pCHAR', 'cstring', 'CSTRING']
   }
   
   CMockDefaultOptions = 

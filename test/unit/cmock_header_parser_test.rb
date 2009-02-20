@@ -300,7 +300,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :args_string => "char * const format",
         :rettype => "int",
         :var_arg => "...",
-        :args => [{:type => "char * const", :name => "format"}],
+        :args => [{:type => "char* const", :name => "format"}],
         :name => "printf"
       },
       {
@@ -320,7 +320,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source =
       "MY_STRUCT* HooWah(char * format);\n" +
-      "bool* HotShot(HIS_STRUCT *p, unsigned int * pint);\n"
+      "bool* HotShot(HIS_STRUCT *p, unsigned int* pint);\n"
       
     @parser = CMockHeaderParser.new(source)
     parsed_stuff = @parser.parse
@@ -332,19 +332,19 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :args_string => "char * format",
         :rettype => "MY_STRUCT*",
         :var_arg => nil,
-        :args => [{:type => "char *", :name => "format"}],
+        :args => [{:type => "char*", :name => "format"}],
         :name => "HooWah"
       },
       
       {
         :modifier => "",
-        :args_string => "HIS_STRUCT *p, unsigned int * pint",
+        :args_string => "HIS_STRUCT *p, unsigned int* pint",
         :rettype => "bool*",
         :var_arg => nil,
         :args => 
         [
-          {:type => "HIS_STRUCT", :name => "*p"},
-          {:type => "unsigned int *", :name => "pint"}
+          {:type => "HIS_STRUCT*", :name => "p"},
+          {:type => "unsigned int*", :name => "pint"}
         ],
         :name => "HotShot"
       }
