@@ -4,11 +4,11 @@ class CMockUnityHelperParser
   
   def initialize(config)
     @config = config
-    @c_types = map_C_types(config.treat_as).merge(import_source(config.load_unity_helper))
+    @c_types = map_C_types.merge(import_source)
   end
 
   def get_helper(ctype)
-    lookup = ctype.gsub(/const\s+/,'').strip.gsub(/\s+/,'_')#.gsub(/\*$/,'_ARRAY')
+    lookup = ctype.gsub(/const\s+/,'').strip.gsub(/\s+/,'_')
     return @c_types[lookup] if (@c_types[lookup])
     raise("Don't know how to test #{ctype} and memory tests are disabled!") unless @config.memcpy_if_unknown
     return 'TEST_ASSERT_EQUAL_MEMORY_MESSAGE'
@@ -16,15 +16,18 @@ class CMockUnityHelperParser
   
   private ###########################
   
-  def map_C_types(treat_as={})
+  def map_C_types
     c_types = {}
-    treat_as.each_pair do |expect, ctypes|
-      ctypes.each {|ctype| c_types[ctype] = "TEST_ASSERT_EQUAL_#{expect}_MESSAGE"}
+    [@config.standard_treat_as_map, @config.treat_as].each do |pairs|
+      pairs.each_pair do |ctype, expecttype|
+        c_types[ctype.gsub(/\s+/,'_')] = "TEST_ASSERT_EQUAL_#{expecttype}_MESSAGE"
+      end unless pairs.nil?
     end
     c_types
   end
   
-  def import_source(source=nil)
+  def import_source
+    source = @config.load_unity_helper
     return {} if source.nil?
     
     c_types = {}

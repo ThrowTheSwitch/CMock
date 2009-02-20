@@ -1,16 +1,5 @@
 
 class CMockConfig
-
-  CMockTreatAsDefaults = 
-  {
-      'INT'   => ['int','char','short','long','int8','int16','int32',
-                  'int8_t','int16_t','int32_t', 'bool','bool_t','BOOL','BOOL_T',
-                  'INT8','INT16','INT32','INT8_T','INT16_T','INT32_T'],
-      'HEX32' => ['unsigned int', 'unsigned long', 'uint32', 'uint32_t', 'UINT32','UINT32_T'],
-      'HEX16' => ['unsigned short', 'uint16', 'uint16_t', 'UINT16', 'UINT16_T'],
-      'HEX8'  => ['unsigned char', 'uint8', 'uint8_t', 'UINT8', 'UINT8_T'],
-      'STRING'=> ['char*', 'pCHAR', 'cstring', 'CSTRING']
-  }
   
   CMockDefaultOptions = 
   {
@@ -24,7 +13,7 @@ class CMockConfig
     :cexception_include => nil,
     :cexception_throw_type => 'int',
     :unity_helper => false,
-    :treat_as => CMockTreatAsDefaults,
+    :treat_as => {},
     :memcpy_if_unknown => true,
     :when_ptr_star =>:compare_data,
     :when_ptr_brackets => :compare_array,
@@ -54,5 +43,47 @@ class CMockConfig
   def load_unity_helper
     return File.new(@options[:unity_helper]).read if (@options[:unity_helper])
     return nil
+  end
+
+  def standard_treat_as_map 
+    {
+      'int'             => 'INT',
+      'char'            => 'INT',
+      'short'           => 'INT',
+      'long'            => 'INT',
+      'int8'            => 'INT',
+      'int16'           => 'INT',
+      'int32'           => 'INT',
+      'int8_t'          => 'INT',
+      'int16_t'         => 'INT',
+      'int32_t'         => 'INT',
+      'INT8_T'          => 'INT',
+      'INT16_T'         => 'INT',
+      'INT32_T'         => 'INT',
+      'bool'            => 'INT',
+      'bool_t'          => 'INT',
+      'BOOL'            => 'INT',
+      'BOOL_T'          => 'INT',
+      'unsigned int'    => 'HEX32',
+      'unsigned long'   => 'HEX32',
+      'uint32'          => 'HEX32',
+      'uint32_t'        => 'HEX32',
+      'UINT32'          => 'HEX32',
+      'UINT32_T'        => 'HEX32',
+      'unsigned short'  => 'HEX16',
+      'uint16'          => 'HEX16',
+      'uint16_t'        => 'HEX16',
+      'UINT16'          => 'HEX16',
+      'UINT16_T'        => 'HEX16',
+      'unsigned char'   => 'HEX8',
+      'uint8'           => 'HEX8',
+      'uint8_t'         => 'HEX8',
+      'UINT8'           => 'HEX8',
+      'UINT8_T'         => 'HEX8',
+      'char*'           => 'STRING',
+      'pCHAR'           => 'STRING',
+      'cstring'         => 'STRING',
+      'CSTRING'         => 'STRING',
+    }
   end
 end
