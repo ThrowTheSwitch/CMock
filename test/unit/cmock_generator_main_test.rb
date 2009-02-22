@@ -40,6 +40,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     @module_name = "PoutPoutFish"
     
     @config.expect.tab.returns("  ")
+    @config.expect.mock_prefix.returns("Mock")
     @cmock_generator = CMockGenerator.new(@config, @module_name, @file_writer, @utils, @plugins)
   end
 

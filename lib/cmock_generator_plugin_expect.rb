@@ -6,6 +6,7 @@ class CMockGeneratorPluginExpect
   def initialize(config, utils)
     @config = config
 	  @tab = @config.tab
+    @ptr_handling = @config.when_ptr_star
     @utils = utils
     @unity_helper = @utils.helpers[:unity_helper]
   end
@@ -19,14 +20,14 @@ class CMockGeneratorPluginExpect
     if (function[:rettype] != "void")
       lines << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return;\n"
       lines << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_Head;\n"
-      lines << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_HeadTail;\n"
+      lines << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_Tail;\n"
     end
 
     function[:args].each do |arg|
       type = arg[:type].sub(/const/, '').strip
       lines << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]};\n"
       lines << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Head;\n"
-      lines << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_HeadTail;\n"
+      lines << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Tail;\n"
     end
     lines
   end
@@ -111,7 +112,7 @@ class CMockGeneratorPluginExpect
       lines << "#{@tab}{\n"
       lines << "#{@tab}#{@tab}free(Mock.#{function[:name]}_Return_Head);\n"
       lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Head=NULL;\n"
-      lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Return_HeadTail=NULL;\n"
+      lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Tail=NULL;\n"
       lines << "#{@tab}}\n"
     end
     function[:args].each do |arg|
@@ -119,7 +120,7 @@ class CMockGeneratorPluginExpect
       lines << "#{@tab}{\n"
       lines << "#{@tab}#{@tab}free(Mock.#{function[:name]}_Expected_#{arg[:name]}_Head);\n"
       lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Head=NULL;\n"
-      lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_HeadTail=NULL;\n"
+      lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Tail=NULL;\n"
       lines << "#{@tab}}\n"
     end
     lines

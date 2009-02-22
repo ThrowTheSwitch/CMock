@@ -5,6 +5,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
     @config.expect.tab.returns("  ")
+    @config.expect.when_ptr_star.returns(:compare_data)
     @config.stubs!(:respond_to?).returns(true)
     @utils.expect.helpers.returns({})
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)
@@ -45,7 +46,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "  #{count_type} #{function[:name]}_CallsExpected;\n",
                 "  #{function[:rettype]} *#{function[:name]}_Return;\n",
                 "  #{function[:rettype]} *#{function[:name]}_Return_Head;\n",
-                "  #{function[:rettype]} *#{function[:name]}_Return_HeadTail;\n"
+                "  #{function[:rettype]} *#{function[:name]}_Return_Tail;\n"
                ]
     returned = @cmock_generator_plugin_expect.instance_structure(function)
     assert_equal(expected, returned)
@@ -60,10 +61,10 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "  #{count_type} #{function[:name]}_CallsExpected;\n",
                 "  int *#{function[:name]}_Expected_chicken;\n",
                 "  int *#{function[:name]}_Expected_chicken_Head;\n",
-                "  int *#{function[:name]}_Expected_chicken_HeadTail;\n",
+                "  int *#{function[:name]}_Expected_chicken_Tail;\n",
                 "  char* *#{function[:name]}_Expected_pork;\n",
                 "  char* *#{function[:name]}_Expected_pork_Head;\n",
-                "  char* *#{function[:name]}_Expected_pork_HeadTail;\n"
+                "  char* *#{function[:name]}_Expected_pork_Tail;\n"
                ]
     returned = @cmock_generator_plugin_expect.instance_structure(function)
     assert_equal(expected, returned)
@@ -78,10 +79,10 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "  #{count_type} #{function[:name]}_CallsExpected;\n",
                 "  #{function[:rettype]} *#{function[:name]}_Return;\n",
                 "  #{function[:rettype]} *#{function[:name]}_Return_Head;\n",
-                "  #{function[:rettype]} *#{function[:name]}_Return_HeadTail;\n",
+                "  #{function[:rettype]} *#{function[:name]}_Return_Tail;\n",
                 "  float *#{function[:name]}_Expected_beef;\n",
                 "  float *#{function[:name]}_Expected_beef_Head;\n",
-                "  float *#{function[:name]}_Expected_beef_HeadTail;\n",
+                "  float *#{function[:name]}_Expected_beef_Tail;\n",
                ]
     returned = @cmock_generator_plugin_expect.instance_structure(function)
     assert_equal(expected, returned)
@@ -215,7 +216,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "  {\n",
                 "    free(Mock.Palm_Return_Head);\n",
                 "    Mock.Palm_Return_Head=NULL;\n",
-                "    Mock.Palm_Return_HeadTail=NULL;\n",
+                "    Mock.Palm_Return_Tail=NULL;\n",
                 "  }\n"
                ]
     returned = @cmock_generator_plugin_expect.mock_destroy(function)
@@ -228,13 +229,13 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "  {\n",
                 "    free(Mock.Coconut_Return_Head);\n",
                 "    Mock.Coconut_Return_Head=NULL;\n",
-                "    Mock.Coconut_Return_HeadTail=NULL;\n",
+                "    Mock.Coconut_Return_Tail=NULL;\n",
                 "  }\n",
                 "  if (Mock.Coconut_Expected_grease_Head)\n",
                 "  {\n",
                 "    free(Mock.Coconut_Expected_grease_Head);\n",
                 "    Mock.Coconut_Expected_grease_Head=NULL;\n",
-                "    Mock.Coconut_Expected_grease_HeadTail=NULL;\n",
+                "    Mock.Coconut_Expected_grease_Tail=NULL;\n",
                 "  }\n"
                ]
     returned = @cmock_generator_plugin_expect.mock_destroy(function)

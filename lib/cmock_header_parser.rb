@@ -112,6 +112,15 @@ class CMockHeaderParser
     return args
   end
 
+  def clean_args(arg_list)
+    if ((arg_list.strip == 'void') or (arg_list.empty?))
+      return 'void'
+    else
+      c=0
+      arg_list.split(',').map{|arg| (arg.strip =~ /^(\w+|.+\*)\s*$/) ? "#{arg.strip} cmock_arg#{c+=1}" : arg.strip}.join(', ')
+    end
+  end
+  
   def parse_declaration(declaration)
     decl = {}
   
@@ -146,7 +155,7 @@ class CMockHeaderParser
       decl[:var_arg] = nil
     end
     
-    args.strip!
+    args = clean_args(args)
     decl[:args_string] = args
     decl[:args] = parse_args(args)
       

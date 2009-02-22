@@ -5,7 +5,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :unity_helper
     @config.expect.tab.returns("  ")
-    @config.expect.when_ptr_star.returns(:compare_ptr)
+    @config.expect.when_ptr_star.returns(:compare_data)
     @cmock_generator_utils = CMockGeneratorUtils.new(@config)
   end
 
@@ -51,29 +51,29 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   
   should "make expand array" do
     the_type = "int"
-    the_array = "array"
+    the_array = "arrayHead"
     new_value = "new_value"
     
     expected = ["\n",
                 "  {\n",
                 "    int sz = 0;\n",
-                "    int *pointer = array;\n",
+                "    int *pointer = arrayHead;\n",
                 "    while (pointer && pointer != arrayTail) { sz++; pointer++; }\n",
                 "    if (sz == 0)\n",
                 "    {\n",
-                "      array = (int*)malloc(2*sizeof(int));\n",
-                "      if (!array)\n",
+                "      arrayHead = (int*)malloc(2*sizeof(int));\n",
+                "      if (!arrayHead)\n",
                 "        Mock.allocFailure++;\n",
                 "    }\n",
                 "    else\n",
                 "    {\n",
-                "      int *ptmp = (int*)realloc(array, sizeof(int) * (sz+1));\n",
+                "      int *ptmp = (int*)realloc(arrayHead, sizeof(int) * (sz+1));\n",
                 "      if (!ptmp)\n",
                 "        Mock.allocFailure++;\n",
                 "      else\n",
-                "        array = ptmp;\n","    }\n",
-                "    memcpy(&array[sz], &new_value, sizeof(int));\n",
-                "    arrayTail = &array[sz+1];\n",
+                "        arrayHead = ptmp;\n","    }\n",
+                "    memcpy(&arrayHead[sz], &new_value, sizeof(int));\n",
+                "    arrayTail = &arrayHead[sz+1];\n",
                 "  }\n"
                ]
     returned = @cmock_generator_utils.code_insert_item_into_expect_array(the_type, the_array, new_value)
@@ -84,7 +84,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => "Spatula", :rettype => "uint64"}
     indent = "[tab]"
     expected = ["\n",
-                "[tab]if (Mock.Spatula_Return != Mock.Spatula_Return_HeadTail)\n",
+                "[tab]if (Mock.Spatula_Return != Mock.Spatula_Return_Tail)\n",
                 "[tab]{\n",
                 "[tab]  uint64 toReturn = *Mock.Spatula_Return;\n",
                 "[tab]  Mock.Spatula_Return++;\n",
@@ -108,7 +108,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    int sz = 0;\n",
                 "    uint16 *pointer = Mock.PizzaCutter_Expected_Spork_Head;\n",
-                "    while (pointer && pointer != Mock.PizzaCutter_Expected_Spork_HeadTail) { sz++; pointer++; }\n",
+                "    while (pointer && pointer != Mock.PizzaCutter_Expected_Spork_Tail) { sz++; pointer++; }\n",
                 "    if (sz == 0)\n",
                 "    {\n",
                 "      Mock.PizzaCutter_Expected_Spork_Head = (uint16*)malloc(2*sizeof(uint16));\n",
@@ -124,7 +124,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "        Mock.PizzaCutter_Expected_Spork_Head = ptmp;\n",
                 "    }\n",
                 "    memcpy(&Mock.PizzaCutter_Expected_Spork_Head[sz], &Spork, sizeof(uint16));\n",
-                "    Mock.PizzaCutter_Expected_Spork_HeadTail = &Mock.PizzaCutter_Expected_Spork_Head[sz+1];\n",
+                "    Mock.PizzaCutter_Expected_Spork_Tail = &Mock.PizzaCutter_Expected_Spork_Head[sz+1];\n",
                 "  }\n",
                 "  Mock.PizzaCutter_Expected_Spork = Mock.PizzaCutter_Expected_Spork_Head;\n",
                 "  Mock.PizzaCutter_Expected_Spork += Mock.PizzaCutter_CallCount;\n"
@@ -139,7 +139,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     var_name = "CorkScrew"
     
     expected = ["\n",
-                "  if (Mock.CanOpener_Expected_CorkScrew != Mock.CanOpener_Expected_CorkScrew_HeadTail)\n",
+                "  if (Mock.CanOpener_Expected_CorkScrew != Mock.CanOpener_Expected_CorkScrew_Tail)\n",
                 "  {\n",
                 "    uint16* p_expected = Mock.CanOpener_Expected_CorkScrew;\n",
                 "    Mock.CanOpener_Expected_CorkScrew++;\n",
@@ -159,7 +159,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_STRING_MESSAGE")
     
     expected = ["\n",
-                "  if (Mock.MeasureCup_Expected_TeaSpoon != Mock.MeasureCup_Expected_TeaSpoon_HeadTail)\n",
+                "  if (Mock.MeasureCup_Expected_TeaSpoon != Mock.MeasureCup_Expected_TeaSpoon_Tail)\n",
                 "  {\n",
                 "    const char** p_expected = Mock.MeasureCup_Expected_TeaSpoon;\n",
                 "    Mock.MeasureCup_Expected_TeaSpoon++;\n",
@@ -179,7 +179,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE")
     
     expected = ["\n",
-                "  if (Mock.TeaPot_Expected_TeaSpoon != Mock.TeaPot_Expected_TeaSpoon_HeadTail)\n",
+                "  if (Mock.TeaPot_Expected_TeaSpoon != Mock.TeaPot_Expected_TeaSpoon_Tail)\n",
                 "  {\n",
                 "    MANDELBROT_SET_T* p_expected = Mock.TeaPot_Expected_TeaSpoon;\n",
                 "    Mock.TeaPot_Expected_TeaSpoon++;\n",
@@ -199,7 +199,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_MEMORY_MESSAGE")
     
     expected = ["\n",
-                "  if (Mock.Toaster_Expected_Bread != Mock.Toaster_Expected_Bread_HeadTail)\n",
+                "  if (Mock.Toaster_Expected_Bread != Mock.Toaster_Expected_Bread_Tail)\n",
                 "  {\n",
                 "    SOME_STRUCT* p_expected = Mock.Toaster_Expected_Bread;\n",
                 "    Mock.Toaster_Expected_Bread++;\n",
@@ -219,7 +219,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_FRUIT_ARRAY_MESSAGE")
     
     expected = ["\n",
-                "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_HeadTail)\n",
+                "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
                 "  {\n",
                 "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
                 "    Mock.Blender_Expected_Strawberry++;\n",

@@ -39,10 +39,10 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
     
     expected = ["  uint32 *Oak_ThrowOnCallCount;\n",
                 "  uint32 *Oak_ThrowOnCallCount_Head;\n",
-                "  uint32 *Oak_ThrowOnCallCount_HeadTail;\n",
+                "  uint32 *Oak_ThrowOnCallCount_Tail;\n",
                 "  EXCEPTION_TYPE *Oak_ThrowValue;\n",
                 "  EXCEPTION_TYPE *Oak_ThrowValue_Head;\n",
-                "  EXCEPTION_TYPE *Oak_ThrowValue_HeadTail;\n"
+                "  EXCEPTION_TYPE *Oak_ThrowValue_Tail;\n"
                ]
     returned = @cmock_generator_plugin_cexception.instance_structure(function)
     assert_equal(expected, returned)
@@ -75,8 +75,8 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
   
     expected = ["\n",
-                "  if((Mock.Cherry_ThrowOnCallCount != Mock.Cherry_ThrowOnCallCount_HeadTail) &&\n",
-                "    (Mock.Cherry_ThrowValue != Mock.Cherry_ThrowValue_HeadTail))\n",
+                "  if((Mock.Cherry_ThrowOnCallCount != Mock.Cherry_ThrowOnCallCount_Tail) &&\n",
+                "    (Mock.Cherry_ThrowValue != Mock.Cherry_ThrowValue_Tail))\n",
                 "  {\n",
                 "    if (*Mock.Cherry_ThrowOnCallCount && \n",
                 "      (Mock.Cherry_CallCount == *Mock.Cherry_ThrowOnCallCount))\n",
@@ -148,13 +148,13 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
                 "  {\n",
                 "    free(Mock.Banana_ThrowOnCallCount_Head);\n",
                 "    Mock.Banana_ThrowOnCallCount_Head=NULL;\n",
-                "    Mock.Banana_ThrowOnCallCount_HeadTail=NULL;\n",
+                "    Mock.Banana_ThrowOnCallCount_Tail=NULL;\n",
                 "  }\n",
                 "  if(Mock.Banana_ThrowValue_Head)\n",
                 "  {\n",
                 "    free(Mock.Banana_ThrowValue_Head);\n",
                 "    Mock.Banana_ThrowValue_Head=NULL;\n",
-                "    Mock.Banana_ThrowValue_HeadTail=NULL;\n",
+                "    Mock.Banana_ThrowValue_Tail=NULL;\n",
                 "  }\n"
                ]
     returned = @cmock_generator_plugin_cexception.mock_destroy(function)

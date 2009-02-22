@@ -235,7 +235,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       
       {
         :modifier => "",
-        :args_string => "",
+        :args_string => "void",
         :rettype => "void",
         :var_arg => nil,
         :args => [],
@@ -352,5 +352,40 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     
     assert_equal(expected, parsed_stuff[:functions])
   end
+ 
+  should "extract and return function declarations with just types (no argument names)" do
   
+    source =
+      "int buzzlightyear(char*, bool);\n" +
+      "bool woody();\n"
+      
+    @parser = CMockHeaderParser.new(source)
+    parsed_stuff = @parser.parse
+    
+    expected =
+    [
+      {
+        :modifier => "",
+        :args_string => "char* cmock_arg1, bool cmock_arg2",
+        :rettype => "int",
+        :var_arg => nil,
+        :args => 
+        [
+          {:type => "char*", :name => "cmock_arg1"},
+          {:type => "bool",  :name => "cmock_arg2"}
+        ],
+        :name => "buzzlightyear"
+      },
+      {
+        :modifier => "",
+        :args_string => "void",
+        :rettype => "bool",
+        :var_arg => nil,
+        :args => [],
+        :name => "woody"
+      }
+    ]
+    
+    assert_equal(expected, parsed_stuff[:functions])
+  end
 end

@@ -4,6 +4,7 @@ class CMockConfig
   CMockDefaultOptions = 
   {
     :mock_path => 'mocks',
+    :mock_prefix => 'Mock',
     :includes => [],
     :plugins => ['cexception', 'ignore'],
     :tab => '  ',
@@ -15,8 +16,8 @@ class CMockConfig
     :unity_helper => false,
     :treat_as => {},
     :memcpy_if_unknown => true,
-    :when_ptr_star =>:compare_data,
-    :when_ptr_brackets => :compare_array,
+    :when_ptr_star =>:compare_data, #the options being :compare_ptr, :compare_data, :compare_array
+    :when_ptr_brackets => :compare_array, #not really supported yet
   }
   
   def initialize(options=nil)

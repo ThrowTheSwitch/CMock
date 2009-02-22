@@ -23,11 +23,12 @@ class CMockGeneratorUtils
   end
   
   def code_insert_item_into_expect_array(type, array, newValue)
+    tail = array.gsub(/Head$/,'Tail')
     lines = ["\n"]
     lines << "#{@tab}{\n"
     lines << "#{@tab}#{@tab}int sz = 0;\n"
     lines << "#{@tab}#{@tab}#{type} *pointer = #{array};\n"
-    lines << "#{@tab}#{@tab}while (pointer && pointer != #{array}Tail) { sz++; pointer++; }\n"
+    lines << "#{@tab}#{@tab}while (pointer && pointer != #{tail}) { sz++; pointer++; }\n"
     lines << "#{@tab}#{@tab}if (sz == 0)\n"
     lines << "#{@tab}#{@tab}{\n"
     lines << "#{@tab}#{@tab}#{@tab}#{array} = (#{type}*)malloc(2*sizeof(#{type}));\n"
@@ -43,13 +44,13 @@ class CMockGeneratorUtils
     lines << "#{@tab}#{@tab}#{@tab}#{@tab}#{array} = ptmp;\n"
     lines << "#{@tab}#{@tab}}\n"
     lines << "#{@tab}#{@tab}memcpy(&#{array}[sz], &#{newValue}, sizeof(#{type}));\n"
-    lines << "#{@tab}#{@tab}#{array}Tail = &#{array}[sz+1];\n"
+    lines << "#{@tab}#{@tab}#{tail} = &#{array}[sz+1];\n"
     lines << "#{@tab}}\n"
   end
   
   def code_handle_return_value(function, indent)
     lines = ["\n"]
-    lines << "#{indent}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_HeadTail)\n"
+    lines << "#{indent}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_Tail)\n"
     lines << "#{indent}{\n"
     lines << "#{indent}#{@tab}#{function[:rettype]} toReturn = *Mock.#{function[:name]}_Return;\n"
     lines << "#{indent}#{@tab}Mock.#{function[:name]}_Return++;\n"
@@ -69,7 +70,7 @@ class CMockGeneratorUtils
   
   def code_verify_an_arg_expectation(function, arg_type, actual)
     lines = ["\n"]
-    lines << "#{@tab}if (Mock.#{function[:name]}_Expected_#{actual} != Mock.#{function[:name]}_Expected_#{actual}_HeadTail)\n"
+    lines << "#{@tab}if (Mock.#{function[:name]}_Expected_#{actual} != Mock.#{function[:name]}_Expected_#{actual}_Tail)\n"
     lines << "#{@tab}{\n"
     lines << "#{@tab}#{@tab}#{arg_type}* p_expected = Mock.#{function[:name]}_Expected_#{actual};\n"
     lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{actual}++;\n"
@@ -79,7 +80,7 @@ class CMockGeneratorUtils
   end
   
   def expect_helper(c_type, expected, actual, msg, indent)
-    if ((c_type.strip[0] == 42) and (@ptr_handling == :compare_ptr))
+    if ((c_type.strip[-1] == 42) and (@ptr_handling == :compare_ptr))
       unity_func = "TEST_ASSERT_EQUAL_INT_MESSAGE"
     else
       unity_func = (@helpers.nil? or @helpers[:unity_helper].nil?) ? "TEST_ASSERT_EQUAL_MESSAGE" : @helpers[:unity_helper].get_helper(c_type)

@@ -9,7 +9,7 @@ class CMockGenerator
     @file_writer = file_writer
     @tab = @config.tab
     @module_name = module_name
-    @mock_name = "Mock" + @module_name
+    @mock_name = @config.mock_prefix + @module_name
     @utils = utils
     @plugins = plugins
   end
