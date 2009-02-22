@@ -79,3 +79,43 @@ void testJustHereToTest_Should_ProperlyPassAStructAndVerifyIt(void)
 //    TEST_ASSERT_TRUE(AdcConductor_JustHereToTest());
 //}
 
+void test_AdcConductor_AlsoHereToTest_Should_ProperlyReturnAStructAsExpected1(void)
+{
+    EXAMPLE_STRUCT_T TestStruct;
+    TestStruct.x = 99;
+    TestStruct.y = 1;
+
+    AdcModel_DoNothingExceptReturnASpecialType_ExpectAndReturn(TestStruct);
+
+    TEST_ASSERT_TRUE(AdcConductor_AlsoHereToTest());
+}
+
+void test_AdcConductor_AlsoHereToTest_Should_ProperlyReturnAStructAsExpected2(void)
+{
+    EXAMPLE_STRUCT_T TestStruct;
+    TestStruct.x = 98;
+    TestStruct.y = 1;
+
+    AdcModel_DoNothingExceptReturnASpecialType_ExpectAndReturn(TestStruct);
+
+    TEST_ASSERT_FALSE(AdcConductor_AlsoHereToTest());
+}
+
+void test_AdcConductor_YetAnotherTest_Should_VerifyThatPointersToStructsAreTestable(void)
+{
+    uint32 TestNum = 3;
+
+    AdModel_DoNothingExceptTestPointers_ExpectAndReturn(&TestNum, TRUE);
+
+    TEST_ASSERT_TRUE(AdcConductor_YetAnotherTest());
+}
+
+//void test_AdcConductor_YetAnotherTest_Should_FailIfYouUncommentThisTestBecauseTheValuePointedToIsWrong(void)
+//{
+//    uint32 TestNum = 7;
+//
+//    AdModel_DoNothingExceptTestPointers_ExpectAndReturn(&TestNum, FALSE);
+//
+//    TEST_ASSERT_FALSE(AdcConductor_YetAnotherTest());
+//}
+

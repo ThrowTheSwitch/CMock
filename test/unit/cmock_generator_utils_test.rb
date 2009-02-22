@@ -5,6 +5,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :unity_helper
     @config.expect.tab.returns("  ")
+    @config.expect.when_ptr_star.returns(:compare_ptr)
     @cmock_generator_utils = CMockGeneratorUtils.new(@config)
   end
 
@@ -20,6 +21,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init, complete with passed helpers" do
     create_mocks :config
     @config.expect.tab.returns("  ")
+    @config.expect.when_ptr_star.returns(:compare_ptr)
     @cmock_generator_utils = CMockGeneratorUtils.new(@config, {:A, :B})
     assert_equal(@config, @cmock_generator_utils.config)
     assert_equal("  ",    @cmock_generator_utils.tab)
@@ -131,7 +133,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "make handle expected for non character strings" do
+  should "make handle expected when no helpers are available" do
     function = { :name => "CanOpener", :rettype => "uint64"}
     var_type = "uint16"
     var_name = "CorkScrew"
@@ -168,7 +170,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "make handle expected for custom types" do
+  should "make handle expected for custom types from unity helper" do
     function = { :name => "TeaPot", :rettype => "uint64"}
     var_type = "MANDELBROT_SET_T"
     var_name = "TeaSpoon"
@@ -202,6 +204,29 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    SOME_STRUCT* p_expected = Mock.Toaster_Expected_Bread;\n",
                 "    Mock.Toaster_Expected_Bread++;\n",
                 "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)p_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for parameter 'Bread'.\");\n",
+                "  }\n"
+               ]
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    assert_equal(expected, returned)
+  end
+  
+  should "make handle default types with array compares, which involves extra work" do
+    function = { :name => "Blender", :rettype => "uint16*"}
+    var_type = "FRUIT*"
+    var_name = "Strawberry"
+    
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_FRUIT_ARRAY_MESSAGE")
+    
+    expected = ["\n",
+                "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_HeadTail)\n",
+                "  {\n",
+                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    Mock.Blender_Expected_Strawberry++;\n",
+                "    if (*p_expected == NULL)\n",
+                "      { TEST_ASSERT_NULL(Strawberry); }\n",
+                "    else\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY_MESSAGE(*p_expected, Strawberry, 1, \"Function 'Blender' called with unexpected value for parameter 'Strawberry'.\"); }\n",
                 "  }\n"
                ]
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)

@@ -25,3 +25,18 @@ bool AdcConductor_JustHereToTest(void)
 
     return AdcModel_DoNothingExceptTestASpecialType(ExampleStruct);
 }
+
+bool AdcConductor_AlsoHereToTest(void)
+{
+    EXAMPLE_STRUCT_T example = AdcModel_DoNothingExceptReturnASpecialType();
+
+    return ((example.x == 99) && (example.y == 1));
+}
+
+bool AdcConductor_YetAnotherTest(void)
+{
+    uint32 example = 3;
+
+    return AdModel_DoNothingExceptTestPointers(&example);
+}
+
