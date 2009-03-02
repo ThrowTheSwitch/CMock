@@ -17,10 +17,12 @@ void AdcModel_ProcessInput(uint16 millivolts)
 bool AdcModel_DoNothingExceptTestASpecialType(EXAMPLE_STRUCT_T ExampleStruct)
 {
     //This doesn't really do anything. it's only here to make sure I can compare a struct.
+    return FALSE;
 }
 bool AdModel_DoNothingExceptTestPointers(uint32* pExample)
 {
     //This doesn't really do anything. it's only here to make sure I can compare a pointer value.
+    return FALSE;
 }
 
 EXAMPLE_STRUCT_T AdcModel_DoNothingExceptReturnASpecialType(void)

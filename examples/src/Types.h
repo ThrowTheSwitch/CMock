@@ -2,6 +2,7 @@
 #define _MYTYPES_H_
 
 #include "AT91SAM7X256.h"
+#include <math.h>
 
 #ifndef __monitor
 #define __monitor
