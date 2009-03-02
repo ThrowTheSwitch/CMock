@@ -23,6 +23,7 @@ compiler:
 linker:
   path: gcc
   options:
+    - -lm
   includes:
     prefix: '-I'
   object_files:
