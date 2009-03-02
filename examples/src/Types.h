@@ -36,24 +36,12 @@ typedef char bool;
 #endif // NULL
 #define DONT_CARE (0)
 
-// Floating point edge case defintions
-#define MATH_NaN (0xFFFFFFFF)
-#define MATH_POS_INF (0x7F800000)
-#define MATH_NEG_INF (0xFF800000)
-
-#define F_TO_U(f) (*(uint32_t*)(&f))
-#define U_TO_F(u) (*(float*)(u))
-
-#define IS_NAN(f) ( F_TO_U(f) == MATH_NaN )
-#define IS_POS_INF(f) ( F_TO_U(f) == MATH_POS_INF )
-#define IS_NEG_INF(f) ( F_TO_U(f) == MATH_NEG_INF )
-
 #ifndef INFINITY
-#define INFINITY (U_TO_F(MATH_POS_INF))
+#define INFINITY (1.0 / 0.0)
 #endif
 
 #ifndef NAN
-#define NAN MATH_NaN
+#define NAN (0.0 / 0.0)
 #endif
 
 // MIN/MAX Definitions for Standard Types
