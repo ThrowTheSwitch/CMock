@@ -58,6 +58,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
   end
   
   should "create the top of a header file" do
+    @config.expect.mock_prefix.returns("Mock")
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
