@@ -71,6 +71,7 @@ class CMockConfig
       'uint32_t'        => 'HEX32',
       'UINT32'          => 'HEX32',
       'UINT32_T'        => 'HEX32',
+      'void*'           => 'HEX32',
       'unsigned short'  => 'HEX16',
       'uint16'          => 'HEX16',
       'uint16_t'        => 'HEX16',
