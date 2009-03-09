@@ -37,12 +37,20 @@ class CMockUnityHelperParser
     #scan for comparison helpers
     m = Regexp.new('^\s*#define\s+(TEST_ASSERT_EQUAL_(\w+)_MESSAGE|TEST_ASSERT_EQUAL_(\w+))\s*\(' + Array.new(2,'\s*\w+\s*').join(',') + '\)')
     a = source.scan(m).flatten.compact
-    a.each_slice(2) {|expect, ctype| c_types[ctype] = expect unless expect.include?("_ARRAY")}
+    (a.size/2).times do |i|
+      expect = a[i*2]
+      ctype = a[(i*2)+1]
+      c_types[ctype] = expect unless expect.include?("_ARRAY")
+    end
       
     #scan for array variants of those helpers
     m = Regexp.new('^\s*#define\s+(TEST_ASSERT_EQUAL_(\w+_ARRAY)_MESSAGE|TEST_ASSERT_EQUAL_(\w+_ARRAY))\s*\(' + Array.new(3,'\s*\w+\s*').join(',') + '\)')
     a = source.scan(m).flatten.compact
-    a.each_slice(2) {|expect, ctype| c_types[ctype.gsub('_ARRAY','*')] = expect}
+    (a.size/2).times do |i|
+      expect = a[i*2]
+      ctype = a[(i*2)+1]
+      c_types[ctype.gsub('_ARRAY','*')] = expect
+    end
     
     c_types
   end
