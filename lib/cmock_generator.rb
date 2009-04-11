@@ -100,6 +100,8 @@ class CMockGenerator
   def create_extern_declarations(file, externs)
     file << externs.collect {|extern| extern.gsub(/extern\s*/,'') << ";\n"}.flatten
     file << "extern jmp_buf AbortFrame;\n"
+    file << "extern int GlobalExpectOrder;\n"
+    file << "extern int GlobalVerifyOrder;\n"
     file << "\n"
   end
   

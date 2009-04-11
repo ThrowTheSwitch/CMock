@@ -26,33 +26,26 @@ class CMockGeneratorPluginIgnore
   end
   
   def mock_implementation_prefix(function)
-    lines = []
-    lines << "#{@tab}if (Mock.#{function[:name]}_IgnoreBool)\n"
-    lines << "#{@tab}{\n"  
-    if (function[:rettype] == "void")
-      lines << "#{@tab}#{@tab}return;\n"
-    else
-      lines << @utils.code_handle_return_value(function, "#{@tab}#{@tab}")
-    end
-    lines << "#{@tab}}\n"  
+    [ "#{@tab}if (Mock.#{function[:name]}_IgnoreBool)\n",
+      "#{@tab}{\n",  
+      (function[:rettype] == "void") ? "#{@tab}#{@tab}return;\n" : @utils.code_handle_return_value(function, "#{@tab}#{@tab}"),
+      "#{@tab}}\n" ]
   end
   
   def mock_interfaces(function)
-    lines = []
     if (function[:rettype] == "void")
-      lines << "void #{function[:name]}_Ignore(void)\n"
-      lines << "{\n"
-      lines << "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n"
-      lines << "}\n\n"
+      [ "void #{function[:name]}_Ignore(void)\n",
+        "{\n",
+        "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n",
+        "}\n\n" ]
     else
-      lines << "void #{function[:name]}_IgnoreAndReturn(#{function[:rettype]} toReturn)\n"
-      lines << "{\n"
-      lines << "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n"
-      lines << @utils.code_insert_item_into_expect_array(function[:rettype], "Mock.#{function[:name]}_Return_Head", "toReturn")
-      lines << "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n"
-      lines << "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
-      lines << "}\n\n"
+      [ "void #{function[:name]}_IgnoreAndReturn(#{function[:rettype]} toReturn)\n",
+        "{\n",
+        "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n",
+        @utils.code_insert_item_into_expect_array(function[:rettype], "Mock.#{function[:name]}_Return_Head", "toReturn"),
+        "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n",
+        "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n",
+        "}\n\n" ]
     end
-    return lines
   end
 end

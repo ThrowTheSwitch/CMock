@@ -6,6 +6,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     create_mocks :config, :utils
     @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_data)
+    @config.expect.enforce_strict_ordering.returns(false)
     @config.stubs!(:respond_to?).returns(true)
     @utils.expect.helpers.returns({})
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)
@@ -145,11 +146,33 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
+  should "add mock function implementation using ordering if needed" do
+    @utils.expect.expect_helper('int','*p_expected','GlobalVerifyOrder',"\"Function 'Apple' Called Out Of Order.\"", '    ').returns("    mocked_retval")
+    function = {:name => "Apple", :args => [], :rettype => "void"}
+    expected = ["  Mock.Apple_CallCount++;\n",
+                "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
+                "  {\n",
+                "    TEST_FAIL(\"Apple Called More Times Than Expected\");\n",
+                "  }\n",
+                "  {\n",
+                "    int* p_expected = Mock.Apple_CallOrder;\n",
+                "    ++GlobalVerifyOrder;\n",
+                "    if (Mock.Apple_CallOrder != Mock.Apple_CallOrder_Tail)\n",
+                "      Mock.Apple_CallOrder++;\n",
+                "    mocked_retval",
+                "  }\n"
+               ]
+    @cmock_generator_plugin_expect.ordered = true
+    returned = @cmock_generator_plugin_expect.mock_implementation(function)
+    assert_equal(expected, returned)
+  end
+  
   should "add mock interfaces for functions of style 'void func(void)'" do
+    @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     function = {:name => "Pear", :args => [], :args_string => "void", :rettype => "void"}
     expected = ["void Pear_Expect(void)\n",
                 "{\n",
-                "  Mock.Pear_CallsExpected++;\n",
+                "mock_retval_0",
                 "}\n\n"
                ]
     returned = @cmock_generator_plugin_expect.mock_interfaces(function)
@@ -158,11 +181,12 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   
   should "add mock interfaces for functions of style 'unsigned short func(void)'" do
     function = {:name => "Orange", :args => [], :args_string => "void", :rettype => "unsigned short"}
+    @utils.expect.code_add_base_expectation("Orange").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array(function[:rettype], "Mock.Orange_Return_Head","toReturn").returns("mock_retval_1")
     
     expected = ["void Orange_ExpectAndReturn(unsigned short toReturn)\n",
                 "{\n",
-                "  Mock.Orange_CallsExpected++;\n",
+                "mock_retval_0",
                 "mock_retval_1",
                 "  Mock.Orange_Return = Mock.Orange_Return_Head;\n",
                 "  Mock.Orange_Return += Mock.Orange_CallCount;\n",
@@ -175,6 +199,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   should "add mock interfaces for functions of style 'int func(char* pescado)'" do
     function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :rettype => "int"}
     @utils.expect.code_add_an_arg_expectation(function, "char*", "pescado").returns("mock_retval_2")
+    @utils.expect.code_add_base_expectation("Lemon").returns("mock_retval_0")
     @utils.expect.create_call_list(function).returns("mock_retval_3")
     @utils.expect.code_insert_item_into_expect_array(function[:rettype], "Mock.Lemon_Return_Head","toReturn").returns("mock_retval_1")
     
@@ -184,13 +209,26 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "}\n\n",
                 "void Lemon_ExpectAndReturn(char* pescado, int toReturn)\n",
                 "{\n",
-                "  Mock.Lemon_CallsExpected++;\n",
+                "mock_retval_0",
                 "  ExpectParameters_Lemon(mock_retval_3);\n",
                 "mock_retval_1",
                 "  Mock.Lemon_Return = Mock.Lemon_Return_Head;\n",
                 "  Mock.Lemon_Return += Mock.Lemon_CallCount;\n",
                 "}\n\n"
                ]
+    returned = @cmock_generator_plugin_expect.mock_interfaces(function)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock interfaces for functions when using ordering" do
+    function = {:name => "Pear", :args => [], :args_string => "void", :rettype => "void"}
+    expected = ["void Pear_Expect(void)\n",
+                "{\n",
+                "mock_retval_0",
+                "}\n\n"
+               ]
+    @cmock_generator_plugin_expect.ordered = true
+    @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     returned = @cmock_generator_plugin_expect.mock_interfaces(function)
     assert_equal(expected, returned)
   end

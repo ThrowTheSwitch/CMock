@@ -1,35 +1,41 @@
 
 class CMockGeneratorPluginExpect
 
-  attr_reader :config, :utils, :tab, :unity_helper
+  attr_accessor :config, :utils, :tab, :unity_helper, :ordered
 
   def initialize(config, utils)
-    @config = config
-	  @tab = @config.tab
+    @config       = config
+	  @tab          = @config.tab
     @ptr_handling = @config.when_ptr_star
-    @utils = utils
+    @ordered      = @config.enforce_strict_ordering
+    @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
   end
   
   def instance_structure(function)
     call_count_type = @config.expect_call_count_type
-    lines = []
-    lines << "#{@tab}#{call_count_type} #{function[:name]}_CallCount;\n"
-    lines << "#{@tab}#{call_count_type} #{function[:name]}_CallsExpected;\n"
+    lines = [ "#{@tab}#{call_count_type} #{function[:name]}_CallCount;\n",
+              "#{@tab}#{call_count_type} #{function[:name]}_CallsExpected;\n" ]
       
     if (function[:rettype] != "void")
-      lines << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return;\n"
-      lines << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_Head;\n"
-      lines << "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_Tail;\n"
+      lines << [ "#{@tab}#{function[:rettype]} *#{function[:name]}_Return;\n",
+                 "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_Head;\n",
+                 "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_Tail;\n" ]
     end
 
+    if (@ordered)
+      lines << [ "#{@tab}#{function[:rettype]} *#{function[:name]}_CallOrder;\n",
+                 "#{@tab}#{function[:rettype]} *#{function[:name]}_CallOrder_Head;\n",
+                 "#{@tab}#{function[:rettype]} *#{function[:name]}_CallOrder_Tail;\n" ]
+    end
+    
     function[:args].each do |arg|
       type = arg[:type].sub(/const/, '').strip
-      lines << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]};\n"
-      lines << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Head;\n"
-      lines << "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Tail;\n"
+      lines << [ "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]};\n",
+                 "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Head;\n",
+                 "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Tail;\n" ]
     end
-    lines
+    lines.flatten
   end
   
   def mock_function_declarations(function)
@@ -49,17 +55,27 @@ class CMockGeneratorPluginExpect
   end
   
   def mock_implementation(function)
-    lines = []
-    lines << "#{@tab}Mock.#{function[:name]}_CallCount++;\n"
-    lines << "#{@tab}if (Mock.#{function[:name]}_CallCount > Mock.#{function[:name]}_CallsExpected)\n"
-    lines << "#{@tab}{\n"
-    lines << "#{@tab}#{@tab}TEST_FAIL(\"#{function[:name]} Called More Times Than Expected\");\n"
-    lines << "#{@tab}}\n"
+    lines = [ "#{@tab}Mock.#{function[:name]}_CallCount++;\n",
+              "#{@tab}if (Mock.#{function[:name]}_CallCount > Mock.#{function[:name]}_CallsExpected)\n",
+              "#{@tab}{\n",
+              "#{@tab}#{@tab}TEST_FAIL(\"#{function[:name]} Called More Times Than Expected\");\n",
+              "#{@tab}}\n" ]
+    
+    if (@ordered)
+      lines << [ "#{@tab}{\n",
+                 "#{@tab}#{@tab}int* p_expected = Mock.#{function[:name]}_CallOrder;\n",
+                 "#{@tab}#{@tab}++GlobalVerifyOrder;\n",
+                 "#{@tab}#{@tab}if (Mock.#{function[:name]}_CallOrder != Mock.#{function[:name]}_CallOrder_Tail)\n",
+                 "#{@tab}#{@tab}#{@tab}Mock.#{function[:name]}_CallOrder++;\n",
+                 @utils.expect_helper('int', '*p_expected', 'GlobalVerifyOrder', "\"Function '#{function[:name]}' Called Out Of Order.\"","#{@tab}#{@tab}"),
+                 "#{@tab}}\n" ]
+    end
+    
     function[:args].each do |arg|
       arg_return_type = arg[:type].sub(/const/, '').strip
       lines << @utils.code_verify_an_arg_expectation(function, arg_return_type, arg[:name])
     end
-    lines
+    lines.flatten
   end
   
   def mock_interfaces(function)
@@ -87,7 +103,7 @@ class CMockGeneratorPluginExpect
       end
     end
     lines << "{\n"
-    lines << "#{@tab}Mock.#{function[:name]}_CallsExpected++;\n"
+    lines << @utils.code_add_base_expectation(function[:name])
     
     if (function[:args_string] != "void")
       lines << "#{@tab}ExpectParameters_#{function[:name]}(#{@utils.create_call_list(function)});\n"
@@ -108,21 +124,21 @@ class CMockGeneratorPluginExpect
   def mock_destroy(function)
     lines = []
     if (function[:rettype] != "void")
-      lines << "#{@tab}if (Mock.#{function[:name]}_Return_Head)\n"
-      lines << "#{@tab}{\n"
-      lines << "#{@tab}#{@tab}free(Mock.#{function[:name]}_Return_Head);\n"
-      lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Head=NULL;\n"
-      lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Tail=NULL;\n"
-      lines << "#{@tab}}\n"
+      lines << [ "#{@tab}if (Mock.#{function[:name]}_Return_Head)\n",
+                 "#{@tab}{\n",
+                 "#{@tab}#{@tab}free(Mock.#{function[:name]}_Return_Head);\n",
+                 "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Head=NULL;\n",
+                 "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Tail=NULL;\n",
+                 "#{@tab}}\n" ]
     end
     function[:args].each do |arg|
-      lines << "#{@tab}if (Mock.#{function[:name]}_Expected_#{arg[:name]}_Head)\n"
-      lines << "#{@tab}{\n"
-      lines << "#{@tab}#{@tab}free(Mock.#{function[:name]}_Expected_#{arg[:name]}_Head);\n"
-      lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Head=NULL;\n"
-      lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Tail=NULL;\n"
-      lines << "#{@tab}}\n"
+      lines << [ "#{@tab}if (Mock.#{function[:name]}_Expected_#{arg[:name]}_Head)\n",
+                 "#{@tab}{\n",
+                 "#{@tab}#{@tab}free(Mock.#{function[:name]}_Expected_#{arg[:name]}_Head);\n",
+                 "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Head=NULL;\n",
+                 "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Tail=NULL;\n",
+                 "#{@tab}}\n" ]
     end
-    lines
+    lines.flatten
   end
 end

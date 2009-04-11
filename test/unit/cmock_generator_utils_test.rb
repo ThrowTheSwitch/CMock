@@ -6,6 +6,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     create_mocks :config, :unity_helper
     @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_data)
+    @config.expect.enforce_strict_ordering.returns(false)
     @cmock_generator_utils = CMockGeneratorUtils.new(@config)
   end
 
@@ -22,6 +23,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     create_mocks :config
     @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_ptr)
+    @config.expect.enforce_strict_ordering.returns(false)
     @cmock_generator_utils = CMockGeneratorUtils.new(@config, {:A, :B})
     assert_equal(@config, @cmock_generator_utils.config)
     assert_equal("  ",    @cmock_generator_utils.tab)
@@ -130,6 +132,44 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  Mock.PizzaCutter_Expected_Spork += Mock.PizzaCutter_CallCount;\n"
                ]
     returned = @cmock_generator_utils.code_add_an_arg_expectation(function, var_type, var_name)
+    assert_equal(expected, returned)
+  end
+  
+  should "add base expectations, with nothing else when strict ordering not turned on" do
+    expected = ["  Mock.Nectarine_CallsExpected++;\n"]
+    returned = @cmock_generator_utils.code_add_base_expectation("Nectarine")
+    
+    assert_equal(expected, returned)  end
+
+  should "add base expectations, with stuff for strict ordering turned on" do
+    expected = ["  Mock.Nectarine_CallsExpected++;\n",
+                "  ++GlobalExpectCount;\n",
+                "\n",
+                "  {\n",
+                "    int sz = 0;\n",
+                "    int *pointer = Mock.Nectarine_CallOrder_Head;\n",
+                "    while (pointer && pointer != Mock.Nectarine_CallOrder_Tail) { sz++; pointer++; }\n",
+                "    if (sz == 0)\n",
+                "    {\n",
+                "      Mock.Nectarine_CallOrder_Head = (int*)malloc(2*sizeof(int));\n",
+                "      if (!Mock.Nectarine_CallOrder_Head)\n",
+                "        Mock.allocFailure++;\n",
+                "    }\n",
+                "    else\n",
+                "    {\n",
+                "      int *ptmp = (int*)realloc(Mock.Nectarine_CallOrder_Head, sizeof(int) * (sz+1));\n",
+                "      if (!ptmp)\n",
+                "        Mock.allocFailure++;\n",
+                "      else\n",
+                "        Mock.Nectarine_CallOrder_Head = ptmp;\n",
+                "    }\n",
+                "    memcpy(&Mock.Nectarine_CallOrder_Head[sz], &GlobalExpectCount, sizeof(int));\n",
+                "    Mock.Nectarine_CallOrder_Tail = &Mock.Nectarine_CallOrder_Head[sz+1];\n",
+                "  }\n",
+                "  Mock.Nectarine_CallOrder = Mock.Nectarine_CallOrder_Head;\n",
+                "  Mock.Nectarine_CallOrder += Mock.Nectarine_CallOrder;\n" ]
+    @cmock_generator_utils.ordered = true
+    returned = @cmock_generator_utils.code_add_base_expectation("Nectarine")
     assert_equal(expected, returned)
   end
   

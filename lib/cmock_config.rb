@@ -15,7 +15,7 @@ class CMockConfig
     :cexception_throw_type => 'int',
     :unity_helper => false,
     :treat_as => {},
-    :memcpy_if_unknown => true,
+    :memcmp_if_unknown => true,
     :when_ptr_star =>:compare_data, #the options being :compare_ptr, :compare_data, :compare_array
     :when_ptr_brackets => :compare_array, #not really supported yet
   }
@@ -34,7 +34,7 @@ class CMockConfig
   def load_config_file_from_yaml yaml_filename
     require 'yaml'
     require 'fileutils'
-    YAML.load(File.read(yaml_filename))['cmock']
+    YAML.load_file(yaml_filename)[:cmock]
   end
   
   def set_path(path)

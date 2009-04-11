@@ -166,7 +166,10 @@ class CMockGeneratorTest < Test::Unit::TestCase
   should "create extern declarations for source file if no extra externs requested" do
     externs = []
     output = []
-    expected = [ "extern jmp_buf AbortFrame;\n","\n" ]
+    expected = [ "extern jmp_buf AbortFrame;\n",
+                 "extern int GlobalExpectOrder;\n",
+                 "extern int GlobalVerifyOrder;\n",
+                 "\n" ]
     
     @cmock_generator.create_extern_declarations(output, externs)
     
@@ -176,7 +179,12 @@ class CMockGeneratorTest < Test::Unit::TestCase
   should "create extern declarations for source file if extra externs requested" do
     externs = ["extern int whatever", "extern    short somethingelse"]
     output = []
-    expected = [ "int whatever;\n", "short somethingelse;\n", "extern jmp_buf AbortFrame;\n","\n"]
+    expected = [ "int whatever;\n", 
+                 "short somethingelse;\n", 
+                 "extern jmp_buf AbortFrame;\n",
+                 "extern int GlobalExpectOrder;\n",
+                 "extern int GlobalVerifyOrder;\n",
+                 "\n"]
     
     @cmock_generator.create_extern_declarations(output, externs)
     

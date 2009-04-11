@@ -171,7 +171,7 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
     }
   
     ["UINT16","UINT8*","SPINACH_T","SALAD","PINEAPPLE"].each do |ctype|
-      @config.expect.memcpy_if_unknown.returns(true)
+      @config.expect.memcmp_if_unknown.returns(true)
       assert_equal("TEST_ASSERT_EQUAL_MEMORY_MESSAGE", @parser.get_helper(ctype))  
     end
   end
@@ -180,7 +180,7 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
     @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns({})
     @config.expect.load_unity_helper.returns("")
-    @config.expect.memcpy_if_unknown.returns(false)
+    @config.expect.memcmp_if_unknown.returns(false)
     @parser = CMockUnityHelperParser.new(@config)
     @parser.c_types = {
       'UINT8'   => "TEST_ASSERT_EQUAL_UINT8_MESSAGE",

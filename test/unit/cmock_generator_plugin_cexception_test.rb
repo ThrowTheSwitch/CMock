@@ -92,16 +92,17 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "add a mock interfaces for functions without arguments" do
+  should "add mock interfaces for functions without arguments" do
     function = {:name => "Pear", :args_string => "void", :args => [], :rettype => "void"}
     @config.expect.cexception_call_count_type.returns("uint32")
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
+    @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Pear_ThrowOnCallCount_Head", "Mock.Pear_CallsExpected").returns("mock_return_1")
     @utils.expect.code_insert_item_into_expect_array("EXCEPTION_TYPE", "Mock.Pear_ThrowValue_Head", "toThrow").returns("mock_return_2")
   
     expected = ["void Pear_ExpectAndThrow(EXCEPTION_TYPE toThrow)\n",
                 "{\n",
-                "  Mock.Pear_CallsExpected++;\n",
+                "mock_retval_0",
                 "mock_return_1",
                 "  Mock.Pear_ThrowOnCallCount = Mock.Pear_ThrowOnCallCount_Head;\n",
                 "  Mock.Pear_ThrowOnCallCount += Mock.Pear_CallCount;\n",
@@ -118,13 +119,14 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
     function = {:name => "Pear", :args_string => "int blah", :args => [{ :type => "int", :name => "blah" }], :rettype => "void"}
     @config.expect.cexception_call_count_type.returns("uint32")
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
+    @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Pear_ThrowOnCallCount_Head", "Mock.Pear_CallsExpected").returns("mock_return_1")
     @utils.expect.code_insert_item_into_expect_array("EXCEPTION_TYPE", "Mock.Pear_ThrowValue_Head", "toThrow").returns("mock_return_2")
     @utils.expect.create_call_list(function).returns("mock_return_3")
     
     expected = ["void Pear_ExpectAndThrow(int blah, EXCEPTION_TYPE toThrow)\n",
                 "{\n",
-                "  Mock.Pear_CallsExpected++;\n",
+                "mock_retval_0",
                 "mock_return_1",
                 "  Mock.Pear_ThrowOnCallCount = Mock.Pear_ThrowOnCallCount_Head;\n",
                 "  Mock.Pear_ThrowOnCallCount += Mock.Pear_CallCount;\n",

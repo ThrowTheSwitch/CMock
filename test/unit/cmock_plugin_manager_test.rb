@@ -6,6 +6,7 @@ class CMockPluginManagerTest < Test::Unit::TestCase
     create_mocks :config, :utils, :pluginA, :pluginB
     @config.stubs!(:respond_to?).returns(true)
     @config.stubs!(:when_ptr_star).returns(:compare_data)
+    @config.stubs!(:enforce_strict_ordering).returns(false)
   end
 
   def teardown

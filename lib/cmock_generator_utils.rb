@@ -1,12 +1,13 @@
 
 class CMockGeneratorUtils
 
-  attr_accessor :config, :tab, :helpers
+  attr_accessor :config, :tab, :helpers, :ordered
 
   def initialize(config, helpers={})
     @config = config
 	  @tab = @config.tab
     @ptr_handling = @config.when_ptr_star
+    @ordered = @config.enforce_strict_ordering
 	  @helpers = helpers
   end
   
@@ -48,35 +49,31 @@ class CMockGeneratorUtils
     lines << "#{@tab}}\n"
   end
   
-  def code_handle_return_value(function, indent)
-    lines = ["\n"]
-    lines << "#{indent}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_Tail)\n"
-    lines << "#{indent}{\n"
-    lines << "#{indent}#{@tab}#{function[:rettype]} toReturn = *Mock.#{function[:name]}_Return;\n"
-    lines << "#{indent}#{@tab}Mock.#{function[:name]}_Return++;\n"
-    lines << "#{indent}#{@tab}return toReturn;\n"
-    lines << "#{indent}}\n"
-    lines << "#{indent}else\n"
-    lines << "#{indent}{\n"
-    lines << "#{indent}#{@tab}return *Mock.#{function[:name]}_Return_Head;\n"
-    lines << "#{indent}}\n"
-  end
-  
   def code_add_an_arg_expectation(function, arg_type, expected)
     lines = code_insert_item_into_expect_array(arg_type, "Mock.#{function[:name]}_Expected_#{expected}_Head", expected)
     lines << "#{@tab}Mock.#{function[:name]}_Expected_#{expected} = Mock.#{function[:name]}_Expected_#{expected}_Head;\n"
     lines << "#{@tab}Mock.#{function[:name]}_Expected_#{expected} += Mock.#{function[:name]}_CallCount;\n"
   end
   
-  def code_verify_an_arg_expectation(function, arg_type, actual)
-    lines = ["\n"]
-    lines << "#{@tab}if (Mock.#{function[:name]}_Expected_#{actual} != Mock.#{function[:name]}_Expected_#{actual}_Tail)\n"
-    lines << "#{@tab}{\n"
-    lines << "#{@tab}#{@tab}#{arg_type}* p_expected = Mock.#{function[:name]}_Expected_#{actual};\n"
-    lines << "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{actual}++;\n"
-    lines << expect_helper(arg_type, '*p_expected', actual, "\"Function '#{function[:name]}' called with unexpected value for parameter '#{actual}'.\"","#{@tab}#{@tab}")
-    lines << "#{@tab}}\n"
+  def code_add_base_expectation(func_name)
+    lines = ["#{@tab}Mock.#{func_name}_CallsExpected++;\n"]
+    if (@ordered)
+      lines << [ "#{@tab}++GlobalExpectCount;\n",
+                 code_insert_item_into_expect_array("int", "Mock.#{func_name}_CallOrder_Head", "GlobalExpectCount"),
+                 "#{@tab}Mock.#{func_name}_CallOrder = Mock.#{func_name}_CallOrder_Head;\n",
+                 "#{@tab}Mock.#{func_name}_CallOrder += Mock.#{func_name}_CallOrder;\n" ]
+    end
     lines.flatten
+  end
+  
+  def code_verify_an_arg_expectation(function, arg_type, actual)
+    [ "\n",
+      "#{@tab}if (Mock.#{function[:name]}_Expected_#{actual} != Mock.#{function[:name]}_Expected_#{actual}_Tail)\n",
+      "#{@tab}{\n",
+      "#{@tab}#{@tab}#{arg_type}* p_expected = Mock.#{function[:name]}_Expected_#{actual};\n",
+      "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{actual}++;\n",
+      expect_helper(arg_type, '*p_expected', actual, "\"Function '#{function[:name]}' called with unexpected value for parameter '#{actual}'.\"","#{@tab}#{@tab}"),
+      "#{@tab}}\n" ].flatten
   end
   
   def expect_helper(c_type, expected, actual, msg, indent)
@@ -98,5 +95,19 @@ class CMockGeneratorUtils
       else
         return "#{indent}#{unity_func}(#{expected}, #{actual}#{unity_msg});\n" 
     end  
+  end
+
+  def code_handle_return_value(function, indent)
+    [ "\n",
+      "#{indent}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_Tail)\n",
+      "#{indent}{\n",
+      "#{indent}#{@tab}#{function[:rettype]} toReturn = *Mock.#{function[:name]}_Return;\n",
+      "#{indent}#{@tab}Mock.#{function[:name]}_Return++;\n",
+      "#{indent}#{@tab}return toReturn;\n",
+      "#{indent}}\n",
+      "#{indent}else\n",
+      "#{indent}{\n",
+      "#{indent}#{@tab}return *Mock.#{function[:name]}_Return_Head;\n",
+      "#{indent}}\n" ]
   end
 end

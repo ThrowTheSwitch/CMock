@@ -10,7 +10,7 @@ class CMockUnityHelperParser
   def get_helper(ctype)
     lookup = ctype.gsub(/const\s+/,'').strip.gsub(/\s+/,'_')
     return @c_types[lookup] if (@c_types[lookup])
-    raise("Don't know how to test #{ctype} and memory tests are disabled!") unless @config.memcpy_if_unknown
+    raise("Don't know how to test #{ctype} and memory tests are disabled!") unless @config.memcmp_if_unknown
     return 'TEST_ASSERT_EQUAL_MEMORY_MESSAGE'
   end
   
