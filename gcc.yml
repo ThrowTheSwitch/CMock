@@ -1,17 +1,18 @@
+---
 compiler:
   path: gcc
-  source_path:    'examples/src/'
+  source_path:     &systest_generated_path 'test/system/generated/'
   unit_tests_path: &unit_tests_path 'examples/test/'
-  mocks_path:     'examples/mocks/'
-  build_path:      &build_path 'examples/build/'
+  mocks_path:      &systest_mocks_path 'test/system/generated/'
+  build_path:      &systest_build_path 'test/system/build/'
   options:
     - -c
   includes:
     prefix: '-I'
     items:
-      - 'examples/src/'
+      - *systest_generated_path
       - *unit_tests_path
-      - 'examples/mocks/'
+      - *systest_mocks_path
       - 'vendor/unity/src/'
   defines:
     prefix: '-D'
@@ -19,7 +20,8 @@ compiler:
   object_files:
     prefix: '-o'
     extension: '.o'
-    destination: *build_path
+    destination: *systest_build_path
+    
 linker:
   path: gcc
   options:
@@ -27,17 +29,11 @@ linker:
   includes:
     prefix: '-I'
   object_files:
-    path: *build_path
+    path: *systest_build_path
     extension: '.o'
   bin_files:
     prefix: '-o'
     extension: '.exe'
-    destination: *build_path
-:cmock:
-  :mock_path: 'examples/mocks/'
-  :includes:
-    - 'Types.h'
-    - 'UnityHelper.h'
-  :plugins:
-    - 'ignore'
-  :unity_helper: 'vendor/unity/src/UnityHelper.h'
+    destination: *systest_build_path
+
+

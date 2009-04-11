@@ -3,10 +3,15 @@ require 'fileutils'
 require 'cmock'
 require 'generate_test_runner'
 require 'unity_test_summary'
+require 'systest_generator'
 
 module RakefileHelpers
 
+  SYSTEST_GENERATED_FILES_PATH = 'test/system/generated/'
+  SYSTEST_BUILD_FILES_PATH     = 'test/system/build/'
+
   C_EXTENSION = '.c'
+  RESULT_EXTENSION = '.result'
   
   def report(message)
     puts message
@@ -20,19 +25,13 @@ module RakefileHelpers
   end
   
   def configure_clean
-    CLEAN.include($cfg['compiler']['mocks_path'] + '*.*') unless $cfg['compiler']['mocks_path'].nil?
-    CLEAN.include($cfg['compiler']['build_path'] + '*.*') unless $cfg['compiler']['mocks_path'].nil?
+    CLEAN.include(SYSTEST_GENERATED_FILES_PATH + '*.*')
+    CLEAN.include(SYSTEST_BUILD_FILES_PATH + '*.*')
   end
   
   def configure_toolchain(config_file)
     load_configuration(config_file)
     configure_clean
-  end
-  
-  def get_unit_test_files
-    path = $cfg['compiler']['unit_tests_path'] + 'Test*' + C_EXTENSION
-    path.gsub!(/\\/, '/')
-    FileList.new(path)
   end
   
   def get_local_include_dirs
@@ -146,11 +145,11 @@ module RakefileHelpers
   end
   
   def execute(command_string, verbose=true)
-    report command_string
+#    report command_string
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
     if $?.exitstatus != 0
-      raise "Command failed. (Returned #{$?.exitstatus})"
+      raise "#{command_string} failed. (Returned #{$?.exitstatus})"
     end
     return output
   end
@@ -165,50 +164,50 @@ module RakefileHelpers
     summary.run
   end
   
-  def run_systests(test_files)
+  def run_systests(test_case_files)    
+    SystemTestGenerator.new.generate_files(test_case_files)
+    test_files = FileList.new(SYSTEST_GENERATED_FILES_PATH + 'test*.c')
     
-    report 'Running system tests...'
-    
-    # Tack on TEST define for compiling unit tests
     load_configuration($cfg_file)
-    test_defines = ['TEST']
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
-    $cfg['compiler']['defines']['items'] << 'TEST'
     
     include_dirs = get_local_include_dirs
-    
+        
     # Build and execute each unit test
     test_files.each do |test|
-    
+
       obj_list = []
+      
+      test_base    = File.basename(test, C_EXTENSION)
+      cmock_config = test_base.gsub(/test_/, '') + '_cmock.yml'
       
       # Detect dependencies and build required required modules
       extract_headers(test).each do |header|
+
         # Generate mock if a mock was included
-        if header =~ /^Mock(.*)\.h/i
+        if header =~ /^mock_(.*)\.h/i
           module_name = $1
-          cmock = CMock.new($cfg_file)
+          cmock = CMock.new(SYSTEST_GENERATED_FILES_PATH + cmock_config)
           cmock.setup_mocks("#{$cfg['compiler']['source_path']}#{module_name}.h")
         end
         # Compile corresponding source file if it exists
         src_file = find_source_file(header, include_dirs)
         if !src_file.nil?
-          compile(src_file, test_defines)
+          compile(src_file)
           obj_list << header.ext($cfg['compiler']['object_files']['extension'])
         end
       end
-      
+
       # Generate and build the test suite runner
-      test_base = File.basename(test, C_EXTENSION)
-      runner_name = test_base + '_Runner.c'
-      runner_path = $cfg['compiler']['build_path'] + runner_name
+      runner_name = test_base + '_runner.c'
+      runner_path = $cfg['compiler']['source_path'] + runner_name
       test_gen = UnityTestRunnerGenerator.new
-      test_gen.run(test, runner_path, ['Types'])
-      compile(runner_path, test_defines)
+      test_gen.run(test, runner_path, [])
+      compile(runner_path)
       obj_list << runner_name.ext($cfg['compiler']['object_files']['extension'])
       
       # Build the test module
-      compile(test, test_defines)
+      compile(test)
       obj_list << test_base.ext($cfg['compiler']['object_files']['extension'])
       
       # Link the test executable
@@ -222,44 +221,48 @@ module RakefileHelpers
       else
         cmd_str = "#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}"
       end
-      output = execute(cmd_str)
-      test_results = $cfg['compiler']['build_path'] + test_base
-      if output.match(/OK$/m).nil?
-        test_results += '.testfail'
-      else
-        test_results += '.testpass'
-      end
+      output = execute(cmd_str, false)
+      test_results = $cfg['compiler']['build_path'] + test_base + RESULT_EXTENSION
       File.open(test_results, 'w') { |f| f.print output }
-      
     end
-  end
-  
-  def build_application(main)
-  
-    report "Building application..."
     
-    obj_list = []
-    load_configuration($cfg_file)
-    main_path = $cfg['compiler']['source_path'] + main + C_EXTENSION
+    # Parse and report test results
+    total_tests = 0
+    total_failures = 0
+    failure_messages = []
 
-    # Detect dependencies and build required required modules
-    include_dirs = get_local_include_dirs
-    extract_headers(main_path).each do |header|
-      src_file = find_source_file(header, include_dirs)
-      if !src_file.nil?
-        compile(src_file)
-        obj_list << header.ext($cfg['compiler']['object_files']['extension'])
+    test_case_files.each do |test_case|      
+      tests = (YAML.load_file(test_case))[:systest][:tests][:units]
+      total_tests += tests.size
+
+      test_file    = 'test_' + File.basename(test_case).ext(C_EXTENSION)
+      result_file  = test_file.ext(RESULT_EXTENSION)
+      test_results = File.read(SYSTEST_BUILD_FILES_PATH + result_file)
+
+      tests.each_with_index do |test, index|
+        # compare test's intended pass/fail state with pass/fail state in actual results;
+        # if they don't match, the system test has failed
+        if (test[:pass] != !((test_results =~ /test#{index+1}::: PASS/).nil?))
+          total_failures += 1
+          failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}"
+        end
       end
     end
     
-    # Build the main source file
-    main_base = File.basename(main_path, C_EXTENSION)
-    compile(main_path)
-    obj_list << main_base.ext($cfg['compiler']['object_files']['extension'])
+    puts "\n"
+    puts "--------------------------\n"
+    puts "SYSTEM TEST SUMMARY\n"
+    puts "--------------------------\n"
+    puts "TOTAL TESTS: #{total_tests} TOTAL FAILURES: #{total_failures}\n"
+    puts "\n"
     
-    # Create the executable
-    link(main_base, obj_list)
+    failure_messages.each do |failure|
+      puts failure
+    end
+    
+    puts ''
+
+    return total_failures
   end
-  
 end
 

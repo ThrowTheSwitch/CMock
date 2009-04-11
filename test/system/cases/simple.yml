@@ -1,0 +1,54 @@
+---
+:cmock:
+  :plugins:
+  - 'ignore'
+
+:systest:
+  :types: |
+    #define UINT32 unsigned int
+    
+    typedef signed int custom_type;
+
+  :mockable: |
+    UINT32 foo(custom_type a);
+    UINT32 bar(custom_type b);
+
+  :source: 
+    :header: |
+      unsigned int foobar(int a, int b);
+    :code: |
+      unsigned int foobar(int a, int b)    
+      {
+        return foo((custom_type)a) + bar((custom_type)b);
+      }    
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+    :units:
+    - :pass: TRUE
+      :should: 'exercise two simple ExpectAndReturn mock calls'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)2, 20);
+          TEST_ASSERT_EQUAL(30, foobar(1, 2));
+        }
+      
+    - :pass: FALSE
+      :should: 'fail because bar() is called but not expected'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          TEST_ASSERT_EQUAL(30, foobar(1, 2));
+        }
+      
+  # :unity_helper:
+  #   :header: |
+  #     // header stuff
+  #   :code:
+  #     // code stuff
+  #     

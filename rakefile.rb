@@ -10,15 +10,11 @@ include RakefileHelpers
 
 DEFAULT_CONFIG_FILE = 'gcc.yml'
 
+configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
-task :default => [:clobber, 'test:all', :app]
+task :default => ['test:all']
 task :cruise => [:default]
-
-desc "Build application"
-task :app do
-  build_application('Main')
-end
 
 desc "Load configuration"
 task :config, :config_file do |t, args|
@@ -30,31 +26,19 @@ end
 namespace :test do
 
   desc "Run CMock and example application tests"
-  task :all => [:clean, :units, :example, :app]
+  task :all => ['test:units', 'test:system']
 
   Rake::TestTask.new('units') do |t|
     t.pattern = 'test/unit/*_test.rb'
     t.verbose = true
   end
   
-  desc "Run example unit tests"
-  task :example => [:clean] do
-    systest_test_files = get_unit_test_files
-    run_systests(systest_test_files)
-    tests_failed = report_summary
-    raise "Unit tests failed." if (tests_failed > 0)
+  desc "Run system tests"
+  task :system => [:clobber] do
+    report 'Running system tests'
+
+    tests_failed = run_systests(FileList['test/system/cases/*.yml'])
+    raise "System tests failed." if (tests_failed > 0)
   end
-  
-  get_unit_test_files.each do |test_file|
-    file_name = File.basename(test_file)
-    module_name = file_name.sub(/Test/,'')
-    task file_name do
-      run_systests(test_file)
-    end
-    desc "Test #{module_name}"
-    task module_name do
-      run_systests(test_file)
-    end
-  end
-  
+    
 end

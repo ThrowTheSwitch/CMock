@@ -5,7 +5,8 @@ ROOT_PATH = File.expand_path(File.dirname(__FILE__) + "/../")
   'lib',
   'vendor/behaviors/lib',
   'vendor/hardmock/lib',
-  'vendor/unity/auto/'
+  'vendor/unity/auto/',
+  'test/system/'
 ].each do |dir|
   $LOAD_PATH.unshift(File.join(ROOT_PATH, dir))
 end
