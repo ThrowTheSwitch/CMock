@@ -35,7 +35,7 @@ namespace :test do
   
   desc "Run system tests"
   task :system => [:clobber] do
-    report 'Running system tests'
+    report "\nRunning system tests..."
 
     tests_failed = run_systests(FileList['test/system/cases/*.yml'])
     raise "System tests failed." if (tests_failed > 0)

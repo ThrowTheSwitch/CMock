@@ -181,10 +181,12 @@ module RakefileHelpers
       test_base    = File.basename(test, C_EXTENSION)
       cmock_config = test_base.gsub(/test_/, '') + '_cmock.yml'
       
+      puts "Executing system test cases contained in #{File.basename(test)}..."
+      
       # Detect dependencies and build required required modules
       extract_headers(test).each do |header|
 
-        # Generate mock if a mock was included
+        # Generate any needed mocks
         if header =~ /^mock_(.*)\.h/i
           module_name = $1
           cmock = CMock.new(SYSTEST_GENERATED_FILES_PATH + cmock_config)
@@ -244,7 +246,8 @@ module RakefileHelpers
         # if they don't match, the system test has failed
         if (test[:pass] != !((test_results =~ /test#{index+1}::: PASS/).nil?))
           total_failures += 1
-          failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}"
+          test_results =~ /test#{index+1}:(.+)/
+          failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:#{$1}"
         end
       end
     end
@@ -256,8 +259,11 @@ module RakefileHelpers
     puts "TOTAL TESTS: #{total_tests} TOTAL FAILURES: #{total_failures}\n"
     puts "\n"
     
-    failure_messages.each do |failure|
-      puts failure
+    if (failure_messages.size > 0)
+      puts 'System test failures:'
+      failure_messages.each do |failure|
+        puts failure
+      end
     end
     
     puts ''

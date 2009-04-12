@@ -1,0 +1,66 @@
+---
+:cmock:
+  :plugins:
+  - 'ignore'
+
+:systest:
+  :types: |
+
+  :mockable: |
+    int foo(int a);
+    void bar(int b);
+
+  :source: 
+    :header: |
+      int function(int a, int b);
+    :code: |
+      int function(int a, int b)
+      {
+        bar(b);
+        return foo(a) + foo(b);
+      }    
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+    :units:
+    - :pass: TRUE
+      :should: 'successfully exercise simple ExpectAndReturn mock calls'
+      :code: |
+        test()
+        {
+          bar_Expect(2);
+          foo_ExpectAndReturn(1, 10);
+          foo_ExpectAndReturn(2, 20);
+          TEST_ASSERT_EQUAL(30, function(1, 2));
+        }
+      
+    - :pass: TRUE
+      :should: 'ignore foo() calls'
+      :code: |
+        test()
+        {
+          bar_Expect(4);
+          foo_IgnoreAndReturn(10);
+          TEST_ASSERT_EQUAL(20, function(3, 4));
+        }
+      
+    - :pass: TRUE
+      :should: 'ignore bar() and foo() calls'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_IgnoreAndReturn(50);
+          TEST_ASSERT_EQUAL(100, function(0, 0));
+        }
+
+...
+      
+  # :unity_helper:
+  #   :header: |
+  #     // header stuff
+  #   :code:
+  #     // code stuff
+  #     
