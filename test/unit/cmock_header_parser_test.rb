@@ -13,9 +13,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "create and initialize variables to defaults appropriately" do
     @parser = CMockHeaderParser.new("//some contents")
     assert_nil(@parser.funcs)
-    assert_equal(/\w+\**/, @parser.match_type)
+    assert_equal(/[^\s]+\s*\**?/, @parser.match_type)
     assert_equal(['static', '__monitor', '__ramfunc', '__irq', '__fiq'], @parser.c_attributes)
-    assert_equal(/(\w*\s+)*([^\s]+)\s+(\w+)\s*\(([^\)]*)\)/, @parser.declaration_parse_matcher)
+    assert_equal(/(\w*\s+)*??(#{@parser.match_type})\s*(\w+)\s*\(([^\)]*)\)/, @parser.declaration_parse_matcher)
     assert_nil(@parser.included)
   end
   
@@ -320,7 +320,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source =
       "MY_STRUCT* HooWah(char * format);\n" +
-      "bool* HotShot(HIS_STRUCT *p, unsigned int* pint);\n"
+      "bool* HotShot(HIS_STRUCT *p, unsigned int* pint);\n" +
+      "bool * HotDog(BOW_WOW *p, unsigned int* pint);\n" +
+      "static bool *HotToTrot(unsigned int * struttin);\n"
       
     @parser = CMockHeaderParser.new(source)
     parsed_stuff = @parser.parse
@@ -347,7 +349,33 @@ class CMockHeaderParserTest < Test::Unit::TestCase
           {:type => "unsigned int*", :name => "pint"}
         ],
         :name => "HotShot"
+      },
+
+      {
+        :modifier => "",
+        :args_string => "BOW_WOW *p, unsigned int* pint",
+        :rettype => "bool*",
+        :var_arg => nil,
+        :args => 
+        [
+          {:type => "BOW_WOW*", :name => "p"},
+          {:type => "unsigned int*", :name => "pint"}
+        ],
+        :name => "HotDog"
+      },
+      
+      {
+        :modifier => "static",
+        :args_string => "unsigned int * struttin",
+        :rettype => "bool*",
+        :var_arg => nil,
+        :args => 
+        [
+          {:type => "unsigned int*", :name => "struttin"}
+        ],
+        :name => "HotToTrot"
       }
+
     ]
     
     assert_equal(expected, parsed_stuff[:functions])

@@ -2,12 +2,12 @@ class CMockHeaderParser
 
   attr_accessor :match_type, :attribute_match, :src_lines, :funcs, :c_attributes, :declaration_parse_matcher, :included
   
-  def initialize(source, match_type=/\w+\**/, attributes=['static', '__monitor', '__ramfunc', '__irq', '__fiq'])
+  def initialize(source, match_type=/[^\s]+\s*\**?/, attributes=['static', '__monitor', '__ramfunc', '__irq', '__fiq'])
     import_source(source)
     @funcs = nil
     @match_type = match_type
     @c_attributes = attributes
-    @declaration_parse_matcher = /(\w*\s+)*([^\s]+)\s+(\w+)\s*\(([^\)]*)\)/
+    @declaration_parse_matcher = /(\w*\s+)*??(#{match_type})\s*(\w+)\s*\(([^\)]*)\)/
     @included = nil
   end
   
@@ -82,7 +82,7 @@ class CMockHeaderParser
       @funcs = []
       depth = 0
       @src_lines.each do |line|
-        if depth.zero? && line =~ /#{@attribute_match}\s*#{@match_type}\s+\w+\s*\(.*\)/m
+        if depth.zero? && line =~ /#{@attribute_match}\s*#{@match_type}\s*\w+\s*\(.*\)/m
           @funcs << line.strip.gsub(/\s+/, ' ')
         end
         if line =~ /\{/
@@ -129,15 +129,12 @@ class CMockHeaderParser
     modifier = $1 
     modifier = '' if modifier.nil?
     decl[:modifier] = modifier.strip
-    decl[:rettype] = $2
+    decl[:rettype] = $2.strip
     decl[:name] = $3
     args = $4
     
     #put the asterisk with the type (where it belongs)
-    if (decl[:name][0] == '*')
-      decl[:rettype] << '*'
-      decl[:name].slice!(0)
-    end
+    decl[:rettype].gsub!(/\s+\*/,'*')
     
     #remove default parameter statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')

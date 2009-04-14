@@ -1,0 +1,82 @@
+---
+:cmock:
+  :plugins:
+  - # no plugins
+
+:systest:
+  :types: |
+    typedef unsigned short U16;
+
+  :mockable: |
+    U16  *ptr_return1(int a);
+    U16*  ptr_return2(int a);
+    U16 * ptr_return3(int a);
+
+    void var_args1(int a, ...);
+    void var_args2(int a, int b, ...);
+    
+    void arg_list(int * a, int *b, int* c);
+
+  :source: 
+    :header: |
+      U16* function1(int a);
+      void function2(int a, int b);
+      void function3(void);
+    :code: |
+      int A, B, C;
+
+      U16* function1(int a)
+      {
+        ptr_return1(a);
+        ptr_return2(a);
+        return ptr_return3(a);
+      }    
+
+      void function2(int a, int b)
+      {
+        var_args1(a, 3);
+        var_args2(a, b, 'c');
+      }
+      
+      void function3(void)
+      {
+        arg_list(&A, &B, &C);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+      
+      extern int A, B, C;
+    :units:
+    - :pass: TRUE
+      :should: 'just do cursory return value check - compilation was the important part'
+      :code: |
+        test()
+        {
+          U16 retval;
+          ptr_return1_ExpectAndReturn(2, NULL);
+          ptr_return2_ExpectAndReturn(2, NULL);
+          ptr_return3_ExpectAndReturn(2, &retval);
+          TEST_ASSERT_EQUAL(&retval, function1(2));
+        }
+    - :pass: TRUE
+      :should: 'just do cursory var arg check - compilation was the important part'
+      :code: |
+        test()
+        {
+          var_args1_Expect(2);
+          var_args2_Expect(2, 3);
+          function2(2, 3);
+        }
+    - :pass: TRUE
+      :should: 'just do cursory argument list check - compilation was the important part'
+      :code: |
+        test()
+        {
+          arg_list_Expect(&A, &B, &C);
+          function3();
+        }
+
+...
