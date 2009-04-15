@@ -6,6 +6,11 @@
 :systest:
   :types: |
     typedef unsigned short U16;
+    typedef struct _POINT_T
+    {
+      int x;
+      int y;
+    } POINT_T;
 
   :mockable: |
     U16  *ptr_return1(int a);
@@ -16,12 +21,22 @@
     void var_args2(int a, int b, ...);
     
     void arg_list(int * a, int *b, int* c);
+    
+    unsigned int** ptr_ptr_return1(unsigned int** a);
+    unsigned int* *ptr_ptr_return2(unsigned int* *a);
+    unsigned int **ptr_ptr_return3(unsigned int **a);
+    unsigned int ** ptr_ptr_return4(unsigned int ** a);
 
+    inline unsigned long int incredible_descriptors(const unsigned short a);
+    
   :source: 
     :header: |
       U16* function1(int a);
       void function2(int a, int b);
       void function3(void);
+      void function4(unsigned int a);
+      int function5(int a);
+      
     :code: |
       int A, B, C;
 
@@ -43,6 +58,19 @@
         arg_list(&A, &B, &C);
       }
 
+      void function4(unsigned int a)
+      {
+        ptr_ptr_return1((unsigned int**)a);
+        ptr_ptr_return2((unsigned int**)a);
+        ptr_ptr_return3((unsigned int**)a);
+        ptr_ptr_return4((unsigned int**)a);
+      }
+      
+      int function5(int a)
+      {
+        return (int)incredible_descriptors((const unsigned short)a);
+      }
+      
   :tests:
     :common: |
       void setUp(void) {}
@@ -61,6 +89,7 @@
           ptr_return3_ExpectAndReturn(2, &retval);
           TEST_ASSERT_EQUAL(&retval, function1(2));
         }
+        
     - :pass: TRUE
       :should: 'just do cursory var arg check - compilation was the important part'
       :code: |
@@ -70,6 +99,7 @@
           var_args2_Expect(2, 3);
           function2(2, 3);
         }
+        
     - :pass: TRUE
       :should: 'just do cursory argument list check - compilation was the important part'
       :code: |
@@ -79,4 +109,24 @@
           function3();
         }
 
+    - :pass: TRUE
+      :should: 'just do cursory value check - compilation was the important part'
+      :code: |
+        test()
+        {
+          ptr_ptr_return1_ExpectAndReturn((unsigned int**)A, (unsigned int**)B);
+          ptr_ptr_return2_ExpectAndReturn((unsigned int**)A, (unsigned int**)B);
+          ptr_ptr_return3_ExpectAndReturn((unsigned int**)A, (unsigned int**)B);
+          ptr_ptr_return4_ExpectAndReturn((unsigned int**)A, (unsigned int**)B);
+          function4((unsigned int)A);
+        }
+
+    - :pass: TRUE
+      :should: 'just do cursory return value check - compilation was the important part'
+      :code: |
+        test()
+        {
+          incredible_descriptors_ExpectAndReturn(888, 777);
+          TEST_ASSERT_EQUAL(777, function5(888));
+        }
 ...
