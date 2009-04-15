@@ -1,13 +1,12 @@
 class CMockHeaderParser
 
-  attr_accessor :match_type, :attribute_match, :src_lines, :funcs, :c_attributes, :declaration_parse_matcher, :included
+  attr_accessor :src_lines, :funcs, :c_attributes, :included
   
   def initialize(source, cfg)
     import_source(source)
     @funcs = nil
-    @match_type = /[^\s]+\s*\**?/
     @c_attributes = cfg.attributes
-    @declaration_parse_matcher = /(\w*\s+)*??(#{@match_type})\s*(\w+)\s*\(([^\)]*)\)/
+    @declaration_parse_matcher = /(.*)\(([^\)]*)\)/
     @included = nil
   end
   
@@ -82,7 +81,7 @@ class CMockHeaderParser
       @funcs = []
       depth = 0
       @src_lines.each do |line|
-        if depth.zero? && line =~ /#{@attribute_match}\s*#{@match_type}\s*\w+\s*\(.*\)/m
+        if depth.zero? && line =~ /#{@declaration_parse_matcher}/m
           @funcs << line.strip.gsub(/\s+/, ' ')
         end
         if line =~ /\{/
@@ -105,9 +104,10 @@ class CMockHeaderParser
     arg_list.split(',').each do |arg|
       arg = arg.strip
       return args if ((arg == '...') || (arg == 'void'))
-      arg_match = arg.match /^(.+\s+\*?)(\w+)$/
-      raise "Failed parsing argument list at argument: '#{arg}'" if arg_match.nil? 
-      args << {:type => arg_match[1].strip.gsub(/\s+\*/,'*'), :name => arg_match[-1].strip}
+      arg.gsub!(/\s+\*/,'*')     #remove space to place asterisks with type (where they belong)
+      arg.gsub!(/\*(\w)/,'* \1') #pull asterisks away from param to place asterisks with type (where they belong)
+      arg_elements = arg.split
+      args << {:type => arg_elements[0..-2].join(' '), :name => arg_elements[-1].strip}
     end
     return args
   end
@@ -123,19 +123,35 @@ class CMockHeaderParser
   
   def parse_declaration(declaration)
     decl = {}
-  
-    @declaration_parse_matcher.match(declaration)
+
+    regex_match = @declaration_parse_matcher.match(declaration)
+    raise "Failed parsing function declaration: '#{declaration}'" if regex_match.nil? 
     
-    modifier = $1 
-    modifier = '' if modifier.nil?
-    decl[:modifier] = modifier.strip
-    decl[:rettype] = $2.strip
-    decl[:name] = $3
-    args = $4
+    #grab argument list
+    args = regex_match[2].strip
     
-    #put the asterisk with the type (where it belongs)
-    decl[:rettype].gsub!(/\s+\*/,'*')
-    
+    #process function attributes, return type, and name
+    descriptors = regex_match[1]
+    descriptors.gsub!(/\s+\*/,'*')     #remove space to place asterisks with return type (where they belong)
+    descriptors.gsub!(/\*(\w)/,'* \1') #pull asterisks away from function name to place asterisks with return type (where they belong)
+    descriptors = descriptors.split    #array of all descriptor strings
+
+    #grab name
+    decl[:name] = descriptors[-1]      #snag name as last array item
+
+    #build attribute and return type strings
+    decl[:modifier] = []
+    decl[:rettype]  = []    
+    descriptors[0..-2].each do |word|
+      if @c_attributes.include?(word)
+        decl[:modifier] << word
+      else
+        decl[:rettype]  << word
+      end
+    end
+    decl[:modifier] = decl[:modifier].join(' ')
+    decl[:rettype]  = decl[:rettype].join(' ')
+        
     #remove default parameter statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')

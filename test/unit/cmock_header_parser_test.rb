@@ -5,8 +5,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
   def setup
     create_mocks :config
-    @config.expect.attributes.returns(['static','inline'])
-    #@parser = CMockHeaderParser.new("//some contents", @config)
+    @config.expect.attributes.returns(['static', 'inline', '__ramfunc'])
   end
 
   def teardown
@@ -15,9 +14,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "create and initialize variables to defaults appropriately" do
     @parser = CMockHeaderParser.new("", @config)
     assert_nil(@parser.funcs)
-    assert_equal(/[^\s]+\s*\**?/, @parser.match_type)
-    assert_equal(['static', 'inline'], @parser.c_attributes)
-    assert_equal(/(\w*\s+)*??(#{@parser.match_type})\s*(\w+)\s*\(([^\)]*)\)/, @parser.declaration_parse_matcher)
+    assert_equal(['static', 'inline', '__ramfunc'], @parser.c_attributes)
     assert_nil(@parser.included)
   end
   
@@ -252,7 +249,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source =
       "static \tint \n Foo(int a, unsigned int b);\n" +
-      "inline \t bool  bar \n(uint la, int de, bool da);\n"
+      "inline\t bool  bar \n(uint la, int de, bool da);\n" +
+      "inline static __ramfunc bool bar ( uint thinger );\n"
       
     @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
@@ -280,7 +278,19 @@ class CMockHeaderParserTest < Test::Unit::TestCase
           {:type => "bool", :name => "da"}
         ],
         :name => "bar"
-      }
+      },
+      
+      {
+        :modifier => "inline static __ramfunc",
+        :args_string => "uint thinger",
+        :rettype => "bool",
+        :var_arg => nil,
+        :args => 
+        [
+          {:type => "uint", :name => "thinger"},
+        ],
+        :name => "bar"
+      }      
     ]
     
     assert_equal(expected, parsed_stuff[:functions])
@@ -321,10 +331,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "attach * to type" do
   
     source =
-      "MY_STRUCT* HooWah(char * format);\n" +
-      "bool* HotShot(HIS_STRUCT *p, unsigned int* pint);\n" +
+      "MY_STRUCT* HooWah(char *** format);\n" +
+      "bool* HotShot(HIS_STRUCT **p, unsigned int* pint);\n" +
       "bool * HotDog(BOW_WOW *p, unsigned int* pint);\n" +
-      "static bool *HotToTrot(unsigned int * struttin);\n"
+      "bool ** HotDog(BOW_WOW* p, unsigned int* pint);\n" +
+      "static bool *HotToTrot(unsigned int * struttin);\n" +
+      "static bool ***HotToTrot(unsigned int ** struttin);\n"
       
     @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
@@ -333,21 +345,21 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     [
       {
         :modifier => "",
-        :args_string => "char * format",
+        :args_string => "char *** format",
         :rettype => "MY_STRUCT*",
         :var_arg => nil,
-        :args => [{:type => "char*", :name => "format"}],
+        :args => [{:type => "char***", :name => "format"}],
         :name => "HooWah"
       },
       
       {
         :modifier => "",
-        :args_string => "HIS_STRUCT *p, unsigned int* pint",
+        :args_string => "HIS_STRUCT **p, unsigned int* pint",
         :rettype => "bool*",
         :var_arg => nil,
         :args => 
         [
-          {:type => "HIS_STRUCT*", :name => "p"},
+          {:type => "HIS_STRUCT**", :name => "p"},
           {:type => "unsigned int*", :name => "pint"}
         ],
         :name => "HotShot"
@@ -367,6 +379,19 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       },
       
       {
+        :modifier => "",
+        :args_string => "BOW_WOW* p, unsigned int* pint",
+        :rettype => "bool**",
+        :var_arg => nil,
+        :args => 
+        [
+          {:type => "BOW_WOW*", :name => "p"},
+          {:type => "unsigned int*", :name => "pint"}
+        ],
+        :name => "HotDog"
+      },
+      
+      {
         :modifier => "static",
         :args_string => "unsigned int * struttin",
         :rettype => "bool*",
@@ -376,8 +401,19 @@ class CMockHeaderParserTest < Test::Unit::TestCase
           {:type => "unsigned int*", :name => "struttin"}
         ],
         :name => "HotToTrot"
-      }
+      },
 
+      {
+        :modifier => "static",
+        :args_string => "unsigned int ** struttin",
+        :rettype => "bool***",
+        :var_arg => nil,
+        :args => 
+        [
+          {:type => "unsigned int**", :name => "struttin"}
+        ],
+        :name => "HotToTrot"
+      }
     ]
     
     assert_equal(expected, parsed_stuff[:functions])
