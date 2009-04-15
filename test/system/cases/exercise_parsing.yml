@@ -35,7 +35,7 @@
       void function2(int a, int b);
       void function3(void);
       void function4(unsigned int a);
-      int function5(int a);
+      int  function5(int a);
       
     :code: |
       int A, B, C;

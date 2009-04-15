@@ -104,10 +104,8 @@ class CMockHeaderParser
     arg_list.split(',').each do |arg|
       arg = arg.strip
       return args if ((arg == '...') || (arg == 'void'))
-      arg.gsub!(/\s+\*/,'*')     #remove space to place asterisks with type (where they belong)
-      arg.gsub!(/\*(\w)/,'* \1') #pull asterisks away from param to place asterisks with type (where they belong)
       arg_elements = arg.split
-      args << {:type => arg_elements[0..-2].join(' '), :name => arg_elements[-1].strip}
+      args << {:type => arg_elements[0..-2].join(' '), :name => arg_elements[-1]}
     end
     return args
   end
@@ -117,6 +115,8 @@ class CMockHeaderParser
       return 'void'
     else
       c=0
+      arg_list.gsub!(/\s+\*/,'*')     #remove space to place asterisks with type (where they belong)
+      arg_list.gsub!(/\*(\w)/,'* \1') #pull asterisks away from param to place asterisks with type (where they belong)
       arg_list.split(',').map{|arg| (arg.strip =~ /^(\w+|.+\*)\s*$/) ? "#{arg.strip} cmock_arg#{c+=1}" : arg.strip}.join(', ')
     end
   end

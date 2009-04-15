@@ -309,7 +309,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     [
       {
         :modifier => "",
-        :args_string => "char * const format",
+        :args_string => "char* const format",
         :rettype => "int",
         :var_arg => "...",
         :args => [{:type => "char* const", :name => "format"}],
@@ -345,7 +345,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     [
       {
         :modifier => "",
-        :args_string => "char *** format",
+        :args_string => "char*** format",
         :rettype => "MY_STRUCT*",
         :var_arg => nil,
         :args => [{:type => "char***", :name => "format"}],
@@ -354,7 +354,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       
       {
         :modifier => "",
-        :args_string => "HIS_STRUCT **p, unsigned int* pint",
+        :args_string => "HIS_STRUCT** p, unsigned int* pint",
         :rettype => "bool*",
         :var_arg => nil,
         :args => 
@@ -367,7 +367,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
       {
         :modifier => "",
-        :args_string => "BOW_WOW *p, unsigned int* pint",
+        :args_string => "BOW_WOW* p, unsigned int* pint",
         :rettype => "bool*",
         :var_arg => nil,
         :args => 
@@ -393,7 +393,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       
       {
         :modifier => "static",
-        :args_string => "unsigned int * struttin",
+        :args_string => "unsigned int* struttin",
         :rettype => "bool*",
         :var_arg => nil,
         :args => 
@@ -405,7 +405,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
       {
         :modifier => "static",
-        :args_string => "unsigned int ** struttin",
+        :args_string => "unsigned int** struttin",
         :rettype => "bool***",
         :var_arg => nil,
         :args => 
