@@ -4,17 +4,19 @@ require File.expand_path(File.dirname(__FILE__)) + "/../../lib/cmock_header_pars
 class CMockHeaderParserTest < Test::Unit::TestCase
 
   def setup
-    @parser = CMockHeaderParser.new("//some contents")
+    create_mocks :config
+    @config.expect.attributes.returns(['static','inline'])
+    #@parser = CMockHeaderParser.new("//some contents", @config)
   end
 
   def teardown
   end
   
   should "create and initialize variables to defaults appropriately" do
-    @parser = CMockHeaderParser.new("//some contents")
+    @parser = CMockHeaderParser.new("", @config)
     assert_nil(@parser.funcs)
     assert_equal(/[^\s]+\s*\**?/, @parser.match_type)
-    assert_equal(['static', '__monitor', '__ramfunc', '__irq', '__fiq'], @parser.c_attributes)
+    assert_equal(['static', 'inline'], @parser.c_attributes)
     assert_equal(/(\w*\s+)*??(#{@parser.match_type})\s*(\w+)\s*\(([^\)]*)\)/, @parser.declaration_parse_matcher)
     assert_nil(@parser.included)
   end
@@ -24,7 +26,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " abcd;\n" +
       "// hello;\n" +
       "who // is you\n"
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
@@ -43,7 +45,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "who /* is you\n" +
       "whatdya say? */\n" +
       "/* shizzzle*/"
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
@@ -61,7 +63,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#when stuff_happens\n" +
       "#ifdef _TEST\n" +
       "#pragma stack_switch"
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
@@ -78,7 +80,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "Match ; { and } as end of line characters" do
     source = 
       " i like ice cream; and i can eat { vanilla, chocolate } when I want to; so there!"
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
@@ -100,7 +102,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     source = 
       "hoo hah \\\n" +
       "when \\ \n"
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
@@ -115,7 +117,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "whack me? #typedef int INT\n" +
       "#typedef who cares what really comes here\n" +
       "this should remain!"
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
@@ -132,7 +134,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#DEFINE I JUST DON'T CARE\n" +
       "#deFINE\n"
       
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
@@ -155,7 +157,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#include \"myheader.h\"\n" +
       "#include   \t \"os.h\"\n"
       
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
     
     expected =
@@ -173,7 +175,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "extern unsigned int NumSamples;\n" +
       "extern FOO_TYPE fooFun;"
       
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
@@ -196,7 +198,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "void\n shiz(void);\n" +
       "void tat();\n"
       
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
     
     expected =
@@ -250,9 +252,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source =
       "static \tint \n Foo(int a, unsigned int b);\n" +
-      "goodness \t bool  bar \n(uint la, int de, bool da);\n"
+      "inline \t bool  bar \n(uint la, int de, bool da);\n"
       
-    @parser = CMockHeaderParser.new(source, /\w+\**/, ['static', 'goodness'])
+    @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
     
     expected =
@@ -267,7 +269,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       },
       
       {
-        :modifier => "goodness",
+        :modifier => "inline",
         :args_string => "uint la, int de, bool da",
         :rettype => "bool",
         :var_arg => nil,
@@ -290,7 +292,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "\tint \n printf(char * const format, ...);\n" +
       "bool  bar \n(...);\n"
       
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
     
     expected =
@@ -324,7 +326,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "bool * HotDog(BOW_WOW *p, unsigned int* pint);\n" +
       "static bool *HotToTrot(unsigned int * struttin);\n"
       
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
     
     expected =
@@ -387,7 +389,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "int buzzlightyear(char*, bool);\n" +
       "bool woody();\n"
       
-    @parser = CMockHeaderParser.new(source)
+    @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
     
     expected =

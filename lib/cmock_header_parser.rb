@@ -2,12 +2,12 @@ class CMockHeaderParser
 
   attr_accessor :match_type, :attribute_match, :src_lines, :funcs, :c_attributes, :declaration_parse_matcher, :included
   
-  def initialize(source, match_type=/[^\s]+\s*\**?/, attributes=['static', '__monitor', '__ramfunc', '__irq', '__fiq'])
+  def initialize(source, cfg)
     import_source(source)
     @funcs = nil
-    @match_type = match_type
-    @c_attributes = attributes
-    @declaration_parse_matcher = /(\w*\s+)*??(#{match_type})\s*(\w+)\s*\(([^\)]*)\)/
+    @match_type = /[^\s]+\s*\**?/
+    @c_attributes = cfg.attributes
+    @declaration_parse_matcher = /(\w*\s+)*??(#{@match_type})\s*(\w+)\s*\(([^\)]*)\)/
     @included = nil
   end
   

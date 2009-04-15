@@ -26,7 +26,7 @@ class CMock
     path = File.dirname(src)
     @cfg.set_path(path)
     
-    cm_parser      = CMockHeaderParser.new(File.read(src))
+    cm_parser      = CMockHeaderParser.new(File.read(src), @cfg)
     cm_unityhelper = CMockUnityHelperParser.new(@cfg)
     cm_writer      = CMockFileWriter.new(@cfg)
     cm_gen_utils   = CMockGeneratorUtils.new(@cfg, {:unity_helper => cm_unityhelper})

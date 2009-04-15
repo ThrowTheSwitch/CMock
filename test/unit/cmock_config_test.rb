@@ -12,6 +12,7 @@ class CMockConfigTest < Test::Unit::TestCase
     config = CMockConfig.new
     assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],             config.mock_path)
     assert_equal(CMockConfig::CMockDefaultOptions[:includes],              config.includes)
+    assert_equal(CMockConfig::CMockDefaultOptions[:attributes],            config.attributes)
     assert_equal(CMockConfig::CMockDefaultOptions[:plugins],               config.plugins)
     assert_equal(CMockConfig::CMockDefaultOptions[:tab],                   config.tab)
     assert_equal(CMockConfig::CMockDefaultOptions[:expect_call_count_type],config.expect_call_count_type)
@@ -22,10 +23,12 @@ class CMockConfigTest < Test::Unit::TestCase
   
   should "replace only options specified in a hash" do
     test_includes = ['hello']
+    test_attributes = ['blah', 'bleh']
     test_bool_type = 'bool'
-    config = CMockConfig.new(:includes => test_includes, :ignore_bool_type => test_bool_type)
+    config = CMockConfig.new(:includes => test_includes, :ignore_bool_type => test_bool_type, :attributes => test_attributes)
     assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],              config.mock_path)
     assert_equal(test_includes,                                             config.includes)
+    assert_equal(test_attributes,                                           config.attributes)
     assert_equal(CMockConfig::CMockDefaultOptions[:plugins],                config.plugins)
     assert_equal(CMockConfig::CMockDefaultOptions[:tab],                    config.tab)
     assert_equal(CMockConfig::CMockDefaultOptions[:expect_call_count_type], config.expect_call_count_type)
