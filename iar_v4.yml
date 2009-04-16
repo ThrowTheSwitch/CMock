@@ -1,10 +1,10 @@
-tools_root: &tools_root 'C:\Program Files\IAR Systems\Embedded Workbench 4.0 Kickstart\'
+tools_root: &tools_root 'C:\Program Files\IAR Systems\Embedded Workbench 4.0\'
 compiler:
   path:             [*tools_root, 'arm\bin\iccarm.exe']
-  source_path:      'examples\src\'
-  unit_tests_path:  &unit_tests_path 'examples\test\'
-  mocks_path:       'examples\mocks\'
-  build_path:       &build_path 'examples\build\'
+  source_path:     &systest_generated_path 'test/system/generated/'
+  unit_tests_path: &unit_tests_path 'examples/test/'
+  mocks_path:      &systest_mocks_path 'test/system/generated/'
+  build_path:      &systest_build_path 'test/system/build/'
   options:
     - --dlib_config
     - [*tools_root, 'arm\lib\dl4tptinl8n.h']
@@ -31,17 +31,18 @@ compiler:
     prefix: '-I'
     items:
       - [*tools_root, 'arm\inc\']
-      - 'examples\src\'
+      - *systest_generated_path
       - *unit_tests_path
-      - 'examples\mocks\'
-      - 'vendor\unity\src\'
+      - *systest_mocks_path
+      - 'vendor/unity/src/'
   defines:
     prefix: '-D'
     items:
   object_files:
     prefix: '-o'
     extension: '.r79'
-    destination: *build_path
+    destination: *systest_build_path
+    
 linker:
   path: [*tools_root, 'common\bin\xlink.exe']
   options:
@@ -58,15 +59,20 @@ linker:
   includes:
     prefix: '-I'
     items:
+      - *systest_generated_path
+      - *unit_tests_path
+      - *systest_mocks_path
+      - 'vendor/unity/src/'
       - [*tools_root, 'arm\config\']
       - [*tools_root, 'arm\lib\']
   object_files:
-    path: *build_path
+    path: *systest_build_path
     extension: '.r79'
   bin_files:
     prefix: '-o'
     extension: '.d79'
-    destination: *build_path
+    destination: *systest_build_path
+    
 simulator:
   path: [*tools_root, 'common\bin\CSpyBat.exe']
   pre_support:
@@ -84,11 +90,3 @@ simulator:
     - [*tools_root, 'arm\config\ioat91sam7X256.ddf']
     - -d
     - sim
-:cmock:
-  :mock_path: 'examples/mocks/'
-  :includes:
-    - 'Types.h'
-    - 'UnityHelper.h'
-  :plugins:
-    - 'ignore'
-  :unity_helper: 'vendor/unity/src/UnityHelper.h'

@@ -27,7 +27,7 @@
     unsigned int **ptr_ptr_return3(unsigned int **a);
     unsigned int ** ptr_ptr_return4(unsigned int ** a);
 
-    inline unsigned long int incredible_descriptors(const unsigned short a);
+    unsigned long int incredible_descriptors(const unsigned short a);
     
   :source: 
     :header: |
@@ -68,7 +68,7 @@
       
       int function5(int a)
       {
-        return (int)incredible_descriptors((const unsigned short)a);
+        return (int)incredible_descriptors((unsigned short)a);
       }
       
   :tests:
