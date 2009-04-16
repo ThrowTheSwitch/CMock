@@ -6,9 +6,10 @@ compiler:
   mocks_path:      &systest_mocks_path 'test/system/generated/'
   build_path:      &systest_build_path 'test/system/build/'
   options:
-    - -c
-    - -std=c99
-    - -pedantic
+    - '-c'
+    - '-Wall'
+    - '-std=c99'
+    - '-pedantic'
   includes:
     prefix: '-I'
     items:
