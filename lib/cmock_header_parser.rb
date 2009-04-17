@@ -6,7 +6,7 @@ class CMockHeaderParser
     import_source(source)
     @funcs = nil
     @c_attributes = cfg.attributes
-    @declaration_parse_matcher = /(.*)\(([^\)]*)\)/
+    @declaration_parse_matcher = /(.*??)\((.*)\)/m
     @included = nil
   end
   
@@ -81,7 +81,7 @@ class CMockHeaderParser
       @funcs = []
       depth = 0
       @src_lines.each do |line|
-        if depth.zero? && line =~ /#{@declaration_parse_matcher}/m
+        if depth.zero? && line =~ @declaration_parse_matcher
           @funcs << line.strip.gsub(/\s+/, ' ')
         end
         if line =~ /\{/
@@ -117,7 +117,7 @@ class CMockHeaderParser
       c=0
       arg_list.gsub!(/\s+\*/,'*')     #remove space to place asterisks with type (where they belong)
       arg_list.gsub!(/\*(\w)/,'* \1') #pull asterisks away from param to place asterisks with type (where they belong)
-      arg_list.split(',').map{|arg| (arg.strip =~ /^(\w+|.+\*)\s*$/) ? "#{arg.strip} cmock_arg#{c+=1}" : arg.strip}.join(', ')
+      arg_list.split(/\s*,\s*/).map{|arg| (arg =~ /^(\w+|.+\*|.+\)|.+const)$/) ? "#{arg} cmock_arg#{c+=1}" : arg}.join(', ')
     end
   end
   
@@ -129,7 +129,7 @@ class CMockHeaderParser
     
     #grab argument list
     args = regex_match[2].strip
-    
+
     #process function attributes, return type, and name
     descriptors = regex_match[1]
     descriptors.gsub!(/\s+\*/,'*')     #remove space to place asterisks with return type (where they belong)

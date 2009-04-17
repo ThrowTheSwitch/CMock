@@ -192,6 +192,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     source =
       "int Foo(int a, unsigned int b);\n" +
       "void  bar \n(uint la, int de, bool da);\n" +
+      "void FunkyChicken (\n   uint la,\n   int de,\n   bool da);\n" +
       "void\n shiz(void);\n" +
       "void tat();\n"
       
@@ -223,6 +224,20 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :name => "bar"
       },
       
+      {
+        :modifier => "",
+        :args_string => "uint la, int de, bool da",
+        :rettype => "void",
+        :var_arg => nil,
+        :args => 
+        [
+          {:type => "uint", :name => "la"},
+          {:type => "int", :name => "de"},
+          {:type => "bool", :name => "da"}
+        ],
+        :name => "FunkyChicken"
+      },
+
       {
         :modifier => "",
         :args_string => "void",
@@ -423,7 +438,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source =
       "int buzzlightyear(char*, bool);\n" +
-      "bool woody();\n"
+      "bool woody();\n" +
+      "int slinkydog(bool thing, int (* const)(void));\n" +
+      "int andy(int* const);\n"
       
     @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
@@ -442,6 +459,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         ],
         :name => "buzzlightyear"
       },
+      
       {
         :modifier => "",
         :args_string => "void",
@@ -449,6 +467,31 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :var_arg => nil,
         :args => [],
         :name => "woody"
+      },
+      
+      {
+        :modifier => "",
+        :args_string => "bool thing, int (* const)(void) cmock_arg1",
+        :rettype => "int",
+        :var_arg => nil,
+        :args =>
+        [
+          {:type => "bool", :name => "thing"},
+          {:type => "int (* const)(void)",  :name => "cmock_arg1"}
+        ],
+        :name => "slinkydog"
+      },
+      
+      {
+        :modifier => "",
+        :args_string => "int* const cmock_arg1",
+        :rettype => "int",
+        :var_arg => nil,
+        :args =>
+        [
+          {:type => "int* const", :name => "cmock_arg1"},
+        ],
+        :name => "andy"
       }
     ]
     
