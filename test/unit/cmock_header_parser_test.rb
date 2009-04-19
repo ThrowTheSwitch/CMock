@@ -166,27 +166,6 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, parsed_stuff[:includes])
   end
   
-  should "extract and return externs" do
-    source =
-      "extern int Foo(int a, unsigned int b);\n" +
-      "extern unsigned int NumSamples;\n" +
-      "extern FOO_TYPE fooFun;"
-      
-    @parser = CMockHeaderParser.new(source, @config)
-    
-    expected =
-    [
-      "extern int Foo(int a, unsigned int b)",
-      ";",
-      "\nextern unsigned int NumSamples",
-      ";",
-      "\nextern FOO_TYPE fooFun",
-      ";"
-    ]
-    
-    assert_equal(expected, @parser.src_lines)
-  end
-  
   should "extract and return function declarations" do
   
     source =

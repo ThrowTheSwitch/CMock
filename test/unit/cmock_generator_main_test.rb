@@ -77,26 +77,6 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output)
   end
   
-  should "extern nothing if not requested to do so" do
-    parsed_stuff = { :externs => []}
-    output = []
-    expected = []
-    
-    @cmock_generator.create_mock_header_externs(output, parsed_stuff)
-    
-    assert_equal(expected, output)
-  end
-  
-  should "extern whatever it is requested to" do
-    parsed_stuff = { :externs => ["extern int kisskissfish", "extern int blubblubblub"]}
-    output = []
-    expected = [ "extern int kisskissfish",";\n","extern int blubblubblub",";\n","\n" ]
-    
-    @cmock_generator.create_mock_header_externs(output, parsed_stuff)
-    
-    assert_equal(expected, output)
-  end
-  
   should "append the proper footer to the header file" do 
     output = []
     expected = ["\n#endif\n"]
@@ -163,30 +143,14 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output.flatten)
   end
   
-  should "create extern declarations for source file if no extra externs requested" do
-    externs = []
+  should "create extern declarations for source file" do
     output = []
     expected = [ "extern jmp_buf AbortFrame;\n",
                  "extern int GlobalExpectOrder;\n",
                  "extern int GlobalVerifyOrder;\n",
                  "\n" ]
     
-    @cmock_generator.create_extern_declarations(output, externs)
-    
-    assert_equal(expected, output.flatten)
-  end
-  
-  should "create extern declarations for source file if extra externs requested" do
-    externs = ["extern int whatever", "extern    short somethingelse"]
-    output = []
-    expected = [ "int whatever;\n", 
-                 "short somethingelse;\n", 
-                 "extern jmp_buf AbortFrame;\n",
-                 "extern int GlobalExpectOrder;\n",
-                 "extern int GlobalVerifyOrder;\n",
-                 "\n"]
-    
-    @cmock_generator.create_extern_declarations(output, externs)
+    @cmock_generator.create_extern_declarations(output)
     
     assert_equal(expected, output.flatten)
   end

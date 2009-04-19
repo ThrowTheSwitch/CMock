@@ -11,9 +11,8 @@ class CMockHeaderParser
   end
   
   def parse
-    mod = {:includes => nil, :externs => nil, :functions => []}
+    mod = {:includes => nil, :functions => []}
     mod[:includes] = included_files
-    mod[:externs] = externs
     parse_functions
     if !@funcs.nil? and @funcs.length > 0
       @funcs.each do |decl|
@@ -53,27 +52,6 @@ class CMockHeaderParser
       end
     end
     return @included
-  end
-
-  def externs
-    if !@externs
-      @externs = []
-      depth = 0
-      if !@src_lines.nil? and @src_lines.length > 0
-        @src_lines.each do |line|
-          if depth.zero? && line =~ /^\s*extern.*/m
-            @externs << $&.strip.gsub(/\s+/, ' ')
-          end
-          if line =~ /\{/
-            depth += 1
-          end
-          if line =~ /\}/
-            depth -= 1
-          end
-        end
-      end
-    end
-    return @externs
   end
 
   def parse_functions

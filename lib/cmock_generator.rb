@@ -24,7 +24,6 @@ class CMockGenerator
   def create_mock_header_file(parsed_stuff)
     @file_writer.create_file(@mock_name + ".h") do |file, filename|
       create_mock_header_header(file, filename)
-      create_mock_header_externs(file, parsed_stuff)
       parsed_stuff[:functions].each do |function|
         file << @plugins.run(:mock_function_declarations, function)
       end
@@ -36,7 +35,7 @@ class CMockGenerator
     @file_writer.create_file(@mock_name + ".c") do |file, filename|
       create_source_header_section(file, filename, parsed_stuff[:includes])
       create_instance_structure(file, parsed_stuff[:functions])
-      create_extern_declarations(file, parsed_stuff[:externs])
+      create_extern_declarations(file)
       create_mock_verify_function(file, parsed_stuff[:functions])
       create_mock_init_function(file)
       create_mock_destroy_function(file, parsed_stuff[:functions])
@@ -57,15 +56,6 @@ class CMockGenerator
     file << "void #{@mock_name}_Init(void);\n"
     file << "void #{@mock_name}_Destroy(void);\n"
     file << "void #{@mock_name}_Verify(void);\n\n"
-  end
-  
-  def create_mock_header_externs(header, parsed_stuff)
-    unless (parsed_stuff[:externs].empty?)
-      parsed_stuff[:externs].each do |extern|
-        header << extern << ";\n"
-      end
-      header << "\n" 
-    end
   end
   
   def create_mock_header_footer(header)
@@ -97,8 +87,7 @@ class CMockGenerator
     file << "} Mock;\n\n"
   end
   
-  def create_extern_declarations(file, externs)
-    file << externs.collect {|extern| extern.gsub(/extern\s*/,'') << ";\n"}.flatten
+  def create_extern_declarations(file)
     file << "extern jmp_buf AbortFrame;\n"
     file << "extern int GlobalExpectOrder;\n"
     file << "extern int GlobalVerifyOrder;\n"
