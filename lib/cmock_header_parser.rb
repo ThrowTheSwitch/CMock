@@ -3,10 +3,12 @@ class CMockHeaderParser
   attr_accessor :src_lines, :funcs, :c_attributes
   
   def initialize(source, cfg)
-    import_source(source)
     @funcs = []
     @c_attributes = cfg.attributes
-    @declaration_parse_matcher = /(.+??)\((.*)\)/m
+    @declaration_parse_matcher = /([\d\w\s\*\(\),]+??)\(([\d\w\s\*\(\),\.]*)\)/m
+    @braces_matcher = /(\{|\})/m
+
+    import_source(source)
   end
   
   def parse
@@ -23,11 +25,11 @@ class CMockHeaderParser
   private
   
   def import_source(source)
-    source = source.gsub(/\s*\\\s*/m, ' ')    # smush multiline into single line
-    source = source.gsub(/\/\/.*$/, '')       # remove line comments
-    source = source.gsub(/\/\*.*?\*\//m, '')  # remove block comments
-    source = source.gsub(/#.*/, '')           # remove preprocessor statements
-    source = source.gsub(/typedef.*/i, '')    # remove typedef statements
+    source.gsub!(/\s*\\\s*/m, ' ')    # smush multiline into single line
+    source.gsub!(/\/\/.*$/, '')       # remove line comments
+    source.gsub!(/\/\*.*?\*\//m, '')  # remove block comments
+    source.gsub!(/#.*/, '')           # remove preprocessor statements
+    source.gsub!(/typedef.*/, '')     # remove typedef statements
      
     @src_lines = source.split(/;/)
     @src_lines.delete_if {|line| line.strip.length == 0} # remove blank lines
@@ -40,9 +42,7 @@ class CMockHeaderParser
 
   def parse_functions
     @src_lines.each do |line|
-      if line =~ @declaration_parse_matcher
-        @funcs << line.strip.gsub(/\s+/, ' ')
-      end
+      @funcs << line.strip.gsub(/\s+/, ' ') if line =~ @declaration_parse_matcher
     end
     return @funcs
   end
