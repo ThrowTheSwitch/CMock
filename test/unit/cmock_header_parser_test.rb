@@ -13,9 +13,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
   should "create and initialize variables to defaults appropriately" do
     @parser = CMockHeaderParser.new("", @config)
-    assert_nil(@parser.funcs)
+    assert_equal([], @parser.funcs)
     assert_equal(['static', 'inline', '__ramfunc'], @parser.c_attributes)
-    assert_nil(@parser.included)
   end
   
   should "strip out line comments" do
@@ -28,7 +27,6 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     expected =
     [
       " abcd",
-      ";",
       "\n\nwho \n"
     ]
     
@@ -47,7 +45,6 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     expected =
     [
       " abcd",
-      ";",
       "\n\nwho \n"
     ]
     
@@ -62,40 +59,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#pragma stack_switch"
     @parser = CMockHeaderParser.new(source, @config)
     
-    expected =
-    [
-      "#when stuff_happens",
-      "\n",
-      "#ifdef _TEST",
-      "\n",
-      "#pragma stack_switch"
-    ]
+    expected = []
     
     assert_equal(expected, @parser.src_lines)
   end
   
-  should "Match ; { and } as end of line characters" do
-    source = 
-      " i like ice cream; and i can eat { vanilla, chocolate } when I want to; so there!"
-    @parser = CMockHeaderParser.new(source, @config)
-    
-    expected =
-    [
-      " i like ice cream",
-      ";",
-      " and i can eat ",
-      "{",
-      " vanilla, chocolate ",
-      "}",
-      " when I want to",
-      ";",
-      " so there!"
-    ]
-    
-    assert_equal(expected, @parser.src_lines)
-  end
-  
-  should "ignore lines that contain continuation characters" do
+  should "smush lines together that contain continuation characters" do
     source = 
       "hoo hah \\\n" +
       "when \\ \n"
@@ -103,22 +72,24 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     
     expected =
     [
+      "hoo hah when "
     ]
     
     assert_equal(expected, @parser.src_lines)
   end
   
-  should "ignore lines that contain typedef statements" do
+  should "remove typedef statements" do
     source = 
-      "#typedef uint32 (unsigned int)\n" +
-      "whack me? #typedef int INT\n" +
-      "#typedef who cares what really comes here\n" +
+      "typedef uint32 (unsigned int)\n" +
+      "whack me? typedef int INT\n" +
+      "typedef who cares what really comes here \\\n" + # exercise multiline typedef
+      "   continuation\n" +
       "this should remain!"
     @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
-      "\nthis should remain!"
+      "\nwhack me? \n\nthis should remain!"
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -126,44 +97,20 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
   should "remove defines" do
     source =
-      "hello;\n" +
       "#define whatever you feel like defining\n" +
+      "void hello(void);\n" +
       "#DEFINE I JUST DON'T CARE\n" +
-      "#deFINE\n"
+      "#deFINE\n" +
+      "#define get_foo() \\\n   ((Thing)foo.bar)" # exercise multiline define
       
     @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
-      "hello",
-      ";",
-      "\n",
-      "\n",
-      "\n",
-      "\n"
+      "\nvoid hello(void)",
     ]
     
     assert_equal(expected, @parser.src_lines)
-  end
-  
-  should "extract and return included files" do
-    source =
-      "int Foo(int a, unsigned int b);" +
-      "hello;\n" +
-      "#define whatever you feel like defining\n" +
-      "#include \"myheader.h\"\n" +
-      "#include   \t \"os.h\"\n"
-      
-    @parser = CMockHeaderParser.new(source, @config)
-    parsed_stuff = @parser.parse
-    
-    expected =
-    [
-      "myheader.h",
-      "os.h"
-    ]
-    
-    assert_equal(expected, parsed_stuff[:includes])
   end
   
   should "extract and return function declarations" do
@@ -173,7 +120,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "void  bar \n(uint la, int de, bool da);\n" +
       "void FunkyChicken (\n   uint la,\n   int de,\n   bool da);\n" +
       "void\n shiz(void);\n" +
-      "void tat();\n"
+      "void tat();\n" +
+      "#define get_foo() \\\n   (Thing)foo())" # should extract no function declarations
       
     @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse

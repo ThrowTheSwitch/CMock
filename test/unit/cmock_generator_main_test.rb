@@ -101,7 +101,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
     @config.expect.includes.returns(["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"])
   
-    @cmock_generator.create_source_header_section(output, "MockPoutPoutFish.c", [])
+    @cmock_generator.create_source_header_section(output, "MockPoutPoutFish.c")
     
     assert_equal(expected, output)
   end

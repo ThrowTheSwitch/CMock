@@ -1,18 +1,16 @@
 class CMockHeaderParser
 
-  attr_accessor :src_lines, :funcs, :c_attributes, :included
+  attr_accessor :src_lines, :funcs, :c_attributes
   
   def initialize(source, cfg)
     import_source(source)
-    @funcs = nil
+    @funcs = []
     @c_attributes = cfg.attributes
-    @declaration_parse_matcher = /(.*??)\((.*)\)/m
-    @included = nil
+    @declaration_parse_matcher = /(.+??)\((.*)\)/m
   end
   
   def parse
     mod = {:includes => nil, :functions => []}
-    mod[:includes] = included_files
     parse_functions
     if !@funcs.nil? and @funcs.length > 0
       @funcs.each do |decl|
@@ -25,14 +23,14 @@ class CMockHeaderParser
   private
   
   def import_source(source)
-    source = source.gsub(/\/\/.*$/, '') #remove line comments
-    source = source.gsub(/\/\*.*?\*\//m, '') #remove block comments
-    @src_lines = source.split(/(^\s*\#.*$)  # Treat preprocessor directives as a logical line
-                            | (;|\{|\}) /x) # Match ;, {, and } as end of lines
-    @src_lines.delete_if {|line| line.length < 1}
-    @src_lines.delete_if {|line| line =~ /\\\n/} #ignore lines that contain continuation lines
-    @src_lines.delete_if {|line| line =~ /typedef/i} #ignore lines that contain typedef statements
-    @src_lines.delete_if {|line| line =~ /\#define/i}  #remove defines
+    source = source.gsub(/\s*\\\s*/m, ' ')    # smush multiline into single line
+    source = source.gsub(/\/\/.*$/, '')       # remove line comments
+    source = source.gsub(/\/\*.*?\*\//m, '')  # remove block comments
+    source = source.gsub(/#.*/, '')           # remove preprocessor statements
+    source = source.gsub(/typedef.*/i, '')    # remove typedef statements
+     
+    @src_lines = source.split(/;/)
+    @src_lines.delete_if {|line| line.strip.length == 0} # remove blank lines
   end
 
   def c_attributes=(value)
@@ -40,39 +38,11 @@ class CMockHeaderParser
     @attribute_match = Regexp.compile(%|(#{@c_attributes.join('|')}\s+)*|)
   end
 
-  def included_files
-    if @included.nil?
-      @included = []
-      if !@src_lines.nil? and @src_lines.length > 0
-        @src_lines.each do |line|
-          if line =~ /#include\s+"(.*)"/
-            @included << $1
-          end
-        end
-      end
-    end
-    return @included
-  end
-
   def parse_functions
-    if @funcs.nil?
-      @funcs = []
-      depth = 0
-      @src_lines.each do |line|
-        if depth.zero? && line =~ @declaration_parse_matcher
-          @funcs << line.strip.gsub(/\s+/, ' ')
-        end
-        if line =~ /\{/
-          depth += 1
-        end
-        if line =~ /\}/
-          depth -= 1
-        end
+    @src_lines.each do |line|
+      if line =~ @declaration_parse_matcher
+        @funcs << line.strip.gsub(/\s+/, ' ')
       end
-    end
-    #eliminate define functions
-    @funcs ||= @funcs.reject do |func|
-      func =~ /\bdefine\b/
     end
     return @funcs
   end
