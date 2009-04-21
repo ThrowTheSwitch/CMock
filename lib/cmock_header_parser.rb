@@ -5,8 +5,7 @@ class CMockHeaderParser
   def initialize(source, cfg)
     @funcs = []
     @c_attributes = cfg.attributes
-    @declaration_parse_matcher = /([\d\w\s\*\(\),]+??)\(([\d\w\s\*\(\),\.]*)\)/m
-    @braces_matcher = /(\{|\})/m
+    @declaration_parse_matcher = /([\d\w\s\*\(\),]+??)\(([\d\w\s\*\(\),\.]*)\)$/m
 
     import_source(source)
   end
@@ -26,12 +25,12 @@ class CMockHeaderParser
   
   def import_source(source)
     source.gsub!(/\s*\\\s*/m, ' ')    # smush multiline into single line
-    source.gsub!(/\/\/.*$/, '')       # remove line comments
     source.gsub!(/\/\*.*?\*\//m, '')  # remove block comments
+    source.gsub!(/\/\/.*$/, '')       # remove line comments
     source.gsub!(/#.*/, '')           # remove preprocessor statements
     source.gsub!(/typedef.*/, '')     # remove typedef statements
      
-    @src_lines = source.split(/;/)
+    @src_lines = source.split(/\s*;\s*/)
     @src_lines.delete_if {|line| line.strip.length == 0} # remove blank lines
   end
 

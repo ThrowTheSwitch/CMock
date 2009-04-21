@@ -27,7 +27,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     expected =
     [
       " abcd",
-      "\n\nwho \n"
+      "who \n"
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -38,14 +38,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " abcd;\n" +
       "/* hello;*/\n" +
       "who /* is you\n" +
-      "whatdya say? */\n" +
+      "// embedded line comment */\n" +
       "/* shizzzle*/"
     @parser = CMockHeaderParser.new(source, @config)
     
     expected =
     [
       " abcd",
-      "\n\nwho \n"
+      "who \n"
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -121,7 +121,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "void FunkyChicken (\n   uint la,\n   int de,\n   bool da);\n" +
       "void\n shiz(void);\n" +
       "void tat();\n" +
-      "#define get_foo() \\\n   (Thing)foo())" # should extract no function declarations
+      # following lines should yield no function declarations
+      "#define get_foo() \\\n   (Thing)foo())\n" +
+      "array_type[((U8)10)];\n"
       
     @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
