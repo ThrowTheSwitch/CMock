@@ -25,12 +25,12 @@ class CMockHeaderParser
   
   def import_source(source)
     source.gsub!(/\s*\\\s*/m, ' ')    # smush multiline into single line
-    source.gsub!(/\/\*.*?\*\//m, '')  # remove block comments
+    source.gsub!(/\/\*.*?\*\//m, '')  # remove block comments (do it first to avoid trouble with embedded line comments)
     source.gsub!(/\/\/.*$/, '')       # remove line comments
     source.gsub!(/#.*/, '')           # remove preprocessor statements
     source.gsub!(/typedef.*/, '')     # remove typedef statements
      
-    @src_lines = source.split(/\s*;\s*/)
+    @src_lines = source.split(/\s*;\s*/) # split source at end of statements (removing extra white space)
     @src_lines.delete_if {|line| line.strip.length == 0} # remove blank lines
   end
 

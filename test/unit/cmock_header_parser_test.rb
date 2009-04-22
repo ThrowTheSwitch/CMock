@@ -38,8 +38,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " abcd;\n" +
       "/* hello;*/\n" +
       "who /* is you\n" +
-      "// embedded line comment */\n" +
-      "/* shizzzle*/"
+      "// embedded line comment */\n"
     @parser = CMockHeaderParser.new(source, @config)
     
     expected =
@@ -52,7 +51,6 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   should "treat preprocessor directives as single line" do
-    #flunk "this substitution generates an empty first line element?"
     source = 
       "#when stuff_happens\n" +
       "#ifdef _TEST\n" +
@@ -117,13 +115,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source =
       "int Foo(int a, unsigned int b);\n" +
-      "void  bar \n(uint la, int de, bool da);\n" +
+      "void  bar \n(uint la, int de, bool da) ; \n" +
       "void FunkyChicken (\n   uint la,\n   int de,\n   bool da);\n" +
       "void\n shiz(void);\n" +
       "void tat();\n" +
-      # following lines should yield no function declarations
+      # following lines should yield no function declarations:
       "#define get_foo() \\\n   (Thing)foo())\n" +
-      "array_type[((U8)10)];\n"
+      "ARRAY_TYPE array[((U8)10)];\n" +
+      "THINGER_MASK = (0x0001 << 5),\n"
       
     @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
