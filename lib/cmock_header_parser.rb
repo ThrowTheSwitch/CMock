@@ -27,7 +27,7 @@ class CMockHeaderParser
     # look for any edge cases of typedef'd void;
     # void must be void for cmock AndReturn calls to process properly.
     # to a certain extent, these replacements assume we're chewing on pre-processed header files
-    void_types = source.scan(/typedef\s+void\s+([^\s]+)\s*;/)
+    void_types = source.scan(/typedef\s+void\s+([\w\d]+)\s*;/)
     void_types.each {|type| source.gsub!(/#{type}/, 'void')} if void_types.size > 0
     
     source.gsub!(/\s*\\\s*/m, ' ')    # smush multiline into single line

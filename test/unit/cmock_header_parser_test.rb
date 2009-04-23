@@ -115,10 +115,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source =
       "typedef void SILLY_VOID_TYPE1;\n" +
-      "typedef void SILLY_VOID_TYPE2 ;\n\n" +
+      "typedef void SILLY_VOID_TYPE2 ;\n" +
+      "typedef void (*FUNCPTR)(void);\n\n" + # do no substitution on type
       "SILLY_VOID_TYPE2 Foo(int a, unsigned int b);\n" +
       "void\n shiz(SILLY_VOID_TYPE1 *);\n" +
-      "void tat(void);\n"
+      "void tat(FUNCPTR);\n"
       
     @parser = CMockHeaderParser.new(source, @config)
     parsed_stuff = @parser.parse
@@ -145,10 +146,10 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       
       {
         :modifier => "",
-        :args_string => "void",
+        :args_string => "FUNCPTR cmock_arg1",
         :rettype => "void",
         :var_arg => nil,
-        :args => [],
+        :args => [{:type => "FUNCPTR", :name => "cmock_arg1"}],
         :name => "tat"
       }
     ]
