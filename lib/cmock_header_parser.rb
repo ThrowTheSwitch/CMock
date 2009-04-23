@@ -24,6 +24,12 @@ class CMockHeaderParser
   private
   
   def import_source(source)
+    # look for any edge cases of typedef'd void;
+    # void must be void for cmock AndReturn calls to process properly.
+    # to a certain extent, these replacements assume we're chewing on pre-processed header files
+    void_types = source.scan(/typedef\s+void\s+([^\s]+)\s*;/)
+    void_types.each {|type| source.gsub!(/#{type}/, 'void')} if void_types.size > 0
+    
     source.gsub!(/\s*\\\s*/m, ' ')    # smush multiline into single line
     source.gsub!(/\/\*.*?\*\//m, '')  # remove block comments (do it first to avoid trouble with embedded line comments)
     source.gsub!(/\/\/.*$/, '')       # remove line comments
@@ -62,8 +68,8 @@ class CMockHeaderParser
       return 'void'
     else
       c=0
-      arg_list.gsub!(/\s+\*/,'*')     #remove space to place asterisks with type (where they belong)
-      arg_list.gsub!(/\*(\w)/,'* \1') #pull asterisks away from param to place asterisks with type (where they belong)
+      arg_list.gsub!(/\s+\*/,'*')     # remove space to place asterisks with type (where they belong)
+      arg_list.gsub!(/\*(\w)/,'* \1') # pull asterisks away from param to place asterisks with type (where they belong)
       arg_list.split(/\s*,\s*/).map{|arg| (arg =~ /^(\w+|.+\*|.+\)|.+const)$/) ? "#{arg} cmock_arg#{c+=1}" : arg}.join(', ')
     end
   end
@@ -74,19 +80,19 @@ class CMockHeaderParser
     regex_match = @declaration_parse_matcher.match(declaration)
     raise "Failed parsing function declaration: '#{declaration}'" if regex_match.nil? 
     
-    #grab argument list
+    # grab argument list
     args = regex_match[2].strip
 
-    #process function attributes, return type, and name
+    # process function attributes, return type, and name
     descriptors = regex_match[1]
-    descriptors.gsub!(/\s+\*/,'*')     #remove space to place asterisks with return type (where they belong)
-    descriptors.gsub!(/\*(\w)/,'* \1') #pull asterisks away from function name to place asterisks with return type (where they belong)
-    descriptors = descriptors.split    #array of all descriptor strings
+    descriptors.gsub!(/\s+\*/,'*')     # remove space to place asterisks with return type (where they belong)
+    descriptors.gsub!(/\*(\w)/,'* \1') # pull asterisks away from function name to place asterisks with return type (where they belong)
+    descriptors = descriptors.split    # array of all descriptor strings
 
-    #grab name
-    decl[:name] = descriptors[-1]      #snag name as last array item
+    # grab name
+    decl[:name] = descriptors[-1]      # snag name as last array item
 
-    #build attribute and return type strings
+    # build attribute and return type strings
     decl[:modifier] = []
     decl[:rettype]  = []    
     descriptors[0..-2].each do |word|
@@ -99,7 +105,7 @@ class CMockHeaderParser
     decl[:modifier] = decl[:modifier].join(' ')
     decl[:rettype]  = decl[:rettype].join(' ')
         
-    #remove default parameter statements from mock definitions
+    # remove default parameter statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
     

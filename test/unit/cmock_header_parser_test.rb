@@ -110,6 +110,51 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     
     assert_equal(expected, @parser.src_lines)
   end
+
+  should "handle odd case of typedef'd void" do
+  
+    source =
+      "typedef void SILLY_VOID_TYPE1;\n" +
+      "typedef void SILLY_VOID_TYPE2 ;\n\n" +
+      "SILLY_VOID_TYPE2 Foo(int a, unsigned int b);\n" +
+      "void\n shiz(SILLY_VOID_TYPE1 *);\n" +
+      "void tat(void);\n"
+      
+    @parser = CMockHeaderParser.new(source, @config)
+    parsed_stuff = @parser.parse
+    
+    expected =
+    [
+      {
+        :modifier => "",
+        :args_string => "int a, unsigned int b",
+        :rettype => "void",
+        :var_arg => nil,
+        :args => [{:type => "int", :name => "a"}, {:type => "unsigned int", :name => "b"}],
+        :name => "Foo"
+      },
+      
+      {
+        :modifier => "",
+        :args_string => "void* cmock_arg1",
+        :rettype => "void",
+        :var_arg => nil,
+        :args => [{:type => "void*", :name => "cmock_arg1"}],
+        :name => "shiz"
+      },
+      
+      {
+        :modifier => "",
+        :args_string => "void",
+        :rettype => "void",
+        :var_arg => nil,
+        :args => [],
+        :name => "tat"
+      }
+    ]
+    
+    assert_equal(expected, parsed_stuff[:functions])
+  end
   
   should "extract and return function declarations" do
   

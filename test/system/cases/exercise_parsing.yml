@@ -13,6 +13,8 @@
     } POINT_T;
 
   :mockable: |
+    // typedef edge case; must be in mockable.h (simulating preprocessed header)
+    typedef void VOID_TYPE_CRAZINESS;
     
     U16  *ptr_return1(int a);
     U16*  ptr_return2(int a);
@@ -21,7 +23,7 @@
     void var_args1(int a, ...);
     void var_args2(int a, int b, ...);
     
-    void arg_list(int * a, int *b, int* c);
+    VOID_TYPE_CRAZINESS arg_list(int * a, int *b, int* c);
     
     char
     crazy_multiline(
