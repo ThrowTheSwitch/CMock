@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require File.expand_path(File.dirname(__FILE__)) + "/../../lib/cmock_config"
+require 'cmock_config'
 
 class CMockConfigTest < Test::Unit::TestCase
   def setup

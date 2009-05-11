@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require File.expand_path(File.dirname(__FILE__)) + "/../../lib/cmock_header_parser"
+require 'cmock_header_parser'
 
 class CMockHeaderParserTest < Test::Unit::TestCase
 
@@ -116,7 +116,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     source =
       "typedef void SILLY_VOID_TYPE1;\n" +
       "typedef void SILLY_VOID_TYPE2 ;\n" +
-      "typedef void (*FUNCPTR)(void);\n\n" + # do no substitution on type
+      "typedef void (*FUNCPTR)(void);\n\n" + # don't get fooled by function pointer typedef with void as return type
       "SILLY_VOID_TYPE2 Foo(int a, unsigned int b);\n" +
       "void\n shiz(SILLY_VOID_TYPE1 *);\n" +
       "void tat(FUNCPTR);\n"

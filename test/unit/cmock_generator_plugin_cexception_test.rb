@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require File.expand_path(File.dirname(__FILE__)) + "/../../lib/cmock_generator_plugin_cexception"
+require 'cmock_generator_plugin_cexception'
 
 class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   def setup

@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require File.expand_path(File.dirname(__FILE__)) + "/../../lib/cmock_generator_utils"
+require 'cmock_generator_utils'
 
 class CMockGeneratorUtilsTest < Test::Unit::TestCase
   def setup
@@ -139,7 +139,8 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["  Mock.Nectarine_CallsExpected++;\n"]
     returned = @cmock_generator_utils.code_add_base_expectation("Nectarine")
     
-    assert_equal(expected, returned)  end
+    assert_equal(expected, returned)
+  end
 
   should "add base expectations, with stuff for strict ordering turned on" do
     expected = ["  Mock.Nectarine_CallsExpected++;\n",

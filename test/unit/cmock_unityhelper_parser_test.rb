@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require File.expand_path(File.dirname(__FILE__)) + "/../../lib/cmock_unityhelper_parser"
+require 'cmock_unityhelper_parser'
 
 class CMockUnityHelperParserTest < Test::Unit::TestCase
 

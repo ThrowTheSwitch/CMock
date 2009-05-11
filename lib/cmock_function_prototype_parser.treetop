@@ -1,0 +1,87 @@
+grammar CMockFunctionPrototype
+
+  rule function_prototype
+		  function_prototype_function_pointer_return / function_prototype_standard
+	end
+	
+  rule function_prototype_standard
+    return_type name argument_list <FunctionPrototypeStandardNode>
+  end
+  
+  rule function_prototype_function_pointer_return
+    # ex. float (*GetPtr(const char opCode))(float, float)
+    return_type left_paren asterisk name function_arglist:argument_list right_paren function_return_arglist:argument_list <FunctionPrototypeFunctionPointerReturnNode>
+  end
+
+  rule return_type
+    void / type
+  end
+
+  rule argument_list
+    # without a priori knowledge of all custom types (i.e. typedefs), the parser can only recognize
+    #  a list of primitives followed by an optional name or a single custom type followed by an optional name.
+    # otherwise, there's no way to distinguish the last type in a list from a possibly non-existent argument name;
+    # the rules in the grammar enforce this idea to ensure the parser fails rather than do something wonky
+    left_paren arguments:( argument:argument (comma)? )* right_paren <ArgumentListNode>
+  end
+
+  rule argument
+    func_ptr_prototype / void / type_and_name / variable_argument
+  end
+    
+  rule variable_argument
+    '...' space <VarArgNode>
+  end
+
+  rule func_ptr_prototype
+    # ex. int (*funcPtr)(float, char, char)
+    # add name: tag to name? so we can always access it in programming even if blank.
+    return_type left_paren asterisk name:name? right_paren argument_list <FunctionPointerNode>
+  end
+
+  rule type_and_name
+    # add name: tag to name? so we can always access it in programming even if blank.
+    # tell parser that type and optional name will always be followed by ',' '(' or ')' but don't consume them;
+    # this helps enforce the limits on what can be parsed in argument lists
+    type name:name? &( comma / left_paren / right_paren ) <TypeWithNameNode>
+  end
+
+  rule type
+    const? ((('void' / 'unsigned' / 'signed' / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space)+ / name) (asterisk)* const? <TypeNode>
+  end
+
+	rule name
+	  [a-zA-Z0-9_]+ space <NameNode>
+	end
+
+  rule void
+    # in reality, 'void' is something different than the 'void*' type so limit to 'void' here and handle 'void*' in type rule;
+    # recognizing the VoidNode uniquely in programming is helpful
+    'void' space !asterisk <VoidNode>
+  end
+
+  rule const
+    'const' space
+  end
+
+  rule asterisk
+    '*' space
+  end
+
+  rule left_paren
+    '(' space
+  end
+
+  rule right_paren
+    ')' space
+  end
+
+  rule comma
+    ',' space
+  end
+
+  rule space
+    ' '*
+  end
+  
+end
