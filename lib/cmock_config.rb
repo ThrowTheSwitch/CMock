@@ -26,7 +26,7 @@ class CMockConfig
       when NilClass then options = CMockDefaultOptions.clone 
       when String   then options = CMockDefaultOptions.clone.merge(load_config_file_from_yaml(options))
       when Hash     then options = CMockDefaultOptions.clone.merge(options)
-      else          raise "If you specify parameters, it should be a filename or a hash of options"
+      else          raise "If you specify arguments, it should be a filename or a hash of options"
     end
     @options = options
     @options.each_key { |key| eval("def #{key}() return @options[:#{key}] end") }

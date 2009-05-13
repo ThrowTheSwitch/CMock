@@ -72,7 +72,7 @@ class CMockGeneratorUtils
       "#{@tab}{\n",
       "#{@tab}#{@tab}#{arg_type}* p_expected = Mock.#{function[:name]}_Expected_#{actual};\n",
       "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{actual}++;\n",
-      expect_helper(arg_type, '*p_expected', actual, "\"Function '#{function[:name]}' called with unexpected value for parameter '#{actual}'.\"","#{@tab}#{@tab}"),
+      expect_helper(arg_type, '*p_expected', actual, "\"Function '#{function[:name]}' called with unexpected value for argument '#{actual}'.\"","#{@tab}#{@tab}"),
       "#{@tab}}\n" ].flatten
   end
   

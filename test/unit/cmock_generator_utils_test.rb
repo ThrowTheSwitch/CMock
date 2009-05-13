@@ -184,7 +184,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    uint16* p_expected = Mock.CanOpener_Expected_CorkScrew;\n",
                 "    Mock.CanOpener_Expected_CorkScrew++;\n",
-                "    TEST_ASSERT_EQUAL_MESSAGE(*p_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for parameter 'CorkScrew'.\");\n",
+                "    TEST_ASSERT_EQUAL_MESSAGE(*p_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for argument 'CorkScrew'.\");\n",
                 "  }\n"
                ]
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
@@ -204,7 +204,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    const char** p_expected = Mock.MeasureCup_Expected_TeaSpoon;\n",
                 "    Mock.MeasureCup_Expected_TeaSpoon++;\n",
-                "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected value for parameter 'TeaSpoon'.\");\n",
+                "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected value for argument 'TeaSpoon'.\");\n",
                 "  }\n"
                ]
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
@@ -224,7 +224,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    MANDELBROT_SET_T* p_expected = Mock.TeaPot_Expected_TeaSpoon;\n",
                 "    Mock.TeaPot_Expected_TeaSpoon++;\n",
-                "    TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE(*p_expected, TeaSpoon, \"Function 'TeaPot' called with unexpected value for parameter 'TeaSpoon'.\");\n",
+                "    TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE(*p_expected, TeaSpoon, \"Function 'TeaPot' called with unexpected value for argument 'TeaSpoon'.\");\n",
                 "  }\n"
                ]
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
@@ -244,7 +244,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    SOME_STRUCT* p_expected = Mock.Toaster_Expected_Bread;\n",
                 "    Mock.Toaster_Expected_Bread++;\n",
-                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)p_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for parameter 'Bread'.\");\n",
+                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)p_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\");\n",
                 "  }\n"
                ]
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
@@ -267,7 +267,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    if (*p_expected == NULL)\n",
                 "      { TEST_ASSERT_NULL(Strawberry); }\n",
                 "    else\n",
-                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY_MESSAGE(*p_expected, Strawberry, 1, \"Function 'Blender' called with unexpected value for parameter 'Strawberry'.\"); }\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY_MESSAGE(*p_expected, Strawberry, 1, \"Function 'Blender' called with unexpected value for argument 'Strawberry'.\"); }\n",
                 "  }\n"
                ]
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
