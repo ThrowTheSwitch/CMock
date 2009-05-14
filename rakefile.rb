@@ -1,6 +1,6 @@
 HERE = File.expand_path(File.dirname(__FILE__)) + '/'
 
-require HERE + 'config/environment'
+require HERE + 'config/test_environment'
 require 'rake'
 require 'rake/clean'
 require 'rake/testtask'

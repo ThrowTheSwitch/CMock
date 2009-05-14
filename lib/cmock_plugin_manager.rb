@@ -1,7 +1,7 @@
 
-require "#{$here}/cmock_generator_plugin_expect.rb"
-require "#{$here}/cmock_generator_plugin_ignore.rb"
-require "#{$here}/cmock_generator_plugin_cexception.rb"
+require "cmock_generator_plugin_expect.rb"
+require "cmock_generator_plugin_ignore.rb"
+require "cmock_generator_plugin_cexception.rb"
 
 class CMockPluginManager
 

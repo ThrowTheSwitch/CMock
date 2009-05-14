@@ -1,17 +1,15 @@
-$here = File.dirname __FILE__
+require File.expand_path(File.dirname(__FILE__)) + "/../config/production_environment"
 
-require 'rubygems'
-require 'treetop'
+require "cmock_function_prototype_node_classes"
+require "cmock_function_prototype_parser"
+require "cmock_header_parser"
+require "cmock_generator"
+require "cmock_file_writer"
+require "cmock_config"
+require "cmock_plugin_manager"
+require "cmock_generator_utils"
+require "cmock_unityhelper_parser"
 
-require "#{$here}/cmock_function_prototype_node_classes"
-require "#{$here}/cmock_function_prototype_parser"
-require "#{$here}/cmock_header_parser"
-require "#{$here}/cmock_generator"
-require "#{$here}/cmock_file_writer"
-require "#{$here}/cmock_config"
-require "#{$here}/cmock_plugin_manager"
-require "#{$here}/cmock_generator_utils"
-require "#{$here}/cmock_unityhelper_parser"
 
 class CMock
   
