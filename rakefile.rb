@@ -34,12 +34,9 @@ task :treetop do
   treetop_files.each do |file|
     compiler.compile(file)
   end
-  
-  #`vendor/gems/treetop-1.2.5/bin/tt lib/cmock_function_prototype_parser.treetop`
 end
 
 namespace :test do
-
   desc "Run all unit and system tests"
   task :all => ['test:units', 'test:system']
 
@@ -55,5 +52,4 @@ namespace :test do
     tests_failed = run_systests(FileList['test/system/cases/*.yml'])
     raise "System tests failed." if (tests_failed > 0)
   end
-    
 end

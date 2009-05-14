@@ -1,4 +1,10 @@
 $here = File.dirname __FILE__
+
+require 'rubygems'
+require 'treetop'
+
+require "#{$here}/cmock_function_prototype_node_classes"
+require "#{$here}/cmock_function_prototype_parser"
 require "#{$here}/cmock_header_parser"
 require "#{$here}/cmock_generator"
 require "#{$here}/cmock_file_writer"
@@ -26,7 +32,7 @@ class CMock
     path = File.dirname(src)
     @cfg.set_path(path)
     
-    cm_parser      = CMockHeaderParser.new(File.read(src), @cfg)
+    cm_parser      = CMockHeaderParser.new(CMockFunctionPrototypeParser.new, File.read(src), @cfg)
     cm_unityhelper = CMockUnityHelperParser.new(@cfg)
     cm_writer      = CMockFileWriter.new(@cfg)
     cm_gen_utils   = CMockGeneratorUtils.new(@cfg, {:unity_helper => cm_unityhelper})

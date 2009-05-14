@@ -4,7 +4,7 @@ require 'cmock_header_parser'
 class CMockHeaderParserTest < Test::Unit::TestCase
 
   def setup
-    create_mocks :config
+    create_mocks :config, :prototype_parser, :parsed
     @config.expect.attributes.returns(['static', 'inline', '__ramfunc'])
   end
 
@@ -12,8 +12,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   should "create and initialize variables to defaults appropriately" do
-    @parser = CMockHeaderParser.new("", @config)
-    assert_equal([], @parser.funcs)
+    @parser = CMockHeaderParser.new(@prototype_parser, "", @config)
+    assert_equal([], @parser.prototypes)
+    assert_equal([], @parser.src_lines)
     assert_equal(['static', 'inline', '__ramfunc'], @parser.c_attributes)
   end
   
@@ -22,12 +23,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " abcd;\n" +
       "// hello;\n" +
       "who // is you\n"
-    @parser = CMockHeaderParser.new(source, @config)
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
     
     expected =
     [
-      " abcd",
-      "who \n"
+      "abcd",
+      "who"
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -39,12 +40,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "/* hello;*/\n" +
       "who /* is you\n" +
       "// embedded line comment */\n"
-    @parser = CMockHeaderParser.new(source, @config)
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
     
     expected =
     [
-      " abcd",
-      "who \n"
+      "abcd",
+      "who"
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -55,7 +56,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#when stuff_happens\n" +
       "#ifdef _TEST\n" +
       "#pragma stack_switch"
-    @parser = CMockHeaderParser.new(source, @config)
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
     
     expected = []
     
@@ -66,11 +67,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     source = 
       "hoo hah \\\n" +
       "when \\ \n"
-    @parser = CMockHeaderParser.new(source, @config)
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
     
     expected =
     [
-      "hoo hah when "
+      "hoo hah when"
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -83,11 +84,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "typedef who cares what really comes here \\\n" + # exercise multiline typedef
       "   continuation\n" +
       "this should remain!"
-    @parser = CMockHeaderParser.new(source, @config)
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
     
     expected =
     [
-      "\nwhack me? \n\nthis should remain!"
+      "whack me? this should remain!"
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -100,12 +101,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#DEFINE I JUST DON'T CARE\n" +
       "#deFINE\n" +
       "#define get_foo() \\\n   ((Thing)foo.bar)" # exercise multiline define
-      
-    @parser = CMockHeaderParser.new(source, @config)
+          
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
     
     expected =
     [
-      "\nvoid hello(void)",
+      "void hello(void)",
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -115,360 +116,167 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source =
       "typedef void SILLY_VOID_TYPE1;\n" +
-      "typedef void SILLY_VOID_TYPE2 ;\n" +
-      "typedef void (*FUNCPTR)(void);\n\n" + # don't get fooled by function pointer typedef with void as return type
+      "typedef (void) SILLY_VOID_TYPE2 ;\n" +
+      "typedef ( void ) (*FUNCPTR)(void);\n\n" + # don't get fooled by function pointer typedef with void as return type
       "SILLY_VOID_TYPE2 Foo(int a, unsigned int b);\n" +
       "void\n shiz(SILLY_VOID_TYPE1 *);\n" +
       "void tat(FUNCPTR);\n"
       
-    @parser = CMockHeaderParser.new(source, @config)
-    parsed_stuff = @parser.parse
-    
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
+
     expected =
     [
-      {
-        :modifier => "",
-        :args_string => "int a, unsigned int b",
-        :rettype => "void",
-        :var_arg => nil,
-        :args => [{:type => "int", :name => "a"}, {:type => "unsigned int", :name => "b"}],
-        :name => "Foo"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "void* cmock_arg1",
-        :rettype => "void",
-        :var_arg => nil,
-        :args => [{:type => "void*", :name => "cmock_arg1"}],
-        :name => "shiz"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "FUNCPTR cmock_arg1",
-        :rettype => "void",
-        :var_arg => nil,
-        :args => [{:type => "FUNCPTR", :name => "cmock_arg1"}],
-        :name => "tat"
-      }
+      "void Foo(int a, unsigned int b)",
+      "void shiz(void *)",
+      "void tat(FUNCPTR)"
     ]
     
-    assert_equal(expected, parsed_stuff[:functions])
+    assert_equal(expected, @parser.src_lines)
   end
-  
-  should "extract and return function declarations" do
+
+  should "raise upon prototype parsing failure" do
   
     source =
       "int Foo(int a, unsigned int b);\n" +
-      "void  bar \n(uint la, int de, bool da) ; \n" +
-      "void FunkyChicken (\n   uint la,\n   int de,\n   bool da);\n" +
-      "void\n shiz(void);\n" +
-      "void tat();\n" +
-      # following lines should yield no function declarations:
-      "#define get_foo() \\\n   (Thing)foo())\n" +
-      "ARRAY_TYPE array[((U8)10)];\n" +
-      "THINGER_MASK = (0x0001 << 5),\n"
-      
-    @parser = CMockHeaderParser.new(source, @config)
-    parsed_stuff = @parser.parse
+      "void  bar \n(uint la, int de, bool da) ; \n"
     
-    expected =
-    [
-      {
-        :modifier => "",
-        :args_string => "int a, unsigned int b",
-        :rettype => "int",
-        :var_arg => nil,
-        :args => [{:type => "int", :name => "a"}, {:type => "unsigned int", :name => "b"}],
-        :name => "Foo"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "uint la, int de, bool da",
-        :rettype => "void",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "uint", :name => "la"},
-          {:type => "int", :name => "de"},
-          {:type => "bool", :name => "da"}
-        ],
-        :name => "bar"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "uint la, int de, bool da",
-        :rettype => "void",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "uint", :name => "la"},
-          {:type => "int", :name => "de"},
-          {:type => "bool", :name => "da"}
-        ],
-        :name => "FunkyChicken"
-      },
+    @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(nil)
+    
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
+    
+    begin
+      @parser.parse
+      assert_fail('should have raised')
+    rescue
+    end
+  end
 
-      {
-        :modifier => "",
-        :args_string => "void",
-        :rettype => "void",
-        :var_arg => nil,
-        :args => [],
-        :name => "shiz"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "void",
-        :rettype => "void",
-        :var_arg => nil,
-        :args => [],
-        :name => "tat"
-      }
-    ]
-    
-    assert_equal(expected, parsed_stuff[:functions])
-  end
-  
-  should "extract and return function declarations with attributes" do
-  
-    source =
-      "static \tint \n Foo(int a, unsigned int b);\n" +
-      "inline\t bool  bar \n(uint la, int de, bool da);\n" +
-      "inline static __ramfunc bool bar ( uint thinger );\n"
-      
-    @parser = CMockHeaderParser.new(source, @config)
-    parsed_stuff = @parser.parse
-    
-    expected =
-    [
-      {
-        :modifier => "static",
-        :args_string => "int a, unsigned int b",
-        :rettype => "int",
-        :var_arg => nil,
-        :args => [{:type => "int", :name => "a"}, {:type => "unsigned int", :name => "b"}],
-        :name => "Foo"
-      },
-      
-      {
-        :modifier => "inline",
-        :args_string => "uint la, int de, bool da",
-        :rettype => "bool",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "uint", :name => "la"},
-          {:type => "int", :name => "de"},
-          {:type => "bool", :name => "da"}
-        ],
-        :name => "bar"
-      },
-      
-      {
-        :modifier => "inline static __ramfunc",
-        :args_string => "uint thinger",
-        :rettype => "bool",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "uint", :name => "thinger"},
-        ],
-        :name => "bar"
-      }      
-    ]
-    
-    assert_equal(expected, parsed_stuff[:functions])
-  end
-  
-  should "extract and return function declarations with variable argument lists" do
-  
-    source =
-      "\tint \n printf(char * const format, ...);\n" +
-      "bool  bar \n(...);\n"
-      
-    @parser = CMockHeaderParser.new(source, @config)
-    parsed_stuff = @parser.parse
-    
-    expected =
-    [
-      {
-        :modifier => "",
-        :args_string => "char* const format",
-        :rettype => "int",
-        :var_arg => "...",
-        :args => [{:type => "char* const", :name => "format"}],
-        :name => "printf"
-      },
-      {
-        :modifier => "",
-        :args_string => "void",
-        :rettype => "bool",
-        :var_arg => "...",
-        :args => [],
-        :name => "bar"
-      }
-    ]
-    
-    assert_equal(expected, parsed_stuff[:functions])
-  end
-  
-  should "attach * to type" do
-  
-    source =
-      "MY_STRUCT* HooWah(char *** format);\n" +
-      "bool* HotShot(HIS_STRUCT **p, unsigned int* pint);\n" +
-      "bool * HotDog(BOW_WOW *p, unsigned int* pint);\n" +
-      "bool ** HotDog(BOW_WOW* p, unsigned int* pint);\n" +
-      "static bool *HotToTrot(unsigned int * struttin);\n" +
-      "static bool ***HotToTrot(unsigned int ** struttin);\n"
-      
-    @parser = CMockHeaderParser.new(source, @config)
-    parsed_stuff = @parser.parse
-    
-    expected =
-    [
-      {
-        :modifier => "",
-        :args_string => "char*** format",
-        :rettype => "MY_STRUCT*",
-        :var_arg => nil,
-        :args => [{:type => "char***", :name => "format"}],
-        :name => "HooWah"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "HIS_STRUCT** p, unsigned int* pint",
-        :rettype => "bool*",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "HIS_STRUCT**", :name => "p"},
-          {:type => "unsigned int*", :name => "pint"}
-        ],
-        :name => "HotShot"
-      },
+  # should "extract and return function declarations" do
+  # 
+  #   source =
+  #     "int Foo(int a, unsigned int b);\n" +
+  #     "void  bar \n(uint la, int de, bool da) ; \n" +
+  #     "void FunkyChicken (\n   uint la,\n   int de,\n   bool da);\n" +
+  #     "void\n shiz(void);\n" +
+  #     "void tat();\n" +
+  #     # following lines should yield no function declarations:
+  #     "#define get_foo() \\\n   (Thing)foo())\n" +
+  #     "ARRAY_TYPE array[((U8)10)];\n" +
+  #     "THINGER_MASK = (0x0001 << 5),\n"
+  #     
+  #   @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
+  #   parsed_stuff = @parser.parse
+  #   
+  #   expected =
+  #   [
+  #     {
+  #       :modifier => "",
+  #       :args_string => "int a, unsigned int b",
+  #       :rettype => "int",
+  #       :var_arg => nil,
+  #       :args => [{:type => "int", :name => "a"}, {:type => "unsigned int", :name => "b"}],
+  #       :name => "Foo"
+  #     },
+  #     
+  #     {
+  #       :modifier => "",
+  #       :args_string => "uint la, int de, bool da",
+  #       :rettype => "void",
+  #       :var_arg => nil,
+  #       :args => 
+  #       [
+  #         {:type => "uint", :name => "la"},
+  #         {:type => "int", :name => "de"},
+  #         {:type => "bool", :name => "da"}
+  #       ],
+  #       :name => "bar"
+  #     },
+  #     
+  #     {
+  #       :modifier => "",
+  #       :args_string => "uint la, int de, bool da",
+  #       :rettype => "void",
+  #       :var_arg => nil,
+  #       :args => 
+  #       [
+  #         {:type => "uint", :name => "la"},
+  #         {:type => "int", :name => "de"},
+  #         {:type => "bool", :name => "da"}
+  #       ],
+  #       :name => "FunkyChicken"
+  #     },
+  # 
+  #     {
+  #       :modifier => "",
+  #       :args_string => "void",
+  #       :rettype => "void",
+  #       :var_arg => nil,
+  #       :args => [],
+  #       :name => "shiz"
+  #     },
+  #     
+  #     {
+  #       :modifier => "",
+  #       :args_string => "void",
+  #       :rettype => "void",
+  #       :var_arg => nil,
+  #       :args => [],
+  #       :name => "tat"
+  #     }
+  #   ]
+  #   
+  #   assert_equal(expected, parsed_stuff[:functions])
+  # end
+  # 
+  # should "extract and return function declarations with attributes" do
+  # 
+  #   source =
+  #     "static \tint \n Foo(int a, unsigned int b);\n" +
+  #     "inline\t bool  bar \n(uint la, int de, bool da);\n" +
+  #     "inline static __ramfunc bool bar ( uint thinger );\n"
+  #     
+  #   @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
+  #   parsed_stuff = @parser.parse
+  #   
+  #   expected =
+  #   [
+  #     {
+  #       :modifier => "static",
+  #       :args_string => "int a, unsigned int b",
+  #       :rettype => "int",
+  #       :var_arg => nil,
+  #       :args => [{:type => "int", :name => "a"}, {:type => "unsigned int", :name => "b"}],
+  #       :name => "Foo"
+  #     },
+  #     
+  #     {
+  #       :modifier => "inline",
+  #       :args_string => "uint la, int de, bool da",
+  #       :rettype => "bool",
+  #       :var_arg => nil,
+  #       :args => 
+  #       [
+  #         {:type => "uint", :name => "la"},
+  #         {:type => "int", :name => "de"},
+  #         {:type => "bool", :name => "da"}
+  #       ],
+  #       :name => "bar"
+  #     },
+  #     
+  #     {
+  #       :modifier => "inline static __ramfunc",
+  #       :args_string => "uint thinger",
+  #       :rettype => "bool",
+  #       :var_arg => nil,
+  #       :args => 
+  #       [
+  #         {:type => "uint", :name => "thinger"},
+  #       ],
+  #       :name => "bar"
+  #     }      
+  #   ]
+  #   
+  #   assert_equal(expected, parsed_stuff[:functions])
+  # end
 
-      {
-        :modifier => "",
-        :args_string => "BOW_WOW* p, unsigned int* pint",
-        :rettype => "bool*",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "BOW_WOW*", :name => "p"},
-          {:type => "unsigned int*", :name => "pint"}
-        ],
-        :name => "HotDog"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "BOW_WOW* p, unsigned int* pint",
-        :rettype => "bool**",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "BOW_WOW*", :name => "p"},
-          {:type => "unsigned int*", :name => "pint"}
-        ],
-        :name => "HotDog"
-      },
-      
-      {
-        :modifier => "static",
-        :args_string => "unsigned int* struttin",
-        :rettype => "bool*",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "unsigned int*", :name => "struttin"}
-        ],
-        :name => "HotToTrot"
-      },
-
-      {
-        :modifier => "static",
-        :args_string => "unsigned int** struttin",
-        :rettype => "bool***",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "unsigned int**", :name => "struttin"}
-        ],
-        :name => "HotToTrot"
-      }
-    ]
-    
-    assert_equal(expected, parsed_stuff[:functions])
-  end
- 
-  should "extract and return function declarations with just types (no argument names)" do
-  
-    source =
-      "int buzzlightyear(char*, bool);\n" +
-      "bool woody();\n" +
-      "int slinkydog(bool thing, int (* const)(void));\n" +
-      "int andy(int* const);\n"
-      
-    @parser = CMockHeaderParser.new(source, @config)
-    parsed_stuff = @parser.parse
-    
-    expected =
-    [
-      {
-        :modifier => "",
-        :args_string => "char* cmock_arg1, bool cmock_arg2",
-        :rettype => "int",
-        :var_arg => nil,
-        :args => 
-        [
-          {:type => "char*", :name => "cmock_arg1"},
-          {:type => "bool",  :name => "cmock_arg2"}
-        ],
-        :name => "buzzlightyear"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "void",
-        :rettype => "bool",
-        :var_arg => nil,
-        :args => [],
-        :name => "woody"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "bool thing, int (* const)(void) cmock_arg1",
-        :rettype => "int",
-        :var_arg => nil,
-        :args =>
-        [
-          {:type => "bool", :name => "thing"},
-          {:type => "int (* const)(void)",  :name => "cmock_arg1"}
-        ],
-        :name => "slinkydog"
-      },
-      
-      {
-        :modifier => "",
-        :args_string => "int* const cmock_arg1",
-        :rettype => "int",
-        :var_arg => nil,
-        :args =>
-        [
-          {:type => "int* const", :name => "cmock_arg1"},
-        ],
-        :name => "andy"
-      }
-    ]
-    
-    assert_equal(expected, parsed_stuff[:functions])
-  end
 end

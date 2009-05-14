@@ -15,6 +15,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
   def teardown
   end
   
+  
   should "parse simple void function prototypes" do
     parsed = @parser.parse("void foo_bar(void)")
 
@@ -35,6 +36,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_nil(parsed.get_var_arg)
   end
 
+
   should "fail to parse garbage, broken function prototypes, and strings that only appear to be prototypes" do
     assert_nil(@parser.parse("** !"))
     assert_nil(@parser.parse("ashjfhskdh"))
@@ -50,6 +52,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_nil(@parser.parse("typedef void (*FUNCPTR)(void)")) # typedef string that looks like function prototype
     assert_nil(@parser.parse("(parenthetical comment)"))
   end
+  
   
   should "parse and normalize white space" do
     parsed = @parser.parse("void foo_bar ( void )")
@@ -73,6 +76,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     parsed = @parser.parse("float ( * GetPtr( const   char opCode))( float,  float)")
     assert_equal("float (*GetPtr( const char opCode ))( float, float )", parsed.get_declaration)    
   end
+  
   
   should "parse out simple arguments from an argument list into an array of hashes" do
     # function pointers & var args tested elsewhere
@@ -115,6 +119,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_nil(parsed.get_var_arg)
   end
   
+  
   should "fail to parse arguments that mix multiple custom types or a custom type and a primitive" do
     # parser can only recognize strings of primitves followed by optional name or
     # a single custom type followed by optional name;
@@ -124,6 +129,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_nil(@parser.parse("void foo_bar(CUSTOM_TYPE, CUSTOM_TYPE1 CUSTOM_TYPE2 abc)"))
     assert_nil(@parser.parse("void foo_bar(CUSTOM_TYPE1 CUSTOM_TYPE2 abc, CUSTOM_TYPE1 CUSTOM_TYPE2 xyz)"))    
   end
+  
   
   should "parse out simple return types" do
     # function pointers tested elsewhere
@@ -144,19 +150,21 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_equal('CUSTOM_TYPE', parsed.get_return_type)
   end
   
+  
   should "normalize pointer notation" do
-    parsed = @parser.parse("void * foo(unsigned int * a,  char * *b, int*  c, int (* func)(void))")
+    parsed = @parser.parse("void * foo(unsigned int * * * a,  char * *b, int*  c, int (* func)(void))")
   
     assert_equal('void*', parsed.get_return_type)
-    assert_equal('unsigned int* a, char** b, int* c, int (*func)(void)', parsed.get_argument_list)
+    assert_equal('unsigned int*** a, char** b, int* c, int (*func)(void)', parsed.get_argument_list)
     assert_equal([
-       {:type => 'unsigned int*', :name => 'a'},
+       {:type => 'unsigned int***', :name => 'a'},
        {:type => 'char**', :name => 'b'},
        {:type => 'int*', :name => 'c'},
        {:type => 'int (*)(void)', :name => 'func'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   end
+  
   
   should "specially process var args in preparation for mocking" do
     parsed = @parser.parse("void foo_bar(...)")
@@ -179,8 +187,12 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_nil(parsed.get_var_arg) # no var args for thing(), just for the function pointer param
   end
   
+  
   should "parse prototypes handling function pointers" do
     # function pointer prototypes in argument lists (i.e. no typedef)
+
+    # handle this?  -->  "int slinkydog(bool thing, int (* const)(void));\n" +
+
     parsed = @parser.parse("void thing(int (*func_ptr)(int, int))")
     assert_equal('int (*func_ptr)( int, int )', parsed.get_argument_list)
     assert_equal(
@@ -210,6 +222,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     parsed = @parser.parse("unsigned int * (* func(double foo, THING bar))(unsigned int a)")
     assert_equal('unsigned int* (*)( unsigned int a )', parsed.get_return_type)
   end
+  
   
   should "create unique typedefs for function pointer prototypes in argument lists and return types" do
     # function prototype argument list handling
@@ -246,13 +259,14 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       parsed.get_typedefs)
   end
   
-  should "insert unique names for top-level nameless arguments" do
-    parsed = @parser.parse("void foo_bar(int (*)(int, int), char, unsigned int c, CUSTOM_THING)")
   
-    assert_equal('int (*cmock_arg1)( int, int ), char cmock_arg2, unsigned int c, CUSTOM_THING cmock_arg4', parsed.get_argument_list)
+  should "insert unique names for top-level nameless arguments" do
+    parsed = @parser.parse("void foo_bar(int (*)(int, int), char* const, unsigned int c, CUSTOM_THING)")
+  
+    assert_equal('int (*cmock_arg1)( int, int ), char* const cmock_arg2, unsigned int c, CUSTOM_THING cmock_arg4', parsed.get_argument_list)
     assert_equal(
       [{:type => 'int (*)( int, int )', :name => 'cmock_arg1'},
-       {:type => 'char', :name => 'cmock_arg2'},
+       {:type => 'char* const', :name => 'cmock_arg2'},
        {:type => 'unsigned int', :name => 'c'},
        {:type => 'CUSTOM_THING', :name => 'cmock_arg4'}],
       parsed.get_arguments)

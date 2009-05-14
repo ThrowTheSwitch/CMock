@@ -1,23 +1,23 @@
+
 class CMockHeaderParser
 
-  attr_accessor :src_lines, :funcs, :c_attributes
+  attr_accessor :src_lines, :prototypes, :c_attributes
   
-  def initialize(source, cfg)
-    @funcs = []
+  def initialize(parser, source, cfg)
+    @src_lines = []
+    @prototypes = []
     @c_attributes = cfg.attributes
-    @declaration_parse_matcher = /([\d\w\s\*\(\),]+??)\(([\d\w\s\*\(\),\.]*)\)$/m
-
+    @prototype_parse_matcher = /([\d\w\s\*\(\),]+??)\(([\d\w\s\*\(\),\.]*)\)$/m
+    @parser = parser
     import_source(source)
   end
   
   def parse
     mod = {:includes => nil, :functions => []}
-    parse_functions
-    if !@funcs.nil? and @funcs.length > 0
-      @funcs.each do |decl|
-        mod[:functions] << parse_declaration(decl)
-      end
-    end
+    # build prototype list
+    extract_prototypes
+    # parse all prototyes into hashes of components and add to array
+    @prototypes.each {|prototype| mod[:functions] << parse_prototype(prototype)} if (@prototypes.length > 0)
     return mod
   end
   
@@ -27,7 +27,7 @@ class CMockHeaderParser
     # look for any edge cases of typedef'd void;
     # void must be void for cmock AndReturn calls to process properly.
     # to a certain extent, these replacements assume we're chewing on pre-processed header files
-    void_types = source.scan(/typedef\s+void\s+([\w\d]+)\s*;/)
+    void_types = source.scan(/typedef\s+(\(\s*)?void(\s*\))?\s+([\w\d]+)\s*;/)
     void_types.each {|type| source.gsub!(/#{type}/, 'void')} if void_types.size > 0
     
     source.gsub!(/\s*\\\s*/m, ' ')    # smush multiline into single line
@@ -35,7 +35,10 @@ class CMockHeaderParser
     source.gsub!(/\/\/.*$/, '')       # remove line comments
     source.gsub!(/#.*/, '')           # remove preprocessor statements
     source.gsub!(/typedef.*/, '')     # remove typedef statements
-     
+    source.gsub!(/^\s+/, '')          # remove excessive white space
+    source.gsub!(/\s+$/, '')          # remove excessive white space
+    source.gsub!(/\s+/, ' ')          # remove excessive white space
+
     @src_lines = source.split(/\s*;\s*/) # split source at end of statements (removing extra white space)
     @src_lines.delete_if {|line| line.strip.length == 0} # remove blank lines
   end
@@ -45,96 +48,41 @@ class CMockHeaderParser
     @attribute_match = Regexp.compile(%|(#{@c_attributes.join('|')}\s+)*|)
   end
 
-  def parse_functions
+  def extract_prototypes
     @src_lines.each do |line|
-      @funcs << line.strip.gsub(/\s+/, ' ') if line =~ @declaration_parse_matcher
-    end
-    return @funcs
-  end
-  
-  def parse_args(arg_list)
-    args = []
-    arg_list.split(',').each do |arg|
-      arg = arg.strip
-      return args if ((arg == '...') || (arg == 'void'))
-      arg_elements = arg.split
-      args << {:type => arg_elements[0..-2].join(' '), :name => arg_elements[-1]}
-    end
-    return args
-  end
-
-  def clean_args(arg_list)
-    if ((arg_list.strip == 'void') or (arg_list.empty?))
-      return 'void'
-    else
-      c=0
-      arg_list.gsub!(/\s+\*/,'*')     # remove space to place asterisks with type (where they belong)
-      arg_list.gsub!(/\*(\w)/,'* \1') # pull asterisks away from param to place asterisks with type (where they belong)
-      arg_list.split(/\s*,\s*/).map{|arg| (arg =~ /^(\w+|.+\*|.+\)|.+const)$/) ? "#{arg} cmock_arg#{c+=1}" : arg}.join(', ')
-    end
-  end
-  
-  def parse_declaration(declaration)
-    decl = {}
-
-    regex_match = @declaration_parse_matcher.match(declaration)
-    raise "Failed parsing function declaration: '#{declaration}'" if regex_match.nil? 
-    
-    # grab argument list
-    args = regex_match[2].strip
-
-    # process function attributes, return type, and name
-    descriptors = regex_match[1]
-    descriptors.gsub!(/\s+\*/,'*')     # remove space to place asterisks with return type (where they belong)
-    descriptors.gsub!(/\*(\w)/,'* \1') # pull asterisks away from function name to place asterisks with return type (where they belong)
-    descriptors = descriptors.split    # array of all descriptor strings
-
-    # grab name
-    decl[:name] = descriptors[-1]      # snag name as last array item
-
-    # build attribute and return type strings
-    decl[:modifier] = []
-    decl[:rettype]  = []    
-    descriptors[0..-2].each do |word|
-      if @c_attributes.include?(word)
-        decl[:modifier] << word
-      else
-        decl[:rettype]  << word
+      # build array of function prototypes
+      if (line =~ @prototype_parse_matcher)
+        # (remove any default parameter statements from argument lists while scanning)
+        line.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, '')
+        @prototypes << line
       end
     end
-    decl[:modifier] = decl[:modifier].join(' ')
-    decl[:rettype]  = decl[:rettype].join(' ')
-        
-    # remove default parameter statements from mock definitions
-    args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
-    args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
+    return @prototypes
+  end
+  
+  def parse_prototype(prototype)
+    hash = {}
     
-    #check for var args
-    if (args =~ /\.\.\./)
-      decl[:var_arg] = args.match( /[\w\s]*\.\.\./ ).to_s.strip
-      if (args =~ /\,[\w\s]*\.\.\./)
-        args = args.gsub!(/\,[\w\s]*\.\.\./,'')
-      else
-        args = 'void'
+    modifiers = []
+    @c_attributes.each do |attribute|
+      if (prototype =~ /#{attribute}\s+/i)
+        modifiers << attribute
+        prototype.gsub!(/#{attribute}\s+/i, '')
       end
-    else
-      decl[:var_arg] = nil
     end
+    hash[:modifier] = modifiers.join(' ')
     
-    args = clean_args(args)
-    decl[:args_string] = args
-    decl[:args] = parse_args(args)
-      
-    if decl[:rettype].nil? or decl[:name].nil? or decl[:args].nil?
-      raise "Declaration parse failed!\n" +
-        "  declaration: #{declaration}\n" +
-        "  modifier: #{decl[:modifier]}\n" +
-        "  return: #{decl[:rettype]}\n" +
-        "  function: #{decl[:name]}\n" +
-        "  args:#{decl[:args]}\n"
-    end
+    parsed = @parser.parse(prototype)
+
+    raise "Failed parsing function prototype: '#{prototype}'" if parsed.nil? 
     
-    return decl
+    hash[:name]        = parsed.get_function_name
+    hash[:args_string] = parsed.get_argument_list
+    hash[:args]        = parsed.get_arguments
+    hash[:rettype]     = parsed.get_return_type
+    hash[:var_arg]     = parsed.get_var_arg
+
+    return hash
   end
 
 end
