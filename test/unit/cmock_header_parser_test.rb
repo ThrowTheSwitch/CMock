@@ -134,6 +134,21 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.src_lines)
   end
 
+  should "strip default values from function parameter lists" do
+  
+    source =
+      "void Foo(int a = 57, float b=37.52, char c= 'd', char* e=\"junk\");\n"
+
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config)
+
+    expected =
+    [
+      "void Foo(int a, float b, char c, char* e)"
+    ]
+    
+    assert_equal(expected, @parser.src_lines)
+  end
+
   should "raise upon prototype parsing failure" do
   
     source =
