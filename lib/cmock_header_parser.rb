@@ -3,12 +3,15 @@ class CMockHeaderParser
 
   attr_reader :src_lines, :prototypes, :c_attributes
   
-  def initialize(parser, source, cfg)
+  def initialize(parser, source, cfg, name)
     @src_lines = []
     @prototypes = []
-    @c_attributes = cfg.attributes
     @prototype_parse_matcher = /([\d\w\s\*\(\),]+??)\(([\d\w\s\*\(\),\.]*)\)$/m
+
+    @c_attributes = cfg.attributes
     @parser = parser
+    @name = name
+    
     import_source(source)
   end
   
@@ -41,6 +44,8 @@ class CMockHeaderParser
 
     source.gsub!(/^\s+/, '')          # remove extra white space
     source.gsub!(/\s+$/, '')          # remove extra white space
+    source.gsub!(/\s*\(\s*/, '(')     # remove extra white space
+    source.gsub!(/\s*\)\s*/, ')')     # remove extra white space
     source.gsub!(/\s+/, ' ')          # remove extra white space
 
     @src_lines = source.split(/\s*;\s*/) # split source at end of statements (removing extra white space)
@@ -52,6 +57,7 @@ class CMockHeaderParser
     @src_lines.each do |line|
       @prototypes << line if (line =~ @prototype_parse_matcher)
     end
+    raise "No function prototypes found in '#{@name}'" if @prototypes.empty?
   end
   
   def parse_prototype(prototype)
