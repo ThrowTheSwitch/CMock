@@ -10,10 +10,12 @@ grammar CMockFunctionPrototype
   
   rule function_prototype_function_pointer_return
     # ex. float (*GetPtr(const char opCode))(float, float)
-    return_type left_paren asterisk name function_arglist:argument_list right_paren function_return_arglist:argument_list <FunctionPrototypeFunctionPointerReturnNode>
+    # const: tag so we can always access its nodes in programming even if blank.
+    return_type left_paren asterisk const:const? name function_arglist:argument_list right_paren function_return_arglist:argument_list <FunctionPrototypeFunctionPointerReturnNode>
   end
 
   rule return_type
+    # void is different than the type possibility 'void*'
     void / type
   end
 
@@ -35,8 +37,8 @@ grammar CMockFunctionPrototype
 
   rule func_ptr_prototype
     # ex. int (*funcPtr)(float, char, char)
-    # add name: tag to name? so we can always access it in programming even if blank.
-    return_type left_paren asterisk name:name? right_paren argument_list <FunctionPointerNode>
+    # const: & name: tags so we can always access their nodes in programming even if blank.
+    return_type left_paren asterisk const:const? name:name? right_paren argument_list <FunctionPointerNode>
   end
 
   rule type_and_name
@@ -47,7 +49,12 @@ grammar CMockFunctionPrototype
   end
 
   rule type
-    const? ((('void' / 'unsigned' / 'signed' / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space)+ / name) (asterisk)* const? <TypeNode>
+    # be careful in here with parens; placement and grouping is important
+    const?
+      (('struct' space name asterisk+) /
+       ((('void' / 'unsigned' / 'signed' / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space)+ asterisk*) / 
+       (name asterisk*))
+    const? <TypeNode>
   end
 
 	rule name

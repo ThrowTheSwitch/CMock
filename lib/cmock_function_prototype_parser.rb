@@ -91,20 +91,24 @@ module CMockFunctionPrototype
       elements[2]
     end
 
-    def name
+    def const
       elements[3]
     end
 
-    def function_arglist
+    def name
       elements[4]
     end
 
-    def right_paren
+    def function_arglist
       elements[5]
     end
 
-    def function_return_arglist
+    def right_paren
       elements[6]
+    end
+
+    def function_return_arglist
+      elements[7]
     end
   end
 
@@ -126,17 +130,26 @@ module CMockFunctionPrototype
         r3 = _nt_asterisk
         s0 << r3
         if r3
-          r4 = _nt_name
+          r5 = _nt_const
+          if r5
+            r4 = r5
+          else
+            r4 = instantiate_node(SyntaxNode,input, index...index)
+          end
           s0 << r4
           if r4
-            r5 = _nt_argument_list
-            s0 << r5
-            if r5
-              r6 = _nt_right_paren
-              s0 << r6
-              if r6
-                r7 = _nt_argument_list
-                s0 << r7
+            r6 = _nt_name
+            s0 << r6
+            if r6
+              r7 = _nt_argument_list
+              s0 << r7
+              if r7
+                r8 = _nt_right_paren
+                s0 << r8
+                if r8
+                  r9 = _nt_argument_list
+                  s0 << r9
+                end
               end
             end
           end
@@ -353,16 +366,20 @@ module CMockFunctionPrototype
       elements[2]
     end
 
-    def name
+    def const
       elements[3]
     end
 
-    def right_paren
+    def name
       elements[4]
     end
 
-    def argument_list
+    def right_paren
       elements[5]
+    end
+
+    def argument_list
+      elements[6]
     end
   end
 
@@ -384,7 +401,7 @@ module CMockFunctionPrototype
         r3 = _nt_asterisk
         s0 << r3
         if r3
-          r5 = _nt_name
+          r5 = _nt_const
           if r5
             r4 = r5
           else
@@ -392,11 +409,20 @@ module CMockFunctionPrototype
           end
           s0 << r4
           if r4
-            r6 = _nt_right_paren
+            r7 = _nt_name
+            if r7
+              r6 = r7
+            else
+              r6 = instantiate_node(SyntaxNode,input, index...index)
+            end
             s0 << r6
             if r6
-              r7 = _nt_argument_list
-              s0 << r7
+              r8 = _nt_right_paren
+              s0 << r8
+              if r8
+                r9 = _nt_argument_list
+                s0 << r9
+              end
             end
           end
         end
@@ -491,9 +517,30 @@ module CMockFunctionPrototype
     def space
       elements[1]
     end
+
+    def name
+      elements[2]
+    end
+
   end
 
   module Type1
+    def space
+      elements[1]
+    end
+  end
+
+  module Type2
+  end
+
+  module Type3
+    def name
+      elements[0]
+    end
+
+  end
+
+  module Type4
   end
 
   def _nt_type
@@ -514,173 +561,250 @@ module CMockFunctionPrototype
     s0 << r1
     if r1
       i3 = index
-      s4, i4 = [], index
-      loop do
-        i5, s5 = index, []
-        i6 = index
-        if input.index('void', index) == index
-          r7 = instantiate_node(SyntaxNode,input, index...(index + 4))
-          @index += 4
-        else
-          terminal_parse_failure('void')
-          r7 = nil
-        end
-        if r7
-          r6 = r7
-        else
-          if input.index('unsigned', index) == index
-            r8 = instantiate_node(SyntaxNode,input, index...(index + 8))
-            @index += 8
-          else
-            terminal_parse_failure('unsigned')
-            r8 = nil
-          end
-          if r8
-            r6 = r8
-          else
-            if input.index('signed', index) == index
-              r9 = instantiate_node(SyntaxNode,input, index...(index + 6))
-              @index += 6
-            else
-              terminal_parse_failure('signed')
-              r9 = nil
-            end
-            if r9
-              r6 = r9
-            else
-              if input.index('long', index) == index
-                r10 = instantiate_node(SyntaxNode,input, index...(index + 4))
-                @index += 4
-              else
-                terminal_parse_failure('long')
-                r10 = nil
-              end
-              if r10
-                r6 = r10
-              else
-                if input.index('int', index) == index
-                  r11 = instantiate_node(SyntaxNode,input, index...(index + 3))
-                  @index += 3
-                else
-                  terminal_parse_failure('int')
-                  r11 = nil
-                end
-                if r11
-                  r6 = r11
-                else
-                  if input.index('short', index) == index
-                    r12 = instantiate_node(SyntaxNode,input, index...(index + 5))
-                    @index += 5
-                  else
-                    terminal_parse_failure('short')
-                    r12 = nil
-                  end
-                  if r12
-                    r6 = r12
-                  else
-                    if input.index('char', index) == index
-                      r13 = instantiate_node(SyntaxNode,input, index...(index + 4))
-                      @index += 4
-                    else
-                      terminal_parse_failure('char')
-                      r13 = nil
-                    end
-                    if r13
-                      r6 = r13
-                    else
-                      if input.index('float', index) == index
-                        r14 = instantiate_node(SyntaxNode,input, index...(index + 5))
-                        @index += 5
-                      else
-                        terminal_parse_failure('float')
-                        r14 = nil
-                      end
-                      if r14
-                        r6 = r14
-                      else
-                        if input.index('double', index) == index
-                          r15 = instantiate_node(SyntaxNode,input, index...(index + 6))
-                          @index += 6
-                        else
-                          terminal_parse_failure('double')
-                          r15 = nil
-                        end
-                        if r15
-                          r6 = r15
-                        else
-                          self.index = i6
-                          r6 = nil
-                        end
-                      end
-                    end
-                  end
-                end
-              end
-            end
-          end
-        end
-        s5 << r6
+      i4, s4 = index, []
+      if input.index('struct', index) == index
+        r5 = instantiate_node(SyntaxNode,input, index...(index + 6))
+        @index += 6
+      else
+        terminal_parse_failure('struct')
+        r5 = nil
+      end
+      s4 << r5
+      if r5
+        r6 = _nt_space
+        s4 << r6
         if r6
-          r16 = _nt_space
-          s5 << r16
-        end
-        if s5.last
-          r5 = instantiate_node(SyntaxNode,input, i5...index, s5)
-          r5.extend(Type0)
-        else
-          self.index = i5
-          r5 = nil
-        end
-        if r5
-          s4 << r5
-        else
-          break
+          r7 = _nt_name
+          s4 << r7
+          if r7
+            s8, i8 = [], index
+            loop do
+              r9 = _nt_asterisk
+              if r9
+                s8 << r9
+              else
+                break
+              end
+            end
+            if s8.empty?
+              self.index = i8
+              r8 = nil
+            else
+              r8 = instantiate_node(SyntaxNode,input, i8...index, s8)
+            end
+            s4 << r8
+          end
         end
       end
-      if s4.empty?
+      if s4.last
+        r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
+        r4.extend(Type0)
+      else
         self.index = i4
         r4 = nil
-      else
-        r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
       end
       if r4
         r3 = r4
       else
-        r17 = _nt_name
-        if r17
-          r3 = r17
-        else
-          self.index = i3
-          r3 = nil
-        end
-      end
-      s0 << r3
-      if r3
-        s18, i18 = [], index
+        i10, s10 = index, []
+        s11, i11 = [], index
         loop do
-          r19 = _nt_asterisk
-          if r19
-            s18 << r19
+          i12, s12 = index, []
+          i13 = index
+          if input.index('void', index) == index
+            r14 = instantiate_node(SyntaxNode,input, index...(index + 4))
+            @index += 4
+          else
+            terminal_parse_failure('void')
+            r14 = nil
+          end
+          if r14
+            r13 = r14
+          else
+            if input.index('unsigned', index) == index
+              r15 = instantiate_node(SyntaxNode,input, index...(index + 8))
+              @index += 8
+            else
+              terminal_parse_failure('unsigned')
+              r15 = nil
+            end
+            if r15
+              r13 = r15
+            else
+              if input.index('signed', index) == index
+                r16 = instantiate_node(SyntaxNode,input, index...(index + 6))
+                @index += 6
+              else
+                terminal_parse_failure('signed')
+                r16 = nil
+              end
+              if r16
+                r13 = r16
+              else
+                if input.index('long', index) == index
+                  r17 = instantiate_node(SyntaxNode,input, index...(index + 4))
+                  @index += 4
+                else
+                  terminal_parse_failure('long')
+                  r17 = nil
+                end
+                if r17
+                  r13 = r17
+                else
+                  if input.index('int', index) == index
+                    r18 = instantiate_node(SyntaxNode,input, index...(index + 3))
+                    @index += 3
+                  else
+                    terminal_parse_failure('int')
+                    r18 = nil
+                  end
+                  if r18
+                    r13 = r18
+                  else
+                    if input.index('short', index) == index
+                      r19 = instantiate_node(SyntaxNode,input, index...(index + 5))
+                      @index += 5
+                    else
+                      terminal_parse_failure('short')
+                      r19 = nil
+                    end
+                    if r19
+                      r13 = r19
+                    else
+                      if input.index('char', index) == index
+                        r20 = instantiate_node(SyntaxNode,input, index...(index + 4))
+                        @index += 4
+                      else
+                        terminal_parse_failure('char')
+                        r20 = nil
+                      end
+                      if r20
+                        r13 = r20
+                      else
+                        if input.index('float', index) == index
+                          r21 = instantiate_node(SyntaxNode,input, index...(index + 5))
+                          @index += 5
+                        else
+                          terminal_parse_failure('float')
+                          r21 = nil
+                        end
+                        if r21
+                          r13 = r21
+                        else
+                          if input.index('double', index) == index
+                            r22 = instantiate_node(SyntaxNode,input, index...(index + 6))
+                            @index += 6
+                          else
+                            terminal_parse_failure('double')
+                            r22 = nil
+                          end
+                          if r22
+                            r13 = r22
+                          else
+                            self.index = i13
+                            r13 = nil
+                          end
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+          s12 << r13
+          if r13
+            r23 = _nt_space
+            s12 << r23
+          end
+          if s12.last
+            r12 = instantiate_node(SyntaxNode,input, i12...index, s12)
+            r12.extend(Type1)
+          else
+            self.index = i12
+            r12 = nil
+          end
+          if r12
+            s11 << r12
           else
             break
           end
         end
-        r18 = instantiate_node(SyntaxNode,input, i18...index, s18)
-        s0 << r18
-        if r18
-          r21 = _nt_const
-          if r21
-            r20 = r21
-          else
-            r20 = instantiate_node(SyntaxNode,input, index...index)
-          end
-          s0 << r20
+        if s11.empty?
+          self.index = i11
+          r11 = nil
+        else
+          r11 = instantiate_node(SyntaxNode,input, i11...index, s11)
         end
+        s10 << r11
+        if r11
+          s24, i24 = [], index
+          loop do
+            r25 = _nt_asterisk
+            if r25
+              s24 << r25
+            else
+              break
+            end
+          end
+          r24 = instantiate_node(SyntaxNode,input, i24...index, s24)
+          s10 << r24
+        end
+        if s10.last
+          r10 = instantiate_node(SyntaxNode,input, i10...index, s10)
+          r10.extend(Type2)
+        else
+          self.index = i10
+          r10 = nil
+        end
+        if r10
+          r3 = r10
+        else
+          i26, s26 = index, []
+          r27 = _nt_name
+          s26 << r27
+          if r27
+            s28, i28 = [], index
+            loop do
+              r29 = _nt_asterisk
+              if r29
+                s28 << r29
+              else
+                break
+              end
+            end
+            r28 = instantiate_node(SyntaxNode,input, i28...index, s28)
+            s26 << r28
+          end
+          if s26.last
+            r26 = instantiate_node(SyntaxNode,input, i26...index, s26)
+            r26.extend(Type3)
+          else
+            self.index = i26
+            r26 = nil
+          end
+          if r26
+            r3 = r26
+          else
+            self.index = i3
+            r3 = nil
+          end
+        end
+      end
+      s0 << r3
+      if r3
+        r31 = _nt_const
+        if r31
+          r30 = r31
+        else
+          r30 = instantiate_node(SyntaxNode,input, index...index)
+        end
+        s0 << r30
       end
     end
     if s0.last
       r0 = instantiate_node(TypeNode,input, i0...index, s0)
-      r0.extend(Type1)
+      r0.extend(Type4)
     else
       self.index = i0
       r0 = nil

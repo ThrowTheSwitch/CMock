@@ -1,6 +1,5 @@
 require 'yaml'
 require 'fileutils'
-require 'cmock'
 require 'generate_test_runner'
 require 'unity_test_summary'
 require 'systest_generator'
@@ -164,7 +163,9 @@ module RakefileHelpers
     summary.run
   end
   
-  def run_systests(test_case_files)    
+  def run_systests(test_case_files)
+    require 'cmock'
+    
     SystemTestGenerator.new.generate_files(test_case_files)
     test_files = FileList.new(SYSTEST_GENERATED_FILES_PATH + 'test*.c')
     

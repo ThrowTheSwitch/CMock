@@ -1,4 +1,3 @@
-ROOT_PATH = File.expand_path(File.dirname(__FILE__) + "/../")
 
 # Setup our load path:
 [ 
@@ -6,7 +5,7 @@ ROOT_PATH = File.expand_path(File.dirname(__FILE__) + "/../")
   'vendor/gems/polyglot-0.2.5/lib/',
   'vendor/gems/treetop-1.2.5/lib/',
 ].each do |dir|
-  $LOAD_PATH.unshift(File.join(ROOT_PATH, dir))
+  $LOAD_PATH.unshift( File.join( File.expand_path(File.dirname(__FILE__) + "/../"), dir) )
 end
 
 require 'rubygems'
