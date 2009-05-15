@@ -81,6 +81,7 @@ class CMockHeaderParser
     hash[:args]        = parsed.get_arguments
     hash[:rettype]     = parsed.get_return_type
     hash[:var_arg]     = parsed.get_var_arg
+    hash[:typedefs]    = parsed.get_typedefs
 
     return hash
   end

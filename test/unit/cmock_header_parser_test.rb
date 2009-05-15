@@ -245,6 +245,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
     @parsed.expect.get_return_type.returns('bo peep')
     @parsed.expect.get_var_arg.returns('...')
+    @parsed.expect.get_typedefs.returns([])
     
     @prototype_parser.expect.parse('void FunkyChicken(uint la, int de, bool da)').returns(@parsed)
 
@@ -253,6 +254,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_arguments.returns([{:type => 'back', :name => 'to'}])
     @parsed.expect.get_return_type.returns('the future')
     @parsed.expect.get_var_arg.returns(nil)
+    @parsed.expect.get_typedefs.returns([])
 
     @prototype_parser.expect.parse('void tat()').returns(@parsed)
 
@@ -261,6 +263,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_arguments.returns([{:type => 'trinity', :name => 'the one'}])
     @parsed.expect.get_return_type.returns('agent smith')
     @parsed.expect.get_var_arg.returns('...')
+    @parsed.expect.get_typedefs.returns(['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'])
 
     expected_prototypes = 
     [
@@ -277,7 +280,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :rettype => 'bo peep',
         :var_arg => '...',
         :args => [{:type => 'what up', :name => 'dawg'}],
-        :name => 'buzz lightyear'
+        :name => 'buzz lightyear',
+        :typedefs => [],
       },
       
       {
@@ -286,7 +290,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :rettype => 'the future',
         :var_arg => nil,
         :args => [{:type => 'back', :name => 'to'}],
-        :name => 'marty'
+        :name => 'marty',
+        :typedefs => [],
       },
 
       {
@@ -295,7 +300,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :rettype => 'agent smith',
         :var_arg => '...',
         :args => [{:type => 'trinity', :name => 'the one'}],
-        :name => 'neo'
+        :name => 'neo',
+        :typedefs => ['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'],
       },
     ]
 
@@ -319,6 +325,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
     @parsed.expect.get_return_type.returns('bo peep')
     @parsed.expect.get_var_arg.returns('...')
+    @parsed.expect.get_typedefs.returns([])
     
     @prototype_parser.expect.parse('void tat()').returns(@parsed)
 
@@ -327,6 +334,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_arguments.returns([{:type => 'trinity', :name => 'the one'}])
     @parsed.expect.get_return_type.returns('agent smith')
     @parsed.expect.get_var_arg.returns('...')
+    @parsed.expect.get_typedefs.returns([])
 
     expected_prototypes = 
     [
@@ -342,7 +350,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :rettype => 'bo peep',
         :var_arg => '...',
         :args => [{:type => 'what up', :name => 'dawg'}],
-        :name => 'buzz lightyear'
+        :name => 'buzz lightyear',
+        :typedefs => []
       },
 
       {
@@ -351,7 +360,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :rettype => 'agent smith',
         :var_arg => '...',
         :args => [{:type => 'trinity', :name => 'the one'}],
-        :name => 'neo'
+        :name => 'neo',
+        :typedefs => []
       },
     ]
 

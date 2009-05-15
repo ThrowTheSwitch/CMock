@@ -67,12 +67,40 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "#ifndef _#{define_name}\n",
                  "#define _#{define_name}\n\n",
                  "#include \"#{orig_filename}\"\n\n",
-                 "void #{mock_name}_Init(void);\n",
+               ]
+    
+    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    
+    assert_equal(expected, output)
+  end
+
+  should "write typedefs" do
+    functions = [ { :typedefs => ['typedef unsigned char U8;', 'typedef char S8;'] },
+                  { :typedefs => ['typedef unsigned long U32;'] } 
+                ]
+    output = []
+    expected = [ "\n",
+                 "typedef unsigned char U8;\n",
+                 "typedef char S8;\n",
+                 "typedef unsigned long U32;\n",
+                 "\n\n"
+               ]
+    
+    @cmock_generator.create_typedefs(output, functions)
+    
+    assert_equal(expected, output.flatten)
+  end
+
+  should "create the header file service call declarations" do
+    mock_name = "MockPoutPoutFish"
+
+    output = []
+    expected = [ "void #{mock_name}_Init(void);\n",
                  "void #{mock_name}_Destroy(void);\n",
                  "void #{mock_name}_Verify(void);\n\n"
                ]
     
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_service_call_declarations(output)
     
     assert_equal(expected, output)
   end

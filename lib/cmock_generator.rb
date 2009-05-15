@@ -24,6 +24,8 @@ class CMockGenerator
   def create_mock_header_file(parsed_stuff)
     @file_writer.create_file(@mock_name + ".h") do |file, filename|
       create_mock_header_header(file, filename)
+      create_typedefs(file, parsed_stuff[:functions])
+      create_mock_header_service_call_declarations(file)
       parsed_stuff[:functions].each do |function|
         file << @plugins.run(:mock_function_declarations, function)
       end
@@ -53,11 +55,22 @@ class CMockGenerator
     file << "#ifndef _#{define_name}\n"
     file << "#define _#{define_name}\n\n"
     file << "#include \"#{orig_filename}\"\n\n"
+  end
+  
+  def create_typedefs(file, functions)
+    file << "\n"
+    functions.each do |function|
+      function[:typedefs].each {|typedef| file << "#{typedef}\n" }
+    end
+    file << "\n\n"
+  end
+
+  def create_mock_header_service_call_declarations(file) 
     file << "void #{@mock_name}_Init(void);\n"
     file << "void #{@mock_name}_Destroy(void);\n"
     file << "void #{@mock_name}_Verify(void);\n\n"
   end
-  
+
   def create_mock_header_footer(header)
     header << "\n#endif\n"
   end

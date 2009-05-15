@@ -11,6 +11,14 @@ module CMockFunctionPrototype
     def make_cmock_arg_name(index)
       return "cmock_arg#{index+1}"
     end
+    
+    def make_function_pointer_param_typedef_name(arg_list_index, function_name)
+      return "FUNC_PTR_#{function_name.upcase}_PARAM_#{arg_list_index+1}_T"
+    end    
+
+    def make_function_pointer_return_typedef_name(function_name)
+      return "FUNC_PTR_#{function_name.upcase}_RETURN_T"
+    end    
   end
 
   
@@ -46,14 +54,15 @@ module CMockFunctionPrototype
 
 
   class FunctionPrototypeFunctionPointerReturnNode < Treetop::Runtime::SyntaxNode
+    include FunctionPrototypeUtils
+
     def get_declaration
-      return "#{return_type.text_value} (* const #{get_function_name}#{function_arglist.normalized_argument_list})#{function_return_arglist.normalized_argument_list}"  if not (const.text_value.blank?)
+      return "#{return_type.text_value} (* const #{get_function_name}#{function_arglist.normalized_argument_list})#{function_return_arglist.normalized_argument_list}" if not (const.text_value.blank?)
       return "#{return_type.text_value} (*#{get_function_name}#{function_arglist.normalized_argument_list})#{function_return_arglist.normalized_argument_list}"
     end
     
     def get_return_type
-      return "#{return_type.text_value} (* const)#{function_return_arglist.normalized_argument_list}" if not (const.text_value.blank?)
-      return "#{return_type.text_value} (*)#{function_return_arglist.normalized_argument_list}"
+      return make_function_pointer_return_typedef_name(get_function_name)
     end
     
     def get_function_name
@@ -73,24 +82,15 @@ module CMockFunctionPrototype
     end
     
     def get_typedefs
-      type_name = "FUNC_PTR_#{get_function_name.upcase}_RETURN_T"
-
-      if (const.text_value.blank?)
-        return [
-          { :type => get_return_type,
-            :typename => type_name,
-            :typedef => "typedef #{return_type.text_value} (*#{type_name})#{function_return_arglist.normalized_argument_list};" }]
-      end
-
-      return [
-        { :type => get_return_type,
-          :typename => type_name,
-          :typedef => "typedef #{return_type.text_value} (* const #{type_name})#{function_return_arglist.normalized_argument_list};" }]
+      typename = make_function_pointer_return_typedef_name(get_function_name)
+      return ["typedef #{return_type.text_value} (*#{typename})#{function_return_arglist.normalized_argument_list};"] if (const.text_value.blank?)
+      return ["typedef #{return_type.text_value} (* const #{typename})#{function_return_arglist.normalized_argument_list};"]
     end
   end
 
 
   class ArgumentListNode < Treetop::Runtime::SyntaxNode
+    include FunctionPrototypeUtils
     
     def initialize(*params)
       super(*params)
@@ -123,9 +123,9 @@ module CMockFunctionPrototype
       arguments.elements.each_with_index do |element, index|
         arg = element.argument
         if    (arg.class == CMockFunctionPrototype::TypeWithNameNode)
-          list << arg.formatted_type_and_name_string(index)
+          list << arg.type_and_smart_name_string(index)
         elsif (arg.class == CMockFunctionPrototype::FunctionPointerNode)
-            list << arg.formatted_type_and_name_string(index)
+            list << arg.type_and_smart_name_string(index)
         elsif (arg.class == CMockFunctionPrototype::VarArgNode)
           @var_arg_found = true
           # consume var args
@@ -145,9 +145,9 @@ module CMockFunctionPrototype
       arguments.elements.each_with_index do |element, index|
         arg = element.argument
         if    (arg.class == CMockFunctionPrototype::TypeWithNameNode)
-          list << arg.type_and_name_token_hash(index)
+          list << arg.type_and_smart_name_token_hash(index)
         elsif (arg.class == CMockFunctionPrototype::FunctionPointerNode)
-          list << arg.type_and_name_token_hash(index, self.parent.name.text_value)
+          list << arg.type_and_smart_name_token_hash(index, self.parent.name.text_value)
         elsif (arg.class == CMockFunctionPrototype::VarArgNode)
           # consume var args
         elsif (arg.class == CMockFunctionPrototype::VoidNode)
@@ -165,7 +165,7 @@ module CMockFunctionPrototype
       arguments.elements.each_with_index do |element, index|
         arg = element.argument
         if (arg.class == CMockFunctionPrototype::FunctionPointerNode)
-          list << arg.typedef_hash(index, self.parent.name.text_value)
+          list << arg.typedef(index, self.parent.name.text_value)
         end
       end
       
@@ -182,7 +182,7 @@ module CMockFunctionPrototype
       return "#{return_type.text_value} (*#{name.text_value})#{argument_list.normalized_argument_list}"
     end
 
-    def formatted_type_and_name_string(arg_list_index)
+    def type_and_smart_name_string(arg_list_index)
       func_ptr_name = name.text_value
       
       if (name.text_value.blank?)
@@ -193,33 +193,18 @@ module CMockFunctionPrototype
       return "#{return_type.text_value} (*#{func_ptr_name})#{argument_list.normalized_argument_list}"
     end
 
-    def type_and_name_token_hash(arg_list_index, function_name)
-      type = ''
-      
-      if (const.text_value.blank?)
-        type = "#{return_type.text_value} (*)#{argument_list.normalized_argument_list}"
-      else
-        type = "#{return_type.text_value} (* const)#{argument_list.normalized_argument_list}"
-      end
-      
-      return { :type => type, :name => make_cmock_arg_name(arg_list_index) } if (name.text_value.blank?)    
-      return { :type => type, :name => name.text_value }
+    def type_and_smart_name_token_hash(arg_list_index, function_name)
+      typename = make_function_pointer_param_typedef_name(arg_list_index, function_name)
+            
+      return { :type => typename, :name => make_cmock_arg_name(arg_list_index) } if (name.text_value.blank?)    
+      return { :type => typename, :name => name.text_value }
     end
 
-    def typedef_hash(arg_list_index, function_name)
-      typename  = "FUNC_PTR_#{function_name.upcase}_PARAM_#{arg_list_index+1}_T"
+    def typedef(arg_list_index, function_name)
+      typename= make_function_pointer_param_typedef_name(arg_list_index, function_name)
 
-      if (const.text_value.blank?)
-        type    = "#{return_type.text_value} (*)#{argument_list.normalized_argument_list}"
-        typedef = "typedef #{return_type.text_value} (*#{typename})#{argument_list.normalized_argument_list};"
-
-        return { :type => type, :typename => typename, :typedef => typedef }
-      end
-      
-      type    = "#{return_type.text_value} (* const)#{argument_list.normalized_argument_list}"
-      typedef = "typedef #{return_type.text_value} (* const #{typename})#{argument_list.normalized_argument_list};"
-
-      return { :type => type, :typename => typename, :typedef => typedef }      
+      return "typedef #{return_type.text_value} (*#{typename})#{argument_list.normalized_argument_list};" if (const.text_value.blank?)
+      return "typedef #{return_type.text_value} (* const #{typename})#{argument_list.normalized_argument_list};"
     end
   end
 
@@ -232,7 +217,7 @@ module CMockFunctionPrototype
       return "#{normalize_ptr(type.text_value)}"
     end
 
-    def formatted_type_and_name_string(arg_list_index)
+    def type_and_smart_name_string(arg_list_index)
       if (name.text_value.blank?)
         return "#{type.text_value} #{make_cmock_arg_name(arg_list_index)}"
       end
@@ -240,7 +225,7 @@ module CMockFunctionPrototype
       return "#{type.text_value} #{name.text_value}"
     end
 
-    def type_and_name_token_hash(arg_list_index)
+    def type_and_smart_name_token_hash(arg_list_index)
       if (name.text_value.blank?)
         return { :type => type.text_value, :name => make_cmock_arg_name(arg_list_index)}
       end

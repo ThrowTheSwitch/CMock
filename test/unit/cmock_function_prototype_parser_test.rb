@@ -176,7 +176,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
        {:type => 'unsigned int***', :name => 'a'},
        {:type => 'char**', :name => 'b'},
        {:type => 'int*', :name => 'c'},
-       {:type => 'int (*)(void)', :name => 'func'}],
+       {:type => 'FUNC_PTR_FOO_PARAM_4_T', :name => 'func'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   end
@@ -198,7 +198,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     parsed = @parser.parse("void thing(void (*func)(int, ...))")
     assert_equal('void (*func)( int, ... )', parsed.get_argument_list)
     assert_equal(
-      [{:type => 'void (*)( int, ... )', :name => 'func'}],
+      [{:type => 'FUNC_PTR_THING_PARAM_1_T', :name => 'func'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg) # no var args for thing(), just for the function pointer param
   end
@@ -207,49 +207,47 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
   should "parse prototypes handling function pointers" do
     # function pointer prototypes in argument lists (i.e. no typedef)
 
-    # handle this?  -->  "int slinkydog(bool thing, int (* const)(void));\n" +
-
     parsed = @parser.parse("void thing(int (*func_ptr)(int, int))")
     assert_equal('void thing( int (*func_ptr)( int, int ) )', parsed.get_declaration)
     assert_equal('int (*func_ptr)( int, int )', parsed.get_argument_list)
     assert_equal(
-      [{:type => 'int (*)( int, int )', :name => 'func_ptr'}],
+      [{:type => 'FUNC_PTR_THING_PARAM_1_T', :name => 'func_ptr'}],
       parsed.get_arguments)
 
     parsed = @parser.parse("void foo(int (* const func_ptr)(int, int))")
     assert_equal('void foo( int (* const func_ptr)( int, int ) )', parsed.get_declaration)
     assert_equal('int (* const func_ptr)( int, int )', parsed.get_argument_list)
     assert_equal(
-      [{:type => 'int (* const)( int, int )', :name => 'func_ptr'}],
+      [{:type => 'FUNC_PTR_FOO_PARAM_1_T', :name => 'func_ptr'}],
       parsed.get_arguments)
 
     parsed = @parser.parse("void foo_bar(void * (*func)(int *, unsigned long int, ...))")
     assert_equal('void foo_bar( void* (*func)( int*, unsigned long int, ... ) )', parsed.get_declaration)
     assert_equal('void* (*func)( int*, unsigned long int, ... )', parsed.get_argument_list)
     assert_equal(
-      [{:type => 'void* (*)( int*, unsigned long int, ... )', :name => 'func'}],
+      [{:type => 'FUNC_PTR_FOO_BAR_PARAM_1_T', :name => 'func'}],
       parsed.get_arguments)
 
     parsed = @parser.parse("void foo_bar(int (* func1)(int, char), void (*func2)(void))")
     assert_equal('void foo_bar( int (*func1)( int, char ), void (*func2)(void) )', parsed.get_declaration)
     assert_equal('int (*func1)( int, char ), void (*func2)(void)', parsed.get_argument_list)
     assert_equal(
-      [{:type => 'int (*)( int, char )', :name => 'func1'},
-       {:type => 'void (*)(void)', :name => 'func2'}],
+      [{:type => 'FUNC_PTR_FOO_BAR_PARAM_1_T', :name => 'func1'},
+       {:type => 'FUNC_PTR_FOO_BAR_PARAM_2_T', :name => 'func2'}],
       parsed.get_arguments)
   
     # directly returning function pointers (i.e. no typedef)
     parsed = @parser.parse("float (*func(const char opCode))(float, float)")
     assert_equal('float (*func( const char opCode ))( float, float )', parsed.get_declaration)
-    assert_equal('float (*)( float, float )', parsed.get_return_type)
+    assert_equal('FUNC_PTR_FUNC_RETURN_T', parsed.get_return_type)
 
     parsed = @parser.parse("void (* const func (void))(void)")
     assert_equal('void (* const func(void))(void)', parsed.get_declaration)
-    assert_equal('void (* const)(void)', parsed.get_return_type)
+    assert_equal('FUNC_PTR_FUNC_RETURN_T', parsed.get_return_type)
 
     parsed = @parser.parse("unsigned int * (* func(double foo, THING bar))(unsigned int a)")
     assert_equal('unsigned int* (*func( double foo, THING bar ))( unsigned int a )', parsed.get_declaration)
-    assert_equal('unsigned int* (*)( unsigned int a )', parsed.get_return_type)
+    assert_equal('FUNC_PTR_FUNC_RETURN_T', parsed.get_return_type)
   end
   
   
@@ -257,34 +255,24 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     # function prototype argument list handling
     parsed = @parser.parse("void foo_bar(unsigned int a, void (* const func)(int *, unsigned long int, ...))")
     assert_equal(
-      [{:type => 'void (* const)( int*, unsigned long int, ... )',
-        :typename => 'FUNC_PTR_FOO_BAR_PARAM_2_T',
-        :typedef => 'typedef void (* const FUNC_PTR_FOO_BAR_PARAM_2_T)( int*, unsigned long int, ... );'}],
+      ['typedef void (* const FUNC_PTR_FOO_BAR_PARAM_2_T)( int*, unsigned long int, ... );'],
       parsed.get_typedefs)
   
     parsed = @parser.parse("void test_func(void (*)(int, char), unsigned int (*)(void))")
     assert_equal(
-      [{:type => 'void (*)( int, char )',
-        :typename => 'FUNC_PTR_TEST_FUNC_PARAM_1_T',
-        :typedef => 'typedef void (*FUNC_PTR_TEST_FUNC_PARAM_1_T)( int, char );'},
-       {:type => 'unsigned int (*)(void)',
-        :typename => 'FUNC_PTR_TEST_FUNC_PARAM_2_T',
-        :typedef => 'typedef unsigned int (*FUNC_PTR_TEST_FUNC_PARAM_2_T)(void);'}],
+      ['typedef void (*FUNC_PTR_TEST_FUNC_PARAM_1_T)( int, char );',
+       'typedef unsigned int (*FUNC_PTR_TEST_FUNC_PARAM_2_T)(void);'],
       parsed.get_typedefs)
   
     # function prototype return type handling
     parsed = @parser.parse("void (* const func (void))(void)")
     assert_equal(
-      [{:type => 'void (* const)(void)',
-        :typename => 'FUNC_PTR_FUNC_RETURN_T',
-        :typedef => 'typedef void (* const FUNC_PTR_FUNC_RETURN_T)(void);'}],
+      ['typedef void (* const FUNC_PTR_FUNC_RETURN_T)(void);'],
       parsed.get_typedefs)
 
     parsed = @parser.parse("unsigned int * (* func(double foo, THING bar))(unsigned int, ...)")
     assert_equal(
-      [{:type => 'unsigned int* (*)( unsigned int, ... )',
-        :typename => 'FUNC_PTR_FUNC_RETURN_T',
-        :typedef => 'typedef unsigned int* (*FUNC_PTR_FUNC_RETURN_T)( unsigned int, ... );'}],
+      ['typedef unsigned int* (*FUNC_PTR_FUNC_RETURN_T)( unsigned int, ... );'],
       parsed.get_typedefs)
   end
   
@@ -294,7 +282,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
   
     assert_equal('int (*cmock_arg1)( int, int ), char* const cmock_arg2, unsigned int c, CUSTOM_THING cmock_arg4', parsed.get_argument_list)
     assert_equal(
-      [{:type => 'int (*)( int, int )', :name => 'cmock_arg1'},
+      [{:type => 'FUNC_PTR_FOO_BAR_PARAM_1_T', :name => 'cmock_arg1'},
        {:type => 'char* const', :name => 'cmock_arg2'},
        {:type => 'unsigned int', :name => 'c'},
        {:type => 'CUSTOM_THING', :name => 'cmock_arg4'}],

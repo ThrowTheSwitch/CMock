@@ -44,11 +44,11 @@
       void exercise_arglist_pointers(void);
       char exercise_multiline_declarations(int a, unsigned int b);
       void exercise_double_pointers(unsigned int a);
-      int  exercise_many_descriptors(int a);
+      int  exercise_many_descriptors(int a);      
       
     :code: |
       int A, B, C;
-
+      
       U16* exercise_return_pointers(int a)
       {
         ptr_return1(a);
@@ -152,4 +152,6 @@
           incredible_descriptors_ExpectAndReturn(888, 777);
           TEST_ASSERT_EQUAL(777, exercise_many_descriptors(888));
         }
+
+
 ...
