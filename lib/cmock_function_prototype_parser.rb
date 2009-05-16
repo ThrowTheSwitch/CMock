@@ -531,16 +531,23 @@ module CMockFunctionPrototype
   end
 
   module Type2
+    def const
+      elements[0]
+    end
+
   end
 
   module Type3
+  end
+
+  module Type4
     def name
       elements[0]
     end
 
   end
 
-  module Type4
+  module Type5
   end
 
   def _nt_type
@@ -738,21 +745,60 @@ module CMockFunctionPrototype
         end
         s10 << r11
         if r11
-          s24, i24 = [], index
-          loop do
-            r25 = _nt_asterisk
-            if r25
-              s24 << r25
+          i24 = index
+          i25, s25 = index, []
+          r26 = _nt_const
+          s25 << r26
+          if r26
+            s27, i27 = [], index
+            loop do
+              r28 = _nt_asterisk
+              if r28
+                s27 << r28
+              else
+                break
+              end
+            end
+            if s27.empty?
+              self.index = i27
+              r27 = nil
             else
-              break
+              r27 = instantiate_node(SyntaxNode,input, i27...index, s27)
+            end
+            s25 << r27
+          end
+          if s25.last
+            r25 = instantiate_node(SyntaxNode,input, i25...index, s25)
+            r25.extend(Type2)
+          else
+            self.index = i25
+            r25 = nil
+          end
+          if r25
+            r24 = r25
+          else
+            s29, i29 = [], index
+            loop do
+              r30 = _nt_asterisk
+              if r30
+                s29 << r30
+              else
+                break
+              end
+            end
+            r29 = instantiate_node(SyntaxNode,input, i29...index, s29)
+            if r29
+              r24 = r29
+            else
+              self.index = i24
+              r24 = nil
             end
           end
-          r24 = instantiate_node(SyntaxNode,input, i24...index, s24)
           s10 << r24
         end
         if s10.last
           r10 = instantiate_node(SyntaxNode,input, i10...index, s10)
-          r10.extend(Type2)
+          r10.extend(Type3)
         else
           self.index = i10
           r10 = nil
@@ -760,31 +806,40 @@ module CMockFunctionPrototype
         if r10
           r3 = r10
         else
-          i26, s26 = index, []
-          r27 = _nt_name
-          s26 << r27
-          if r27
-            s28, i28 = [], index
-            loop do
-              r29 = _nt_asterisk
-              if r29
-                s28 << r29
-              else
-                break
-              end
+          i31, s31 = index, []
+          r32 = _nt_name
+          s31 << r32
+          if r32
+            r34 = _nt_const
+            if r34
+              r33 = r34
+            else
+              r33 = instantiate_node(SyntaxNode,input, index...index)
             end
-            r28 = instantiate_node(SyntaxNode,input, i28...index, s28)
-            s26 << r28
+            s31 << r33
+            if r33
+              s35, i35 = [], index
+              loop do
+                r36 = _nt_asterisk
+                if r36
+                  s35 << r36
+                else
+                  break
+                end
+              end
+              r35 = instantiate_node(SyntaxNode,input, i35...index, s35)
+              s31 << r35
+            end
           end
-          if s26.last
-            r26 = instantiate_node(SyntaxNode,input, i26...index, s26)
-            r26.extend(Type3)
+          if s31.last
+            r31 = instantiate_node(SyntaxNode,input, i31...index, s31)
+            r31.extend(Type4)
           else
-            self.index = i26
-            r26 = nil
+            self.index = i31
+            r31 = nil
           end
-          if r26
-            r3 = r26
+          if r31
+            r3 = r31
           else
             self.index = i3
             r3 = nil
@@ -793,18 +848,18 @@ module CMockFunctionPrototype
       end
       s0 << r3
       if r3
-        r31 = _nt_const
-        if r31
-          r30 = r31
+        r38 = _nt_const
+        if r38
+          r37 = r38
         else
-          r30 = instantiate_node(SyntaxNode,input, index...index)
+          r37 = instantiate_node(SyntaxNode,input, index...index)
         end
-        s0 << r30
+        s0 << r37
       end
     end
     if s0.last
       r0 = instantiate_node(TypeNode,input, i0...index, s0)
-      r0.extend(Type4)
+      r0.extend(Type5)
     else
       self.index = i0
       r0 = nil

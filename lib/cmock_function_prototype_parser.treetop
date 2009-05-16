@@ -51,9 +51,9 @@ grammar CMockFunctionPrototype
   rule type
     # be careful in here with parens; placement and grouping is important
     const?
-      (('struct' space name asterisk+) /
-       ((('void' / 'unsigned' / 'signed' / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space)+ asterisk*) / 
-       (name asterisk*))
+      ( ('struct' space name asterisk+) /
+        ( (('void' / 'unsigned' / 'signed' / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space)+ (const asterisk+ / asterisk*) ) / 
+        (name const? asterisk*) )
     const? <TypeNode>
   end
 
