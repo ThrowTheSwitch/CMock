@@ -57,7 +57,6 @@ module CMockFunctionPrototype
     include FunctionPrototypeUtils
 
     def get_declaration
-      return "#{return_type.text_value} (* const #{get_function_name}#{function_arglist.normalized_argument_list})#{function_return_arglist.normalized_argument_list}" if not (const.text_value.blank?)
       return "#{return_type.text_value} (*#{get_function_name}#{function_arglist.normalized_argument_list})#{function_return_arglist.normalized_argument_list}"
     end
     
@@ -83,8 +82,8 @@ module CMockFunctionPrototype
     
     def get_typedefs
       typename = make_function_pointer_return_typedef_name(get_function_name)
-      return ["typedef #{return_type.text_value} (*#{typename})#{function_return_arglist.normalized_argument_list};"] if (const.text_value.blank?)
-      return ["typedef #{return_type.text_value} (* const #{typename})#{function_return_arglist.normalized_argument_list};"]
+
+      return ["typedef #{return_type.text_value} (*#{typename})#{function_return_arglist.normalized_argument_list};"]
     end
   end
 
@@ -202,9 +201,10 @@ module CMockFunctionPrototype
 
     def typedef(arg_list_index, function_name)
       typename= make_function_pointer_param_typedef_name(arg_list_index, function_name)
-
-      return "typedef #{return_type.text_value} (*#{typename})#{argument_list.normalized_argument_list};" if (const.text_value.blank?)
-      return "typedef #{return_type.text_value} (* const #{typename})#{argument_list.normalized_argument_list};"
+      
+      # don't place 'const' in typedef no matter if it exists or not;
+      # data types that comprise mock queues can't be const
+      return "typedef #{return_type.text_value} (*#{typename})#{argument_list.normalized_argument_list};"
     end
   end
 

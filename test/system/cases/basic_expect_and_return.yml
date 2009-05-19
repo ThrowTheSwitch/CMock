@@ -13,43 +13,14 @@
     UINT32 foo(custom_type a);
     UINT32 bar(custom_type b);
     UINT32 foo_varargs(custom_type a, ...);
-    void takes_function_ptr( unsigned int (*func_ptr)(int, char) );
-    unsigned short (*returns_function_ptr( const char op_code ))( int, long int );
 
   :source: 
     :header: |
       UINT32 function_a(int a, int b);
       void function_b(void);
       UINT32 function_c(int a);
-      
-      void exercise_function_pointer_param(void);
-      unsigned short (*exercise_function_pointer_return( const char op_code ))( int, long int );
-      
-      // functions for function pointer tests
-      unsigned int dummy_function1(int a, char b);
-      unsigned short dummy_function2(int a, long int b);
 
     :code: |
-      /*
-       * functions used in tests
-       */
-       
-      unsigned int dummy_function1(int a, char b)
-      {
-        // prevent compiler warnings by using everything
-        return (unsigned int)a + (unsigned int)b;
-      }
-
-      unsigned short dummy_function2(int a, long int b)
-      {
-        // prevent compiler warnings by using everything
-        return (unsigned short)a + (unsigned short)b;
-      }
-
-      /*
-       * functions executed by tests
-       */
-
       UINT32 function_a(int a, int b)    
       {
         return foo((custom_type)a) + bar((custom_type)b);
@@ -61,16 +32,6 @@
       {
         return foo_varargs((custom_type)a, "ignored", 5);
       }    
-
-      void exercise_function_pointer_param(void)
-      {
-        takes_function_ptr(dummy_function1);
-      }
-
-      unsigned short (*exercise_function_pointer_return( const char op_code ))( int, long int )
-      {
-        return returns_function_ptr(op_code);
-      }
 
   :tests:
     :common: |
@@ -113,25 +74,6 @@
           foo_varargs_ExpectAndReturn((custom_type)3, 10);
           TEST_ASSERT_EQUAL(10, function_c(3));
         }
-
-    - :pass: TRUE
-      :should: 'expect a function pointer param'
-      :code: |
-        test()
-        {
-          takes_function_ptr_Expect(dummy_function1);
-          exercise_function_pointer_param();
-        }
-
-    - :pass: TRUE
-      :should: 'return a function pointer'
-      :code: |
-        test()
-        {
-          returns_function_ptr_ExpectAndReturn('z', dummy_function2);
-          TEST_ASSERT_EQUAL(dummy_function2, exercise_function_pointer_return('z'));
-        }
-
 
 ...
 

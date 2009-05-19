@@ -111,14 +111,16 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_nil(parsed.get_var_arg)
 
     # make sure known types in param names don't gum up the parsing works
-    # parsed = @parser.parse("void foo_bar(const unsigned int const_param, int int_param, char character)")
-    # assert_equal('const unsigned int const_param, int int_param, char character', parsed.get_argument_list)
-    # assert_equal([
-    #   {:type => 'const unsigned int', :name => 'const_param'},
-    #   {:type => 'int', :name => 'int_param'},
-    #   {:type => 'char', :name => 'character'}],
-    #   parsed.get_arguments)
-    # assert_nil(parsed.get_var_arg)
+    parsed = @parser.parse("void foo_bar(const unsigned int const_param, int int_param, int integer, char character, int* const constant)")
+    assert_equal('const unsigned int const_param, int int_param, int integer, char character, int* const constant', parsed.get_argument_list)
+    assert_equal([
+      {:type => 'const unsigned int', :name => 'const_param'},
+      {:type => 'int', :name => 'int_param'},
+      {:type => 'int', :name => 'integer'},
+      {:type => 'char', :name => 'character'},
+      {:type => 'int* const', :name => 'constant'}],
+      parsed.get_arguments)
+    assert_nil(parsed.get_var_arg)
 
     parsed = @parser.parse("void foo_bar(signed char * abc, const unsigned long int xyz_123)")
     assert_equal('signed char* abc, const unsigned long int xyz_123', parsed.get_argument_list)
@@ -243,8 +245,8 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_equal('float (*func( const char opCode ))( float, float )', parsed.get_declaration)
     assert_equal('FUNC_PTR_FUNC_RETURN_T', parsed.get_return_type)
 
-    parsed = @parser.parse("void (* const func (void))(void)")
-    assert_equal('void (* const func(void))(void)', parsed.get_declaration)
+    parsed = @parser.parse("void (* func (void))(void)")
+    assert_equal('void (*func(void))(void)', parsed.get_declaration)
     assert_equal('FUNC_PTR_FUNC_RETURN_T', parsed.get_return_type)
 
     parsed = @parser.parse("unsigned int * (* func(double foo, THING bar))(unsigned int a)")
@@ -257,7 +259,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     # function prototype argument list handling
     parsed = @parser.parse("void foo_bar(unsigned int a, void (* const func)(int *, unsigned long int, ...))")
     assert_equal(
-      ['typedef void (* const FUNC_PTR_FOO_BAR_PARAM_2_T)( int*, unsigned long int, ... );'],
+      ['typedef void (*FUNC_PTR_FOO_BAR_PARAM_2_T)( int*, unsigned long int, ... );'],
       parsed.get_typedefs)
   
     parsed = @parser.parse("void test_func(void (*)(int, char), unsigned int (*)(void))")
@@ -267,9 +269,9 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       parsed.get_typedefs)
   
     # function prototype return type handling
-    parsed = @parser.parse("void (* const func (void))(void)")
+    parsed = @parser.parse("void (* func (void))(void)")
     assert_equal(
-      ['typedef void (* const FUNC_PTR_FUNC_RETURN_T)(void);'],
+      ['typedef void (*FUNC_PTR_FUNC_RETURN_T)(void);'],
       parsed.get_typedefs)
 
     parsed = @parser.parse("unsigned int * (* func(double foo, THING bar))(unsigned int, ...)")

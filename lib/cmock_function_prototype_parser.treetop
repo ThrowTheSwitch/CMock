@@ -11,7 +11,7 @@ grammar CMockFunctionPrototype
   rule function_prototype_function_pointer_return
     # ex. float (*GetPtr(const char opCode))(float, float)
     # const: tag so we can always access its nodes in programming even if blank.
-    return_type left_paren asterisk const:const? name function_arglist:argument_list right_paren function_return_arglist:argument_list <FunctionPrototypeFunctionPointerReturnNode>
+    return_type left_paren asterisk name function_arglist:argument_list right_paren function_return_arglist:argument_list <FunctionPrototypeFunctionPointerReturnNode>
   end
 
   rule return_type
@@ -49,12 +49,36 @@ grammar CMockFunctionPrototype
   end
 
   rule type
-    # be careful in here with parens; placement and grouping is important
     const?
-      ( ('struct' space name asterisk+) /
-        ( (('void' / 'unsigned' / 'signed' / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space)+ (const asterisk+ / asterisk*) ) / 
-        (name const? asterisk*) )
-    const? <TypeNode>
+    ( type_struct_ptr /
+      type_void_ptr /
+      type_primitive /
+      type_custom ) <TypeNode>
+  end
+
+  rule type_struct_ptr
+    'struct' space name space type_const_and_ptr_suffix
+  end
+
+  rule type_void_ptr
+    'void' space type_const_and_ptr_suffix
+  end
+
+  rule type_primitive
+    # at least one clause has to exist, not all can be '?' optional;
+    # hence the long and int variations instead of an optional long followed by optional everything else
+    (('unsigned' / 'signed') space)?
+    (('long' space 'int') / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space
+    type_const_and_ptr_suffix?
+  end
+
+  rule type_custom
+    name space type_const_and_ptr_suffix?
+  end
+
+  rule type_const_and_ptr_suffix
+    # "const *" or "* const" or "*" (asterisks can be multiples)
+    ((const space asterisk+) / (asterisk+ (const space)?))
   end
 
 	rule name
