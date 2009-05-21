@@ -27,7 +27,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add to control structure mock needs of functions of style 'void func(void)'" do
-    function = {:name => "Oak", :args => [], :rettype => "void"}
+    function = {:name => "Oak", :args => [], :return_type => "void"}
     count_type = "uint32"
     @config.expect.expect_call_count_type.returns(count_type)
     
@@ -39,22 +39,22 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add to control structure mock needs of functions of style 'int func(void)'" do
-    function = {:name => "Elm", :args => [], :rettype => "int"}
+    function = {:name => "Elm", :args => [], :return_type => "int"}
     count_type = "int16"
     @config.expect.expect_call_count_type.returns(count_type)
     
     expected = ["  #{count_type} #{function[:name]}_CallCount;\n", 
                 "  #{count_type} #{function[:name]}_CallsExpected;\n",
-                "  #{function[:rettype]} *#{function[:name]}_Return;\n",
-                "  #{function[:rettype]} *#{function[:name]}_Return_Head;\n",
-                "  #{function[:rettype]} *#{function[:name]}_Return_Tail;\n"
+                "  #{function[:return_type]} *#{function[:name]}_Return;\n",
+                "  #{function[:return_type]} *#{function[:name]}_Return_Head;\n",
+                "  #{function[:return_type]} *#{function[:name]}_Return_Tail;\n"
                ]
     returned = @cmock_generator_plugin_expect.instance_structure(function)
     assert_equal(expected, returned)
   end
   
   should "add to control structure mock needs of functions of style 'void func(int chicken, char* pork)'" do
-    function = {:name => "Cedar", :args => [{ :name => "chicken", :type => "int"}, { :name => "pork", :type => "char*"}], :rettype => "void"}
+    function = {:name => "Cedar", :args => [{ :name => "chicken", :type => "int"}, { :name => "pork", :type => "char*"}], :return_type => "void"}
     count_type = "unsigned char"
     @config.expect.expect_call_count_type.returns(count_type)
     
@@ -72,15 +72,15 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add to control structure mock needs of functions of style 'int func(float beef)'" do
-    function = {:name => "Birch", :args => [{ :name => "beef", :type => "float"}], :rettype => "int"}
+    function = {:name => "Birch", :args => [{ :name => "beef", :type => "float"}], :return_type => "int"}
     count_type = "unsigned int"
     @config.expect.expect_call_count_type.returns(count_type)
     
     expected = ["  #{count_type} #{function[:name]}_CallCount;\n", 
                 "  #{count_type} #{function[:name]}_CallsExpected;\n",
-                "  #{function[:rettype]} *#{function[:name]}_Return;\n",
-                "  #{function[:rettype]} *#{function[:name]}_Return_Head;\n",
-                "  #{function[:rettype]} *#{function[:name]}_Return_Tail;\n",
+                "  #{function[:return_type]} *#{function[:name]}_Return;\n",
+                "  #{function[:return_type]} *#{function[:name]}_Return_Head;\n",
+                "  #{function[:return_type]} *#{function[:name]}_Return_Tail;\n",
                 "  float *#{function[:name]}_Expected_beef;\n",
                 "  float *#{function[:name]}_Expected_beef_Head;\n",
                 "  float *#{function[:name]}_Expected_beef_Tail;\n",
@@ -90,24 +90,24 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock function declaration for functions of style 'void func(void)'" do
-    function = {:name => "Maple", :args_string => "void", :rettype => "void"}
+    function = {:name => "Maple", :args_string => "void", :return_type => "void"}
     expected = "void #{function[:name]}_Expect(#{function[:args_string]});\n"
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declaration for functions of style 'int func(void)'" do
-    function = {:name => "Spruce", :args_string => "void", :rettype => "int"}
+    function = {:name => "Spruce", :args_string => "void", :return_string => "int #{CMOCK_RETURN_PARAM_NAME}"}
     
-    expected = "void #{function[:name]}_ExpectAndReturn(#{function[:rettype]} toReturn);\n"
+    expected = "void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declaration for functions of style 'const char* func(int tofu)'" do
-    function = {:name => "Pine", :args_string => "int tofu", :rettype => "const char*"}
+    function = {:name => "Pine", :args_string => "int tofu", :return_string => "const char* #{CMOCK_RETURN_PARAM_NAME}"}
     
-    expected = "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:rettype]} toReturn);\n"
+    expected = "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -117,7 +117,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock function implementation for functions of style 'void func(void)'" do
-    function = {:name => "Apple", :args => [], :rettype => "void"}
+    function = {:name => "Apple", :args => [], :return_type => "void"}
     expected = ["  Mock.Apple_CallCount++;\n",
                 "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
                 "  {\n",
@@ -129,7 +129,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock function implementation for functions of style 'int func(int veal, unsigned int sushi)'" do
-    function = {:name => "Cherry", :args => [ { :type => "int", :name => "veal" }, { :type => "unsigned int", :name => "sushi" } ], :rettype => "int"}
+    function = {:name => "Cherry", :args => [ { :type => "int", :name => "veal" }, { :type => "unsigned int", :name => "sushi" } ], :return_type => "int"}
     
     @utils.expect.code_verify_an_arg_expectation(function, function[:args][0][:type], function[:args][0][:name]).returns("mocked_retval_1")
     @utils.expect.code_verify_an_arg_expectation(function, function[:args][1][:type], function[:args][1][:name]).returns("mocked_retval_2")
@@ -148,7 +148,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   
   should "add mock function implementation using ordering if needed" do
     @utils.expect.expect_helper('int','*p_expected','GlobalVerifyOrder',"\"Function 'Apple' Called Out Of Order.\"", '    ').returns("    mocked_retval")
-    function = {:name => "Apple", :args => [], :rettype => "void"}
+    function = {:name => "Apple", :args => [], :return_type => "void"}
     expected = ["  Mock.Apple_CallCount++;\n",
                 "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
                 "  {\n",
@@ -169,7 +169,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   
   should "add mock interfaces for functions of style 'void func(void)'" do
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
-    function = {:name => "Pear", :args => [], :args_string => "void", :rettype => "void"}
+    function = {:name => "Pear", :args => [], :args_string => "void", :return_type => "void"}
     expected = ["void Pear_Expect(void)\n",
                 "{\n",
                 "mock_retval_0",
@@ -180,11 +180,11 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock interfaces for functions of style 'unsigned short func(void)'" do
-    function = {:name => "Orange", :args => [], :args_string => "void", :rettype => "unsigned short"}
+    function = {:name => "Orange", :args => [], :args_string => "void", :return_type => "unsigned short", :return_string => "unsigned short #{CMOCK_RETURN_PARAM_NAME}"}
     @utils.expect.code_add_base_expectation("Orange").returns("mock_retval_0")
-    @utils.expect.code_insert_item_into_expect_array(function[:rettype], "Mock.Orange_Return_Head","toReturn").returns("mock_retval_1")
+    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Orange_Return_Head","toReturn").returns("mock_retval_1")
     
-    expected = ["void Orange_ExpectAndReturn(unsigned short toReturn)\n",
+    expected = ["void Orange_ExpectAndReturn(unsigned short #{CMOCK_RETURN_PARAM_NAME})\n",
                 "{\n",
                 "mock_retval_0",
                 "mock_retval_1",
@@ -197,17 +197,17 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock interfaces for functions of style 'int func(char* pescado)'" do
-    function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :rettype => "int"}
+    function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return_type => "int", :return_string => "int #{CMOCK_RETURN_PARAM_NAME}"}
     @utils.expect.code_add_an_arg_expectation(function, "char*", "pescado").returns("mock_retval_2")
     @utils.expect.code_add_base_expectation("Lemon").returns("mock_retval_0")
     @utils.expect.create_call_list(function).returns("mock_retval_3")
-    @utils.expect.code_insert_item_into_expect_array(function[:rettype], "Mock.Lemon_Return_Head","toReturn").returns("mock_retval_1")
+    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return_Head", CMOCK_RETURN_PARAM_NAME).returns("mock_retval_1")
     
     expected = ["void ExpectParameters_Lemon(char* pescado)\n",
                 "{\n",
                 "mock_retval_2",
                 "}\n\n",
-                "void Lemon_ExpectAndReturn(char* pescado, int toReturn)\n",
+                "void Lemon_ExpectAndReturn(char* pescado, int #{CMOCK_RETURN_PARAM_NAME})\n",
                 "{\n",
                 "mock_retval_0",
                 "  ExpectParameters_Lemon(mock_retval_3);\n",
@@ -221,7 +221,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock interfaces for functions when using ordering" do
-    function = {:name => "Pear", :args => [], :args_string => "void", :rettype => "void"}
+    function = {:name => "Pear", :args => [], :args_string => "void", :return_type => "void"}
     expected = ["void Pear_Expect(void)\n",
                 "{\n",
                 "mock_retval_0",
@@ -242,14 +242,14 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock destroy for functions of style 'void func(void)'" do
-    function = {:name => "Peach", :args => [], :rettype => "void" }
+    function = {:name => "Peach", :args => [], :return_type => "void" }
     expected = []
     returned = @cmock_generator_plugin_expect.mock_destroy(function)
     assert_equal(expected, returned)
   end
   
   should "add mock destroy for functions of style 'char func(void)'" do
-    function = {:name => "Palm", :args => [], :rettype => "char" }
+    function = {:name => "Palm", :args => [], :return_type => "char" }
     expected = ["  if (Mock.Palm_Return_Head)\n",
                 "  {\n",
                 "    free(Mock.Palm_Return_Head);\n",
@@ -262,7 +262,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock destroy for functions of style 'int func(uint32 grease)'" do
-    function = {:name => "Coconut", :args => [{ :type => "uint32", :name => "grease"}], :rettype => "int" }
+    function = {:name => "Coconut", :args => [{ :type => "uint32", :name => "grease"}], :return_type => "int" }
     expected = ["  if (Mock.Coconut_Return_Head)\n",
                 "  {\n",
                 "    free(Mock.Coconut_Return_Head);\n",

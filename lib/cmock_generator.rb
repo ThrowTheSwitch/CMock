@@ -1,5 +1,7 @@
 $here = File.dirname __FILE__
 
+CMOCK_RETURN_PARAM_NAME = 'toReturn'
+
 class CMockGenerator
 
   attr_reader :config, :file_writer, :tab, :module_name, :mock_name, :utils, :plugins
@@ -24,7 +26,6 @@ class CMockGenerator
   def create_mock_header_file(parsed_stuff)
     @file_writer.create_file(@mock_name + ".h") do |file, filename|
       create_mock_header_header(file, filename)
-      create_typedefs(file, parsed_stuff[:functions])
       create_mock_header_service_call_declarations(file)
       parsed_stuff[:functions].each do |function|
         file << @plugins.run(:mock_function_declarations, function)
@@ -36,6 +37,7 @@ class CMockGenerator
   def create_mock_source_file(parsed_stuff)
     @file_writer.create_file(@mock_name + ".c") do |file, filename|
       create_source_header_section(file, filename)
+      create_source_typedefs(file, parsed_stuff[:functions])
       create_instance_structure(file, parsed_stuff[:functions])
       create_extern_declarations(file)
       create_mock_verify_function(file, parsed_stuff[:functions])
@@ -57,7 +59,7 @@ class CMockGenerator
     file << "#include \"#{orig_filename}\"\n\n"
   end
   
-  def create_typedefs(file, functions)
+  def create_source_typedefs(file, functions)
     file << "\n"
     functions.each do |function|
       function[:typedefs].each {|typedef| file << "#{typedef}\n" }
@@ -128,9 +130,9 @@ class CMockGenerator
   def create_mock_implementation(file, function)        
     # create return value combo         
     if (function[:modifier].empty?)
-      function_mod_and_rettype = function[:rettype] 
+      function_mod_and_rettype = function[:return_type] 
     else
-      function_mod_and_rettype = function[:modifier] + ' ' + function[:rettype] 
+      function_mod_and_rettype = function[:modifier] + ' ' + function[:return_type] 
     end
     
     args_string = function[:args_string]
@@ -144,7 +146,7 @@ class CMockGenerator
     file << @plugins.run(:mock_implementation, function)
     
     # Return expected value, if necessary
-    if (function[:rettype] != "void")
+    if (function[:return_type] != "void")
       file << @utils.code_handle_return_value(function, "#{@tab}")
     end
     

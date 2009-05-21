@@ -76,12 +76,13 @@ class CMockHeaderParser
 
     raise "Failed parsing function prototype: '#{prototype}'" if parsed.nil? 
     
-    hash[:name]        = parsed.get_function_name
-    hash[:args_string] = parsed.get_argument_list
-    hash[:args]        = parsed.get_arguments
-    hash[:rettype]     = parsed.get_return_type
-    hash[:var_arg]     = parsed.get_var_arg
-    hash[:typedefs]    = parsed.get_typedefs
+    hash[:name]          = parsed.get_function_name
+    hash[:args_string]   = parsed.get_argument_list
+    hash[:args]          = parsed.get_arguments
+    hash[:return_type]   = parsed.get_return_type
+    hash[:return_string] = parsed.get_return_type_with_name
+    hash[:var_arg]       = parsed.get_var_arg
+    hash[:typedefs]      = parsed.get_typedefs
 
     return hash
   end

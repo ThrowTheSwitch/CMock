@@ -31,6 +31,11 @@ module CMockFunctionPrototype
       return return_type.text_value
     end
     
+    # preformatted string for _Return statements e.g. "int toReturn"
+    def get_return_type_with_name
+      return "#{return_type.text_value} #{CMOCK_RETURN_PARAM_NAME}"
+    end
+
     def get_function_name
       return name.text_value
     end
@@ -62,6 +67,11 @@ module CMockFunctionPrototype
     
     def get_return_type
       return make_function_pointer_return_typedef_name(get_function_name)
+    end
+
+    # preformatted string for _Return statements e.g. "void (*toReturn)(void)"
+    def get_return_type_with_name
+      return "#{return_type.text_value} (*#{CMOCK_RETURN_PARAM_NAME})#{function_return_arglist.normalized_argument_list}"
     end
     
     def get_function_name

@@ -17,16 +17,16 @@ class CMockGeneratorPluginExpect
     lines = [ "#{@tab}#{call_count_type} #{function[:name]}_CallCount;\n",
               "#{@tab}#{call_count_type} #{function[:name]}_CallsExpected;\n" ]
       
-    if (function[:rettype] != "void")
-      lines << [ "#{@tab}#{function[:rettype]} *#{function[:name]}_Return;\n",
-                 "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_Head;\n",
-                 "#{@tab}#{function[:rettype]} *#{function[:name]}_Return_Tail;\n" ]
+    if (function[:return_type] != "void")
+      lines << [ "#{@tab}#{function[:return_type]} *#{function[:name]}_Return;\n",
+                 "#{@tab}#{function[:return_type]} *#{function[:name]}_Return_Head;\n",
+                 "#{@tab}#{function[:return_type]} *#{function[:name]}_Return_Tail;\n" ]
     end
 
     if (@ordered)
-      lines << [ "#{@tab}#{function[:rettype]} *#{function[:name]}_CallOrder;\n",
-                 "#{@tab}#{function[:rettype]} *#{function[:name]}_CallOrder_Head;\n",
-                 "#{@tab}#{function[:rettype]} *#{function[:name]}_CallOrder_Tail;\n" ]
+      lines << [ "#{@tab}#{function[:return_type]} *#{function[:name]}_CallOrder;\n",
+                 "#{@tab}#{function[:return_type]} *#{function[:name]}_CallOrder_Head;\n",
+                 "#{@tab}#{function[:return_type]} *#{function[:name]}_CallOrder_Tail;\n" ]
     end
     
     function[:args].each do |arg|
@@ -40,16 +40,16 @@ class CMockGeneratorPluginExpect
   
   def mock_function_declarations(function)
     if (function[:args_string] == "void")
-      if (function[:rettype] == 'void')
+      if (function[:return_type] == 'void')
         return "void #{function[:name]}_Expect(void);\n"
       else
-        return "void #{function[:name]}_ExpectAndReturn(#{function[:rettype]} toReturn);\n"
+        return "void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"
       end
     else        
-      if (function[:rettype] == 'void')
+      if (function[:return_type] == 'void')
         return "void #{function[:name]}_Expect(#{function[:args_string]});\n"
       else
-        return "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:rettype]} toReturn);\n"
+        return "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"
       end
     end
   end
@@ -93,13 +93,13 @@ class CMockGeneratorPluginExpect
     end
     
     #Main Mock Interface
-    if (function[:rettype] == "void")
+    if (function[:return_type] == "void")
       lines << "void #{function[:name]}_Expect(#{function[:args_string]})\n"
     else
       if (function[:args_string] == "void")
-        lines << "void #{function[:name]}_ExpectAndReturn(#{function[:rettype]} toReturn)\n"
+        lines << "void #{function[:name]}_ExpectAndReturn(#{function[:return_string]})\n"
       else
-        lines << "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:rettype]} toReturn)\n"
+        lines << "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]})\n"
       end
     end
     lines << "{\n"
@@ -109,8 +109,8 @@ class CMockGeneratorPluginExpect
       lines << "#{@tab}ExpectParameters_#{function[:name]}(#{@utils.create_call_list(function)});\n"
     end
     
-    if (function[:rettype] != "void")
-      lines << @utils.code_insert_item_into_expect_array(function[:rettype], "Mock.#{function[:name]}_Return_Head", "toReturn")
+    if (function[:return_type] != "void")
+      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return_Head", CMOCK_RETURN_PARAM_NAME)
       lines << "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n"
       lines << "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
     end
@@ -123,7 +123,7 @@ class CMockGeneratorPluginExpect
   
   def mock_destroy(function)
     lines = []
-    if (function[:rettype] != "void")
+    if (function[:return_type] != "void")
       lines << [ "#{@tab}if (Mock.#{function[:name]}_Return_Head)\n",
                  "#{@tab}{\n",
                  "#{@tab}#{@tab}free(Mock.#{function[:name]}_Return_Head);\n",

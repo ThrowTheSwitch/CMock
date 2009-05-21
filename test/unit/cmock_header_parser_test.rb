@@ -243,7 +243,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_function_name.returns('buzz lightyear')
     @parsed.expect.get_argument_list.returns('woody')
     @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
-    @parsed.expect.get_return_type.returns('bo peep')
+    @parsed.expect.get_return_type.returns('little')
+    @parsed.expect.get_return_type_with_name.returns('bo peep')
     @parsed.expect.get_var_arg.returns('...')
     @parsed.expect.get_typedefs.returns([])
     
@@ -253,6 +254,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_argument_list.returns('mcfly')
     @parsed.expect.get_arguments.returns([{:type => 'back', :name => 'to'}])
     @parsed.expect.get_return_type.returns('the future')
+    @parsed.expect.get_return_type_with_name.returns('doc')
     @parsed.expect.get_var_arg.returns(nil)
     @parsed.expect.get_typedefs.returns([])
 
@@ -262,6 +264,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_argument_list.returns('the matrix')
     @parsed.expect.get_arguments.returns([{:type => 'trinity', :name => 'the one'}])
     @parsed.expect.get_return_type.returns('agent smith')
+    @parsed.expect.get_return_type_with_name.returns('morpheus')
     @parsed.expect.get_var_arg.returns('...')
     @parsed.expect.get_typedefs.returns(['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'])
 
@@ -277,7 +280,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       {
         :modifier => '',
         :args_string => 'woody',
-        :rettype => 'bo peep',
+        :return_type => 'little',
+        :return_string => 'bo peep',
         :var_arg => '...',
         :args => [{:type => 'what up', :name => 'dawg'}],
         :name => 'buzz lightyear',
@@ -287,7 +291,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       {
         :modifier => '',
         :args_string => 'mcfly',
-        :rettype => 'the future',
+        :return_type => 'the future',
+        :return_string => 'doc',
         :var_arg => nil,
         :args => [{:type => 'back', :name => 'to'}],
         :name => 'marty',
@@ -297,7 +302,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       {
         :modifier => '',
         :args_string => 'the matrix',
-        :rettype => 'agent smith',
+        :return_type => 'agent smith',
+        :return_string => 'morpheus',
         :var_arg => '...',
         :args => [{:type => 'trinity', :name => 'the one'}],
         :name => 'neo',
@@ -323,7 +329,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_function_name.returns('buzz lightyear')
     @parsed.expect.get_argument_list.returns('woody')
     @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
-    @parsed.expect.get_return_type.returns('bo peep')
+    @parsed.expect.get_return_type.returns('little')
+    @parsed.expect.get_return_type_with_name.returns('bo peep')
     @parsed.expect.get_var_arg.returns('...')
     @parsed.expect.get_typedefs.returns([])
     
@@ -333,6 +340,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parsed.expect.get_argument_list.returns('the matrix')
     @parsed.expect.get_arguments.returns([{:type => 'trinity', :name => 'the one'}])
     @parsed.expect.get_return_type.returns('agent smith')
+    @parsed.expect.get_return_type_with_name.returns('morpheus')
     @parsed.expect.get_var_arg.returns('...')
     @parsed.expect.get_typedefs.returns([])
 
@@ -347,7 +355,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       {
         :modifier => 'static inline',
         :args_string => 'woody',
-        :rettype => 'bo peep',
+        :return_type => 'little',
+        :return_string => 'bo peep',
         :var_arg => '...',
         :args => [{:type => 'what up', :name => 'dawg'}],
         :name => 'buzz lightyear',
@@ -357,7 +366,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       {
         :modifier => '__ramfunc',
         :args_string => 'the matrix',
-        :rettype => 'agent smith',
+        :return_type => 'agent smith',
+        :return_string => 'morpheus',
         :var_arg => '...',
         :args => [{:type => 'trinity', :name => 'the one'}],
         :name => 'neo',

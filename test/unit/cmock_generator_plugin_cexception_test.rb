@@ -33,7 +33,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "add to control structure mock needs" do
-    function = { :name => "Oak", :args => [], :rettype => "void" }
+    function = { :name => "Oak", :args => [], :return_type => "void" }
     @config.expect.cexception_call_count_type.returns("uint32")
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     
@@ -49,7 +49,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "add mock function declarations for functions without arguments" do
-    function = { :name => "Spruce", :args_string => "void", :rettype => "void" }
+    function = { :name => "Spruce", :args_string => "void", :return_type => "void" }
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     
     expected = "void Spruce_ExpectAndThrow(EXCEPTION_TYPE toThrow);\n"
@@ -58,7 +58,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "add mock function declarations for functions with arguments" do
-    function = { :name => "Spruce", :args_string => "const char* Petunia, uint32_t Lily", :rettype => "void" }
+    function = { :name => "Spruce", :args_string => "const char* Petunia, uint32_t Lily", :return_type => "void" }
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
   
     expected = "void Spruce_ExpectAndThrow(const char* Petunia, uint32_t Lily, EXCEPTION_TYPE toThrow);\n"
@@ -71,7 +71,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "add a mock implementation" do
-    function = {:name => "Cherry", :args => [], :rettype => "void"}
+    function = {:name => "Cherry", :args => [], :return_type => "void"}
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
   
     expected = ["\n",
@@ -93,7 +93,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "add mock interfaces for functions without arguments" do
-    function = {:name => "Pear", :args_string => "void", :args => [], :rettype => "void"}
+    function = {:name => "Pear", :args_string => "void", :args => [], :return_type => "void"}
     @config.expect.cexception_call_count_type.returns("uint32")
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
@@ -116,7 +116,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "add a mock interfaces for functions with arguments" do
-    function = {:name => "Pear", :args_string => "int blah", :args => [{ :type => "int", :name => "blah" }], :rettype => "void"}
+    function = {:name => "Pear", :args_string => "int blah", :args => [{ :type => "int", :name => "blah" }], :return_type => "void"}
     @config.expect.cexception_call_count_type.returns("uint32")
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
@@ -145,7 +145,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "add necessary baggage to destroy function" do
-    function = {:name => "Banana", :args_string => "", :args => [], :rettype => "void"}
+    function = {:name => "Banana", :args_string => "", :args => [], :return_type => "void"}
     expected = ["  if(Mock.Banana_ThrowOnCallCount_Head)\n",
                 "  {\n",
                 "    free(Mock.Banana_ThrowOnCallCount_Head);\n",

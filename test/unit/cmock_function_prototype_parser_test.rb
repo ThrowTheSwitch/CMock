@@ -159,15 +159,19 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
   
     parsed = @parser.parse("void * foo_bar(void)")
     assert_equal('void*', parsed.get_return_type)
+    assert_equal("void* #{CMOCK_RETURN_PARAM_NAME}", parsed.get_return_type_with_name)
   
     parsed = @parser.parse("unsigned  int  foo_bar(void)")
     assert_equal('unsigned int', parsed.get_return_type)
+    assert_equal("unsigned int #{CMOCK_RETURN_PARAM_NAME}", parsed.get_return_type_with_name)
   
     parsed = @parser.parse("unsigned long int foo_bar(void)")
     assert_equal('unsigned long int', parsed.get_return_type)
+    assert_equal("unsigned long int #{CMOCK_RETURN_PARAM_NAME}", parsed.get_return_type_with_name)
   
     parsed = @parser.parse("CUSTOM_TYPE foo_bar(void)")
     assert_equal('CUSTOM_TYPE', parsed.get_return_type)
+    assert_equal("CUSTOM_TYPE #{CMOCK_RETURN_PARAM_NAME}", parsed.get_return_type_with_name)
   end
   
   
@@ -244,14 +248,17 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     parsed = @parser.parse("float (*func(const char opCode))(float, float)")
     assert_equal('float (*func( const char opCode ))( float, float )', parsed.get_declaration)
     assert_equal('FUNC_PTR_FUNC_RETURN_T', parsed.get_return_type)
+    assert_equal("float (*#{CMOCK_RETURN_PARAM_NAME})( float, float )", parsed.get_return_type_with_name)
 
     parsed = @parser.parse("void (* func (void))(void)")
     assert_equal('void (*func(void))(void)', parsed.get_declaration)
     assert_equal('FUNC_PTR_FUNC_RETURN_T', parsed.get_return_type)
+    assert_equal("void (*#{CMOCK_RETURN_PARAM_NAME})(void)", parsed.get_return_type_with_name)
 
-    parsed = @parser.parse("unsigned int * (* func(double foo, THING bar))(unsigned int a)")
-    assert_equal('unsigned int* (*func( double foo, THING bar ))( unsigned int a )', parsed.get_declaration)
+    parsed = @parser.parse("unsigned int * (* func(double foo, THING bar))(unsigned int)")
+    assert_equal('unsigned int* (*func( double foo, THING bar ))( unsigned int )', parsed.get_declaration)
     assert_equal('FUNC_PTR_FUNC_RETURN_T', parsed.get_return_type)
+    assert_equal("unsigned int* (*#{CMOCK_RETURN_PARAM_NAME})( unsigned int )", parsed.get_return_type_with_name)
   end
   
   

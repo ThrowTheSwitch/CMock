@@ -86,7 +86,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "\n\n"
                ]
     
-    @cmock_generator.create_typedefs(output, functions)
+    @cmock_generator.create_source_typedefs(output, functions)
     
     assert_equal(expected, output.flatten)
   end
@@ -151,8 +151,8 @@ class CMockGeneratorTest < Test::Unit::TestCase
   
   should "create the instance structure where it is needed when functions required" do 
     output = []
-    functions = [ { :name => "First", :args => "int Candy", :rettype => "int" }, 
-                  { :name => "Second", :args => "bool Smarty", :rettype => "char" }
+    functions = [ { :name => "First", :args => "int Candy", :return_type => "int" }, 
+                  { :name => "Second", :args => "bool Smarty", :return_type => "char" }
                 ]
     expected = [ "static struct MockPoutPoutFishInstance\n",
                  "{\n",
@@ -197,8 +197,8 @@ class CMockGeneratorTest < Test::Unit::TestCase
   end
   
   should "create mock verify functions in source file when extra functions specified" do
-    functions = [ { :name => "First", :args => "int Candy", :rettype => "int" }, 
-                  { :name => "Second", :args => "bool Smarty", :rettype => "char" } 
+    functions = [ { :name => "First", :args => "int Candy", :return_type => "int" }, 
+                  { :name => "Second", :args => "bool Smarty", :return_type => "char" } 
                 ]
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
@@ -243,8 +243,8 @@ class CMockGeneratorTest < Test::Unit::TestCase
   end
   
   should "create mock destroy functions in source file when extra functions specified" do
-    functions = [ { :name => "First", :args => "int Candy", :rettype => "int" }, 
-                  { :name => "Second", :args => "bool Smarty", :rettype => "char" } 
+    functions = [ { :name => "First", :args => "int Candy", :return_type => "int" }, 
+                  { :name => "Second", :args => "bool Smarty", :return_type => "char" } 
                 ]
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
@@ -265,7 +265,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
   
   should "create mock implementation functions in source file" do
     function = { :modifier => "static", 
-                 :rettype => "bool", 
+                 :return_type => "bool", 
                  :args_string => "uint32 sandwiches, const char* named", 
                  :args => ["uint32 sandwiches", "const char* named"],
                  :var_arg => nil,
@@ -294,7 +294,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
   
   should "create mock implementation functions in source file with different options" do
     function = { :modifier => "", 
-                 :rettype => "int", 
+                 :return_type => "int", 
                  :args_string => "uint32 sandwiches", 
                  :args => ["uint32 sandwiches"],
                  :var_arg => "corn ...",

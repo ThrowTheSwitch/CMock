@@ -83,7 +83,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
   
   should "make handle return" do 
-    function = { :name => "Spatula", :rettype => "uint64"}
+    function = { :name => "Spatula", :return_type => "uint64"}
     indent = "[tab]"
     expected = ["\n",
                 "[tab]if (Mock.Spatula_Return != Mock.Spatula_Return_Tail)\n",
@@ -102,7 +102,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
   
   should "add new expected handler" do
-    function = { :name => "PizzaCutter", :rettype => "uint64"}
+    function = { :name => "PizzaCutter", :return_type => "uint64"}
     var_type = "uint16"
     var_name = "Spork"
     
@@ -175,7 +175,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
   
   should "make handle expected when no helpers are available" do
-    function = { :name => "CanOpener", :rettype => "uint64"}
+    function = { :name => "CanOpener", :return_type => "uint64"}
     var_type = "uint16"
     var_name = "CorkScrew"
     
@@ -192,7 +192,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
 
   should "make handle expected for character strings" do
-    function = { :name => "MeasureCup", :rettype => "uint64"}
+    function = { :name => "MeasureCup", :return_type => "uint64"}
     var_type = "const char*"
     var_name = "TeaSpoon"
     
@@ -212,7 +212,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
   
   should "make handle expected for custom types from unity helper" do
-    function = { :name => "TeaPot", :rettype => "uint64"}
+    function = { :name => "TeaPot", :return_type => "uint64"}
     var_type = "MANDELBROT_SET_T"
     var_name = "TeaSpoon"
     
@@ -232,7 +232,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
 
   should "make handle default types with memory compares, which involves extra work" do
-    function = { :name => "Toaster", :rettype => "uint64"}
+    function = { :name => "Toaster", :return_type => "uint64"}
     var_type = "SOME_STRUCT"
     var_name = "Bread"
     
@@ -252,7 +252,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   end
   
   should "make handle default types with array compares, which involves extra work" do
-    function = { :name => "Blender", :rettype => "uint16*"}
+    function = { :name => "Blender", :return_type => "uint16*"}
     var_type = "FRUIT*"
     var_name = "Strawberry"
     
