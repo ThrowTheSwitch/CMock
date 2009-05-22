@@ -77,10 +77,3 @@
         }
 
 ...
-
-  # :unity_helper:
-  #   :header: |
-  #     // header stuff
-  #   :code:
-  #     // code stuff
-  #     
