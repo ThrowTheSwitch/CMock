@@ -529,20 +529,25 @@ module CMockFunctionPrototype
         if r5
           r3 = r5
         else
-          r6 = _nt_type_void_ptr
+          r6 = _nt_type_enum
           if r6
             r3 = r6
           else
-            r7 = _nt_type_primitive
+            r7 = _nt_type_void_ptr
             if r7
               r3 = r7
             else
-              r8 = _nt_type_custom
+              r8 = _nt_type_primitive
               if r8
                 r3 = r8
               else
-                self.index = i3
-                r3 = nil
+                r9 = _nt_type_custom
+                if r9
+                  r3 = r9
+                else
+                  self.index = i3
+                  r3 = nil
+                end
               end
             end
           end
@@ -691,6 +696,72 @@ module CMockFunctionPrototype
     end
 
     node_cache[:type_union][start_index] = r0
+
+    return r0
+  end
+
+  module TypeEnum0
+    def space
+      elements[1]
+    end
+
+    def name
+      elements[2]
+    end
+
+    def space
+      elements[3]
+    end
+
+  end
+
+  def _nt_type_enum
+    start_index = index
+    if node_cache[:type_enum].has_key?(index)
+      cached = node_cache[:type_enum][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0, s0 = index, []
+    if input.index('enum', index) == index
+      r1 = instantiate_node(SyntaxNode,input, index...(index + 4))
+      @index += 4
+    else
+      terminal_parse_failure('enum')
+      r1 = nil
+    end
+    s0 << r1
+    if r1
+      r2 = _nt_space
+      s0 << r2
+      if r2
+        r3 = _nt_name
+        s0 << r3
+        if r3
+          r4 = _nt_space
+          s0 << r4
+          if r4
+            r6 = _nt_type_const_and_ptr_suffix
+            if r6
+              r5 = r6
+            else
+              r5 = instantiate_node(SyntaxNode,input, index...index)
+            end
+            s0 << r5
+          end
+        end
+      end
+    end
+    if s0.last
+      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+      r0.extend(TypeEnum0)
+    else
+      self.index = i0
+      r0 = nil
+    end
+
+    node_cache[:type_enum][start_index] = r0
 
     return r0
   end

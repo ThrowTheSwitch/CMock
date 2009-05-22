@@ -52,6 +52,7 @@ grammar CMockFunctionPrototype
     const?
     ( type_struct /
       type_union /
+      type_enum /
       type_void_ptr /
       type_primitive /
       type_custom ) <TypeNode>
@@ -63,6 +64,10 @@ grammar CMockFunctionPrototype
 
   rule type_union
     'union' space name space type_const_and_ptr_suffix?
+  end
+
+  rule type_enum
+    'enum' space name space type_const_and_ptr_suffix?
   end
 
   rule type_void_ptr

@@ -107,7 +107,7 @@ class SystemTestGenerator
       out.puts('')
 
       tests[:units].each_with_index do |test, index|
-        out.puts('// ' + test[:should])
+        out.puts('// should ' + test[:should])
         out.puts(test[:code].gsub!(/test\(\)/, "void test#{index+1}(void)"))
         out.puts('')
       end

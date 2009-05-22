@@ -7,20 +7,30 @@
   :types: |
     struct THING { int a; int b; };
 
-    union JUNK { int a; char b; };
+    union STARS_AND_STRIPES { int a; char b; };
+    
+    enum HOKEY_POKEY { IN, OUT, SHAKE_IT_ALL_ABOUT };
 
   :mockable: |
     void foo_struct(struct THING*, struct THING);
-    void foo_union(union JUNK*, union JUNK);
     struct THING foobar_struct(void);
-    union JUNK foobar_union(void);
+
+    void foo_union(union STARS_AND_STRIPES*, union STARS_AND_STRIPES);
+    union STARS_AND_STRIPES foobar_union(void);
+
+    void foo_enum(enum HOKEY_POKEY a, enum HOKEY_POKEY * b);
+    enum HOKEY_POKEY foobar_enum(void);
 
   :source: 
     :header: |    
       void exercise_struct(struct THING* a, struct THING b);
-      void exercise_union(union JUNK* a, union JUNK b);
       struct THING return_struct(void);
-      union JUNK return_union(void);
+
+      void exercise_union(union STARS_AND_STRIPES* a, union STARS_AND_STRIPES b);
+      union STARS_AND_STRIPES return_union(void);
+
+      void exercise_enum(enum HOKEY_POKEY a, enum HOKEY_POKEY * b);
+      enum HOKEY_POKEY return_enum(void);
 
     :code: |
       void exercise_struct(struct THING* a, struct THING b)
@@ -28,20 +38,31 @@
         foo_struct(a, b);
       }
       
-      void exercise_union(union JUNK* a, union JUNK b)
-      {
-        foo_union(a, b);
-      }
-      
       struct THING return_struct(void)
       {
         return foobar_struct();
       }
     
-      union JUNK return_union(void)
+      void exercise_union(union STARS_AND_STRIPES* a, union STARS_AND_STRIPES b)
+      {
+        foo_union(a, b);
+      }
+      
+      union STARS_AND_STRIPES return_union(void)
       {
         return foobar_union();
       }
+
+      void exercise_enum(enum HOKEY_POKEY a, enum HOKEY_POKEY * b)
+      {
+        foo_enum(a, b);
+      }
+
+      enum HOKEY_POKEY return_enum(void)
+      {
+        return foobar_enum();
+      }
+
 
   :tests:
     :common: |
@@ -52,12 +73,15 @@
       struct THING struct5;
       struct THING struct6;
     
-      union JUNK union1;
-      union JUNK union2;
-      union JUNK union3;
-      union JUNK union4;
-      union JUNK union5;
-      union JUNK union6;
+      union STARS_AND_STRIPES union1;
+      union STARS_AND_STRIPES union2;
+      union STARS_AND_STRIPES union3;
+      union STARS_AND_STRIPES union4;
+      union STARS_AND_STRIPES union5;
+      union STARS_AND_STRIPES union6;
+      
+      enum HOKEY_POKEY enum1;
+      enum HOKEY_POKEY enum2;
 
       void setUp(void)
       {
@@ -85,6 +109,9 @@
         union4.a = 4;
         union5.a = 5;
         union6.a = 5;
+        
+        enum1 = OUT;
+        enum2 = IN;
       }
       
       void tearDown(void) {}
@@ -168,7 +195,7 @@
         test()
         {
           foobar_union_ExpectAndReturn(union5);
-          TEST_ASSERT_EQUAL_JUNK(union6, return_union());
+          TEST_ASSERT_EQUAL_STARS_AND_STRIPES(union6, return_union());
         }
 
     - :pass: FALSE
@@ -177,16 +204,62 @@
         test()
         {
           foobar_union_ExpectAndReturn(union4);
-          TEST_ASSERT_EQUAL_JUNK(union5, return_union());
+          TEST_ASSERT_EQUAL_STARS_AND_STRIPES(union5, return_union());
         }
+
+    - :pass: TRUE
+      :should: 'successfully pass enum values'
+      :code: |
+        test()
+        {
+          foo_enum_Expect(OUT, &enum1);
+          exercise_enum(OUT, &enum1);
+        }
+
+    - :pass: FALSE
+      :should: 'blow up on bad enum pointer comparison'
+      :code: |
+        test()
+        {
+          foo_enum_Expect(IN, &enum1);
+          exercise_enum(IN, &enum2);
+        }
+
+    - :pass: FALSE
+      :should: 'blow up on bad enum comparison'
+      :code: |
+        test()
+        {
+          foo_enum_Expect(IN, &enum1);
+          exercise_enum(SHAKE_IT_ALL_ABOUT, &enum1);
+        }
+
+    - :pass: TRUE
+      :should: 'compare returned enums as equal'
+      :code: |
+        test()
+        {
+          foobar_enum_ExpectAndReturn(OUT);
+          TEST_ASSERT_EQUAL(OUT, return_enum());
+        }
+
+    - :pass: FALSE
+      :should: 'compare returned unions as unequal'
+      :code: |
+        test()
+        {
+          foobar_enum_ExpectAndReturn(OUT);
+          TEST_ASSERT_EQUAL(IN, return_enum());
+        }
+
 
   :unity_helper:
     :header: |
       void AssertEqualTHINGStruct(struct THING expected, struct THING actual);
-      void AssertEqualJUNKUnion(union JUNK expected, union JUNK actual);
+      void AssertEqualSTARS_AND_STRIPESUnion(union STARS_AND_STRIPES expected, union STARS_AND_STRIPES actual);
 
       #define TEST_ASSERT_EQUAL_THING(expected, actual) {AssertEqualTHINGStruct(expected, actual);}
-      #define TEST_ASSERT_EQUAL_JUNK(expected, actual) {AssertEqualJUNKUnion(expected, actual);}
+      #define TEST_ASSERT_EQUAL_STARS_AND_STRIPES(expected, actual) {AssertEqualSTARS_AND_STRIPESUnion(expected, actual);}
 
     :code: |
       void AssertEqualTHINGStruct(struct THING expected, struct THING actual)
@@ -195,7 +268,7 @@
         TEST_ASSERT_EQUAL_INT_MESSAGE(expected.b, actual.b, "actual struct member \"b\" does not equal expected");
       }
 
-      void AssertEqualJUNKUnion(union JUNK expected, union JUNK actual)
+      void AssertEqualSTARS_AND_STRIPESUnion(union STARS_AND_STRIPES expected, union STARS_AND_STRIPES actual)
       {
         TEST_ASSERT_EQUAL_INT_MESSAGE(expected.a, actual.a, "actual union member \"a\" does not equal expected");
         TEST_ASSERT_EQUAL_MESSAGE(expected.b, actual.b, "actual union member \"b\" does not equal expected");
