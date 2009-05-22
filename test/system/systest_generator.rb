@@ -45,7 +45,7 @@ class SystemTestGenerator
     cmock[:mock_prefix] = MOCK_PREFIX
     if not yaml_hash[:systest][:unity_helper].nil?
       cmock[:includes]     << namix + UNITY_HELPER_H 
-      cmock[:unity_helper]  = namix + UNITY_HELPER_C
+      cmock[:unity_helper]  = GENERATED_PATH + namix + UNITY_HELPER_C
     end
 
     File.open(GENERATED_PATH + namix + 'cmock' + YAML_EXTENSION, 'w') do |out|
@@ -88,7 +88,7 @@ class SystemTestGenerator
       out.puts(unity_helper[:header])
     end
 
-    write_source_file(GENERATED_PATH + namix + UNITY_HELPER_C, [namix + UNITY_HELPER_H]) do |out|
+    write_source_file(GENERATED_PATH + namix + UNITY_HELPER_C, ["unity.h", namix + UNITY_HELPER_H]) do |out|
       out.puts(unity_helper[:code])
     end
   end

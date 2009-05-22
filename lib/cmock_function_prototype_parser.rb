@@ -521,24 +521,29 @@ module CMockFunctionPrototype
     s0 << r1
     if r1
       i3 = index
-      r4 = _nt_type_struct_ptr
+      r4 = _nt_type_struct
       if r4
         r3 = r4
       else
-        r5 = _nt_type_void_ptr
+        r5 = _nt_type_union
         if r5
           r3 = r5
         else
-          r6 = _nt_type_primitive
+          r6 = _nt_type_void_ptr
           if r6
             r3 = r6
           else
-            r7 = _nt_type_custom
+            r7 = _nt_type_primitive
             if r7
               r3 = r7
             else
-              self.index = i3
-              r3 = nil
+              r8 = _nt_type_custom
+              if r8
+                r3 = r8
+              else
+                self.index = i3
+                r3 = nil
+              end
             end
           end
         end
@@ -558,7 +563,7 @@ module CMockFunctionPrototype
     return r0
   end
 
-  module TypeStructPtr0
+  module TypeStruct0
     def space
       elements[1]
     end
@@ -571,15 +576,12 @@ module CMockFunctionPrototype
       elements[3]
     end
 
-    def type_const_and_ptr_suffix
-      elements[4]
-    end
   end
 
-  def _nt_type_struct_ptr
+  def _nt_type_struct
     start_index = index
-    if node_cache[:type_struct_ptr].has_key?(index)
-      cached = node_cache[:type_struct_ptr][index]
+    if node_cache[:type_struct].has_key?(index)
+      cached = node_cache[:type_struct][index]
       @index = cached.interval.end if cached
       return cached
     end
@@ -603,7 +605,12 @@ module CMockFunctionPrototype
           r4 = _nt_space
           s0 << r4
           if r4
-            r5 = _nt_type_const_and_ptr_suffix
+            r6 = _nt_type_const_and_ptr_suffix
+            if r6
+              r5 = r6
+            else
+              r5 = instantiate_node(SyntaxNode,input, index...index)
+            end
             s0 << r5
           end
         end
@@ -611,13 +618,79 @@ module CMockFunctionPrototype
     end
     if s0.last
       r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
-      r0.extend(TypeStructPtr0)
+      r0.extend(TypeStruct0)
     else
       self.index = i0
       r0 = nil
     end
 
-    node_cache[:type_struct_ptr][start_index] = r0
+    node_cache[:type_struct][start_index] = r0
+
+    return r0
+  end
+
+  module TypeUnion0
+    def space
+      elements[1]
+    end
+
+    def name
+      elements[2]
+    end
+
+    def space
+      elements[3]
+    end
+
+  end
+
+  def _nt_type_union
+    start_index = index
+    if node_cache[:type_union].has_key?(index)
+      cached = node_cache[:type_union][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0, s0 = index, []
+    if input.index('union', index) == index
+      r1 = instantiate_node(SyntaxNode,input, index...(index + 5))
+      @index += 5
+    else
+      terminal_parse_failure('union')
+      r1 = nil
+    end
+    s0 << r1
+    if r1
+      r2 = _nt_space
+      s0 << r2
+      if r2
+        r3 = _nt_name
+        s0 << r3
+        if r3
+          r4 = _nt_space
+          s0 << r4
+          if r4
+            r6 = _nt_type_const_and_ptr_suffix
+            if r6
+              r5 = r6
+            else
+              r5 = instantiate_node(SyntaxNode,input, index...index)
+            end
+            s0 << r5
+          end
+        end
+      end
+    end
+    if s0.last
+      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+      r0.extend(TypeUnion0)
+    else
+      self.index = i0
+      r0 = nil
+    end
+
+    node_cache[:type_union][start_index] = r0
 
     return r0
   end

@@ -50,14 +50,19 @@ grammar CMockFunctionPrototype
 
   rule type
     const?
-    ( type_struct_ptr /
+    ( type_struct /
+      type_union /
       type_void_ptr /
       type_primitive /
       type_custom ) <TypeNode>
   end
 
-  rule type_struct_ptr
-    'struct' space name space type_const_and_ptr_suffix
+  rule type_struct
+    'struct' space name space type_const_and_ptr_suffix?
+  end
+
+  rule type_union
+    'union' space name space type_const_and_ptr_suffix?
   end
 
   rule type_void_ptr

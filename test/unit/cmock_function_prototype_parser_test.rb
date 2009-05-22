@@ -103,10 +103,19 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   
-    parsed = @parser.parse("void foo_bar(struct THINGER * a)")
-    assert_equal('struct THINGER* a', parsed.get_argument_list)
+    parsed = @parser.parse("void foo_bar(struct THINGER * a, struct JIMBOB b)")
+    assert_equal('struct THINGER* a, struct JIMBOB b', parsed.get_argument_list)
     assert_equal([
-      {:type => 'struct THINGER*', :name => 'a'}],
+      {:type => 'struct THINGER*', :name => 'a'},
+      {:type => 'struct JIMBOB', :name => 'b'}],
+      parsed.get_arguments)
+    assert_nil(parsed.get_var_arg)
+
+    parsed = @parser.parse("void foo_bar(union STARS_AND_STRIPES * a, union AFL_CIO b)")
+    assert_equal('union STARS_AND_STRIPES* a, union AFL_CIO b', parsed.get_argument_list)
+    assert_equal([
+      {:type => 'union STARS_AND_STRIPES*', :name => 'a'},
+      {:type => 'union AFL_CIO', :name => 'b'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 

@@ -15,7 +15,7 @@
     UINT32 foo_varargs(custom_type a, ...);
 
   :source: 
-    :header: |
+    :header: |    
       UINT32 function_a(int a, int b);
       void function_b(void);
       UINT32 function_c(int a);
@@ -31,12 +31,13 @@
       UINT32 function_c(int a)    
       {
         return foo_varargs((custom_type)a, "ignored", 5);
-      }    
-
+      }
+      
   :tests:
     :common: |
       void setUp(void) {}
       void tearDown(void) {}
+      
     :units:
     - :pass: TRUE
       :should: 'successfully exercise two simple ExpectAndReturn mock calls'
