@@ -22,6 +22,8 @@
       UINT32 function_c(int a);
       char* function_d(char a[], char* b);
 
+      void ( ( * const OSEKOStaskStartAddress [] ) ( void ) );
+
     :code: |
       UINT32 function_a(int a, int b)    
       {
