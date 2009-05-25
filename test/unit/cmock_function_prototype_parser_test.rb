@@ -146,6 +146,15 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       {:type => 'CUSTOM_TYPE*', :name => 'xyz_123'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
+
+    parsed = @parser.parse("void foo_bar(CUSTOM_TYPE thing1[], int thing2 [ ], char thing3 [][2 ][ 3])")
+    assert_equal('CUSTOM_TYPE thing1[], int thing2[], char thing3[][2][3]', parsed.get_argument_list)
+    assert_equal([
+      {:type => 'CUSTOM_TYPE*', :name => 'thing1'},
+      {:type => 'int*', :name => 'thing2'},
+      {:type => 'char*', :name => 'thing3'}],
+      parsed.get_arguments)
+    assert_nil(parsed.get_var_arg)
   end
   
   
@@ -298,14 +307,18 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
   
   
   should "insert unique names for top-level nameless arguments" do
-    parsed = @parser.parse("void foo_bar(int (*)(int, int), char* const, unsigned int c, CUSTOM_THING)")
+    parsed = @parser.parse("void foo_bar(int (*)(int, int), char* const, unsigned int c, CUSTOM_THING, int[], char[][2])")
   
-    assert_equal('int (*cmock_arg1)( int, int ), char* const cmock_arg2, unsigned int c, CUSTOM_THING cmock_arg4', parsed.get_argument_list)
+    assert_equal(
+      'int (*cmock_arg1)( int, int ), char* const cmock_arg2, unsigned int c, CUSTOM_THING cmock_arg4, int cmock_arg5[], char cmock_arg6[][2]',
+      parsed.get_argument_list)
     assert_equal(
       [{:type => 'FUNC_PTR_FOO_BAR_PARAM_1_T', :name => 'cmock_arg1'},
        {:type => 'char* const', :name => 'cmock_arg2'},
        {:type => 'unsigned int', :name => 'c'},
-       {:type => 'CUSTOM_THING', :name => 'cmock_arg4'}],
+       {:type => 'CUSTOM_THING', :name => 'cmock_arg4'},
+       {:type => 'int*', :name => 'cmock_arg5'},
+       {:type => 'char*', :name => 'cmock_arg6'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   end

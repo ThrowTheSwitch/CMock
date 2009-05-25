@@ -6,7 +6,7 @@ class CMockHeaderParser
   def initialize(parser, source, cfg, name)
     @src_lines = []
     @prototypes = []
-    @prototype_parse_matcher = /([\d\w\s\*\(\),]+??)\(([\d\w\s\*\(\),\.]*)\)$/m
+    @prototype_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]]*)\)$/m
 
     @c_attributes = cfg.attributes
     @parser = parser

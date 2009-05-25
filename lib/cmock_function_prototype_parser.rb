@@ -451,7 +451,7 @@ module CMockFunctionPrototype
     r1 = _nt_type
     s0 << r1
     if r1
-      r3 = _nt_name
+      r3 = _nt_name_with_brackets
       if r3
         r2 = r3
       else
@@ -501,6 +501,9 @@ module CMockFunctionPrototype
   end
 
   module Type0
+    def brackets
+      elements[2]
+    end
   end
 
   def _nt_type
@@ -554,6 +557,15 @@ module CMockFunctionPrototype
         end
       end
       s0 << r3
+      if r3
+        r11 = _nt_array_brackets
+        if r11
+          r10 = r11
+        else
+          r10 = instantiate_node(SyntaxNode,input, index...index)
+        end
+        s0 << r10
+      end
     end
     if s0.last
       r0 = instantiate_node(TypeNode,input, i0...index, s0)
@@ -1247,6 +1259,49 @@ module CMockFunctionPrototype
     return r0
   end
 
+  module NameWithBrackets0
+    def name
+      elements[0]
+    end
+
+    def brackets
+      elements[1]
+    end
+  end
+
+  def _nt_name_with_brackets
+    start_index = index
+    if node_cache[:name_with_brackets].has_key?(index)
+      cached = node_cache[:name_with_brackets][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0, s0 = index, []
+    r1 = _nt_name
+    s0 << r1
+    if r1
+      r3 = _nt_array_brackets
+      if r3
+        r2 = r3
+      else
+        r2 = instantiate_node(SyntaxNode,input, index...index)
+      end
+      s0 << r2
+    end
+    if s0.last
+      r0 = instantiate_node(NameWithBracketsNode,input, i0...index, s0)
+      r0.extend(NameWithBrackets0)
+    else
+      self.index = i0
+      r0 = nil
+    end
+
+    node_cache[:name_with_brackets][start_index] = r0
+
+    return r0
+  end
+
   module Void0
     def space
       elements[1]
@@ -1295,6 +1350,89 @@ module CMockFunctionPrototype
     end
 
     node_cache[:void][start_index] = r0
+
+    return r0
+  end
+
+  module ArrayBrackets0
+    def left_bracket
+      elements[0]
+    end
+
+    def number
+      elements[1]
+    end
+
+    def right_bracket
+      elements[2]
+    end
+  end
+
+  module ArrayBrackets1
+    def left_bracket
+      elements[0]
+    end
+
+    def right_bracket
+      elements[1]
+    end
+
+  end
+
+  def _nt_array_brackets
+    start_index = index
+    if node_cache[:array_brackets].has_key?(index)
+      cached = node_cache[:array_brackets][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0, s0 = index, []
+    r1 = _nt_left_bracket
+    s0 << r1
+    if r1
+      r2 = _nt_right_bracket
+      s0 << r2
+      if r2
+        s3, i3 = [], index
+        loop do
+          i4, s4 = index, []
+          r5 = _nt_left_bracket
+          s4 << r5
+          if r5
+            r6 = _nt_number
+            s4 << r6
+            if r6
+              r7 = _nt_right_bracket
+              s4 << r7
+            end
+          end
+          if s4.last
+            r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
+            r4.extend(ArrayBrackets0)
+          else
+            self.index = i4
+            r4 = nil
+          end
+          if r4
+            s3 << r4
+          else
+            break
+          end
+        end
+        r3 = instantiate_node(SyntaxNode,input, i3...index, s3)
+        s0 << r3
+      end
+    end
+    if s0.last
+      r0 = instantiate_node(ArrayBracketsNode,input, i0...index, s0)
+      r0.extend(ArrayBrackets1)
+    else
+      self.index = i0
+      r0 = nil
+    end
+
+    node_cache[:array_brackets][start_index] = r0
 
     return r0
   end
@@ -1459,6 +1597,86 @@ module CMockFunctionPrototype
     return r0
   end
 
+  module LeftBracket0
+    def space
+      elements[1]
+    end
+  end
+
+  def _nt_left_bracket
+    start_index = index
+    if node_cache[:left_bracket].has_key?(index)
+      cached = node_cache[:left_bracket][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0, s0 = index, []
+    if input.index('[', index) == index
+      r1 = instantiate_node(SyntaxNode,input, index...(index + 1))
+      @index += 1
+    else
+      terminal_parse_failure('[')
+      r1 = nil
+    end
+    s0 << r1
+    if r1
+      r2 = _nt_space
+      s0 << r2
+    end
+    if s0.last
+      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+      r0.extend(LeftBracket0)
+    else
+      self.index = i0
+      r0 = nil
+    end
+
+    node_cache[:left_bracket][start_index] = r0
+
+    return r0
+  end
+
+  module RightBracket0
+    def space
+      elements[1]
+    end
+  end
+
+  def _nt_right_bracket
+    start_index = index
+    if node_cache[:right_bracket].has_key?(index)
+      cached = node_cache[:right_bracket][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0, s0 = index, []
+    if input.index(']', index) == index
+      r1 = instantiate_node(SyntaxNode,input, index...(index + 1))
+      @index += 1
+    else
+      terminal_parse_failure(']')
+      r1 = nil
+    end
+    s0 << r1
+    if r1
+      r2 = _nt_space
+      s0 << r2
+    end
+    if s0.last
+      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+      r0.extend(RightBracket0)
+    else
+      self.index = i0
+      r0 = nil
+    end
+
+    node_cache[:right_bracket][start_index] = r0
+
+    return r0
+  end
+
   module Comma0
     def space
       elements[1]
@@ -1495,6 +1713,45 @@ module CMockFunctionPrototype
     end
 
     node_cache[:comma][start_index] = r0
+
+    return r0
+  end
+
+  module Number0
+    def space
+      elements[1]
+    end
+  end
+
+  def _nt_number
+    start_index = index
+    if node_cache[:number].has_key?(index)
+      cached = node_cache[:number][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0, s0 = index, []
+    if input.index(Regexp.new('[0-9]'), index) == index
+      r1 = instantiate_node(SyntaxNode,input, index...(index + 1))
+      @index += 1
+    else
+      r1 = nil
+    end
+    s0 << r1
+    if r1
+      r2 = _nt_space
+      s0 << r2
+    end
+    if s0.last
+      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+      r0.extend(Number0)
+    else
+      self.index = i0
+      r0 = nil
+    end
+
+    node_cache[:number][start_index] = r0
 
     return r0
   end

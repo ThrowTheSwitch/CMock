@@ -204,7 +204,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "raise upon prototype parsing failure" do  
+  should "raise upon prototype parsing failure" do
     source =
       "int Foo(int a, unsigned int b);\n" +
       "void  bar \n(uint la, int de, bool da) ; \n"

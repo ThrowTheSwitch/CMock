@@ -13,12 +13,14 @@
     UINT32 foo(custom_type a);
     UINT32 bar(custom_type b);
     UINT32 foo_varargs(custom_type a, ...);
+    char* foo_char_strings(char a[], char* b);
 
   :source: 
     :header: |    
       UINT32 function_a(int a, int b);
       void function_b(void);
       UINT32 function_c(int a);
+      char* function_d(char a[], char* b);
 
     :code: |
       UINT32 function_a(int a, int b)    
@@ -31,6 +33,11 @@
       UINT32 function_c(int a)    
       {
         return foo_varargs((custom_type)a, "ignored", 5);
+      }
+      
+      char* function_d(char a[], char* b)
+      {
+        return foo_char_strings(a, b);
       }
       
   :tests:
@@ -74,6 +81,15 @@
         {
           foo_varargs_ExpectAndReturn((custom_type)3, 10);
           TEST_ASSERT_EQUAL(10, function_c(3));
+        }
+
+    - :pass: TRUE
+      :should: 'handle char strings'
+      :code: |
+        test()
+        {
+          foo_char_strings_ExpectAndReturn("larry", "curly", "moe");
+          TEST_ASSERT_EQUAL("moe", function_d("larry", "curly"));
         }
 
 ...

@@ -2,6 +2,7 @@
 module CMockFunctionPrototype
 
   module FunctionPrototypeUtils
+    # handles '*' and '[]' (they're both pointers after all)
     def normalize_ptr(ptr_string)
       ptr_string.gsub!(/\s+\*/, '*')
       ptr_string.gsub!(/\*(\w)/, '* \1')
@@ -210,7 +211,7 @@ module CMockFunctionPrototype
     end
 
     def typedef(arg_list_index, function_name)
-      typename= make_function_pointer_param_typedef_name(arg_list_index, function_name)
+      typename = make_function_pointer_param_typedef_name(arg_list_index, function_name)
       
       # don't place 'const' in typedef no matter if it exists or not;
       # data types that comprise mock queues can't be const
@@ -229,6 +230,9 @@ module CMockFunctionPrototype
 
     def type_and_smart_name_string(arg_list_index)
       if (name.text_value.blank?)
+        if (type.brackets?)
+          return "#{type.replace_brackets} #{make_cmock_arg_name(arg_list_index)}#{type.get_brackets}"
+        end
         return "#{type.text_value} #{make_cmock_arg_name(arg_list_index)}"
       end
 
@@ -237,10 +241,36 @@ module CMockFunctionPrototype
 
     def type_and_smart_name_token_hash(arg_list_index)
       if (name.text_value.blank?)
-        return { :type => type.text_value, :name => make_cmock_arg_name(arg_list_index)}
+        if (type.brackets?)
+          return { :type => type.replace_brackets('*'), :name => make_cmock_arg_name(arg_list_index) }
+        end
+        return { :type => type.text_value, :name => make_cmock_arg_name(arg_list_index) }
       end
 
-      return { :type => type.text_value, :name => name.text_value}
+      if (name.brackets?)
+        return { :type => "#{type.text_value}*", :name => name.replace_brackets }
+      end
+
+      return { :type => type.text_value, :name => name.text_value }
+    end
+  end
+
+
+  class NameWithBracketsNode < Treetop::Runtime::SyntaxNode
+    def text_value
+      return super.gsub(/\s+/, '')
+    end
+
+    def brackets?
+      return !brackets.text_value.blank?
+    end
+
+    def get_brackets
+      return brackets.text_value
+    end
+
+    def replace_brackets(replace='')
+      return text_value.gsub(/(\s*\[\s*[0-9]*\])+/, replace)
     end
   end
 
@@ -258,9 +288,28 @@ module CMockFunctionPrototype
     def text_value
       return normalize_ptr(super.gsub(/\s+/, ' ')).strip
     end
+    
+    def brackets?
+      return !brackets.text_value.blank?
+    end
+    
+    def get_brackets
+      return brackets.text_value
+    end
+    
+    def replace_brackets(replace='')
+      return text_value.gsub(/(\s*\[\s*[0-9]*\])+/, replace)
+    end
   end
   
-
+  
+  class ArrayBracketsNode < Treetop::Runtime::SyntaxNode
+    def text_value
+      return super.gsub(/\s+/, '')
+    end
+  end
+  
+  
   class VoidNode < Treetop::Runtime::SyntaxNode
     def text_value
       return super.strip

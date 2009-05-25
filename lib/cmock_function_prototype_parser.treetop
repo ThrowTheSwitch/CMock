@@ -45,7 +45,7 @@ grammar CMockFunctionPrototype
     # add name: tag to name? so we can always access it in programming even if blank.
     # tell parser that type and optional name will always be followed by ',' '(' or ')' but don't consume them;
     # this helps enforce the limits on what can be parsed in argument lists
-    type name:name? &( comma / left_paren / right_paren ) <TypeWithNameNode>
+    type name:name_with_brackets? &( comma / left_paren / right_paren ) <TypeWithNameNode>
   end
 
   rule type
@@ -55,7 +55,8 @@ grammar CMockFunctionPrototype
       type_enum /
       type_void_ptr /
       type_primitive /
-      type_custom ) <TypeNode>
+      type_custom ) 
+    brackets:array_brackets? <TypeNode>
   end
 
   rule type_struct
@@ -87,7 +88,7 @@ grammar CMockFunctionPrototype
   end
 
   rule type_const_and_ptr_suffix
-    # "const *" or "* const" or "*" (asterisks can be multiples)
+    # "const *" or "* const" or "*" (more than one asterisk possible)
     ((const space asterisk+) / (asterisk+ (const space)?))
   end
 
@@ -95,10 +96,18 @@ grammar CMockFunctionPrototype
 	  [a-zA-Z0-9_]+ space <NameNode>
 	end
 
+  rule name_with_brackets
+    name brackets:array_brackets? <NameWithBracketsNode>
+  end
+
   rule void
     # in reality, 'void' is something different than the 'void*' type so limit to 'void' here and handle 'void*' in type rule;
     # recognizing the VoidNode uniquely in programming is helpful
     'void' space !asterisk <VoidNode>
+  end
+  
+  rule array_brackets
+    left_bracket right_bracket (left_bracket number right_bracket)* <ArrayBracketsNode>
   end
 
   rule const
@@ -117,8 +126,20 @@ grammar CMockFunctionPrototype
     ')' space
   end
 
+  rule left_bracket
+    '[' space
+  end
+
+  rule right_bracket
+    ']' space
+  end
+
   rule comma
     ',' space
+  end
+
+  rule number
+    [0-9] space
   end
 
   rule space
