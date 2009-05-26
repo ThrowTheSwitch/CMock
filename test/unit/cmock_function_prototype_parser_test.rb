@@ -254,7 +254,8 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       [{:type => 'FUNC_PTR_FOO_BAR_PARAM_1_T', :name => 'func'}],
       parsed.get_arguments)
 
-    parsed = @parser.parse("void foo_bar(int (* func1)(int, char), void (*func2)(void))")
+    # note nested parens around name and arg list of first function pointer param
+    parsed = @parser.parse("void foo_bar(int (((* func1)(int, char))), void (*func2)(void))")
     assert_equal('void foo_bar( int (*func1)( int, char ), void (*func2)(void) )', parsed.get_declaration)
     assert_equal('int (*func1)( int, char ), void (*func2)(void)', parsed.get_argument_list)
     assert_equal(

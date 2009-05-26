@@ -188,34 +188,48 @@ module CMockFunctionPrototype
     include FunctionPrototypeUtils
 
     def text_value
-      return "#{return_type.text_value} (* const #{name.text_value})#{argument_list.normalized_argument_list}" if not (const.text_value.blank?)
-      return "#{return_type.text_value} (*#{name.text_value})#{argument_list.normalized_argument_list}"
+      name_and_args = get_deepest_name_and_args_node
+      return "#{return_type.text_value} (* const #{name_and_args.name.text_value})#{name_and_args.argument_list.normalized_argument_list}" if not (name_and_args.const.text_value.blank?)
+      return "#{return_type.text_value} (*#{name_and_args.name.text_value})#{name_and_args.argument_list.normalized_argument_list}"
     end
 
     def type_and_smart_name_string(arg_list_index)
-      func_ptr_name = name.text_value
+      name_and_args = get_deepest_name_and_args_node
+      func_ptr_name = name_and_args.name.text_value
       
-      if (name.text_value.blank?)
+      if (name_and_args.name.text_value.blank?)
         func_ptr_name = make_cmock_arg_name(arg_list_index)
       end
 
-      return "#{return_type.text_value} (* const #{func_ptr_name})#{argument_list.normalized_argument_list}" if not (const.text_value.blank?)
-      return "#{return_type.text_value} (*#{func_ptr_name})#{argument_list.normalized_argument_list}"
+      return "#{return_type.text_value} (* const #{func_ptr_name})#{name_and_args.argument_list.normalized_argument_list}" if not (name_and_args.const.text_value.blank?)
+      return "#{return_type.text_value} (*#{func_ptr_name})#{name_and_args.argument_list.normalized_argument_list}"
     end
 
     def type_and_smart_name_token_hash(arg_list_index, function_name)
+      name_and_args = get_deepest_name_and_args_node
       typename = make_function_pointer_param_typedef_name(arg_list_index, function_name)
             
-      return { :type => typename, :name => make_cmock_arg_name(arg_list_index) } if (name.text_value.blank?)    
-      return { :type => typename, :name => name.text_value }
+      return { :type => typename, :name => make_cmock_arg_name(arg_list_index) } if (name_and_args.name.text_value.blank?)    
+      return { :type => typename, :name => name_and_args.name.text_value }
     end
 
     def typedef(arg_list_index, function_name)
+      name_and_args = get_deepest_name_and_args_node
       typename = make_function_pointer_param_typedef_name(arg_list_index, function_name)
       
       # don't place 'const' in typedef no matter if it exists or not;
       # data types that comprise mock queues can't be const
-      return "typedef #{return_type.text_value} (*#{typename})#{argument_list.normalized_argument_list};"
+      return "typedef #{return_type.text_value} (*#{typename})#{name_and_args.argument_list.normalized_argument_list};"
+    end
+    
+    private
+    # dive down into nested parentheses to pull out deepest node info
+    def get_deepest_name_and_args_node
+      node = name_and_args
+      while (node.methods.include?('name_and_args'))
+        node = node.name_and_args
+      end
+      return node
     end
   end
 

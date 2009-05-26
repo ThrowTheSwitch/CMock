@@ -40,8 +40,14 @@ grammar CMockFunctionPrototype
 
   rule func_ptr_prototype
     # ex. int (*funcPtr)(float, char, char)
-    # const: & name: tags so we can always access their nodes in programming even if blank.
-    return_type left_paren asterisk const:const? name:name? right_paren argument_list <FunctionPointerNode>
+    return_type name_and_args:parenthesized_func_ptr_name_with_arglist <FunctionPointerNode>
+  end
+
+  rule parenthesized_func_ptr_name_with_arglist
+    # allow nested parentheses around name and arglist
+    # use labels 'const:' and 'name:' to give programmatic access even if nodes aren't found in string
+    (left_paren name_and_args:parenthesized_func_ptr_name_with_arglist right_paren) /
+    (left_paren asterisk const:const? name:name? right_paren argument_list)
   end
 
   rule type_and_name

@@ -248,12 +248,12 @@ StatusType (* OSEKOStaskStatuses [10][5]) ( void );
 
 void OSEKOSV850StartContext
 (
-    OSEK_TASK ( * const ) ( void ),
+    OSEK_TASK (( * const ) ( void )),
     OSEK_U8 * const
 );
 void OSEKOSV850StartContextFromIRQ
 (
-    OSEK_TASK ( * const ) ( void ),
+    OSEK_TASK (( * const ) ( void )),
     OSEK_U8 * const
 );
 

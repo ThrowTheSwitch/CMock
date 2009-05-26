@@ -83,6 +83,10 @@ module CMockFunctionPrototype
       elements[0]
     end
 
+    def left_paren
+      elements[1]
+    end
+
     def asterisk
       elements[2]
     end
@@ -102,7 +106,6 @@ module CMockFunctionPrototype
     def function_return_arglist
       elements[6]
     end
-
   end
 
   def _nt_function_prototype_function_pointer_return
@@ -117,46 +120,23 @@ module CMockFunctionPrototype
     r1 = _nt_return_type
     s0 << r1
     if r1
-      s2, i2 = [], index
-      loop do
-        r3 = _nt_left_paren
-        if r3
-          s2 << r3
-        else
-          break
-        end
-      end
-      if s2.empty?
-        self.index = i2
-        r2 = nil
-      else
-        r2 = instantiate_node(SyntaxNode,input, i2...index, s2)
-      end
+      r2 = _nt_left_paren
       s0 << r2
       if r2
-        r4 = _nt_asterisk
-        s0 << r4
-        if r4
-          r5 = _nt_name
-          s0 << r5
-          if r5
-            r6 = _nt_argument_list
-            s0 << r6
-            if r6
-              r7 = _nt_right_paren
-              s0 << r7
-              if r7
-                r8 = _nt_argument_list
-                s0 << r8
-                if r8
-                  r10 = _nt_right_paren
-                  if r10
-                    r9 = r10
-                  else
-                    r9 = instantiate_node(SyntaxNode,input, index...index)
-                  end
-                  s0 << r9
-                end
+        r3 = _nt_asterisk
+        s0 << r3
+        if r3
+          r4 = _nt_name
+          s0 << r4
+          if r4
+            r5 = _nt_argument_list
+            s0 << r5
+            if r5
+              r6 = _nt_right_paren
+              s0 << r6
+              if r6
+                r7 = _nt_argument_list
+                s0 << r7
               end
             end
           end
@@ -365,28 +345,8 @@ module CMockFunctionPrototype
       elements[0]
     end
 
-    def left_paren
+    def name_and_args
       elements[1]
-    end
-
-    def asterisk
-      elements[2]
-    end
-
-    def const
-      elements[3]
-    end
-
-    def name
-      elements[4]
-    end
-
-    def right_paren
-      elements[5]
-    end
-
-    def argument_list
-      elements[6]
     end
   end
 
@@ -402,38 +362,8 @@ module CMockFunctionPrototype
     r1 = _nt_return_type
     s0 << r1
     if r1
-      r2 = _nt_left_paren
+      r2 = _nt_parenthesized_func_ptr_name_with_arglist
       s0 << r2
-      if r2
-        r3 = _nt_asterisk
-        s0 << r3
-        if r3
-          r5 = _nt_const
-          if r5
-            r4 = r5
-          else
-            r4 = instantiate_node(SyntaxNode,input, index...index)
-          end
-          s0 << r4
-          if r4
-            r7 = _nt_name
-            if r7
-              r6 = r7
-            else
-              r6 = instantiate_node(SyntaxNode,input, index...index)
-            end
-            s0 << r6
-            if r6
-              r8 = _nt_right_paren
-              s0 << r8
-              if r8
-                r9 = _nt_argument_list
-                s0 << r9
-              end
-            end
-          end
-        end
-      end
     end
     if s0.last
       r0 = instantiate_node(FunctionPointerNode,input, i0...index, s0)
@@ -444,6 +374,129 @@ module CMockFunctionPrototype
     end
 
     node_cache[:func_ptr_prototype][start_index] = r0
+
+    return r0
+  end
+
+  module ParenthesizedFuncPtrNameWithArglist0
+    def left_paren
+      elements[0]
+    end
+
+    def name_and_args
+      elements[1]
+    end
+
+    def right_paren
+      elements[2]
+    end
+  end
+
+  module ParenthesizedFuncPtrNameWithArglist1
+    def left_paren
+      elements[0]
+    end
+
+    def asterisk
+      elements[1]
+    end
+
+    def const
+      elements[2]
+    end
+
+    def name
+      elements[3]
+    end
+
+    def right_paren
+      elements[4]
+    end
+
+    def argument_list
+      elements[5]
+    end
+  end
+
+  def _nt_parenthesized_func_ptr_name_with_arglist
+    start_index = index
+    if node_cache[:parenthesized_func_ptr_name_with_arglist].has_key?(index)
+      cached = node_cache[:parenthesized_func_ptr_name_with_arglist][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0 = index
+    i1, s1 = index, []
+    r2 = _nt_left_paren
+    s1 << r2
+    if r2
+      r3 = _nt_parenthesized_func_ptr_name_with_arglist
+      s1 << r3
+      if r3
+        r4 = _nt_right_paren
+        s1 << r4
+      end
+    end
+    if s1.last
+      r1 = instantiate_node(SyntaxNode,input, i1...index, s1)
+      r1.extend(ParenthesizedFuncPtrNameWithArglist0)
+    else
+      self.index = i1
+      r1 = nil
+    end
+    if r1
+      r0 = r1
+    else
+      i5, s5 = index, []
+      r6 = _nt_left_paren
+      s5 << r6
+      if r6
+        r7 = _nt_asterisk
+        s5 << r7
+        if r7
+          r9 = _nt_const
+          if r9
+            r8 = r9
+          else
+            r8 = instantiate_node(SyntaxNode,input, index...index)
+          end
+          s5 << r8
+          if r8
+            r11 = _nt_name
+            if r11
+              r10 = r11
+            else
+              r10 = instantiate_node(SyntaxNode,input, index...index)
+            end
+            s5 << r10
+            if r10
+              r12 = _nt_right_paren
+              s5 << r12
+              if r12
+                r13 = _nt_argument_list
+                s5 << r13
+              end
+            end
+          end
+        end
+      end
+      if s5.last
+        r5 = instantiate_node(SyntaxNode,input, i5...index, s5)
+        r5.extend(ParenthesizedFuncPtrNameWithArglist1)
+      else
+        self.index = i5
+        r5 = nil
+      end
+      if r5
+        r0 = r5
+      else
+        self.index = i0
+        r0 = nil
+      end
+    end
+
+    node_cache[:parenthesized_func_ptr_name_with_arglist][start_index] = r0
 
     return r0
   end

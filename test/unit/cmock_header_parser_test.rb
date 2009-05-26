@@ -424,7 +424,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
 
   should "not extract for mocking multiply defined prototypes" do
-    # multiple instances of same function (particularly externs) can get pulled into output of preprocessor
+    # multiple instances of same function (particularly externs) can be present in output of preprocessor
     source =
       "extern int Foo(int a, unsigned int b);\n" +
       "void FunkyChicken (\n   uint la,\n   int de,\n   bool da) ; \n" +
