@@ -6,7 +6,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :prototype_parser, :parsed
     @test_name = 'test_file.h'
-    @config.expect.attributes.returns(['static', 'inline', '__ramfunc'])
+    @config.expect.attributes.returns(['static', 'inline', '__ramfunc', 'register'])
   end
 
   def teardown
@@ -17,7 +17,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parser = CMockHeaderParser.new(@prototype_parser, "", @config, @test_name)
     assert_equal([], @parser.prototypes)
     assert_equal([], @parser.src_lines)
-    assert_equal(['static', 'inline', '__ramfunc'], @parser.c_attributes)
+    assert_equal(['static', 'inline', '__ramfunc', 'register'], @parser.c_attributes)
   end
   
   
@@ -319,9 +319,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   
-  should "extract and return function declarations with attributes" do
+  should "extract and return function declarations with attributes and remove parameter attributes" do
     source =
-      "static inline int Foo(int a, unsigned int b);\n" +
+      "static inline int Foo(register int a, unsigned int b);\n" +
       " __ramfunc void \n tat();\n"
 
     @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(@parsed)

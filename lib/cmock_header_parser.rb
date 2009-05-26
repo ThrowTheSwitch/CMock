@@ -65,10 +65,12 @@ class CMockHeaderParser
     
     modifiers = []
     @c_attributes.each do |attribute|
-      if (prototype =~ /#{attribute}\s+/i)
+      # grab attributes from start of function prototype
+      if (prototype =~ /^#{attribute}\s+/i)
         modifiers << attribute
-        prototype.gsub!(/#{attribute}\s+/i, '')
       end
+      # remove all modifiers from prototype (start of string as well as in parameter list)
+      prototype.gsub!(/#{attribute}\s+/i, '')
     end
     hash[:modifier] = modifiers.join(' ')
     

@@ -83,10 +83,6 @@ module CMockFunctionPrototype
       elements[0]
     end
 
-    def left_paren
-      elements[1]
-    end
-
     def asterisk
       elements[2]
     end
@@ -106,6 +102,7 @@ module CMockFunctionPrototype
     def function_return_arglist
       elements[6]
     end
+
   end
 
   def _nt_function_prototype_function_pointer_return
@@ -120,23 +117,46 @@ module CMockFunctionPrototype
     r1 = _nt_return_type
     s0 << r1
     if r1
-      r2 = _nt_left_paren
+      s2, i2 = [], index
+      loop do
+        r3 = _nt_left_paren
+        if r3
+          s2 << r3
+        else
+          break
+        end
+      end
+      if s2.empty?
+        self.index = i2
+        r2 = nil
+      else
+        r2 = instantiate_node(SyntaxNode,input, i2...index, s2)
+      end
       s0 << r2
       if r2
-        r3 = _nt_asterisk
-        s0 << r3
-        if r3
-          r4 = _nt_name
-          s0 << r4
-          if r4
-            r5 = _nt_argument_list
-            s0 << r5
-            if r5
-              r6 = _nt_right_paren
-              s0 << r6
-              if r6
-                r7 = _nt_argument_list
-                s0 << r7
+        r4 = _nt_asterisk
+        s0 << r4
+        if r4
+          r5 = _nt_name
+          s0 << r5
+          if r5
+            r6 = _nt_argument_list
+            s0 << r6
+            if r6
+              r7 = _nt_right_paren
+              s0 << r7
+              if r7
+                r8 = _nt_argument_list
+                s0 << r8
+                if r8
+                  r10 = _nt_right_paren
+                  if r10
+                    r9 = r10
+                  else
+                    r9 = instantiate_node(SyntaxNode,input, index...index)
+                  end
+                  s0 << r9
+                end
               end
             end
           end

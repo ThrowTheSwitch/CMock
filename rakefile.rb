@@ -49,7 +49,9 @@ namespace :test do
   task :system => [:clobber] do
     report "\nRunning system tests..."
 
-    tests_failed = run_systests(FileList['test/system/test_interactions/*.yml'])
+    tests_failed = run_system_test_interactions(FileList['test/system/test_interactions/*.yml'])
     raise "System tests failed." if (tests_failed > 0)
+    
+    run_system_test_compilations(FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'])
   end
 end

@@ -17,6 +17,7 @@ compiler:
       - *unit_tests_path
       - *systest_mocks_path
       - 'vendor/unity/src/'
+      - 'test/system/test_compilation/'
   defines:
     prefix: '-D'
     items:

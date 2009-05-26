@@ -6,8 +6,9 @@ require 'systest_generator'
 
 module RakefileHelpers
 
-  SYSTEST_GENERATED_FILES_PATH = 'test/system/generated/'
-  SYSTEST_BUILD_FILES_PATH     = 'test/system/build/'
+  SYSTEST_GENERATED_FILES_PATH   = 'test/system/generated/'
+  SYSTEST_BUILD_FILES_PATH       = 'test/system/build/'
+  SYSTEST_COMPILE_MOCKABLES_PATH = 'test/system/test_compilation/'
 
   C_EXTENSION = '.c'
   RESULT_EXTENSION = '.result'
@@ -144,7 +145,6 @@ module RakefileHelpers
   end
   
   def execute(command_string, verbose=true)
-#    report command_string
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
     if $?.exitstatus != 0
@@ -163,7 +163,7 @@ module RakefileHelpers
     summary.run
   end
   
-  def run_systests(test_case_files)
+  def run_system_test_interactions(test_case_files)
     require 'cmock'
     
     SystemTestGenerator.new.generate_files(test_case_files)
@@ -173,7 +173,7 @@ module RakefileHelpers
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
     
     include_dirs = get_local_include_dirs
-        
+
     # Build and execute each unit test
     test_files.each do |test|
 
@@ -254,9 +254,9 @@ module RakefileHelpers
     end
     
     puts "\n"
-    puts "--------------------------\n"
-    puts "SYSTEM TEST SUMMARY\n"
-    puts "--------------------------\n"
+    puts "------------------------------------\n"
+    puts "SYSTEM TEST MOCK INTERACTION SUMMARY\n"
+    puts "------------------------------------\n"
     puts "TOTAL TESTS: #{total_tests} TOTAL FAILURES: #{total_failures}\n"
     puts "\n"
     
@@ -271,5 +271,23 @@ module RakefileHelpers
 
     return total_failures
   end
+  
+  def run_system_test_compilations(mockables)
+    require 'cmock'
+    
+    load_configuration($cfg_file)
+    $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
+
+    puts "\n"
+    puts "------------------------------------\n"
+    puts "SYSTEM TEST MOCK COMPILATION SUMMARY\n"
+    puts "------------------------------------\n"
+    mockables.each do |header|
+      cmock = CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml')
+      cmock.setup_mocks(header)
+      compile(SYSTEST_GENERATED_FILES_PATH + 'mock_' + File.basename(header).ext('.c'))
+    end
+  end
+  
 end
 

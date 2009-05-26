@@ -11,7 +11,10 @@ grammar CMockFunctionPrototype
   rule function_prototype_function_pointer_return
     # ex. float (*GetPtr(const char opCode))(float, float)
     # const: tag so we can always access its nodes in programming even if blank.
-    return_type left_paren asterisk name function_arglist:argument_list right_paren function_return_arglist:argument_list <FunctionPrototypeFunctionPointerReturnNode>
+    return_type
+    left_paren asterisk name function_arglist:argument_list right_paren
+    function_return_arglist:argument_list
+    <FunctionPrototypeFunctionPointerReturnNode>
   end
 
   rule return_type

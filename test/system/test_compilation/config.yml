@@ -1,0 +1,7 @@
+--- 
+:cmock: 
+  :plugins: 
+  - 
+  :includes: 
+  :mock_path: /Users/karlesky/svn/cmock/test/system/generated/
+  :mock_prefix: mock_
