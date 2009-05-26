@@ -108,6 +108,12 @@ void OSEKOS_ISR_CanRxInterrupt_1(void);
 void OSEKOS_ISR_LINError_SCI1(void);
 void OSEKOS_ISR_SysCounter(void);
 
+
+// defined multiple times (slightly different forms)
+extern void OSEKOS_ISR_CanTxInterrupt( void );
+extern void OSEKOS_ISR_CanRxInterrupt( void );
+
+
 unsigned long OSEKOSrtcGetSeconds ( void );
 void OSEKOSrtcIncrement ( unsigned long nsec );
 
@@ -236,7 +242,9 @@ void OSEKOSV850SyncContextLoadFromIRQ(OSEKOSSaveType);
 void OSEKOSV850ASyncContextLoad(OSEKOSSaveType);
 void OSEKOSV850ASyncContextLoadFromIRQ(OSEKOSSaveType);
 
-//void ( ( * const OSEKOStaskStartAddress [] ) ( void ) );
+// arrays of function pointers - the look like function prototypes
+void ( ( * const OSEKOStaskStartAddress [10] ) ( void ) );
+StatusType (* OSEKOStaskStatuses [10][5]) ( void );
 
 void OSEKOSV850StartContext
 (

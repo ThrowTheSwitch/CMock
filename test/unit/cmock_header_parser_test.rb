@@ -6,7 +6,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :prototype_parser, :parsed
     @test_name = 'test_file.h'
-    @config.expect.attributes.returns(['static', 'inline', '__ramfunc', 'register'])
+    @config.expect.attributes.returns(['static', 'inline', '__ramfunc', 'register', 'extern'])
   end
 
   def teardown
@@ -17,7 +17,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parser = CMockHeaderParser.new(@prototype_parser, "", @config, @test_name)
     assert_equal([], @parser.prototypes)
     assert_equal([], @parser.src_lines)
-    assert_equal(['static', 'inline', '__ramfunc', 'register'], @parser.c_attributes)
+    assert_equal(['static', 'inline', '__ramfunc', 'register', 'extern'], @parser.c_attributes)
   end
   
   
@@ -86,10 +86,10 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
   should "remove typedef statements" do
     source = 
-      "typedef uint32 (unsigned int)\n" +
-      "whack me? typedef int INT\n" +
+      "typedef uint32 (unsigned int);\n" +
+      "whack me? typedef int INT;\n" +
       "typedef who cares what really comes here \\\n" + # exercise multiline typedef
-      "   continuation\n" +
+      "   continuation;\n" +
       "this should remain!"
     @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
@@ -99,6 +99,42 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     ]
     
     assert_equal(expected, @parser.src_lines)
+  end
+
+
+  should "remove enum statements" do
+    source = 
+      "enum {\n" +
+      " THING1 = (0x0001),\n" +
+      " THING2 = (0x0001 << 5),\n" +
+      "};\n\n" +
+      "don't delete me!!\n" +
+      "typedef enum {\n" +
+      " THING1,\n" +
+      " THING2,\n" +
+      "} Thinger;\n" +
+      "or me!!\n"
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
+    
+    assert_equal(["don't delete me!! or me!!"], @parser.src_lines)
+  end
+
+
+  should "remove union statements" do
+    source = 
+      "union {\n" +
+      " unsigned int a;\n" +
+      " char b;\n" +
+      "};\n\n" +
+      "I want to live!!\n" +
+      "typedef union {\n" +
+      " unsigned int a;\n" +
+      " char b;\n" +
+      "} Whatever;\n" +
+      "me too!!\n"
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
+    
+    assert_equal(["I want to live!! me too!!"], @parser.src_lines)
   end
   
   
@@ -236,7 +272,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       # following lines should yield no function prototypes:
       "#define get_foo() \\\n   (Thing)foo())\n" +
       "ARRAY_TYPE array[((U8)10)];\n" +
-      "THINGER_MASK = (0x0001 << 5),\n"
+      "enum {\n" +
+      "  THINGER_MASK1 = (0x0001),\n" +
+      "  THINGER_MASK2 = (0x0001 << 1),\n" +
+      "  THINGER_MASK3 = (0x0001 << 2) };\n" +
+      "void ( ( * const Tasks [10] ) ( void ) );\n" # array of function pointers
 
     @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(@parsed)
 
@@ -319,7 +359,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   
-  should "extract and return function declarations with attributes and remove parameter attributes" do
+  should "extract and return function declarations with attributes and also remove parameter attributes" do
     source =
       "static inline int Foo(register int a, unsigned int b);\n" +
       " __ramfunc void \n tat();\n"
@@ -372,6 +412,107 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         :args => [{:type => 'trinity', :name => 'the one'}],
         :name => 'neo',
         :typedefs => []
+      },
+    ]
+
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
+    parsed_stuff = @parser.parse
+    
+    assert_equal(expected_prototypes, @parser.prototypes)
+    assert_equal(expected_hashes, parsed_stuff[:functions])
+  end
+
+
+  should "not extract for mocking multiply defined prototypes" do
+    # multiple instances of same function (particularly externs) can get pulled into output of preprocessor
+    source =
+      "extern int Foo(int a, unsigned int b);\n" +
+      "void FunkyChicken (\n   uint la,\n   int de,\n   bool da) ; \n" +
+      "  void \n tat();\n" +
+      "extern int Foo (int, unsigned int);"
+
+    @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(@parsed)
+
+    @parsed.expect.get_function_name.returns('Foo')
+    @parsed.expect.get_argument_list.returns('woody')
+    @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
+    @parsed.expect.get_return_type.returns('little')
+    @parsed.expect.get_return_type_with_name.returns('bo peep')
+    @parsed.expect.get_var_arg.returns('...')
+    @parsed.expect.get_typedefs.returns([])
+    
+    @prototype_parser.expect.parse('void FunkyChicken(uint la, int de, bool da)').returns(@parsed)
+
+    @parsed.expect.get_function_name.returns('marty')
+    @parsed.expect.get_argument_list.returns('mcfly')
+    @parsed.expect.get_arguments.returns([{:type => 'back', :name => 'to'}])
+    @parsed.expect.get_return_type.returns('the future')
+    @parsed.expect.get_return_type_with_name.returns('doc')
+    @parsed.expect.get_var_arg.returns(nil)
+    @parsed.expect.get_typedefs.returns([])
+
+    @prototype_parser.expect.parse('void tat()').returns(@parsed)
+
+    @parsed.expect.get_function_name.returns('neo')
+    @parsed.expect.get_argument_list.returns('the matrix')
+    @parsed.expect.get_arguments.returns([{:type => 'trinity', :name => 'the one'}])
+    @parsed.expect.get_return_type.returns('agent smith')
+    @parsed.expect.get_return_type_with_name.returns('morpheus')
+    @parsed.expect.get_var_arg.returns('...')
+    @parsed.expect.get_typedefs.returns(['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'])
+
+    @prototype_parser.expect.parse('int Foo(int, unsigned int)').returns(@parsed)
+
+    @parsed.expect.get_function_name.returns('Foo')
+    @parsed.expect.get_argument_list.returns('woody')
+    @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
+    @parsed.expect.get_return_type.returns('little')
+    @parsed.expect.get_return_type_with_name.returns('bo peep')
+    @parsed.expect.get_var_arg.returns('...')
+    @parsed.expect.get_typedefs.returns([])
+
+
+    expected_prototypes = 
+    [
+      'int Foo(int a, unsigned int b)',
+      'void FunkyChicken(uint la, int de, bool da)',
+      'void tat()',
+      'int Foo(int, unsigned int)'
+    ]
+    
+    expected_hashes =
+    [
+      {
+        :modifier => 'extern',
+        :args_string => 'woody',
+        :return_type => 'little',
+        :return_string => 'bo peep',
+        :var_arg => '...',
+        :args => [{:type => 'what up', :name => 'dawg'}],
+        :name => 'Foo',
+        :typedefs => [],
+      },
+      
+      {
+        :modifier => '',
+        :args_string => 'mcfly',
+        :return_type => 'the future',
+        :return_string => 'doc',
+        :var_arg => nil,
+        :args => [{:type => 'back', :name => 'to'}],
+        :name => 'marty',
+        :typedefs => [],
+      },
+
+      {
+        :modifier => '',
+        :args_string => 'the matrix',
+        :return_type => 'agent smith',
+        :return_string => 'morpheus',
+        :var_arg => '...',
+        :args => [{:type => 'trinity', :name => 'the one'}],
+        :name => 'neo',
+        :typedefs => ['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'],
       },
     ]
 

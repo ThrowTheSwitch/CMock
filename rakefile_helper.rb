@@ -283,9 +283,11 @@ module RakefileHelpers
     puts "SYSTEM TEST MOCK COMPILATION SUMMARY\n"
     puts "------------------------------------\n"
     mockables.each do |header|
+      mock_filename = 'mock_' + File.basename(header).ext('.c')
       cmock = CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml')
       cmock.setup_mocks(header)
-      compile(SYSTEST_GENERATED_FILES_PATH + 'mock_' + File.basename(header).ext('.c'))
+      puts "Compiling #{mock_filename}..."
+      compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
     end
   end
   
