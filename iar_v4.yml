@@ -27,6 +27,7 @@ compiler:
     - --warnings_are_errors
     - --fpu None
     - --diag_suppress Pa050
+    - --diag_suppress Pe191
   includes:
     prefix: '-I'
     items:
@@ -35,6 +36,7 @@ compiler:
       - *unit_tests_path
       - *systest_mocks_path
       - 'vendor/unity/src/'
+      - 'test/system/test_compilation/'
   defines:
     prefix: '-D'
     items:
