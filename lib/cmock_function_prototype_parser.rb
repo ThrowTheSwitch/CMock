@@ -914,6 +914,13 @@ module CMockFunctionPrototype
 
   module TypePrimitive2
     def space
+      elements[1]
+    end
+
+  end
+
+  module TypePrimitive3
+    def space
       elements[2]
     end
 
@@ -1007,68 +1014,102 @@ module CMockFunctionPrototype
       if r8
         r7 = r8
       else
+        i12, s12 = index, []
         if input.index('long', index) == index
-          r12 = instantiate_node(SyntaxNode,input, index...(index + 4))
+          r13 = instantiate_node(SyntaxNode,input, index...(index + 4))
           @index += 4
         else
           terminal_parse_failure('long')
+          r13 = nil
+        end
+        s12 << r13
+        if r13
+          r14 = _nt_space
+          s12 << r14
+          if r14
+            if input.index('long', index) == index
+              r15 = instantiate_node(SyntaxNode,input, index...(index + 4))
+              @index += 4
+            else
+              terminal_parse_failure('long')
+              r15 = nil
+            end
+            s12 << r15
+          end
+        end
+        if s12.last
+          r12 = instantiate_node(SyntaxNode,input, i12...index, s12)
+          r12.extend(TypePrimitive2)
+        else
+          self.index = i12
           r12 = nil
         end
         if r12
           r7 = r12
         else
-          if input.index('int', index) == index
-            r13 = instantiate_node(SyntaxNode,input, index...(index + 3))
-            @index += 3
+          if input.index('long', index) == index
+            r16 = instantiate_node(SyntaxNode,input, index...(index + 4))
+            @index += 4
           else
-            terminal_parse_failure('int')
-            r13 = nil
+            terminal_parse_failure('long')
+            r16 = nil
           end
-          if r13
-            r7 = r13
+          if r16
+            r7 = r16
           else
-            if input.index('short', index) == index
-              r14 = instantiate_node(SyntaxNode,input, index...(index + 5))
-              @index += 5
+            if input.index('int', index) == index
+              r17 = instantiate_node(SyntaxNode,input, index...(index + 3))
+              @index += 3
             else
-              terminal_parse_failure('short')
-              r14 = nil
+              terminal_parse_failure('int')
+              r17 = nil
             end
-            if r14
-              r7 = r14
+            if r17
+              r7 = r17
             else
-              if input.index('char', index) == index
-                r15 = instantiate_node(SyntaxNode,input, index...(index + 4))
-                @index += 4
+              if input.index('short', index) == index
+                r18 = instantiate_node(SyntaxNode,input, index...(index + 5))
+                @index += 5
               else
-                terminal_parse_failure('char')
-                r15 = nil
+                terminal_parse_failure('short')
+                r18 = nil
               end
-              if r15
-                r7 = r15
+              if r18
+                r7 = r18
               else
-                if input.index('float', index) == index
-                  r16 = instantiate_node(SyntaxNode,input, index...(index + 5))
-                  @index += 5
+                if input.index('char', index) == index
+                  r19 = instantiate_node(SyntaxNode,input, index...(index + 4))
+                  @index += 4
                 else
-                  terminal_parse_failure('float')
-                  r16 = nil
+                  terminal_parse_failure('char')
+                  r19 = nil
                 end
-                if r16
-                  r7 = r16
+                if r19
+                  r7 = r19
                 else
-                  if input.index('double', index) == index
-                    r17 = instantiate_node(SyntaxNode,input, index...(index + 6))
-                    @index += 6
+                  if input.index('float', index) == index
+                    r20 = instantiate_node(SyntaxNode,input, index...(index + 5))
+                    @index += 5
                   else
-                    terminal_parse_failure('double')
-                    r17 = nil
+                    terminal_parse_failure('float')
+                    r20 = nil
                   end
-                  if r17
-                    r7 = r17
+                  if r20
+                    r7 = r20
                   else
-                    self.index = i7
-                    r7 = nil
+                    if input.index('double', index) == index
+                      r21 = instantiate_node(SyntaxNode,input, index...(index + 6))
+                      @index += 6
+                    else
+                      terminal_parse_failure('double')
+                      r21 = nil
+                    end
+                    if r21
+                      r7 = r21
+                    else
+                      self.index = i7
+                      r7 = nil
+                    end
                   end
                 end
               end
@@ -1078,22 +1119,22 @@ module CMockFunctionPrototype
       end
       s0 << r7
       if r7
-        r18 = _nt_space
-        s0 << r18
-        if r18
-          r20 = _nt_type_const_and_ptr_suffix
-          if r20
-            r19 = r20
+        r22 = _nt_space
+        s0 << r22
+        if r22
+          r24 = _nt_type_const_and_ptr_suffix
+          if r24
+            r23 = r24
           else
-            r19 = instantiate_node(SyntaxNode,input, index...index)
+            r23 = instantiate_node(SyntaxNode,input, index...index)
           end
-          s0 << r19
+          s0 << r23
         end
       end
     end
     if s0.last
       r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
-      r0.extend(TypePrimitive2)
+      r0.extend(TypePrimitive3)
     else
       self.index = i0
       r0 = nil

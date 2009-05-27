@@ -131,12 +131,13 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 
-    parsed = @parser.parse("void foo_bar(signed char * abc, const unsigned long int xyz_123, unsigned int const abc_123)")
-    assert_equal('signed char* abc, const unsigned long int xyz_123, unsigned int const abc_123', parsed.get_argument_list)
+    parsed = @parser.parse("void foo_bar(signed char * abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law)")
+    assert_equal('signed char* abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law', parsed.get_argument_list)
     assert_equal([
       {:type => 'signed char*', :name => 'abc'},
       {:type => 'const unsigned long int', :name => 'xyz_123'},
-      {:type => 'unsigned int const', :name => 'abc_123'}],
+      {:type => 'unsigned int const', :name => 'abc_123'},
+      {:type => 'long long', :name => 'arm_of_the_law'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   

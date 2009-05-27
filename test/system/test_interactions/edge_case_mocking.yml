@@ -13,7 +13,7 @@
     } POINT_T;
 
   :mockable: |
-    // typedef edge case; must be in mockable.h (simulating preprocessed header)
+    // typedef edge case; must be in mockable.h for test to compile
     typedef void VOID_TYPE_CRAZINESS;
     
     U16  *ptr_return1(int a);
@@ -23,7 +23,8 @@
     void var_args1(int a, ...);
     void var_args2(int a, int b, ...);
     
-    VOID_TYPE_CRAZINESS arg_list(int * a, int *b, int* c);
+    VOID_TYPE_CRAZINESS void_type_craziness1(int * a, int *b, int* c);
+    void void_type_craziness2(VOID_TYPE_CRAZINESS);
     
     char
     crazy_multiline(
@@ -35,7 +36,7 @@
     unsigned int **ptr_ptr_return3(unsigned int **a);
     unsigned int ** ptr_ptr_return4(unsigned int ** a);
 
-    unsigned long int incredible_descriptors(const unsigned short a);
+    extern unsigned long int incredible_descriptors(register const unsigned short a);
     
   :source: 
     :header: |
@@ -64,7 +65,8 @@
       
       void exercise_arglist_pointers(void)
       {
-        arg_list(&A, &B, &C);
+        void_type_craziness1(&A, &B, &C);
+        void_type_craziness2();
       }
 
       char exercise_multiline_declarations(int a, unsigned int b)
@@ -93,7 +95,7 @@
       extern int A, B, C;
     :units:
     - :pass: TRUE
-      :should: 'just do cursory return value check - compilation was the important part'
+      :should: 'execute simple pointer return value check'
       :code: |
         test()
         {
@@ -105,7 +107,7 @@
         }
         
     - :pass: TRUE
-      :should: 'just do cursory var arg check - compilation was the important part'
+      :should: 'ignore var args in expect prototype generation'
       :code: |
         test()
         {
@@ -115,16 +117,17 @@
         }
         
     - :pass: TRUE
-      :should: 'just do cursory argument list check - compilation was the important part'
+      :should: "not process a typedef'd void as anything other than void"
       :code: |
         test()
         {
-          arg_list_Expect(&A, &B, &C);
+          void_type_craziness1_Expect(&A, &B, &C);
+          void_type_craziness2_Expect();
           exercise_arglist_pointers();
         }
 
     - :pass: TRUE
-      :should: 'just do cursory return value check - compilation was the important part'
+      :should: 'successfully mock crazy multline function prototypes'
       :code: |
         test()
         {
@@ -133,7 +136,7 @@
         }
 
     - :pass: TRUE
-      :should: 'just do cursory value check - compilation was the important part'
+      :should: 'mock double pointers just fine'
       :code: |
         test()
         {
@@ -145,7 +148,7 @@
         }
 
     - :pass: TRUE
-      :should: 'just do cursory return value check - compilation was the important part'
+      :should: 'mock prototypes with long lists of return and parameter type descriptors'
       :code: |
         test()
         {

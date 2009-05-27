@@ -88,7 +88,7 @@ grammar CMockFunctionPrototype
     # at least one clause has to exist, not all can be '?' optional;
     # hence the long and int variations instead of an optional long followed by optional everything else
     (('unsigned' / 'signed') space)?
-    (('long' space 'int') / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space
+    (('long' space 'int') / ('long' space 'long') / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space
     type_const_and_ptr_suffix?
   end
 
