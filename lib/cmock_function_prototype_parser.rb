@@ -1153,27 +1153,40 @@ module CMockFunctionPrototype
   end
 
   module TypeConstAndPtrSuffix0
-    def const
-      elements[0]
-    end
-
-    def space
-      elements[1]
-    end
-
   end
 
   module TypeConstAndPtrSuffix1
+    def space
+      elements[0]
+    end
+
+  end
+
+  module TypeConstAndPtrSuffix2
+    def space
+      elements[0]
+    end
+
+  end
+
+  module TypeConstAndPtrSuffix3
+    def space
+      elements[0]
+    end
+
+  end
+
+  module TypeConstAndPtrSuffix4
+  end
+
+  module TypeConstAndPtrSuffix5
     def const
       elements[0]
     end
 
-    def space
-      elements[1]
-    end
   end
 
-  module TypeConstAndPtrSuffix2
+  module TypeConstAndPtrSuffix6
   end
 
   def _nt_type_const_and_ptr_suffix
@@ -1186,33 +1199,143 @@ module CMockFunctionPrototype
 
     i0 = index
     i1, s1 = index, []
-    r2 = _nt_const
+    if input.index('const', index) == index
+      r2 = instantiate_node(SyntaxNode,input, index...(index + 5))
+      @index += 5
+    else
+      terminal_parse_failure('const')
+      r2 = nil
+    end
     s1 << r2
     if r2
-      r3 = _nt_space
-      s1 << r3
-      if r3
-        s4, i4 = [], index
-        loop do
-          r5 = _nt_asterisk
-          if r5
-            s4 << r5
+      i3 = index
+      i4, s4 = index, []
+      s5, i5 = [], index
+      loop do
+        if input.index(' ', index) == index
+          r6 = instantiate_node(SyntaxNode,input, index...(index + 1))
+          @index += 1
+        else
+          terminal_parse_failure(' ')
+          r6 = nil
+        end
+        if r6
+          s5 << r6
+        else
+          break
+        end
+      end
+      if s5.empty?
+        self.index = i5
+        r5 = nil
+      else
+        r5 = instantiate_node(SyntaxNode,input, i5...index, s5)
+      end
+      s4 << r5
+      if r5
+        i7 = index
+        r8 = _nt_name
+        if r8
+          self.index = i7
+          r7 = instantiate_node(SyntaxNode,input, index...index)
+        else
+          r7 = nil
+        end
+        s4 << r7
+      end
+      if s4.last
+        r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
+        r4.extend(TypeConstAndPtrSuffix0)
+      else
+        self.index = i4
+        r4 = nil
+      end
+      if r4
+        r3 = r4
+      else
+        i9, s9 = index, []
+        r10 = _nt_space
+        s9 << r10
+        if r10
+          i11 = index
+          r12 = _nt_comma
+          if r12
+            self.index = i11
+            r11 = instantiate_node(SyntaxNode,input, index...index)
           else
-            break
+            r11 = nil
+          end
+          s9 << r11
+        end
+        if s9.last
+          r9 = instantiate_node(SyntaxNode,input, i9...index, s9)
+          r9.extend(TypeConstAndPtrSuffix1)
+        else
+          self.index = i9
+          r9 = nil
+        end
+        if r9
+          r3 = r9
+        else
+          i13, s13 = index, []
+          r14 = _nt_space
+          s13 << r14
+          if r14
+            i15 = index
+            r16 = _nt_right_paren
+            if r16
+              self.index = i15
+              r15 = instantiate_node(SyntaxNode,input, index...index)
+            else
+              r15 = nil
+            end
+            s13 << r15
+          end
+          if s13.last
+            r13 = instantiate_node(SyntaxNode,input, i13...index, s13)
+            r13.extend(TypeConstAndPtrSuffix2)
+          else
+            self.index = i13
+            r13 = nil
+          end
+          if r13
+            r3 = r13
+          else
+            i17, s17 = index, []
+            r18 = _nt_space
+            s17 << r18
+            if r18
+              i19 = index
+              r20 = _nt_left_paren
+              if r20
+                self.index = i19
+                r19 = instantiate_node(SyntaxNode,input, index...index)
+              else
+                r19 = nil
+              end
+              s17 << r19
+            end
+            if s17.last
+              r17 = instantiate_node(SyntaxNode,input, i17...index, s17)
+              r17.extend(TypeConstAndPtrSuffix3)
+            else
+              self.index = i17
+              r17 = nil
+            end
+            if r17
+              r3 = r17
+            else
+              self.index = i3
+              r3 = nil
+            end
           end
         end
-        if s4.empty?
-          self.index = i4
-          r4 = nil
-        else
-          r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
-        end
-        s1 << r4
       end
+      s1 << r3
     end
     if s1.last
       r1 = instantiate_node(SyntaxNode,input, i1...index, s1)
-      r1.extend(TypeConstAndPtrSuffix0)
+      r1.extend(TypeConstAndPtrSuffix4)
     else
       self.index = i1
       r1 = nil
@@ -1220,57 +1343,76 @@ module CMockFunctionPrototype
     if r1
       r0 = r1
     else
-      i6, s6 = index, []
-      s7, i7 = [], index
-      loop do
-        r8 = _nt_asterisk
-        if r8
-          s7 << r8
+      i21, s21 = index, []
+      r22 = _nt_const
+      s21 << r22
+      if r22
+        s23, i23 = [], index
+        loop do
+          r24 = _nt_asterisk
+          if r24
+            s23 << r24
+          else
+            break
+          end
+        end
+        if s23.empty?
+          self.index = i23
+          r23 = nil
         else
-          break
+          r23 = instantiate_node(SyntaxNode,input, i23...index, s23)
         end
+        s21 << r23
       end
-      if s7.empty?
-        self.index = i7
-        r7 = nil
+      if s21.last
+        r21 = instantiate_node(SyntaxNode,input, i21...index, s21)
+        r21.extend(TypeConstAndPtrSuffix5)
       else
-        r7 = instantiate_node(SyntaxNode,input, i7...index, s7)
+        self.index = i21
+        r21 = nil
       end
-      s6 << r7
-      if r7
-        i10, s10 = index, []
-        r11 = _nt_const
-        s10 << r11
-        if r11
-          r12 = _nt_space
-          s10 << r12
+      if r21
+        r0 = r21
+      else
+        i25, s25 = index, []
+        s26, i26 = [], index
+        loop do
+          r27 = _nt_asterisk
+          if r27
+            s26 << r27
+          else
+            break
+          end
         end
-        if s10.last
-          r10 = instantiate_node(SyntaxNode,input, i10...index, s10)
-          r10.extend(TypeConstAndPtrSuffix1)
+        if s26.empty?
+          self.index = i26
+          r26 = nil
         else
-          self.index = i10
-          r10 = nil
+          r26 = instantiate_node(SyntaxNode,input, i26...index, s26)
         end
-        if r10
-          r9 = r10
+        s25 << r26
+        if r26
+          r29 = _nt_const
+          if r29
+            r28 = r29
+          else
+            r28 = instantiate_node(SyntaxNode,input, index...index)
+          end
+          s25 << r28
+        end
+        if s25.last
+          r25 = instantiate_node(SyntaxNode,input, i25...index, s25)
+          r25.extend(TypeConstAndPtrSuffix6)
         else
-          r9 = instantiate_node(SyntaxNode,input, index...index)
+          self.index = i25
+          r25 = nil
         end
-        s6 << r9
-      end
-      if s6.last
-        r6 = instantiate_node(SyntaxNode,input, i6...index, s6)
-        r6.extend(TypeConstAndPtrSuffix2)
-      else
-        self.index = i6
-        r6 = nil
-      end
-      if r6
-        r0 = r6
-      else
-        self.index = i0
-        r0 = nil
+        if r25
+          r0 = r25
+        else
+          self.index = i0
+          r0 = nil
+        end
       end
     end
 

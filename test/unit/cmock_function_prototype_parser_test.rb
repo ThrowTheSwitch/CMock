@@ -131,19 +131,21 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 
-    parsed = @parser.parse("void foo_bar(signed char * abc, const unsigned long int xyz_123)")
-    assert_equal('signed char* abc, const unsigned long int xyz_123', parsed.get_argument_list)
+    parsed = @parser.parse("void foo_bar(signed char * abc, const unsigned long int xyz_123, unsigned int const abc_123)")
+    assert_equal('signed char* abc, const unsigned long int xyz_123, unsigned int const abc_123', parsed.get_argument_list)
     assert_equal([
       {:type => 'signed char*', :name => 'abc'},
-      {:type => 'const unsigned long int', :name => 'xyz_123'}],
+      {:type => 'const unsigned long int', :name => 'xyz_123'},
+      {:type => 'unsigned int const', :name => 'abc_123'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   
-    parsed = @parser.parse("void foo_bar(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123)")
-    assert_equal('CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123', parsed.get_argument_list)
+    parsed = @parser.parse("void foo_bar(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz)")
+    assert_equal('CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz', parsed.get_argument_list)
     assert_equal([
       {:type => 'CUSTOM_TYPE', :name => 'abc'},
-      {:type => 'CUSTOM_TYPE*', :name => 'xyz_123'}],
+      {:type => 'CUSTOM_TYPE*', :name => 'xyz_123'},
+      {:type => 'CUSTOM_TYPE const', :name => 'abcxyz'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 
@@ -308,18 +310,19 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
   
   
   should "insert unique names for top-level nameless arguments" do
-    parsed = @parser.parse("void foo_bar(int (*)(int, int), char* const, unsigned int c, CUSTOM_THING, int[], char[][2])")
+    parsed = @parser.parse("void foo_bar(int (*)(int, int), char* const, unsigned int c, long const, CUSTOM_THING, int[], char[][2])")
   
     assert_equal(
-      'int (*cmock_arg1)( int, int ), char* const cmock_arg2, unsigned int c, CUSTOM_THING cmock_arg4, int cmock_arg5[], char cmock_arg6[][2]',
+      'int (*cmock_arg1)( int, int ), char* const cmock_arg2, unsigned int c, long const cmock_arg4, CUSTOM_THING cmock_arg5, int cmock_arg6[], char cmock_arg7[][2]',
       parsed.get_argument_list)
     assert_equal(
       [{:type => 'FUNC_PTR_FOO_BAR_PARAM_1_T', :name => 'cmock_arg1'},
        {:type => 'char* const', :name => 'cmock_arg2'},
        {:type => 'unsigned int', :name => 'c'},
-       {:type => 'CUSTOM_THING', :name => 'cmock_arg4'},
-       {:type => 'int*', :name => 'cmock_arg5'},
-       {:type => 'char*', :name => 'cmock_arg6'}],
+       {:type => 'long const', :name => 'cmock_arg4'},
+       {:type => 'CUSTOM_THING', :name => 'cmock_arg5'},
+       {:type => 'int*', :name => 'cmock_arg6'},
+       {:type => 'char*', :name => 'cmock_arg7'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   end

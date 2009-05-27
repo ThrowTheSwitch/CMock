@@ -97,8 +97,12 @@ grammar CMockFunctionPrototype
   end
 
   rule type_const_and_ptr_suffix
-    # "const *" or "* const" or "*" (more than one asterisk possible)
-    ((const space asterisk+) / (asterisk+ (const space)?))
+    # "const" or "const *" or "* const" or "*" (of course, more than one asterisk possible in pointer cases);
+    # first line below is a fancy lookahead statement that allows const type suffix to be distinguished 
+    #  from a parameter name that might begin with word 'const' (e.g. "int const_param" or "char* const constant")
+    ('const' ( (' '+ &name) / (space &comma) / (space &right_paren) / (space &left_paren) )) /
+    (const asterisk+) / 
+    (asterisk+ (const)?)
   end
 
 	rule name
