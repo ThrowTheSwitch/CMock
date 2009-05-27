@@ -1194,40 +1194,26 @@ module CMockFunctionPrototype
   end
 
   module TypeConstAndPtrSuffix0
+    def const
+      elements[0]
+    end
+
+    def lookahead_const
+      elements[2]
+    end
   end
 
   module TypeConstAndPtrSuffix1
-    def space
-      elements[0]
-    end
-
-  end
-
-  module TypeConstAndPtrSuffix2
-    def space
-      elements[0]
-    end
-
-  end
-
-  module TypeConstAndPtrSuffix3
-    def space
-      elements[0]
-    end
-
-  end
-
-  module TypeConstAndPtrSuffix4
-  end
-
-  module TypeConstAndPtrSuffix5
     def const
       elements[0]
     end
 
   end
 
-  module TypeConstAndPtrSuffix6
+  module TypeConstAndPtrSuffix2
+    def lookahead_const
+      elements[1]
+    end
   end
 
   def _nt_type_const_and_ptr_suffix
@@ -1240,143 +1226,33 @@ module CMockFunctionPrototype
 
     i0 = index
     i1, s1 = index, []
-    if input.index('const', index) == index
-      r2 = instantiate_node(SyntaxNode,input, index...(index + 5))
-      @index += 5
-    else
-      terminal_parse_failure('const')
-      r2 = nil
-    end
+    r2 = _nt_const
     s1 << r2
     if r2
-      i3 = index
-      i4, s4 = index, []
-      s5, i5 = [], index
+      s3, i3 = [], index
       loop do
-        if input.index(' ', index) == index
-          r6 = instantiate_node(SyntaxNode,input, index...(index + 1))
-          @index += 1
-        else
-          terminal_parse_failure(' ')
-          r6 = nil
-        end
-        if r6
-          s5 << r6
+        r4 = _nt_asterisk
+        if r4
+          s3 << r4
         else
           break
         end
       end
-      if s5.empty?
-        self.index = i5
-        r5 = nil
+      if s3.empty?
+        self.index = i3
+        r3 = nil
       else
-        r5 = instantiate_node(SyntaxNode,input, i5...index, s5)
-      end
-      s4 << r5
-      if r5
-        i7 = index
-        r8 = _nt_name
-        if r8
-          self.index = i7
-          r7 = instantiate_node(SyntaxNode,input, index...index)
-        else
-          r7 = nil
-        end
-        s4 << r7
-      end
-      if s4.last
-        r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
-        r4.extend(TypeConstAndPtrSuffix0)
-      else
-        self.index = i4
-        r4 = nil
-      end
-      if r4
-        r3 = r4
-      else
-        i9, s9 = index, []
-        r10 = _nt_space
-        s9 << r10
-        if r10
-          i11 = index
-          r12 = _nt_comma
-          if r12
-            self.index = i11
-            r11 = instantiate_node(SyntaxNode,input, index...index)
-          else
-            r11 = nil
-          end
-          s9 << r11
-        end
-        if s9.last
-          r9 = instantiate_node(SyntaxNode,input, i9...index, s9)
-          r9.extend(TypeConstAndPtrSuffix1)
-        else
-          self.index = i9
-          r9 = nil
-        end
-        if r9
-          r3 = r9
-        else
-          i13, s13 = index, []
-          r14 = _nt_space
-          s13 << r14
-          if r14
-            i15 = index
-            r16 = _nt_right_paren
-            if r16
-              self.index = i15
-              r15 = instantiate_node(SyntaxNode,input, index...index)
-            else
-              r15 = nil
-            end
-            s13 << r15
-          end
-          if s13.last
-            r13 = instantiate_node(SyntaxNode,input, i13...index, s13)
-            r13.extend(TypeConstAndPtrSuffix2)
-          else
-            self.index = i13
-            r13 = nil
-          end
-          if r13
-            r3 = r13
-          else
-            i17, s17 = index, []
-            r18 = _nt_space
-            s17 << r18
-            if r18
-              i19 = index
-              r20 = _nt_left_paren
-              if r20
-                self.index = i19
-                r19 = instantiate_node(SyntaxNode,input, index...index)
-              else
-                r19 = nil
-              end
-              s17 << r19
-            end
-            if s17.last
-              r17 = instantiate_node(SyntaxNode,input, i17...index, s17)
-              r17.extend(TypeConstAndPtrSuffix3)
-            else
-              self.index = i17
-              r17 = nil
-            end
-            if r17
-              r3 = r17
-            else
-              self.index = i3
-              r3 = nil
-            end
-          end
-        end
+        r3 = instantiate_node(SyntaxNode,input, i3...index, s3)
       end
       s1 << r3
+      if r3
+        r5 = _nt_lookahead_const
+        s1 << r5
+      end
     end
     if s1.last
       r1 = instantiate_node(SyntaxNode,input, i1...index, s1)
-      r1.extend(TypeConstAndPtrSuffix4)
+      r1.extend(TypeConstAndPtrSuffix0)
     else
       self.index = i1
       r1 = nil
@@ -1384,80 +1260,282 @@ module CMockFunctionPrototype
     if r1
       r0 = r1
     else
-      i21, s21 = index, []
-      r22 = _nt_const
-      s21 << r22
-      if r22
-        s23, i23 = [], index
+      i6, s6 = index, []
+      r7 = _nt_const
+      s6 << r7
+      if r7
+        s8, i8 = [], index
         loop do
-          r24 = _nt_asterisk
-          if r24
-            s23 << r24
+          r9 = _nt_asterisk
+          if r9
+            s8 << r9
           else
             break
           end
         end
-        if s23.empty?
-          self.index = i23
-          r23 = nil
+        if s8.empty?
+          self.index = i8
+          r8 = nil
         else
-          r23 = instantiate_node(SyntaxNode,input, i23...index, s23)
+          r8 = instantiate_node(SyntaxNode,input, i8...index, s8)
         end
-        s21 << r23
+        s6 << r8
       end
-      if s21.last
-        r21 = instantiate_node(SyntaxNode,input, i21...index, s21)
-        r21.extend(TypeConstAndPtrSuffix5)
+      if s6.last
+        r6 = instantiate_node(SyntaxNode,input, i6...index, s6)
+        r6.extend(TypeConstAndPtrSuffix1)
       else
-        self.index = i21
-        r21 = nil
+        self.index = i6
+        r6 = nil
       end
-      if r21
-        r0 = r21
+      if r6
+        r0 = r6
       else
-        i25, s25 = index, []
-        s26, i26 = [], index
+        i10, s10 = index, []
+        s11, i11 = [], index
         loop do
-          r27 = _nt_asterisk
-          if r27
-            s26 << r27
+          r12 = _nt_asterisk
+          if r12
+            s11 << r12
           else
             break
           end
         end
-        if s26.empty?
-          self.index = i26
-          r26 = nil
+        if s11.empty?
+          self.index = i11
+          r11 = nil
         else
-          r26 = instantiate_node(SyntaxNode,input, i26...index, s26)
+          r11 = instantiate_node(SyntaxNode,input, i11...index, s11)
         end
-        s25 << r26
-        if r26
-          r29 = _nt_const
-          if r29
-            r28 = r29
-          else
-            r28 = instantiate_node(SyntaxNode,input, index...index)
+        s10 << r11
+        if r11
+          r13 = _nt_lookahead_const
+          s10 << r13
+        end
+        if s10.last
+          r10 = instantiate_node(SyntaxNode,input, i10...index, s10)
+          r10.extend(TypeConstAndPtrSuffix2)
+        else
+          self.index = i10
+          r10 = nil
+        end
+        if r10
+          r0 = r10
+        else
+          s14, i14 = [], index
+          loop do
+            r15 = _nt_asterisk
+            if r15
+              s14 << r15
+            else
+              break
+            end
           end
-          s25 << r28
-        end
-        if s25.last
-          r25 = instantiate_node(SyntaxNode,input, i25...index, s25)
-          r25.extend(TypeConstAndPtrSuffix6)
-        else
-          self.index = i25
-          r25 = nil
-        end
-        if r25
-          r0 = r25
-        else
-          self.index = i0
-          r0 = nil
+          if s14.empty?
+            self.index = i14
+            r14 = nil
+          else
+            r14 = instantiate_node(SyntaxNode,input, i14...index, s14)
+          end
+          if r14
+            r0 = r14
+          else
+            r16 = _nt_lookahead_const
+            if r16
+              r0 = r16
+            else
+              self.index = i0
+              r0 = nil
+            end
+          end
         end
       end
     end
 
     node_cache[:type_const_and_ptr_suffix][start_index] = r0
+
+    return r0
+  end
+
+  module LookaheadConst0
+  end
+
+  module LookaheadConst1
+    def space
+      elements[0]
+    end
+
+  end
+
+  module LookaheadConst2
+    def space
+      elements[0]
+    end
+
+  end
+
+  module LookaheadConst3
+    def space
+      elements[0]
+    end
+
+  end
+
+  module LookaheadConst4
+  end
+
+  def _nt_lookahead_const
+    start_index = index
+    if node_cache[:lookahead_const].has_key?(index)
+      cached = node_cache[:lookahead_const][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    i0, s0 = index, []
+    if input.index('const', index) == index
+      r1 = instantiate_node(SyntaxNode,input, index...(index + 5))
+      @index += 5
+    else
+      terminal_parse_failure('const')
+      r1 = nil
+    end
+    s0 << r1
+    if r1
+      i2 = index
+      i3, s3 = index, []
+      s4, i4 = [], index
+      loop do
+        if input.index(' ', index) == index
+          r5 = instantiate_node(SyntaxNode,input, index...(index + 1))
+          @index += 1
+        else
+          terminal_parse_failure(' ')
+          r5 = nil
+        end
+        if r5
+          s4 << r5
+        else
+          break
+        end
+      end
+      if s4.empty?
+        self.index = i4
+        r4 = nil
+      else
+        r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
+      end
+      s3 << r4
+      if r4
+        i6 = index
+        r7 = _nt_name
+        if r7
+          self.index = i6
+          r6 = instantiate_node(SyntaxNode,input, index...index)
+        else
+          r6 = nil
+        end
+        s3 << r6
+      end
+      if s3.last
+        r3 = instantiate_node(SyntaxNode,input, i3...index, s3)
+        r3.extend(LookaheadConst0)
+      else
+        self.index = i3
+        r3 = nil
+      end
+      if r3
+        r2 = r3
+      else
+        i8, s8 = index, []
+        r9 = _nt_space
+        s8 << r9
+        if r9
+          i10 = index
+          r11 = _nt_comma
+          if r11
+            self.index = i10
+            r10 = instantiate_node(SyntaxNode,input, index...index)
+          else
+            r10 = nil
+          end
+          s8 << r10
+        end
+        if s8.last
+          r8 = instantiate_node(SyntaxNode,input, i8...index, s8)
+          r8.extend(LookaheadConst1)
+        else
+          self.index = i8
+          r8 = nil
+        end
+        if r8
+          r2 = r8
+        else
+          i12, s12 = index, []
+          r13 = _nt_space
+          s12 << r13
+          if r13
+            i14 = index
+            r15 = _nt_right_paren
+            if r15
+              self.index = i14
+              r14 = instantiate_node(SyntaxNode,input, index...index)
+            else
+              r14 = nil
+            end
+            s12 << r14
+          end
+          if s12.last
+            r12 = instantiate_node(SyntaxNode,input, i12...index, s12)
+            r12.extend(LookaheadConst2)
+          else
+            self.index = i12
+            r12 = nil
+          end
+          if r12
+            r2 = r12
+          else
+            i16, s16 = index, []
+            r17 = _nt_space
+            s16 << r17
+            if r17
+              i18 = index
+              r19 = _nt_left_paren
+              if r19
+                self.index = i18
+                r18 = instantiate_node(SyntaxNode,input, index...index)
+              else
+                r18 = nil
+              end
+              s16 << r18
+            end
+            if s16.last
+              r16 = instantiate_node(SyntaxNode,input, i16...index, s16)
+              r16.extend(LookaheadConst3)
+            else
+              self.index = i16
+              r16 = nil
+            end
+            if r16
+              r2 = r16
+            else
+              self.index = i2
+              r2 = nil
+            end
+          end
+        end
+      end
+      s0 << r2
+    end
+    if s0.last
+      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+      r0.extend(LookaheadConst4)
+    else
+      self.index = i0
+      r0 = nil
+    end
+
+    node_cache[:lookahead_const][start_index] = r0
 
     return r0
   end

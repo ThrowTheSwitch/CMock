@@ -141,12 +141,13 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   
-    parsed = @parser.parse("void foo_bar(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz)")
-    assert_equal('CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz', parsed.get_argument_list)
+    parsed = @parser.parse("void foo_bar(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const * const abc123)")
+    assert_equal('CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const* const abc123', parsed.get_argument_list)
     assert_equal([
       {:type => 'CUSTOM_TYPE', :name => 'abc'},
       {:type => 'CUSTOM_TYPE*', :name => 'xyz_123'},
-      {:type => 'CUSTOM_TYPE const', :name => 'abcxyz'}],
+      {:type => 'CUSTOM_TYPE const', :name => 'abcxyz'},
+      {:type => 'struct CUSTOM_TYPE const* const', :name => 'abc123'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 

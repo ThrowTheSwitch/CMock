@@ -259,7 +259,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     begin
       @parser.parse      
     rescue RuntimeError => e
-      assert_equal("Failed parsing function prototype: 'int Foo(int a, unsigned int b)'", e.message)
+      assert_equal("Failed parsing function prototype: 'int Foo(int a, unsigned int b)' in file '#{@test_name}'", e.message)
     end    
   end
 

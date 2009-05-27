@@ -90,7 +90,7 @@ class CMockHeaderParser
     
     parsed = @parser.parse(prototype)
 
-    raise "Failed parsing function prototype: '#{prototype}'" if parsed.nil? 
+    raise "Failed parsing function prototype: '#{prototype}' in file '#{@name}'" if parsed.nil? 
     
     hash[:name]          = parsed.get_function_name
     hash[:args_string]   = parsed.get_argument_list
