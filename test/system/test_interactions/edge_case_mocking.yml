@@ -36,7 +36,7 @@
     unsigned int **ptr_ptr_return3(unsigned int **a);
     unsigned int ** ptr_ptr_return4(unsigned int ** a);
 
-    extern unsigned long int incredible_descriptors(register const unsigned short a);
+    unsigned long int incredible_descriptors(register const unsigned short a);
     
   :source: 
     :header: |

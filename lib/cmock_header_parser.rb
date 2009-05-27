@@ -60,8 +60,10 @@ class CMockHeaderParser
     @src_lines = source.split(/\s*;\s*/)
     
     # remove function pointer array declarations (they're erroneously recognized as function prototypes);
-    # look for something like (* blah [#]) - this can't be a parameter list
+    # look for something like (* blah [#]) - this can't be a function parameter list
     @src_lines.delete_if {|line| !(line =~ /\(\s*\*(.*\[\d*\])??\s*\)/).nil?}
+    # remove functions that are externed - mocking an extern'd function will lead to possible collisions at link time
+    @src_lines.delete_if {|line| !(line =~ /^extern/).nil?}
     # remove blank lines
     @src_lines.delete_if {|line| line.strip.length == 0}
   end

@@ -6,7 +6,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :prototype_parser, :parsed
     @test_name = 'test_file.h'
-    @config.expect.attributes.returns(['static', 'inline', '__ramfunc', 'register', 'extern'])
+    @config.expect.attributes.returns(['static', 'inline', '__ramfunc', 'register'])
   end
 
   def teardown
@@ -17,7 +17,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parser = CMockHeaderParser.new(@prototype_parser, "", @config, @test_name)
     assert_equal([], @parser.prototypes)
     assert_equal([], @parser.src_lines)
-    assert_equal(['static', 'inline', '__ramfunc', 'register', 'extern'], @parser.c_attributes)
+    assert_equal(['static', 'inline', '__ramfunc', 'register'], @parser.c_attributes)
   end
   
   
@@ -137,6 +137,22 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(["I want to live!! me too!!"], @parser.src_lines)
   end
   
+  
+  should "remove externed functions" do
+    source = 
+      " extern uint32 foobar(unsigned int);\n" +
+      "uint32 foo(unsigned int);\n" +
+      "extern void bar(unsigned int);\n"
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
+    
+    expected =
+    [
+      "uint32 foo(unsigned int)"
+    ]
+    
+    assert_equal(expected, @parser.src_lines)
+  end
+    
   
   should "remove defines" do
     source =
@@ -424,12 +440,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
 
   should "not extract for mocking multiply defined prototypes" do
-    # multiple instances of same function (particularly externs) can be present in output of preprocessor
+    # just in case a function is defined multiple times and we haven't already dealt with it
     source =
-      "extern int Foo(int a, unsigned int b);\n" +
+      "int Foo(int a, unsigned int b);\n" +
       "void FunkyChicken (\n   uint la,\n   int de,\n   bool da) ; \n" +
       "  void \n tat();\n" +
-      "extern int Foo (int, unsigned int);"
+      "int Foo (int, unsigned int);"
 
     @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(@parsed)
 
@@ -483,7 +499,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     expected_hashes =
     [
       {
-        :modifier => 'extern',
+        :modifier => '',
         :args_string => 'woody',
         :return_type => 'little',
         :return_string => 'bo peep',
