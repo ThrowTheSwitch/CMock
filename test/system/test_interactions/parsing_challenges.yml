@@ -14,6 +14,7 @@
 
   :mockable: |
     // typedef edge case; must be in mockable.h for test to compile
+    // not ANSI C but it has been done and will break cmock if not handled
     typedef void VOID_TYPE_CRAZINESS;
     
     VOID_TYPE_CRAZINESS void_type_craziness1(int * a, int *b, int* c);
@@ -49,7 +50,7 @@
       char exercise_multiline_declarations(int a, unsigned int b);
       void exercise_double_pointers(unsigned int a);
       int  exercise_many_descriptors(int a);      
-      
+
     :code: |
       int A, B, C;
       

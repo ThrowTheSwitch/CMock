@@ -7,7 +7,8 @@ typedef struct _POINT_T
   int y;
 } POINT_T;
 
-// typedef edge case
+// typedef edge case;
+// not ANSI C but it has been done and will break cmock if not handled
 typedef void VOID_TYPE_CRAZINESS;
 
 struct _DUMMY_T { unsigned int a; float b; };

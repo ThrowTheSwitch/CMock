@@ -6,7 +6,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :prototype_parser, :parsed
     @test_name = 'test_file.h'
-    @config.expect.attributes.returns(['static', 'inline', '__ramfunc', 'register'])
+    @config.expect.attributes.returns(['__ramfunc', 'funky_attrib'])
   end
 
   def teardown
@@ -17,7 +17,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @parser = CMockHeaderParser.new(@prototype_parser, "", @config, @test_name)
     assert_equal([], @parser.prototypes)
     assert_equal([], @parser.src_lines)
-    assert_equal(['static', 'inline', '__ramfunc', 'register'], @parser.c_attributes)
+    assert_equal(['__ramfunc', 'funky_attrib'], @parser.attributes)
   end
   
   
@@ -138,16 +138,19 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   
-  should "remove externed functions" do
+  should "remove externed and inline functions" do
     source = 
       " extern uint32 foobar(unsigned int);\n" +
-      "uint32 foo(unsigned int);\n" +
-      "extern void bar(unsigned int);\n"
+      "uint32 extern_name_func(unsigned int);\n" +
+      "uint32 funcinline(unsigned int);\n" +
+      "extern void bar(unsigned int);\n" +
+      "inline void bar(unsigned int);\n"
     @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
     expected =
     [
-      "uint32 foo(unsigned int)"
+      "uint32 extern_name_func(unsigned int)",
+      "uint32 funcinline(unsigned int)"
     ]
     
     assert_equal(expected, @parser.src_lines)
@@ -174,6 +177,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
 
   should "handle odd case of typedef'd void" do  
+    # some code actually typedef's void even though it's not ANSI C and is, frankly, weird
+    # since cmock treats void specially, we can't let void be obfuscated
     source =
       "typedef void SILLY_VOID_TYPE1;\n" +
       "typedef (void) SILLY_VOID_TYPE2 ;\n" +
@@ -375,12 +380,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   
-  should "extract and return function declarations with attributes and also remove parameter attributes" do
+  should "extract custom function attributes and also scrub certain C keywords" do
     source =
-      "static inline int Foo(register int a, unsigned int b);\n" +
-      " __ramfunc void \n tat();\n"
+      " static int Foo( register int a, unsigned int* restrict b);\n" +
+      "register __ramfunc funky_attrib void \n tat();\n"
 
-    @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(@parsed)
+    @prototype_parser.expect.parse('int Foo(int a, unsigned int* b)').returns(@parsed)
 
     @parsed.expect.get_function_name.returns('buzz lightyear')
     @parsed.expect.get_argument_list.returns('woody')
@@ -402,14 +407,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
     expected_prototypes = 
     [
-      'int Foo(int a, unsigned int b)',
+      'int Foo(int a, unsigned int* b)',
       'void tat()'
     ]
     
     expected_hashes =
     [
       {
-        :modifier => 'static inline',
+        :modifier => '',
         :args_string => 'woody',
         :return_type => 'little',
         :return_string => 'bo peep',
@@ -420,7 +425,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       },
 
       {
-        :modifier => '__ramfunc',
+        :modifier => '__ramfunc funky_attrib',
         :args_string => 'the matrix',
         :return_type => 'agent smith',
         :return_string => 'morpheus',

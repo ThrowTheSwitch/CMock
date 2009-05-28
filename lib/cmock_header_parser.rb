@@ -1,7 +1,7 @@
 
 class CMockHeaderParser
 
-  attr_reader :src_lines, :prototypes, :c_attributes
+  attr_reader :src_lines, :prototypes, :attributes
   
   def initialize(parser, source, cfg, name)
     @src_lines = []
@@ -9,7 +9,7 @@ class CMockHeaderParser
     @function_names = []
     @prototype_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]]*)\)$/m
 
-    @c_attributes = cfg.attributes
+    @attributes = cfg.attributes
     @parser = parser
     @name = name
     
@@ -62,8 +62,10 @@ class CMockHeaderParser
     # remove function pointer array declarations (they're erroneously recognized as function prototypes);
     # look for something like (* blah [#]) - this can't be a function parameter list
     @src_lines.delete_if {|line| !(line =~ /\(\s*\*(.*\[\d*\])??\s*\)/).nil?}
-    # remove functions that are externed - mocking an extern'd function will lead to possible collisions at link time
-    @src_lines.delete_if {|line| !(line =~ /^extern/).nil?}
+    # remove functions that are externed - mocking an extern'd function in a header file is a weird condition
+    @src_lines.delete_if {|line| !(line =~ /(^|\s+)extern\s+/).nil?}
+    # remove functions that are inlined - mocking an inine function will either break compilation or lead to other oddities
+    @src_lines.delete_if {|line| !(line =~ /(^|\s+)inline\s+/).nil?}
     # remove blank lines
     @src_lines.delete_if {|line| line.strip.length == 0}
   end
@@ -80,15 +82,19 @@ class CMockHeaderParser
     hash = {}
     
     modifiers = []
-    @c_attributes.each do |attribute|
-      # grab attributes from start of function prototype
-      if (prototype =~ /^#{attribute}\s+/i)
+    # grab special attributes from function prototype and remove them from prototype
+    @attributes.each do |attribute|
+      if (prototype =~ /#{attribute}\s+/)
         modifiers << attribute
+        prototype.gsub!(/#{attribute}\s+/, '')
       end
-      # remove all modifiers from prototype (start of string as well as in parameter list)
-      prototype.gsub!(/#{attribute}\s+/i, '')
     end
     hash[:modifier] = modifiers.join(' ')
+
+    # excise these keywords from prototype (entire 'inline' and 'extern' prototypes are already gone)
+    ['auto', 'register', 'static', 'restrict', 'volatile'].each do |keyword|
+      prototype.gsub!(/(,\s*|\(\s*|\*\s*|^\s*|\s+)#{keyword}\s*(,|\)|\w)/, "\\1\\2")
+    end
     
     parsed = @parser.parse(prototype)
 

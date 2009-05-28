@@ -7,7 +7,7 @@ class CMockConfig
     :mock_prefix => 'Mock',
     :plugins => ['cexception', 'ignore'],
     :includes => [],
-    :attributes => ['static', 'inline', 'auto', 'register', '__ramfunc', '__irq', '__fiq'],
+    :attributes => ['__ramfunc', '__irq', '__fiq'],
     :tab => '  ',
     :expect_call_count_type => 'unsigned short',
     :enforce_strict_ordering => false,
