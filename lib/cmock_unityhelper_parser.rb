@@ -29,7 +29,6 @@ class CMockUnityHelperParser
   def import_source
     source = @config.load_unity_helper
     return {} if source.nil?
-    
     c_types = {}
     source = source.gsub(/\/\/.*$/, '') #remove line comments
     source = source.gsub(/\/\*.*?\*\//m, '') #remove block comments

@@ -86,7 +86,7 @@ class CMockGenerator
     file << "#include \"unity.h\"\n"
     file << @plugins.run(:include_files)
     includes = @config.includes
-    includes.each {|include| file << "#include \"#{include}\"\n"} if (!includes.nil?)
+    includes.each {|inc| file << "#include \"#{inc}\"\n"} if (!includes.nil?)
     file << "#include \"#{header_file}\"\n\n"
   end
   

@@ -57,7 +57,7 @@
         }
       
     - :pass: FALSE
-      :should: 'fail because bar() is called but not expected'
+      :should: 'fail because bar() is not called but is expected'
       :code: |
         test()
         {
@@ -66,7 +66,7 @@
         }
 
     - :pass: FALSE
-      :should: 'fail because bar() is not called but is expected'
+      :should: 'fail because bar() is called but is not expected'
       :code: |
         test()
         {
@@ -89,7 +89,7 @@
         test()
         {
           foo_char_strings_ExpectAndReturn("larry", "curly", "moe");
-          TEST_ASSERT_EQUAL("moe", function_d("larry", "curly"));
+          TEST_ASSERT_EQUAL_STRING("moe", function_d("larry", "curly"));
         }
 
 ...

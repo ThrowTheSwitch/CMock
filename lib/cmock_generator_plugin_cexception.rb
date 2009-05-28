@@ -20,7 +20,7 @@ class CMockGeneratorPluginCException
   end
   
   def instance_structure(function)
-    call_count_type = @config.cexception_call_count_type
+    call_count_type = @config.expect_call_count_type
     throw_type = @config.cexception_throw_type
     [ "#{@tab}#{call_count_type} *#{function[:name]}_ThrowOnCallCount;\n",
       "#{@tab}#{call_count_type} *#{function[:name]}_ThrowOnCallCount_Head;\n",
@@ -56,7 +56,7 @@ class CMockGeneratorPluginCException
   
   def mock_interfaces(function)
     arg_insert = (function[:args_string] == "void") ? "" : "#{function[:args_string]}, "
-    call_count_type = @config.cexception_call_count_type
+    call_count_type = @config.expect_call_count_type
     throw_type = @config.cexception_throw_type
     [ "void #{function[:name]}_ExpectAndThrow(#{arg_insert}#{throw_type} toThrow)\n",
       "{\n",

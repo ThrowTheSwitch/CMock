@@ -1,0 +1,80 @@
+---
+:cmock:
+  :plugins:
+  - # none
+  :treat_as:
+    MY_STRING: STRING
+    MY_INT: INT
+    MY_HEX: HEX32
+
+:systest:
+  :types: |
+    typedef char* MY_STRING;
+    typedef int MY_INT;
+    typedef unsigned int MY_HEX;
+
+  :mockable: |
+    MY_INT foo(MY_HEX a);
+    MY_INT bar(MY_HEX b);
+    MY_STRING foo_char_strings(MY_STRING a, MY_STRING b);
+
+  :source: 
+    :header: |    
+      MY_INT function_a(MY_INT a, MY_INT b);
+      MY_STRING function_b(MY_STRING a, MY_STRING b);
+
+    :code: |
+      MY_INT function_a(MY_INT a, MY_INT b)    
+      {
+        return foo((MY_HEX)a) + bar((MY_HEX)b);
+      }    
+      
+      MY_STRING function_b(MY_STRING a, MY_STRING b)
+      {
+        return foo_char_strings(a, b);
+      }
+      
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+      
+    :units:
+    - :pass: TRUE
+      :should: 'successfully exercise two simple ExpectAndReturn mock calls'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((MY_HEX)1, 10);
+          bar_ExpectAndReturn((MY_HEX)2, 20);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+        }
+      
+    - :pass: FALSE
+      :should: 'fail because bar() is expected but not called'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((MY_HEX)1, 10);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+        }
+
+    - :pass: FALSE
+      :should: 'fail because foo_char_strings() is called but is not expected'
+      :code: |
+        test()
+        {
+          foo_char_strings_ExpectAndReturn((MY_STRING)"jello", (MY_STRING)"jiggle", (MY_STRING)"boing!");
+          function_a(1,2);
+        }
+
+    - :pass: TRUE
+      :should: 'handle char strings'
+      :code: |
+        test()
+        {
+          foo_char_strings_ExpectAndReturn((MY_STRING)"jello", (MY_STRING)"jiggle", (MY_STRING)"boing!");
+          TEST_ASSERT_EQUAL_STRING("boing!", function_b((MY_STRING)"jello", (MY_STRING)"jiggle"));
+        }
+
+...

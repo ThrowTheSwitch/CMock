@@ -34,7 +34,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   
   should "add to control structure mock needs" do
     function = { :name => "Oak", :args => [], :return_type => "void" }
-    @config.expect.cexception_call_count_type.returns("uint32")
+    @config.expect.expect_call_count_type.returns("uint32")
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     
     expected = ["  uint32 *Oak_ThrowOnCallCount;\n",
@@ -94,7 +94,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   
   should "add mock interfaces for functions without arguments" do
     function = {:name => "Pear", :args_string => "void", :args => [], :return_type => "void"}
-    @config.expect.cexception_call_count_type.returns("uint32")
+    @config.expect.expect_call_count_type.returns("uint32")
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Pear_ThrowOnCallCount_Head", "Mock.Pear_CallsExpected").returns("mock_return_1")
@@ -117,7 +117,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   
   should "add a mock interfaces for functions with arguments" do
     function = {:name => "Pear", :args_string => "int blah", :args => [{ :type => "int", :name => "blah" }], :return_type => "void"}
-    @config.expect.cexception_call_count_type.returns("uint32")
+    @config.expect.expect_call_count_type.returns("uint32")
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Pear_ThrowOnCallCount_Head", "Mock.Pear_CallsExpected").returns("mock_return_1")

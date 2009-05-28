@@ -34,8 +34,10 @@ compiler:
       - *unit_tests_path
       - *systest_mocks_path
       - 'vendor/unity/src/'
+      - 'vendor/c_exception/lib/'
       - 'iar\iar_v5\incIAR\'
       - 'test\system\test_compilation\'
+      - 'test\'
   defines:
     prefix: '-D'
     items:

@@ -117,7 +117,7 @@ module RakefileHelpers
   def link(exe_name, obj_list)
     linker = build_linker_fields
     cmd_str = "#{linker[:command]}#{linker[:options]}#{linker[:includes]} " +
-      (obj_list.map{|obj|"#{$cfg['linker']['object_files']['path']}#{obj} "}).join +
+      (obj_list.map{|obj|"#{$cfg['linker']['object_files']['path']}#{obj} "}).uniq.join +
       $cfg['linker']['bin_files']['prefix'] + ' ' +
       $cfg['linker']['bin_files']['destination'] +
       exe_name + $cfg['linker']['bin_files']['extension']
@@ -205,7 +205,8 @@ module RakefileHelpers
       runner_name = test_base + '_runner.c'
       runner_path = $cfg['compiler']['source_path'] + runner_name
       test_gen = UnityTestRunnerGenerator.new
-      test_gen.run(test, runner_path, [])
+      gen_inc, gen_opt = test_gen.grab_config(SYSTEST_GENERATED_FILES_PATH + cmock_config)
+      test_gen.run(test, runner_path, gen_inc, '  ', gen_opt)
       compile(runner_path)
       obj_list << runner_name.ext($cfg['compiler']['object_files']['extension'])
       
