@@ -30,10 +30,9 @@ class CMockGeneratorPluginExpect
     end
     
     function[:args].each do |arg|
-      type = arg[:type].gsub(/\s*const\s*/, ' ').strip
-      lines << [ "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]};\n",
-                 "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Head;\n",
-                 "#{@tab}#{type} *#{function[:name]}_Expected_#{arg[:name]}_Tail;\n" ]
+      lines << [ "#{@tab}#{arg[:type]} *#{function[:name]}_Expected_#{arg[:name]};\n",
+                 "#{@tab}#{arg[:type]} *#{function[:name]}_Expected_#{arg[:name]}_Head;\n",
+                 "#{@tab}#{arg[:type]} *#{function[:name]}_Expected_#{arg[:name]}_Tail;\n" ]
     end
     lines.flatten
   end
@@ -72,8 +71,7 @@ class CMockGeneratorPluginExpect
     end
     
     function[:args].each do |arg|
-      arg_return_type = arg[:type].gsub(/\s*const\s*/, ' ').strip
-      lines << @utils.code_verify_an_arg_expectation(function, arg_return_type, arg[:name])
+      lines << @utils.code_verify_an_arg_expectation(function, arg[:type], arg[:name])
     end
     lines.flatten
   end
@@ -86,8 +84,7 @@ class CMockGeneratorPluginExpect
       lines << "void ExpectParameters_#{function[:name]}(#{function[:args_string]})\n"
       lines << "{\n"
       function[:args].each do |arg|
-        type = arg[:type].gsub(/\s*const\s*/, ' ').strip
-        lines << @utils.code_add_an_arg_expectation(function, type, arg[:name])
+        lines << @utils.code_add_an_arg_expectation(function, arg[:type], arg[:name])
       end
       lines << "}\n\n"
     end

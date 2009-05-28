@@ -123,11 +123,11 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     parsed = @parser.parse("void foo_bar(const unsigned int const_param, int int_param, int integer, char character, int* const constant)")
     assert_equal('const unsigned int const_param, int int_param, int integer, char character, int* const constant', parsed.get_argument_list)
     assert_equal([
-      {:type => 'const unsigned int', :name => 'const_param'},
+      {:type => 'unsigned int', :name => 'const_param'},
       {:type => 'int', :name => 'int_param'},
       {:type => 'int', :name => 'integer'},
       {:type => 'char', :name => 'character'},
-      {:type => 'int* const', :name => 'constant'}],
+      {:type => 'int*', :name => 'constant'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 
@@ -135,19 +135,19 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_equal('signed char* abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law', parsed.get_argument_list)
     assert_equal([
       {:type => 'signed char*', :name => 'abc'},
-      {:type => 'const unsigned long int', :name => 'xyz_123'},
-      {:type => 'unsigned int const', :name => 'abc_123'},
+      {:type => 'unsigned long int', :name => 'xyz_123'},
+      {:type => 'unsigned int', :name => 'abc_123'},
       {:type => 'long long', :name => 'arm_of_the_law'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   
     parsed = @parser.parse("void foo_bar(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const * const abc123)")
-    assert_equal('CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const* const abc123', parsed.get_argument_list)
+    assert_equal('CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const * const abc123', parsed.get_argument_list)
     assert_equal([
       {:type => 'CUSTOM_TYPE', :name => 'abc'},
       {:type => 'CUSTOM_TYPE*', :name => 'xyz_123'},
-      {:type => 'CUSTOM_TYPE const', :name => 'abcxyz'},
-      {:type => 'struct CUSTOM_TYPE const* const', :name => 'abc123'}],
+      {:type => 'CUSTOM_TYPE', :name => 'abcxyz'},
+      {:type => 'struct CUSTOM_TYPE*', :name => 'abc123'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 
@@ -319,9 +319,9 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       parsed.get_argument_list)
     assert_equal(
       [{:type => 'FUNC_PTR_FOO_BAR_PARAM_1_T', :name => 'cmock_arg1'},
-       {:type => 'char* const', :name => 'cmock_arg2'},
+       {:type => 'char*', :name => 'cmock_arg2'},
        {:type => 'unsigned int', :name => 'c'},
-       {:type => 'long const', :name => 'cmock_arg4'},
+       {:type => 'long', :name => 'cmock_arg4'},
        {:type => 'CUSTOM_THING', :name => 'cmock_arg5'},
        {:type => 'int*', :name => 'cmock_arg6'},
        {:type => 'char*', :name => 'cmock_arg7'}],

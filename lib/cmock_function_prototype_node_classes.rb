@@ -2,11 +2,8 @@
 module CMockFunctionPrototype
 
   module FunctionPrototypeUtils
-    # handles '*' and '[]' (they're both pointers after all)
-    def normalize_ptr(ptr_string)
-      ptr_string.gsub!(/\s+\*/, '*')
-      ptr_string.gsub!(/\*(\w)/, '* \1')
-      return ptr_string
+    def replace_brackets(string, replace='')
+      return string.gsub(/(\s*\[\s*[0-9]*\])+/, replace)
     end
 
     def make_cmock_arg_name(index)
@@ -135,7 +132,7 @@ module CMockFunctionPrototype
         if    (arg.class == CMockFunctionPrototype::TypeWithNameNode)
           list << arg.type_and_smart_name_string(index)
         elsif (arg.class == CMockFunctionPrototype::FunctionPointerNode)
-            list << arg.type_and_smart_name_string(index)
+          list << arg.type_and_smart_name_string(index)
         elsif (arg.class == CMockFunctionPrototype::VarArgNode)
           @var_arg_found = true
           # consume var args
@@ -155,9 +152,9 @@ module CMockFunctionPrototype
       arguments.elements.each_with_index do |element, index|
         arg = element.argument
         if    (arg.class == CMockFunctionPrototype::TypeWithNameNode)
-          list << arg.type_and_smart_name_token_hash(index)
+          list << arg.type_and_smart_name_hash(index)
         elsif (arg.class == CMockFunctionPrototype::FunctionPointerNode)
-          list << arg.type_and_smart_name_token_hash(index, self.parent.name.text_value)
+          list << arg.type_and_smart_name_hash(index, self.parent.name.text_value)
         elsif (arg.class == CMockFunctionPrototype::VarArgNode)
           # consume var args
         elsif (arg.class == CMockFunctionPrototype::VoidNode)
@@ -205,7 +202,7 @@ module CMockFunctionPrototype
       return "#{return_type.text_value} (*#{func_ptr_name})#{name_and_args.argument_list.normalized_argument_list}"
     end
 
-    def type_and_smart_name_token_hash(arg_list_index, function_name)
+    def type_and_smart_name_hash(arg_list_index, function_name)
       name_and_args = get_deepest_name_and_args_node
       typename = make_function_pointer_param_typedef_name(arg_list_index, function_name)
             
@@ -238,14 +235,14 @@ module CMockFunctionPrototype
     include FunctionPrototypeUtils
 
     def text_value
-      return "#{normalize_ptr(type.text_value)} #{name.text_value}" if not name.text_value.blank?
-      return "#{normalize_ptr(type.text_value)}"
+      return "#{type.text_value} #{name.text_value}" if not name.text_value.blank?
+      return "#{type.text_value}"
     end
 
     def type_and_smart_name_string(arg_list_index)
       if (name.text_value.blank?)
         if (type.brackets?)
-          return "#{type.replace_brackets} #{make_cmock_arg_name(arg_list_index)}#{type.get_brackets}"
+          return "#{replace_brackets(type.text_value)} #{make_cmock_arg_name(arg_list_index)}#{type.get_brackets}"
         end
         return "#{type.text_value} #{make_cmock_arg_name(arg_list_index)}"
       end
@@ -253,19 +250,19 @@ module CMockFunctionPrototype
       return "#{type.text_value} #{name.text_value}"
     end
 
-    def type_and_smart_name_token_hash(arg_list_index)
+    def type_and_smart_name_hash(arg_list_index)
       if (name.text_value.blank?)
         if (type.brackets?)
-          return { :type => type.replace_brackets('*'), :name => make_cmock_arg_name(arg_list_index) }
+          return { :type => replace_brackets(type.text_value_no_const, '*'), :name => make_cmock_arg_name(arg_list_index) }
         end
-        return { :type => type.text_value, :name => make_cmock_arg_name(arg_list_index) }
+        return { :type => type.text_value_no_const, :name => make_cmock_arg_name(arg_list_index) }
       end
 
       if (name.brackets?)
-        return { :type => "#{type.text_value}*", :name => name.replace_brackets }
+        return { :type => "#{type.text_value_no_const}*", :name => replace_brackets(name.text_value) }
       end
 
-      return { :type => type.text_value, :name => name.text_value }
+      return { :type => type.text_value_no_const, :name => name.text_value }
     end
   end
 
@@ -282,10 +279,6 @@ module CMockFunctionPrototype
     def get_brackets
       return brackets.text_value
     end
-
-    def replace_brackets(replace='')
-      return text_value.gsub(/(\s*\[\s*[0-9]*\])+/, replace)
-    end
   end
 
 
@@ -300,7 +293,15 @@ module CMockFunctionPrototype
     include FunctionPrototypeUtils
 
     def text_value
-      return normalize_ptr(super.gsub(/\s+/, ' ')).strip
+      type = super
+      type.gsub!(/\s+/, ' ')           # remove extra spaces
+      type.gsub!(/\s\*/, '*')          # remove space preceding '*'
+      type.gsub!(/const\*/, 'const *') # space out 'const' & '*'
+      return type.strip
+    end
+
+    def text_value_no_const
+      return text_value.gsub(/\s*const\s*/, '')
     end
     
     def brackets?
@@ -309,10 +310,6 @@ module CMockFunctionPrototype
     
     def get_brackets
       return brackets.text_value
-    end
-    
-    def replace_brackets(replace='')
-      return text_value.gsub(/(\s*\[\s*[0-9]*\])+/, replace)
     end
   end
   
