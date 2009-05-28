@@ -45,6 +45,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
     assert_nil(@parser.parse("void foo-bar(void)")) # illegal function name
     assert_nil(@parser.parse("void foo_bar")) # no param list
     assert_nil(@parser.parse("foo_bar(void)")) # no return type
+    assert_nil(@parser.parse("void ( (* const pointers[])(void) )")) # looks like function prototype but is actually array of function pointers
     assert_nil(@parser.parse("void foo_bar(int (func)(int a, char b), void (*)(void))")) # no asterisk in function pointer definition
     assert_nil(@parser.parse("unsigned int * (*(double foo, THING bar))(unsigned int a)")) # no function name
     assert_nil(@parser.parse("unsigned int * (* func(double foo, THING bar))")) # no parameter list for function pointer return
@@ -198,15 +199,16 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
   
   
   should "normalize pointer notation" do
-    parsed = @parser.parse("void * foo(unsigned int * * * a,  char * *b, int*  c, int (* func)(void))")
+    parsed = @parser.parse("void * foo(unsigned int * * * a,  char * *b, int*  c, int (* func)(void), CUSTOM_TYPE const* e)")
   
     assert_equal('void*', parsed.get_return_type)
-    assert_equal('unsigned int*** a, char** b, int* c, int (*func)(void)', parsed.get_argument_list)
+    assert_equal('unsigned int*** a, char** b, int* c, int (*func)(void), CUSTOM_TYPE const * e', parsed.get_argument_list)
     assert_equal([
        {:type => 'unsigned int***', :name => 'a'},
        {:type => 'char**', :name => 'b'},
        {:type => 'int*', :name => 'c'},
-       {:type => 'FUNC_PTR_FOO_PARAM_4_T', :name => 'func'}],
+       {:type => 'FUNC_PTR_FOO_PARAM_4_T', :name => 'func'},
+       {:type => 'CUSTOM_TYPE*', :name => 'e'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
   end
