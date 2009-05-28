@@ -22,10 +22,13 @@ compiler:
     - --interwork
     - --warnings_are_errors
     - --fpu=None
-    - --diag_suppress=Pa050
-    - --diag_suppress=Pe191
     - -e
     - -On
+    #We are supressing some warnings here because we test CMock against some questionable code to make sure it still works
+    - --diag_suppress=Pa050
+    - --diag_suppress=Pe191
+    - --diag_suppress=Pe494
+    - --diag_suppress=Pe083
   includes:
     prefix: '-I'
     items:
