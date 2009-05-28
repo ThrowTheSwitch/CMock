@@ -16,26 +16,29 @@
     // typedef edge case; must be in mockable.h for test to compile
     typedef void VOID_TYPE_CRAZINESS;
     
+    VOID_TYPE_CRAZINESS void_type_craziness1(int * a, int *b, int* c);
+    void void_type_craziness2(VOID_TYPE_CRAZINESS);
+
+    // pointer parsing exercise
     U16  *ptr_return1(int a);
     U16*  ptr_return2(int a);
     U16 * ptr_return3(int a);
 
-    void var_args1(int a, ...);
-    void var_args2(int a, int b, ...);
-    
-    VOID_TYPE_CRAZINESS void_type_craziness1(int * a, int *b, int* c);
-    void void_type_craziness2(VOID_TYPE_CRAZINESS);
-    
-    char
-    crazy_multiline(
-      int a,
-      unsigned int b);
-    
     unsigned int** ptr_ptr_return1(unsigned int** a);
     unsigned int* *ptr_ptr_return2(unsigned int* *a);
     unsigned int **ptr_ptr_return3(unsigned int **a);
     unsigned int ** ptr_ptr_return4(unsigned int ** a);
 
+    // variable argument lists
+    void var_args1(int a, ...);
+    void var_args2(int a, int b, ...);
+    
+    // parsing "stress tests"
+    char
+    crazy_multiline(
+      int a,
+      unsigned int b);
+    
     unsigned long int incredible_descriptors(register const unsigned short a);
     
   :source: 
