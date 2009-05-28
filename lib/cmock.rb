@@ -30,7 +30,7 @@ class CMock
     path = File.dirname(src)
     @cfg.set_path(path)
     
-    cm_parser      = CMockHeaderParser.new(CMockFunctionPrototypeParser.new, File.read(src), @cfg, name)
+    cm_parser      = CMockHeaderParser.new(CMockFunctionPrototypeParser.new, File.read(src), @cfg, "#{name}.h")
     cm_unityhelper = CMockUnityHelperParser.new(@cfg)
     cm_writer      = CMockFileWriter.new(@cfg)
     cm_gen_utils   = CMockGeneratorUtils.new(@cfg, {:unity_helper => cm_unityhelper})
