@@ -144,7 +144,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " unsigned int a;\n" +
       " signed long int b;\n" +
       "} Thing ;\n\n" +
-      "struct ForwardDeclared_t TestDataType1;\n\n" +
+      "extern struct ForwardDeclared_t TestDataType1;\n" +
+      "void foo(void);\n" +
       "struct\n"+
       "   MultilineForwardDeclared_t\n" +
       "   TestDataType2;\n" +
@@ -156,7 +157,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "I want to live!!\n"
     @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
 
-    assert_equal(["struct THINGER foo(void)", "I want to live!!"], @parser.src_lines)
+    assert_equal(["void foo(void)", "struct THINGER foo(void)", "I want to live!!"], @parser.src_lines)
   end
   
   
