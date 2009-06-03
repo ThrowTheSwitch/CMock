@@ -140,19 +140,23 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
   should "remove struct statements" do
     source = 
-      "struct _NamedStruct {\n" +
+      "struct _NamedStruct1 {\n" +
       " unsigned int a;\n" +
       " signed long int b;\n" +
       "} Thing ;\n\n" +
-      "I want to live!!\n" +
+      "struct ForwardDeclared_t TestDataType1;\n\n" +
+      "struct\n"+
+      "   MultilineForwardDeclared_t\n" +
+      "   TestDataType2;\n" +
+      "struct THINGER foo(void);\n" +
       "typedef struct {\n" +
       " unsigned int a;\n" +
       " signed char b;\n" +
       "}Thinger;\n" +
-      "me too!!\n"
+      "I want to live!!\n"
     @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
-    
-    assert_equal(["I want to live!! me too!!"], @parser.src_lines)
+
+    assert_equal(["struct THINGER foo(void)", "I want to live!!"], @parser.src_lines)
   end
   
   

@@ -45,10 +45,16 @@ class CMockHeaderParser
     source.gsub!(/\/\*.*?\*\//m, '')  # remove block comments (do it first to avoid trouble with embedded line comments)
     source.gsub!(/\/\/.*$/, '')       # remove line comments
     source.gsub!(/#.*/, '')           # remove preprocessor statements
-    source.gsub!(/enum.*??\{[^\}]+\}[^;]*;/m, '')    # remove enum statements (do before typedef removal because an enum can be typedef'd)
-    source.gsub!(/union.*??\{[^\}]+\}[^;]*;/m, '')   # remove union statements (do before typedef removal because a union can be typedef'd)
-    source.gsub!(/struct.*??\{[^\}]+\}[^;]*;/m, '')  # remove struct statements (do before typedef removal because a union can be typedef'd)
-    source.gsub!(/typedef.*/, '')                   # remove typedef statements
+
+    # unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them;
+    # enums might cause trouble or might not - pull 'em just to be safe
+    source.gsub!(/enum[\w\s]*\{[^\}]+\}[\w\s]*;/m, '')   # remove enum definitions (do before typedef removal because an enum can be typedef'd)
+    source.gsub!(/union[\w\s]*\{[^\}]+\}[\w\s]*;/m, '')  # remove union definitions (do before typedef removal because a union can be typedef'd)
+    source.gsub!(/struct[^;\{\}\(\)]+;/m, '')            # remove forward declared structs but leave prototypes having struct in types
+                                                         # (do before struct definitions so as to not mess up recognizing full struct definitions)
+    source.gsub!(/struct[\w\s]*\{[^\}]+\}[\w\s]*;/m, '') # remove struct definitions (do before typedef removal because a struct can be typedef'd)
+    source.gsub!(/typedef.*/, '')                        # remove typedef statements
+    
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '') # remove default value statements from argument lists
 
     source.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
