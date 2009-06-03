@@ -104,10 +104,10 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
   should "remove enum statements" do
     source = 
-      "enum {\n" +
+      "enum _NamedEnum {\n" +
       " THING1 = (0x0001),\n" +
       " THING2 = (0x0001 << 5),\n" +
-      "};\n\n" +
+      "}ListOValues;\n\n" +
       "don't delete me!!\n" +
       "typedef enum {\n" +
       " THING1,\n" +
@@ -122,10 +122,10 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
   should "remove union statements" do
     source = 
-      "union {\n" +
+      "union _NamedDoohicky {\n" +
       " unsigned int a;\n" +
       " char b;\n" +
-      "};\n\n" +
+      "} Doohicky;\n\n" +
       "I want to live!!\n" +
       "typedef union {\n" +
       " unsigned int a;\n" +
@@ -140,10 +140,10 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
   should "remove struct statements" do
     source = 
-      "struct {\n" +
+      "struct _NamedStruct {\n" +
       " unsigned int a;\n" +
       " signed long int b;\n" +
-      "};\n\n" +
+      "} Thing ;\n\n" +
       "I want to live!!\n" +
       "typedef struct {\n" +
       " unsigned int a;\n" +
