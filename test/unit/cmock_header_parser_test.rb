@@ -136,6 +136,24 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     
     assert_equal(["I want to live!! me too!!"], @parser.src_lines)
   end
+
+
+  should "remove struct statements" do
+    source = 
+      "struct {\n" +
+      " unsigned int a;\n" +
+      " signed long int b;\n" +
+      "};\n\n" +
+      "I want to live!!\n" +
+      "typedef struct {\n" +
+      " unsigned int a;\n" +
+      " signed char b;\n" +
+      "}Thinger;\n" +
+      "me too!!\n"
+    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
+    
+    assert_equal(["I want to live!! me too!!"], @parser.src_lines)
+  end
   
   
   should "remove externed and inline functions" do

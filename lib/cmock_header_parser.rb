@@ -47,6 +47,7 @@ class CMockHeaderParser
     source.gsub!(/#.*/, '')           # remove preprocessor statements
     source.gsub!(/enum\s*\{[^\}]+\}[^;]*;/m, '')    # remove enum statements (do before typedef removal because an enum can be typedef'd)
     source.gsub!(/union\s*\{[^\}]+\}[^;]*;/m, '')   # remove union statements (do before typedef removal because a union can be typedef'd)
+    source.gsub!(/struct\s*\{[^\}]+\}[^;]*;/m, '')  # remove struct statements (do before typedef removal because a union can be typedef'd)
     source.gsub!(/typedef.*/, '')                   # remove typedef statements
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '') # remove default value statements from argument lists
 
