@@ -109,6 +109,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " THING2 = (0x0001 << 5),\n" +
       "}ListOValues;\n\n" +
       "don't delete me!!\n" +
+      " modifier_str enum _NamedEnum {THING1 = (0x0001), THING2 = (0x0001 << 5)} ListOValues;\n\n" +
       "typedef enum {\n" +
       " THING1,\n" +
       " THING2,\n" +
@@ -127,6 +128,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " char b;\n" +
       "} Doohicky;\n\n" +
       "I want to live!!\n" +
+      "some_modifier union { unsigned int a; char b;} Whatever;\n" +
       "typedef union {\n" +
       " unsigned int a;\n" +
       " char b;\n" +
