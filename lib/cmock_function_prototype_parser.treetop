@@ -10,7 +10,7 @@ grammar CMockFunctionPrototype
   
   rule function_prototype_function_pointer_return
     # ex. float (*GetPtr(const char opCode))(float, float)
-    # const: tag so we can always access its nodes in programming even if blank.
+    # const: tag so we can always access its nodes in programming even if blank
     return_type
     left_paren asterisk name function_arglist:argument_list right_paren
     function_return_arglist:argument_list
@@ -35,7 +35,7 @@ grammar CMockFunctionPrototype
   end
     
   rule variable_argument
-    '...' space <VarArgNode>
+    '...' space_optional <VarArgNode>
   end
 
   rule func_ptr_prototype
@@ -44,77 +44,75 @@ grammar CMockFunctionPrototype
   end
 
   rule parenthesized_func_ptr_name_with_arglist
-    # allow nested parentheses around name and arglist
-    # use labels 'const:' and 'name:' to give programmatic access even if nodes aren't found in string
+    # - allow nested parentheses around name and arglist
+    # - use labels 'const:' and 'name:' to give programmatic access even if nodes aren't found in string
     (left_paren name_and_args:parenthesized_func_ptr_name_with_arglist right_paren) /
     (left_paren asterisk const:const? name:name? right_paren argument_list)
   end
 
   rule type_and_name
-    # add name: tag to name? so we can always access it in programming even if blank.
-    # tell parser that type and optional name will always be followed by ',' '(' or ')' but don't consume them;
-    # this helps enforce the limits on what can be parsed in argument lists
+    # - name? tagged with name: so we can always access it in programming even if blank
+    # - tell parser that type and optional name will always be followed by ',' '(' or ')' but don't consume them;
+    #   this helps enforce the limits on what can be parsed in argument lists
     type name:name_with_brackets? &( comma / left_paren / right_paren ) <TypeWithNameNode>
   end
 
   rule type
     const?
-    ( type_struct /
-      type_union /
-      type_enum /
+    ( type_struct_union_enum /
       type_void_ptr /
       type_primitive /
-      type_custom ) 
+      type_custom )
     brackets:array_brackets? <TypeNode>
   end
 
-  rule type_struct
-    'struct' space name space type_const_and_ptr_suffix?
-  end
-
-  rule type_union
-    'union' space name space type_const_and_ptr_suffix?
-  end
-
-  rule type_enum
-    'enum' space name space type_const_and_ptr_suffix?
+  rule type_struct_union_enum
+    ('struct' / 'union' / 'enum') space_mandatory name_no_space type_const_and_ptr_suffix? space_optional
   end
 
   rule type_void_ptr
-    'void' space type_const_and_ptr_suffix
+    # note that type_const_and_ptr_suffix is mandatory unlike other type rules because 
+    # rule represents void pointer (i.e. must contain a '*' by definition)
+    'void' type_const_and_ptr_suffix space_optional
   end
 
   rule type_primitive
-    # at least one clause has to exist, not all can be '?' optional;
-    # hence the long and int variations instead of an optional long followed by optional everything else
-    (('unsigned' / 'signed') space)?
-    (('long' space 'int') / ('long' space 'long') / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') space
+    # - at least one clause has to exist, not all can be '?' optional;
+    #   hence the long and int variations instead of an optional long followed by optional everything else
+    # - !name_no_space limits matches to only primitives (allowing custom types to begin with primitive names)
+    (('unsigned' / 'signed') space_mandatory)?
+    (('long' space_mandatory 'int') / ('long' space_mandatory 'long') / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') !name_no_space
     type_const_and_ptr_suffix?
+    space_optional
   end
 
   rule type_custom
-    name space type_const_and_ptr_suffix?
+    name_no_space type_const_and_ptr_suffix? space_optional
   end
 
   rule type_const_and_ptr_suffix
     # variants of "const", "const *", "* const", "const * const", & "*"
     # (of course, more than one asterisk possible in pointer cases)
-    (const asterisk+ lookahead_const) /
-    (const asterisk+) /
-    (asterisk+ lookahead_const) /
-    (asterisk+) / 
-    (lookahead_const)
+    (space_mandatory const asterisk+ lookahead_const) /
+    (space_mandatory const asterisk+) /
+    (space_optional asterisk+ lookahead_const) /
+    (space_optional asterisk+) / 
+    (space_optional lookahead_const)
   end
 
   rule lookahead_const
     # fancy lookahead statement that allows const type suffix to be distinguished 
     # from a parameter name that might begin with word 'const' 
-    # (e.g. "int const_param" or "char* const constant")
-    'const' ( (' '+ &name) / (space &comma) / (space &right_paren) / (space &left_paren) )
+    # (ex. "int const_param" or "char* const constant")
+    'const' ( (space_mandatory &name) / (space_optional &comma) / (space_optional &right_paren) / (space_optional &left_paren) )
   end
 
 	rule name
-	  [a-zA-Z0-9_]+ space <NameNode>
+	  alpha_numeric+ space_optional <NameWithSpaceNode>
+	end
+
+	rule name_no_space
+	  alpha_numeric+
 	end
 
   rule name_with_brackets
@@ -124,7 +122,7 @@ grammar CMockFunctionPrototype
   rule void
     # in reality, 'void' is something different than the 'void*' type so limit to 'void' here and handle 'void*' in type rule;
     # recognizing the VoidNode uniquely in programming is helpful
-    'void' space !asterisk <VoidNode>
+    'void' space_optional !asterisk <VoidNode>
   end
   
   rule array_brackets
@@ -132,38 +130,46 @@ grammar CMockFunctionPrototype
   end
 
   rule const
-    'const' space
+    'const' space_optional
   end
 
   rule asterisk
-    '*' space
+    '*' space_optional
   end
 
   rule left_paren
-    '(' space
+    '(' space_optional
   end
 
   rule right_paren
-    ')' space
+    ')' space_optional
   end
 
   rule left_bracket
-    '[' space
+    '[' space_optional
   end
 
   rule right_bracket
-    ']' space
+    ']' space_optional
   end
 
   rule comma
-    ',' space
+    ',' space_optional
+  end
+
+  rule alpha_numeric
+    [a-zA-Z0-9_]
   end
 
   rule number
-    [0-9] space
+    [0-9] space_optional
   end
 
-  rule space
+  rule space_mandatory
+    ' '+
+  end
+
+  rule space_optional
     ' '*
   end
   

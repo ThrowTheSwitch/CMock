@@ -282,7 +282,7 @@ module CMockFunctionPrototype
   end
 
 
-  class NameNode < Treetop::Runtime::SyntaxNode
+  class NameWithSpaceNode < Treetop::Runtime::SyntaxNode
     def text_value
       return super.strip
     end
@@ -296,12 +296,12 @@ module CMockFunctionPrototype
       type = super
       type.gsub!(/\s+/, ' ')           # remove extra spaces
       type.gsub!(/\s\*/, '*')          # remove space preceding '*'
-      type.gsub!(/const\*/, 'const *') # space out 'const' & '*'
+      type.gsub!(/const\*/, 'const *') # space out 'const' and '*'
       return type.strip
     end
 
     def text_value_no_const
-      return text_value.gsub(/\s*const\s*/, '')
+      return text_value.gsub(/(^|\s+)const($|\s+)/, '')
     end
     
     def brackets?

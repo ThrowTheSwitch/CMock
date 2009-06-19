@@ -18,6 +18,7 @@
     :header: |    
       UINT32 function_a(int a, int b);
       void function_b(void);
+      void function_c(void);
 
     :code: |
       UINT32 function_a(int a, int b)    

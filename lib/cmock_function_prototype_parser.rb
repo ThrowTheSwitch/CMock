@@ -301,7 +301,7 @@ module CMockFunctionPrototype
   end
 
   module VariableArgument0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -324,7 +324,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -597,47 +597,37 @@ module CMockFunctionPrototype
     s0 << r1
     if r1
       i3 = index
-      r4 = _nt_type_struct
+      r4 = _nt_type_struct_union_enum
       if r4
         r3 = r4
       else
-        r5 = _nt_type_union
+        r5 = _nt_type_void_ptr
         if r5
           r3 = r5
         else
-          r6 = _nt_type_enum
+          r6 = _nt_type_primitive
           if r6
             r3 = r6
           else
-            r7 = _nt_type_void_ptr
+            r7 = _nt_type_custom
             if r7
               r3 = r7
             else
-              r8 = _nt_type_primitive
-              if r8
-                r3 = r8
-              else
-                r9 = _nt_type_custom
-                if r9
-                  r3 = r9
-                else
-                  self.index = i3
-                  r3 = nil
-                end
-              end
+              self.index = i3
+              r3 = nil
             end
           end
         end
       end
       s0 << r3
       if r3
-        r11 = _nt_array_brackets
-        if r11
-          r10 = r11
+        r9 = _nt_array_brackets
+        if r9
+          r8 = r9
         else
-          r10 = instantiate_node(SyntaxNode,input, index...index)
+          r8 = instantiate_node(SyntaxNode,input, index...index)
         end
-        s0 << r10
+        s0 << r8
       end
     end
     if s0.last
@@ -653,210 +643,106 @@ module CMockFunctionPrototype
     return r0
   end
 
-  module TypeStruct0
-    def space
+  module TypeStructUnionEnum0
+    def space_mandatory
       elements[1]
     end
 
-    def name
+    def name_no_space
       elements[2]
     end
 
-    def space
-      elements[3]
+    def space_optional
+      elements[4]
     end
-
   end
 
-  def _nt_type_struct
+  def _nt_type_struct_union_enum
     start_index = index
-    if node_cache[:type_struct].has_key?(index)
-      cached = node_cache[:type_struct][index]
+    if node_cache[:type_struct_union_enum].has_key?(index)
+      cached = node_cache[:type_struct_union_enum][index]
       @index = cached.interval.end if cached
       return cached
     end
 
     i0, s0 = index, []
+    i1 = index
     if input.index('struct', index) == index
-      r1 = instantiate_node(SyntaxNode,input, index...(index + 6))
+      r2 = instantiate_node(SyntaxNode,input, index...(index + 6))
       @index += 6
     else
       terminal_parse_failure('struct')
-      r1 = nil
+      r2 = nil
+    end
+    if r2
+      r1 = r2
+    else
+      if input.index('union', index) == index
+        r3 = instantiate_node(SyntaxNode,input, index...(index + 5))
+        @index += 5
+      else
+        terminal_parse_failure('union')
+        r3 = nil
+      end
+      if r3
+        r1 = r3
+      else
+        if input.index('enum', index) == index
+          r4 = instantiate_node(SyntaxNode,input, index...(index + 4))
+          @index += 4
+        else
+          terminal_parse_failure('enum')
+          r4 = nil
+        end
+        if r4
+          r1 = r4
+        else
+          self.index = i1
+          r1 = nil
+        end
+      end
     end
     s0 << r1
     if r1
-      r2 = _nt_space
-      s0 << r2
-      if r2
-        r3 = _nt_name
-        s0 << r3
-        if r3
-          r4 = _nt_space
-          s0 << r4
-          if r4
-            r6 = _nt_type_const_and_ptr_suffix
-            if r6
-              r5 = r6
-            else
-              r5 = instantiate_node(SyntaxNode,input, index...index)
-            end
-            s0 << r5
+      r5 = _nt_space_mandatory
+      s0 << r5
+      if r5
+        r6 = _nt_name_no_space
+        s0 << r6
+        if r6
+          r8 = _nt_type_const_and_ptr_suffix
+          if r8
+            r7 = r8
+          else
+            r7 = instantiate_node(SyntaxNode,input, index...index)
+          end
+          s0 << r7
+          if r7
+            r9 = _nt_space_optional
+            s0 << r9
           end
         end
       end
     end
     if s0.last
       r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
-      r0.extend(TypeStruct0)
+      r0.extend(TypeStructUnionEnum0)
     else
       self.index = i0
       r0 = nil
     end
 
-    node_cache[:type_struct][start_index] = r0
-
-    return r0
-  end
-
-  module TypeUnion0
-    def space
-      elements[1]
-    end
-
-    def name
-      elements[2]
-    end
-
-    def space
-      elements[3]
-    end
-
-  end
-
-  def _nt_type_union
-    start_index = index
-    if node_cache[:type_union].has_key?(index)
-      cached = node_cache[:type_union][index]
-      @index = cached.interval.end if cached
-      return cached
-    end
-
-    i0, s0 = index, []
-    if input.index('union', index) == index
-      r1 = instantiate_node(SyntaxNode,input, index...(index + 5))
-      @index += 5
-    else
-      terminal_parse_failure('union')
-      r1 = nil
-    end
-    s0 << r1
-    if r1
-      r2 = _nt_space
-      s0 << r2
-      if r2
-        r3 = _nt_name
-        s0 << r3
-        if r3
-          r4 = _nt_space
-          s0 << r4
-          if r4
-            r6 = _nt_type_const_and_ptr_suffix
-            if r6
-              r5 = r6
-            else
-              r5 = instantiate_node(SyntaxNode,input, index...index)
-            end
-            s0 << r5
-          end
-        end
-      end
-    end
-    if s0.last
-      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
-      r0.extend(TypeUnion0)
-    else
-      self.index = i0
-      r0 = nil
-    end
-
-    node_cache[:type_union][start_index] = r0
-
-    return r0
-  end
-
-  module TypeEnum0
-    def space
-      elements[1]
-    end
-
-    def name
-      elements[2]
-    end
-
-    def space
-      elements[3]
-    end
-
-  end
-
-  def _nt_type_enum
-    start_index = index
-    if node_cache[:type_enum].has_key?(index)
-      cached = node_cache[:type_enum][index]
-      @index = cached.interval.end if cached
-      return cached
-    end
-
-    i0, s0 = index, []
-    if input.index('enum', index) == index
-      r1 = instantiate_node(SyntaxNode,input, index...(index + 4))
-      @index += 4
-    else
-      terminal_parse_failure('enum')
-      r1 = nil
-    end
-    s0 << r1
-    if r1
-      r2 = _nt_space
-      s0 << r2
-      if r2
-        r3 = _nt_name
-        s0 << r3
-        if r3
-          r4 = _nt_space
-          s0 << r4
-          if r4
-            r6 = _nt_type_const_and_ptr_suffix
-            if r6
-              r5 = r6
-            else
-              r5 = instantiate_node(SyntaxNode,input, index...index)
-            end
-            s0 << r5
-          end
-        end
-      end
-    end
-    if s0.last
-      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
-      r0.extend(TypeEnum0)
-    else
-      self.index = i0
-      r0 = nil
-    end
-
-    node_cache[:type_enum][start_index] = r0
+    node_cache[:type_struct_union_enum][start_index] = r0
 
     return r0
   end
 
   module TypeVoidPtr0
-    def space
+    def type_const_and_ptr_suffix
       elements[1]
     end
 
-    def type_const_and_ptr_suffix
+    def space_optional
       elements[2]
     end
   end
@@ -879,10 +765,10 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_type_const_and_ptr_suffix
       s0 << r2
       if r2
-        r3 = _nt_type_const_and_ptr_suffix
+        r3 = _nt_space_optional
         s0 << r3
       end
     end
@@ -900,30 +786,29 @@ module CMockFunctionPrototype
   end
 
   module TypePrimitive0
-    def space
+    def space_mandatory
       elements[1]
     end
   end
 
   module TypePrimitive1
-    def space
+    def space_mandatory
       elements[1]
     end
 
   end
 
   module TypePrimitive2
-    def space
+    def space_mandatory
       elements[1]
     end
 
   end
 
   module TypePrimitive3
-    def space
-      elements[2]
+    def space_optional
+      elements[4]
     end
-
   end
 
   def _nt_type_primitive
@@ -963,7 +848,7 @@ module CMockFunctionPrototype
     end
     s2 << r3
     if r3
-      r6 = _nt_space
+      r6 = _nt_space_mandatory
       s2 << r6
     end
     if s2.last
@@ -991,7 +876,7 @@ module CMockFunctionPrototype
       end
       s8 << r9
       if r9
-        r10 = _nt_space
+        r10 = _nt_space_mandatory
         s8 << r10
         if r10
           if input.index('int', index) == index
@@ -1024,7 +909,7 @@ module CMockFunctionPrototype
         end
         s12 << r13
         if r13
-          r14 = _nt_space
+          r14 = _nt_space_mandatory
           s12 << r14
           if r14
             if input.index('long', index) == index
@@ -1119,16 +1004,27 @@ module CMockFunctionPrototype
       end
       s0 << r7
       if r7
-        r22 = _nt_space
+        i22 = index
+        r23 = _nt_name_no_space
+        if r23
+          r22 = nil
+        else
+          self.index = i22
+          r22 = instantiate_node(SyntaxNode,input, index...index)
+        end
         s0 << r22
         if r22
-          r24 = _nt_type_const_and_ptr_suffix
-          if r24
-            r23 = r24
+          r25 = _nt_type_const_and_ptr_suffix
+          if r25
+            r24 = r25
           else
-            r23 = instantiate_node(SyntaxNode,input, index...index)
+            r24 = instantiate_node(SyntaxNode,input, index...index)
           end
-          s0 << r23
+          s0 << r24
+          if r24
+            r26 = _nt_space_optional
+            s0 << r26
+          end
         end
       end
     end
@@ -1146,14 +1042,13 @@ module CMockFunctionPrototype
   end
 
   module TypeCustom0
-    def name
+    def name_no_space
       elements[0]
     end
 
-    def space
-      elements[1]
+    def space_optional
+      elements[2]
     end
-
   end
 
   def _nt_type_custom
@@ -1165,19 +1060,19 @@ module CMockFunctionPrototype
     end
 
     i0, s0 = index, []
-    r1 = _nt_name
+    r1 = _nt_name_no_space
     s0 << r1
     if r1
-      r2 = _nt_space
+      r3 = _nt_type_const_and_ptr_suffix
+      if r3
+        r2 = r3
+      else
+        r2 = instantiate_node(SyntaxNode,input, index...index)
+      end
       s0 << r2
       if r2
-        r4 = _nt_type_const_and_ptr_suffix
-        if r4
-          r3 = r4
-        else
-          r3 = instantiate_node(SyntaxNode,input, index...index)
-        end
-        s0 << r3
+        r4 = _nt_space_optional
+        s0 << r4
       end
     end
     if s0.last
@@ -1194,7 +1089,32 @@ module CMockFunctionPrototype
   end
 
   module TypeConstAndPtrSuffix0
+    def space_mandatory
+      elements[0]
+    end
+
     def const
+      elements[1]
+    end
+
+    def lookahead_const
+      elements[3]
+    end
+  end
+
+  module TypeConstAndPtrSuffix1
+    def space_mandatory
+      elements[0]
+    end
+
+    def const
+      elements[1]
+    end
+
+  end
+
+  module TypeConstAndPtrSuffix2
+    def space_optional
       elements[0]
     end
 
@@ -1203,14 +1123,18 @@ module CMockFunctionPrototype
     end
   end
 
-  module TypeConstAndPtrSuffix1
-    def const
+  module TypeConstAndPtrSuffix3
+    def space_optional
       elements[0]
     end
 
   end
 
-  module TypeConstAndPtrSuffix2
+  module TypeConstAndPtrSuffix4
+    def space_optional
+      elements[0]
+    end
+
     def lookahead_const
       elements[1]
     end
@@ -1226,28 +1150,32 @@ module CMockFunctionPrototype
 
     i0 = index
     i1, s1 = index, []
-    r2 = _nt_const
+    r2 = _nt_space_mandatory
     s1 << r2
     if r2
-      s3, i3 = [], index
-      loop do
-        r4 = _nt_asterisk
-        if r4
-          s3 << r4
-        else
-          break
-        end
-      end
-      if s3.empty?
-        self.index = i3
-        r3 = nil
-      else
-        r3 = instantiate_node(SyntaxNode,input, i3...index, s3)
-      end
+      r3 = _nt_const
       s1 << r3
       if r3
-        r5 = _nt_lookahead_const
-        s1 << r5
+        s4, i4 = [], index
+        loop do
+          r5 = _nt_asterisk
+          if r5
+            s4 << r5
+          else
+            break
+          end
+        end
+        if s4.empty?
+          self.index = i4
+          r4 = nil
+        else
+          r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
+        end
+        s1 << r4
+        if r4
+          r6 = _nt_lookahead_const
+          s1 << r6
+        end
       end
     end
     if s1.last
@@ -1260,68 +1188,45 @@ module CMockFunctionPrototype
     if r1
       r0 = r1
     else
-      i6, s6 = index, []
-      r7 = _nt_const
-      s6 << r7
+      i7, s7 = index, []
+      r8 = _nt_space_mandatory
+      s7 << r8
+      if r8
+        r9 = _nt_const
+        s7 << r9
+        if r9
+          s10, i10 = [], index
+          loop do
+            r11 = _nt_asterisk
+            if r11
+              s10 << r11
+            else
+              break
+            end
+          end
+          if s10.empty?
+            self.index = i10
+            r10 = nil
+          else
+            r10 = instantiate_node(SyntaxNode,input, i10...index, s10)
+          end
+          s7 << r10
+        end
+      end
+      if s7.last
+        r7 = instantiate_node(SyntaxNode,input, i7...index, s7)
+        r7.extend(TypeConstAndPtrSuffix1)
+      else
+        self.index = i7
+        r7 = nil
+      end
       if r7
-        s8, i8 = [], index
-        loop do
-          r9 = _nt_asterisk
-          if r9
-            s8 << r9
-          else
-            break
-          end
-        end
-        if s8.empty?
-          self.index = i8
-          r8 = nil
-        else
-          r8 = instantiate_node(SyntaxNode,input, i8...index, s8)
-        end
-        s6 << r8
-      end
-      if s6.last
-        r6 = instantiate_node(SyntaxNode,input, i6...index, s6)
-        r6.extend(TypeConstAndPtrSuffix1)
+        r0 = r7
       else
-        self.index = i6
-        r6 = nil
-      end
-      if r6
-        r0 = r6
-      else
-        i10, s10 = index, []
-        s11, i11 = [], index
-        loop do
-          r12 = _nt_asterisk
-          if r12
-            s11 << r12
-          else
-            break
-          end
-        end
-        if s11.empty?
-          self.index = i11
-          r11 = nil
-        else
-          r11 = instantiate_node(SyntaxNode,input, i11...index, s11)
-        end
-        s10 << r11
-        if r11
-          r13 = _nt_lookahead_const
-          s10 << r13
-        end
-        if s10.last
-          r10 = instantiate_node(SyntaxNode,input, i10...index, s10)
-          r10.extend(TypeConstAndPtrSuffix2)
-        else
-          self.index = i10
-          r10 = nil
-        end
-        if r10
-          r0 = r10
-        else
+        i12, s12 = index, []
+        r13 = _nt_space_optional
+        s12 << r13
+        if r13
           s14, i14 = [], index
           loop do
             r15 = _nt_asterisk
@@ -1337,12 +1242,69 @@ module CMockFunctionPrototype
           else
             r14 = instantiate_node(SyntaxNode,input, i14...index, s14)
           end
+          s12 << r14
           if r14
-            r0 = r14
-          else
             r16 = _nt_lookahead_const
-            if r16
-              r0 = r16
+            s12 << r16
+          end
+        end
+        if s12.last
+          r12 = instantiate_node(SyntaxNode,input, i12...index, s12)
+          r12.extend(TypeConstAndPtrSuffix2)
+        else
+          self.index = i12
+          r12 = nil
+        end
+        if r12
+          r0 = r12
+        else
+          i17, s17 = index, []
+          r18 = _nt_space_optional
+          s17 << r18
+          if r18
+            s19, i19 = [], index
+            loop do
+              r20 = _nt_asterisk
+              if r20
+                s19 << r20
+              else
+                break
+              end
+            end
+            if s19.empty?
+              self.index = i19
+              r19 = nil
+            else
+              r19 = instantiate_node(SyntaxNode,input, i19...index, s19)
+            end
+            s17 << r19
+          end
+          if s17.last
+            r17 = instantiate_node(SyntaxNode,input, i17...index, s17)
+            r17.extend(TypeConstAndPtrSuffix3)
+          else
+            self.index = i17
+            r17 = nil
+          end
+          if r17
+            r0 = r17
+          else
+            i21, s21 = index, []
+            r22 = _nt_space_optional
+            s21 << r22
+            if r22
+              r23 = _nt_lookahead_const
+              s21 << r23
+            end
+            if s21.last
+              r21 = instantiate_node(SyntaxNode,input, i21...index, s21)
+              r21.extend(TypeConstAndPtrSuffix4)
+            else
+              self.index = i21
+              r21 = nil
+            end
+            if r21
+              r0 = r21
             else
               self.index = i0
               r0 = nil
@@ -1358,24 +1320,28 @@ module CMockFunctionPrototype
   end
 
   module LookaheadConst0
+    def space_mandatory
+      elements[0]
+    end
+
   end
 
   module LookaheadConst1
-    def space
+    def space_optional
       elements[0]
     end
 
   end
 
   module LookaheadConst2
-    def space
+    def space_optional
       elements[0]
     end
 
   end
 
   module LookaheadConst3
-    def space
+    def space_optional
       elements[0]
     end
 
@@ -1404,38 +1370,18 @@ module CMockFunctionPrototype
     if r1
       i2 = index
       i3, s3 = index, []
-      s4, i4 = [], index
-      loop do
-        if input.index(' ', index) == index
-          r5 = instantiate_node(SyntaxNode,input, index...(index + 1))
-          @index += 1
-        else
-          terminal_parse_failure(' ')
-          r5 = nil
-        end
-        if r5
-          s4 << r5
-        else
-          break
-        end
-      end
-      if s4.empty?
-        self.index = i4
-        r4 = nil
-      else
-        r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
-      end
+      r4 = _nt_space_mandatory
       s3 << r4
       if r4
-        i6 = index
-        r7 = _nt_name
-        if r7
-          self.index = i6
-          r6 = instantiate_node(SyntaxNode,input, index...index)
+        i5 = index
+        r6 = _nt_name
+        if r6
+          self.index = i5
+          r5 = instantiate_node(SyntaxNode,input, index...index)
         else
-          r6 = nil
+          r5 = nil
         end
-        s3 << r6
+        s3 << r5
       end
       if s3.last
         r3 = instantiate_node(SyntaxNode,input, i3...index, s3)
@@ -1447,77 +1393,77 @@ module CMockFunctionPrototype
       if r3
         r2 = r3
       else
-        i8, s8 = index, []
-        r9 = _nt_space
-        s8 << r9
-        if r9
-          i10 = index
-          r11 = _nt_comma
-          if r11
-            self.index = i10
-            r10 = instantiate_node(SyntaxNode,input, index...index)
-          else
-            r10 = nil
-          end
-          s8 << r10
-        end
-        if s8.last
-          r8 = instantiate_node(SyntaxNode,input, i8...index, s8)
-          r8.extend(LookaheadConst1)
-        else
-          self.index = i8
-          r8 = nil
-        end
+        i7, s7 = index, []
+        r8 = _nt_space_optional
+        s7 << r8
         if r8
-          r2 = r8
+          i9 = index
+          r10 = _nt_comma
+          if r10
+            self.index = i9
+            r9 = instantiate_node(SyntaxNode,input, index...index)
+          else
+            r9 = nil
+          end
+          s7 << r9
+        end
+        if s7.last
+          r7 = instantiate_node(SyntaxNode,input, i7...index, s7)
+          r7.extend(LookaheadConst1)
         else
-          i12, s12 = index, []
-          r13 = _nt_space
-          s12 << r13
-          if r13
-            i14 = index
-            r15 = _nt_right_paren
-            if r15
-              self.index = i14
-              r14 = instantiate_node(SyntaxNode,input, index...index)
-            else
-              r14 = nil
-            end
-            s12 << r14
-          end
-          if s12.last
-            r12 = instantiate_node(SyntaxNode,input, i12...index, s12)
-            r12.extend(LookaheadConst2)
-          else
-            self.index = i12
-            r12 = nil
-          end
+          self.index = i7
+          r7 = nil
+        end
+        if r7
+          r2 = r7
+        else
+          i11, s11 = index, []
+          r12 = _nt_space_optional
+          s11 << r12
           if r12
-            r2 = r12
-          else
-            i16, s16 = index, []
-            r17 = _nt_space
-            s16 << r17
-            if r17
-              i18 = index
-              r19 = _nt_left_paren
-              if r19
-                self.index = i18
-                r18 = instantiate_node(SyntaxNode,input, index...index)
-              else
-                r18 = nil
-              end
-              s16 << r18
-            end
-            if s16.last
-              r16 = instantiate_node(SyntaxNode,input, i16...index, s16)
-              r16.extend(LookaheadConst3)
+            i13 = index
+            r14 = _nt_right_paren
+            if r14
+              self.index = i13
+              r13 = instantiate_node(SyntaxNode,input, index...index)
             else
-              self.index = i16
-              r16 = nil
+              r13 = nil
             end
+            s11 << r13
+          end
+          if s11.last
+            r11 = instantiate_node(SyntaxNode,input, i11...index, s11)
+            r11.extend(LookaheadConst2)
+          else
+            self.index = i11
+            r11 = nil
+          end
+          if r11
+            r2 = r11
+          else
+            i15, s15 = index, []
+            r16 = _nt_space_optional
+            s15 << r16
             if r16
-              r2 = r16
+              i17 = index
+              r18 = _nt_left_paren
+              if r18
+                self.index = i17
+                r17 = instantiate_node(SyntaxNode,input, index...index)
+              else
+                r17 = nil
+              end
+              s15 << r17
+            end
+            if s15.last
+              r15 = instantiate_node(SyntaxNode,input, i15...index, s15)
+              r15.extend(LookaheadConst3)
+            else
+              self.index = i15
+              r15 = nil
+            end
+            if r15
+              r2 = r15
             else
               self.index = i2
               r2 = nil
@@ -1541,7 +1487,7 @@ module CMockFunctionPrototype
   end
 
   module Name0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -1557,12 +1503,7 @@ module CMockFunctionPrototype
     i0, s0 = index, []
     s1, i1 = [], index
     loop do
-      if input.index(Regexp.new('[a-zA-Z0-9_]'), index) == index
-        r2 = instantiate_node(SyntaxNode,input, index...(index + 1))
-        @index += 1
-      else
-        r2 = nil
-      end
+      r2 = _nt_alpha_numeric
       if r2
         s1 << r2
       else
@@ -1577,11 +1518,11 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r3 = _nt_space
+      r3 = _nt_space_optional
       s0 << r3
     end
     if s0.last
-      r0 = instantiate_node(NameNode,input, i0...index, s0)
+      r0 = instantiate_node(NameWithSpaceNode,input, i0...index, s0)
       r0.extend(Name0)
     else
       self.index = i0
@@ -1589,6 +1530,35 @@ module CMockFunctionPrototype
     end
 
     node_cache[:name][start_index] = r0
+
+    return r0
+  end
+
+  def _nt_name_no_space
+    start_index = index
+    if node_cache[:name_no_space].has_key?(index)
+      cached = node_cache[:name_no_space][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    s0, i0 = [], index
+    loop do
+      r1 = _nt_alpha_numeric
+      if r1
+        s0 << r1
+      else
+        break
+      end
+    end
+    if s0.empty?
+      self.index = i0
+      r0 = nil
+    else
+      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+    end
+
+    node_cache[:name_no_space][start_index] = r0
 
     return r0
   end
@@ -1637,7 +1607,7 @@ module CMockFunctionPrototype
   end
 
   module Void0
-    def space
+    def space_optional
       elements[1]
     end
 
@@ -1661,7 +1631,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
       if r2
         i3 = index
@@ -1772,7 +1742,7 @@ module CMockFunctionPrototype
   end
 
   module Const0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -1795,7 +1765,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -1812,7 +1782,7 @@ module CMockFunctionPrototype
   end
 
   module Asterisk0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -1835,7 +1805,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -1852,7 +1822,7 @@ module CMockFunctionPrototype
   end
 
   module LeftParen0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -1875,7 +1845,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -1892,7 +1862,7 @@ module CMockFunctionPrototype
   end
 
   module RightParen0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -1915,7 +1885,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -1932,7 +1902,7 @@ module CMockFunctionPrototype
   end
 
   module LeftBracket0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -1955,7 +1925,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -1972,7 +1942,7 @@ module CMockFunctionPrototype
   end
 
   module RightBracket0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -1995,7 +1965,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -2012,7 +1982,7 @@ module CMockFunctionPrototype
   end
 
   module Comma0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -2035,7 +2005,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -2051,8 +2021,28 @@ module CMockFunctionPrototype
     return r0
   end
 
+  def _nt_alpha_numeric
+    start_index = index
+    if node_cache[:alpha_numeric].has_key?(index)
+      cached = node_cache[:alpha_numeric][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    if input.index(Regexp.new('[a-zA-Z0-9_]'), index) == index
+      r0 = instantiate_node(SyntaxNode,input, index...(index + 1))
+      @index += 1
+    else
+      r0 = nil
+    end
+
+    node_cache[:alpha_numeric][start_index] = r0
+
+    return r0
+  end
+
   module Number0
-    def space
+    def space_optional
       elements[1]
     end
   end
@@ -2074,7 +2064,7 @@ module CMockFunctionPrototype
     end
     s0 << r1
     if r1
-      r2 = _nt_space
+      r2 = _nt_space_optional
       s0 << r2
     end
     if s0.last
@@ -2090,10 +2080,45 @@ module CMockFunctionPrototype
     return r0
   end
 
-  def _nt_space
+  def _nt_space_mandatory
     start_index = index
-    if node_cache[:space].has_key?(index)
-      cached = node_cache[:space][index]
+    if node_cache[:space_mandatory].has_key?(index)
+      cached = node_cache[:space_mandatory][index]
+      @index = cached.interval.end if cached
+      return cached
+    end
+
+    s0, i0 = [], index
+    loop do
+      if input.index(' ', index) == index
+        r1 = instantiate_node(SyntaxNode,input, index...(index + 1))
+        @index += 1
+      else
+        terminal_parse_failure(' ')
+        r1 = nil
+      end
+      if r1
+        s0 << r1
+      else
+        break
+      end
+    end
+    if s0.empty?
+      self.index = i0
+      r0 = nil
+    else
+      r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+    end
+
+    node_cache[:space_mandatory][start_index] = r0
+
+    return r0
+  end
+
+  def _nt_space_optional
+    start_index = index
+    if node_cache[:space_optional].has_key?(index)
+      cached = node_cache[:space_optional][index]
       @index = cached.interval.end if cached
       return cached
     end
@@ -2115,7 +2140,7 @@ module CMockFunctionPrototype
     end
     r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
 
-    node_cache[:space][start_index] = r0
+    node_cache[:space_optional][start_index] = r0
 
     return r0
   end

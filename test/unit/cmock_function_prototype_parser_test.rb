@@ -120,7 +120,7 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 
-    # make sure known types in param names don't gum up the parsing works
+    # make sure primitve types in param names don't gum up the parsing works
     parsed = @parser.parse("void foo_bar(const unsigned int const_param, int int_param, int integer, char character, int* const constant)")
     assert_equal('const unsigned int const_param, int int_param, int integer, char character, int* const constant', parsed.get_argument_list)
     assert_equal([
@@ -129,6 +129,17 @@ class CMockFunctionPrototypeParserTest < Test::Unit::TestCase
       {:type => 'int', :name => 'integer'},
       {:type => 'char', :name => 'character'},
       {:type => 'int*', :name => 'constant'}],
+      parsed.get_arguments)
+    assert_nil(parsed.get_var_arg)
+
+    # make sure custom types containing primitive names don't gum up the parsing works
+    parsed = @parser.parse("void foo_bar(integer param, character thing, longint * junk, constant value)")
+    assert_equal('integer param, character thing, longint* junk, constant value', parsed.get_argument_list)
+    assert_equal([
+      {:type => 'integer', :name => 'param'},
+      {:type => 'character', :name => 'thing'},
+      {:type => 'longint*', :name => 'junk'},
+      {:type => 'constant', :name => 'value'}],
       parsed.get_arguments)
     assert_nil(parsed.get_var_arg)
 
