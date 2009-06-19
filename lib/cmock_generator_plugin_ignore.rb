@@ -14,14 +14,14 @@ class CMockGeneratorPluginIgnore
   end
   
   def instance_structure(function)
-    return "#{@tab}#{@config.ignore_bool_type} #{function[:name]}_IgnoreBool;\n"
+    return ["#{@tab}#{@config.ignore_bool_type} #{function[:name]}_IgnoreBool;\n"]
   end
   
   def mock_function_declarations(function)
     if (function[:return_type] == "void")
-      return "void #{function[:name]}_Ignore(void);\n"
+      return ["void #{function[:name]}_Ignore(void);\n"]
     else        
-      return "void #{function[:name]}_IgnoreAndReturn(#{function[:return_string]});\n"
+      return ["void #{function[:name]}_IgnoreAndReturn(#{function[:return_string]});\n"]
     end 
   end
   

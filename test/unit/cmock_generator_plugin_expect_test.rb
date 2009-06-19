@@ -4,12 +4,22 @@ require 'cmock_generator_plugin_expect'
 class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
+    
+    #no strict ordering
     @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(false)
     @config.stubs!(:respond_to?).returns(true)
     @utils.expect.helpers.returns({})
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)
+    
+    #strict ordering
+    @config.expect.tab.returns("  ")
+    @config.expect.when_ptr_star.returns(:compare_data)
+    @config.expect.enforce_strict_ordering.returns(true)
+    @config.stubs!(:respond_to?).returns(true)
+    @utils.expect.helpers.returns({})
+    @cmock_generator_plugin_expect_strict = CMockGeneratorPluginExpect.new(@config, @utils)
   end
 
   def teardown
@@ -89,9 +99,24 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
+  should "add to control structure mock needs of functions of style 'void func(void)' and global ordering" do
+    function = {:name => "Oak", :args => [], :return_type => "void"}
+    count_type = "uint32"
+    @config.expect.expect_call_count_type.returns(count_type)
+    
+    expected = ["  #{count_type} #{function[:name]}_CallCount;\n", 
+                "  #{count_type} #{function[:name]}_CallsExpected;\n",
+                "  int *#{function[:name]}_CallOrder;\n",
+                "  int *#{function[:name]}_CallOrder_Head;\n",
+                "  int *#{function[:name]}_CallOrder_Tail;\n"
+               ]
+    returned = @cmock_generator_plugin_expect_strict.instance_structure(function)
+    assert_equal(expected, returned)
+  end
+  
   should "add mock function declaration for functions of style 'void func(void)'" do
     function = {:name => "Maple", :args_string => "void", :return_type => "void"}
-    expected = "void #{function[:name]}_Expect(#{function[:args_string]});\n"
+    expected = ["void #{function[:name]}_Expect(#{function[:args_string]});\n"]
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -99,7 +124,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   should "add mock function declaration for functions of style 'int func(void)'" do
     function = {:name => "Spruce", :args_string => "void", :return_string => "int #{CMOCK_RETURN_PARAM_NAME}"}
     
-    expected = "void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"
+    expected = ["void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"]
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -107,7 +132,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   should "add mock function declaration for functions of style 'const char* func(int tofu)'" do
     function = {:name => "Pine", :args_string => "int tofu", :return_string => "const char* #{CMOCK_RETURN_PARAM_NAME}"}
     
-    expected = "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"
+    expected = ["void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"]
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -164,6 +189,26 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                ]
     @cmock_generator_plugin_expect.ordered = true
     returned = @cmock_generator_plugin_expect.mock_implementation(function)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock function implementation for functions of style 'void func(void)' and strict ordering" do
+    function = {:name => "Apple", :args => [], :return_type => "void"}
+    expected = ["  Mock.Apple_CallCount++;\n",
+                "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
+                "  {\n",
+                "    TEST_FAIL(\"Apple Called More Times Than Expected\");\n",
+                "  }\n",
+                "  {\n",
+                "    int* p_expected = Mock.Apple_CallOrder;\n",
+                "    ++GlobalVerifyOrder;\n",
+                "    if (Mock.Apple_CallOrder != Mock.Apple_CallOrder_Tail)\n",
+                "      Mock.Apple_CallOrder++;\n",
+                "    BLEH",
+                "  }\n"
+               ]
+    @utils.expect.expect_helper('int', '*p_expected', 'GlobalVerifyOrder', "\"Function 'Apple' Called Out Of Order.\"","    ").returns("    BLEH")
+    returned = @cmock_generator_plugin_expect_strict.mock_implementation(function)
     assert_equal(expected, returned)
   end
   
@@ -236,7 +281,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   should "add mock verify lines" do
     function = {:name => "Banana" }
   
-    expected = "  TEST_ASSERT_EQUAL_MESSAGE(Mock.Banana_CallsExpected, Mock.Banana_CallCount, \"Function 'Banana' called unexpected number of times.\");\n"
+    expected = ["  TEST_ASSERT_EQUAL_MESSAGE(Mock.Banana_CallsExpected, Mock.Banana_CallCount, \"Function 'Banana' called unexpected number of times.\");\n"]
     returned = @cmock_generator_plugin_expect.mock_verify(function)
     assert_equal(expected, returned)
   end
@@ -277,6 +322,18 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "  }\n"
                ]
     returned = @cmock_generator_plugin_expect.mock_destroy(function)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock destroy for functions with strict ordering" do
+    function = {:name => "Peach", :args => [], :return_type => "void" }
+    expected = [ "  if (Mock.Peach_CallOrder_Head)\n",
+                 "  {\n",
+                 "    free(Mock.Peach_CallOrder_Head);\n",
+                 "    Mock.Peach_CallOrder_Head=NULL;\n",
+                 "    Mock.Peach_CallOrder_Tail=NULL;\n",
+                 "  }\n" ]
+    returned = @cmock_generator_plugin_expect_strict.mock_destroy(function)
     assert_equal(expected, returned)
   end
 end

@@ -16,7 +16,7 @@ class CMockGeneratorPluginCException
   def include_files
     include = @config.cexception_include
     include = "Exception.h" if (include.nil?)
-    return "#include \"#{include}\"\n"
+    return ["#include \"#{include}\"\n"]
   end
   
   def instance_structure(function)
@@ -32,9 +32,9 @@ class CMockGeneratorPluginCException
   
   def mock_function_declarations(function)
     if (function[:args_string] == "void")
-	    return "void #{function[:name]}_ExpectAndThrow(#{@config.cexception_throw_type} toThrow);\n"
+	    return ["void #{function[:name]}_ExpectAndThrow(#{@config.cexception_throw_type} toThrow);\n"]
     else        
-	    return "void #{function[:name]}_ExpectAndThrow(#{function[:args_string]}, #{@config.cexception_throw_type} toThrow);\n"
+	    return ["void #{function[:name]}_ExpectAndThrow(#{function[:args_string]}, #{@config.cexception_throw_type} toThrow);\n"]
     end
   end
   

@@ -19,14 +19,14 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   end
   
   should "include the cexception library" do 
-    expected = "#include \"Exception.h\"\n"
+    expected = ["#include \"Exception.h\"\n"]
     @config.expect.cexception_include.returns(nil)
     returned = @cmock_generator_plugin_cexception.include_files
     assert_equal(expected, returned)
   end
   
   should "include the cexception library with a custom path if specified" do 
-    expected = "#include \"../cexception/lib/Exception.h\"\n"
+    expected = ["#include \"../cexception/lib/Exception.h\"\n"]
     @config.expect.cexception_include.returns("../cexception/lib/Exception.h")
     returned = @cmock_generator_plugin_cexception.include_files
     assert_equal(expected, returned)
@@ -52,7 +52,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
     function = { :name => "Spruce", :args_string => "void", :return_type => "void" }
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
     
-    expected = "void Spruce_ExpectAndThrow(EXCEPTION_TYPE toThrow);\n"
+    expected = ["void Spruce_ExpectAndThrow(EXCEPTION_TYPE toThrow);\n"]
     returned = @cmock_generator_plugin_cexception.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -61,7 +61,7 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
     function = { :name => "Spruce", :args_string => "const char* Petunia, uint32_t Lily", :return_type => "void" }
     @config.expect.cexception_throw_type.returns("EXCEPTION_TYPE")
   
-    expected = "void Spruce_ExpectAndThrow(const char* Petunia, uint32_t Lily, EXCEPTION_TYPE toThrow);\n"
+    expected = ["void Spruce_ExpectAndThrow(const char* Petunia, uint32_t Lily, EXCEPTION_TYPE toThrow);\n"]
     returned = @cmock_generator_plugin_cexception.mock_function_declarations(function)
     assert_equal(expected, returned)
   end

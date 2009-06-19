@@ -10,6 +10,13 @@ require "cmock_plugin_manager"
 require "cmock_generator_utils"
 require "cmock_unityhelper_parser"
 
+#gem install test-unit -v 1.2.3
+ruby_version = RUBY_VERSION.split('.')
+if (ruby_version[1].to_i == 9) and (ruby_version[2].to_i > 1)
+  require 'gems'
+  gem 'test-unit'
+  require 'test/unit'
+end
 
 class CMock
   
@@ -18,7 +25,7 @@ class CMock
   end
   
   def setup_mocks(files)
-    files.each do |src|
+    [files].flatten.each do |src|
       generate_mock src
     end
   end

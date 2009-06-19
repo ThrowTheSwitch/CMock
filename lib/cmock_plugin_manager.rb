@@ -17,9 +17,9 @@ class CMockPluginManager
   
   def run(method, args=nil)
     if args.nil?
-      return @plugins.collect{ |plugin| plugin.send(method) if plugin.respond_to?(method) }.flatten
+      return @plugins.collect{ |plugin| plugin.send(method) if plugin.respond_to?(method) }.flatten.join
     else
-      return @plugins.collect{ |plugin| plugin.send(method, args) if plugin.respond_to?(method) }.flatten
+      return @plugins.collect{ |plugin| plugin.send(method, args) if plugin.respond_to?(method) }.flatten.join
     end
   end
 end

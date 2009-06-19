@@ -102,7 +102,7 @@ class SystemTestGenerator
     includes << [MOCK_PREFIX + namix + MOCKABLE_H]
     includes << [name + H_EXTENSION]
     
-    write_source_file(GENERATED_PATH + TEST_PREFIX + name + C_EXTENSION, includes) do |out|
+    write_source_file(GENERATED_PATH + TEST_PREFIX + name + C_EXTENSION, includes.flatten) do |out|
       out.puts(tests[:common])
       out.puts('')
 
@@ -120,7 +120,7 @@ class SystemTestGenerator
     
     header_file = name + H_EXTENSION
     
-    includes = (namix + TYPES_H) if not yaml_hash[:systest][:types].nil?
+    includes = yaml_hash[:systest][:types].nil? ? [] : [(namix + TYPES_H)]
 
     write_header_file(GENERATED_PATH + header_file, name.upcase, includes) do |out|
       out.puts(source[:header])
@@ -131,7 +131,7 @@ class SystemTestGenerator
     includes << (namix + MOCKABLE_H) if not yaml_hash[:systest][:mockable].nil?
     includes << header_file
     
-    write_source_file(GENERATED_PATH + name + C_EXTENSION, includes) do |out|
+    write_source_file(GENERATED_PATH + name + C_EXTENSION, includes.flatten) do |out|
       out.puts(source[:code])
     end    
   end

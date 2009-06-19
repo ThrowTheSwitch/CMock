@@ -24,9 +24,9 @@ class CMockGeneratorPluginExpect
     end
 
     if (@ordered)
-      lines << [ "#{@tab}#{function[:return_type]} *#{function[:name]}_CallOrder;\n",
-                 "#{@tab}#{function[:return_type]} *#{function[:name]}_CallOrder_Head;\n",
-                 "#{@tab}#{function[:return_type]} *#{function[:name]}_CallOrder_Tail;\n" ]
+      lines << [ "#{@tab}int *#{function[:name]}_CallOrder;\n",
+                 "#{@tab}int *#{function[:name]}_CallOrder_Head;\n",
+                 "#{@tab}int *#{function[:name]}_CallOrder_Tail;\n" ]
     end
     
     function[:args].each do |arg|
@@ -40,15 +40,15 @@ class CMockGeneratorPluginExpect
   def mock_function_declarations(function)
     if (function[:args_string] == "void")
       if (function[:return_type] == 'void')
-        return "void #{function[:name]}_Expect(void);\n"
+        return ["void #{function[:name]}_Expect(void);\n"]
       else
-        return "void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"
+        return ["void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"]
       end
     else        
       if (function[:return_type] == 'void')
-        return "void #{function[:name]}_Expect(#{function[:args_string]});\n"
+        return ["void #{function[:name]}_Expect(#{function[:args_string]});\n"]
       else
-        return "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"
+        return ["void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"]
       end
     end
   end
@@ -115,7 +115,7 @@ class CMockGeneratorPluginExpect
   end
   
   def mock_verify(function)
-    return "#{@tab}TEST_ASSERT_EQUAL_MESSAGE(Mock.#{function[:name]}_CallsExpected, Mock.#{function[:name]}_CallCount, \"Function '#{function[:name]}' called unexpected number of times.\");\n"
+    return ["#{@tab}TEST_ASSERT_EQUAL_MESSAGE(Mock.#{function[:name]}_CallsExpected, Mock.#{function[:name]}_CallCount, \"Function '#{function[:name]}' called unexpected number of times.\");\n"]
   end
   
   def mock_destroy(function)
@@ -126,6 +126,14 @@ class CMockGeneratorPluginExpect
                  "#{@tab}#{@tab}free(Mock.#{function[:name]}_Return_Head);\n",
                  "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Head=NULL;\n",
                  "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Tail=NULL;\n",
+                 "#{@tab}}\n" ]
+    end
+    if (@ordered)
+      lines << [ "#{@tab}if (Mock.#{function[:name]}_CallOrder_Head)\n",
+                 "#{@tab}{\n",
+                 "#{@tab}#{@tab}free(Mock.#{function[:name]}_CallOrder_Head);\n",
+                 "#{@tab}#{@tab}Mock.#{function[:name]}_CallOrder_Head=NULL;\n",
+                 "#{@tab}#{@tab}Mock.#{function[:name]}_CallOrder_Tail=NULL;\n",
                  "#{@tab}}\n" ]
     end
     function[:args].each do |arg|

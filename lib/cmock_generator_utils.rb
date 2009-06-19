@@ -61,7 +61,7 @@ class CMockGeneratorUtils
       lines << [ "#{@tab}++GlobalExpectCount;\n",
                  code_insert_item_into_expect_array("int", "Mock.#{func_name}_CallOrder_Head", "GlobalExpectCount"),
                  "#{@tab}Mock.#{func_name}_CallOrder = Mock.#{func_name}_CallOrder_Head;\n",
-                 "#{@tab}Mock.#{func_name}_CallOrder += Mock.#{func_name}_CallOrder;\n" ]
+                 "#{@tab}Mock.#{func_name}_CallOrder += Mock.#{func_name}_CallCount;\n" ]
     end
     lines.flatten
   end
@@ -85,7 +85,7 @@ class CMockGeneratorUtils
     unity_msg  = (unity_func =~ /_MESSAGE/) ? ", #{msg}" : ''
     case(unity_func)
       when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE"
-        full_expected = (expected.strip[0] == 42) ? expected.slice(1..-1) : "&(#{expected})"
+        full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "&(#{expected})"
         return "#{indent}#{unity_func}((void*)#{full_expected}, (void*)&(#{actual}), sizeof(#{c_type})#{unity_msg});\n"  
       when /_ARRAY/
         return [ "#{indent}if (*p_expected == NULL)\n",

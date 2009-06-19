@@ -7,13 +7,14 @@ class CMockGenerator
   attr_reader :config, :file_writer, :tab, :module_name, :mock_name, :utils, :plugins
   
   def initialize(config, module_name, file_writer, utils, plugins=[])
-    @config = config
     @file_writer = file_writer
-    @tab = @config.tab
     @module_name = module_name
-    @mock_name = @config.mock_prefix + @module_name
-    @utils = utils
-    @plugins = plugins
+    @utils       = utils
+    @plugins     = plugins
+    @config      = config
+    @tab         = @config.tab
+    @mock_name   = @config.mock_prefix + @module_name
+    @ordered     = @config.enforce_strict_ordering
   end
 
   def create_mock(parsed_stuff)
@@ -97,21 +98,23 @@ class CMockGenerator
       file << "#{@tab}unsigned char placeHolder;\n"
     end
     file << "#{@tab}unsigned char allocFailure;\n"
-    file << functions.collect{|function| @plugins.run(:instance_structure, function)}.flatten
+    file << functions.collect{|function| @plugins.run(:instance_structure, function)}.join
     file << "} Mock;\n\n"
   end
   
   def create_extern_declarations(file)
     file << "extern jmp_buf AbortFrame;\n"
-    file << "extern int GlobalExpectOrder;\n"
-    file << "extern int GlobalVerifyOrder;\n"
+    if (@ordered)
+      file << "extern int GlobalExpectCount;\n"
+      file << "extern int GlobalVerifyOrder;\n"
+    end
     file << "\n"
   end
   
   def create_mock_verify_function(file, functions)
     file << "void #{@mock_name}_Verify(void)\n{\n"
     file << "#{@tab}TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n"
-    file << functions.collect {|function| @plugins.run(:mock_verify, function)}.flatten
+    file << functions.collect {|function| @plugins.run(:mock_verify, function)}.join
     file << "}\n\n"
   end
   
@@ -123,8 +126,12 @@ class CMockGenerator
   
   def create_mock_destroy_function(file, functions)
     file << "void #{@mock_name}_Destroy(void)\n{\n"
-    file << functions.collect {|function| @plugins.run(:mock_destroy, function) }.flatten
+    file << functions.collect {|function| @plugins.run(:mock_destroy, function) }.join
     file << "#{@tab}memset(&Mock, 0, sizeof(Mock));\n"
+    if (@ordered)
+      file << "#{@tab}GlobalExpectCount = 0;\n"
+      file << "#{@tab}GlobalVerifyOrder = 0;\n"
+    end
     file << "}\n\n"
   end
   
@@ -148,7 +155,7 @@ class CMockGenerator
     
     # Return expected value, if necessary
     if (function[:return_type] != "void")
-      file << @utils.code_handle_return_value(function, "#{@tab}")
+      file << @utils.code_handle_return_value(function, "#{@tab}").join
     end
     
     # Close out the function

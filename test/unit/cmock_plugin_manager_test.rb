@@ -57,12 +57,12 @@ class CMockPluginManagerTest < Test::Unit::TestCase
     @cmock_plugins = CMockPluginManager.new(@config, @utils)
     
     @cmock_plugins.plugins = [@pluginA, @pluginB]
-    @pluginA.stubs!(:test_method).returns("This Is An Awesome Test")
-    @pluginB.stubs!(:test_method).returns(["And This is Part 2","Of An Awesome Test"])
+    @pluginA.stubs!(:test_method).returns(["This Is An Awesome Test-"])
+    @pluginB.stubs!(:test_method).returns(["And This is Part 2-","Of An Awesome Test"])
     
-    expected = ["This Is An Awesome Test","And This is Part 2","Of An Awesome Test"]
+    expected = "This Is An Awesome Test-And This is Part 2-Of An Awesome Test"
     output   = @cmock_plugins.run(:test_method)
-    assert_equal(expected, output.flatten)
+    assert_equal(expected, output)
   end
   
   should "run a desired method and arg list over each plugin requested and return the results" do
@@ -72,11 +72,11 @@ class CMockPluginManagerTest < Test::Unit::TestCase
     @cmock_plugins = CMockPluginManager.new(@config, @utils)
     
     @cmock_plugins.plugins = [@pluginA, @pluginB]
-    @pluginA.stubs!(:test_method).returns("This Is An Awesome Test")
-    @pluginB.stubs!(:test_method).returns(["And This is Part 2","Of An Awesome Test"])
+    @pluginA.stubs!(:test_method).returns(["This Is An Awesome Test-"])
+    @pluginB.stubs!(:test_method).returns(["And This is Part 2-","Of An Awesome Test"])
     
-    expected = ["This Is An Awesome Test","And This is Part 2","Of An Awesome Test"]
+    expected = "This Is An Awesome Test-And This is Part 2-Of An Awesome Test"
     output   = @cmock_plugins.run(:test_method, "chickenpotpie")
-    assert_equal(expected, output.flatten)
+    assert_equal(expected, output)
   end
 end

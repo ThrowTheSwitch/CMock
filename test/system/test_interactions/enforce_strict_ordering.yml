@@ -1,0 +1,122 @@
+---
+:cmock:
+  :enforce_strict_ordering: 1
+  :plugins:
+  - # none
+
+:systest:
+  :types: |
+    #define UINT32 unsigned int
+    
+    typedef signed int custom_type;
+
+  :mockable: |
+    UINT32 foo(custom_type a);
+    UINT32 bar(custom_type b);
+
+  :source: 
+    :header: |    
+      UINT32 function_a(int a, int b);
+      void function_b(void);
+
+    :code: |
+      UINT32 function_a(int a, int b)    
+      {
+        return foo((custom_type)a) + bar((custom_type)b);
+      }    
+
+      void function_b(void) { }
+
+      void function_c(void) 
+      {
+        foo((custom_type)1);
+        foo((custom_type)2);
+        bar((custom_type)3);
+        bar((custom_type)4);
+        foo((custom_type)5);
+      }
+      
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+      
+    :units:
+    - :pass: TRUE
+      :should: 'successfully exercise two simple ExpectAndReturn mock calls'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)2, 20);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+        }
+      
+    - :pass: FALSE
+      :should: 'fail because bar() is not called but is expected'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+        }
+
+    - :pass: FALSE
+      :should: 'fail because bar() is called but is not expected'
+      :code: |
+        test()
+        {
+          bar_ExpectAndReturn((custom_type)1, 10);
+          function_b();
+        }
+
+    - :pass: FALSE
+      :should: 'fail because bar and foo called in reverse order'
+      :code: |
+        test()
+        {
+          bar_ExpectAndReturn((custom_type)2, 20);
+          foo_ExpectAndReturn((custom_type)1, 10);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+        }
+
+    - :pass: TRUE
+      :should: 'fail because bar and foo called out of order'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          foo_ExpectAndReturn((custom_type)2, 10);
+          bar_ExpectAndReturn((custom_type)3, 20);
+          bar_ExpectAndReturn((custom_type)4, 10);
+          foo_ExpectAndReturn((custom_type)5, 10);
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'fail because bar and foo called out of order at end'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          foo_ExpectAndReturn((custom_type)2, 10);
+          bar_ExpectAndReturn((custom_type)3, 20);
+          foo_ExpectAndReturn((custom_type)5, 10);
+          bar_ExpectAndReturn((custom_type)4, 10);
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'fail because bar and foo called out of order at start'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)2, 10);
+          foo_ExpectAndReturn((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)3, 20);
+          bar_ExpectAndReturn((custom_type)4, 10);
+          foo_ExpectAndReturn((custom_type)5, 10);
+          function_c();
+        }
+
+...

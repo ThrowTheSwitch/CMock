@@ -1,7 +1,6 @@
 
 class CMockFileWriter
 
-  require 'ftools'
   attr_reader :config
 
   def initialize(config)
@@ -21,8 +20,9 @@ class CMockFileWriter
   private ###################################
   
   def update_file(dest, src)
-    File.delete(dest) if (File.exist?(dest))
-    File.copy(src, dest)
-    File.delete(src)
+    require 'fileutils'
+    FileUtils.rm(dest) if (File.exist?(dest))
+    FileUtils.cp(src, dest)
+    FileUtils.rm(src)
   end
 end

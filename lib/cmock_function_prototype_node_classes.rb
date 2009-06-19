@@ -223,7 +223,7 @@ module CMockFunctionPrototype
     # dive down into nested parentheses to pull out deepest node info
     def get_deepest_name_and_args_node
       node = name_and_args
-      while (node.methods.include?('name_and_args'))
+      while (node.respond_to?(:name_and_args))
         node = node.name_and_args
       end
       return node

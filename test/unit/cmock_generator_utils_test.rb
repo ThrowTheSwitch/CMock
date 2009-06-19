@@ -24,10 +24,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_ptr)
     @config.expect.enforce_strict_ordering.returns(false)
-    @cmock_generator_utils = CMockGeneratorUtils.new(@config, {:A, :B})
+    @cmock_generator_utils = CMockGeneratorUtils.new(@config, {:A=>1, :B=>2})
     assert_equal(@config, @cmock_generator_utils.config)
     assert_equal("  ",    @cmock_generator_utils.tab)
-    assert_equal({:A, :B},@cmock_generator_utils.helpers)
+    assert_equal({:A=>1, :B=>2},@cmock_generator_utils.helpers)
   end
   
   should "set up an empty call list if no arguments passed" do
@@ -168,7 +168,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    Mock.Nectarine_CallOrder_Tail = &Mock.Nectarine_CallOrder_Head[sz+1];\n",
                 "  }\n",
                 "  Mock.Nectarine_CallOrder = Mock.Nectarine_CallOrder_Head;\n",
-                "  Mock.Nectarine_CallOrder += Mock.Nectarine_CallOrder;\n" ]
+                "  Mock.Nectarine_CallOrder += Mock.Nectarine_CallCount;\n" ]
     @cmock_generator_utils.ordered = true
     returned = @cmock_generator_utils.code_add_base_expectation("Nectarine")
     assert_equal(expected, returned)

@@ -39,9 +39,17 @@ class CMockGeneratorTest < Test::Unit::TestCase
     create_mocks :config, :file_writer, :utils, :plugins
     @module_name = "PoutPoutFish"
     
+    #no strict handling
     @config.expect.tab.returns("  ")
     @config.expect.mock_prefix.returns("Mock")
+    @config.expect.enforce_strict_ordering.returns(false)
     @cmock_generator = CMockGenerator.new(@config, @module_name, @file_writer, @utils, @plugins)
+    
+    #strict handling
+    @config.expect.tab.returns("  ")
+    @config.expect.mock_prefix.returns("Mock")
+    @config.expect.enforce_strict_ordering.returns(true)
+    @cmock_generator_strict = CMockGenerator.new(@config, @module_name, @file_writer, @utils, @plugins)
   end
 
   def teardown
@@ -141,6 +149,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "{\n",
                  "  unsigned char placeHolder;\n",
                  "  unsigned char allocFailure;\n",
+                 "",
                  "} Mock;\n\n"
                ]
     
@@ -157,9 +166,9 @@ class CMockGeneratorTest < Test::Unit::TestCase
     expected = [ "static struct MockPoutPoutFishInstance\n",
                  "{\n",
                  "  unsigned char allocFailure;\n",
-                 "  Uno_First(int Candy, int)",
-                 "  Dos_First(int Candy, int)",
-                 "  Uno_Second(bool Smarty, char)",
+                 "  Uno_First(int Candy, int)" +
+                 "  Dos_First(int Candy, int)" +
+                 "  Uno_Second(bool Smarty, char)" +
                  "  Dos_Second(bool Smarty, char)",
                  "} Mock;\n\n"
                ]
@@ -174,11 +183,21 @@ class CMockGeneratorTest < Test::Unit::TestCase
   should "create extern declarations for source file" do
     output = []
     expected = [ "extern jmp_buf AbortFrame;\n",
-                 "extern int GlobalExpectOrder;\n",
-                 "extern int GlobalVerifyOrder;\n",
                  "\n" ]
     
     @cmock_generator.create_extern_declarations(output)
+    
+    assert_equal(expected, output.flatten)
+  end
+  
+  should "create extern declarations for source file when using strict ordering" do
+    output = []
+    expected = [ "extern jmp_buf AbortFrame;\n",
+                 "extern int GlobalExpectCount;\n",
+                 "extern int GlobalVerifyOrder;\n",
+                 "\n" ]
+    
+    @cmock_generator_strict.create_extern_declarations(output)
     
     assert_equal(expected, output.flatten)
   end
@@ -188,6 +207,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
                  "  TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n",
+                 "",
                  "}\n\n"
                ]
     
@@ -203,9 +223,9 @@ class CMockGeneratorTest < Test::Unit::TestCase
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
                  "  TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n",
-                 "  Uno_First",
-                 "  Dos_First",
-                 "  Uno_Second",
+                 "  Uno_First" +
+                 "  Dos_First" +
+                 "  Uno_Second" +
                  "  Dos_Second",
                  "}\n\n"
                ]
@@ -233,6 +253,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     functions = []
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
+                 "",
                  "  memset(&Mock, 0, sizeof(Mock));\n",
                  "}\n\n"
                ]
@@ -248,9 +269,9 @@ class CMockGeneratorTest < Test::Unit::TestCase
                 ]
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
-                 "  Uno_First(int Candy, int)",
-                 "  Dos_First(int Candy, int)",
-                 "  Uno_Second(bool Smarty, char)",
+                 "  Uno_First(int Candy, int)" +
+                 "  Dos_First(int Candy, int)" +
+                 "  Uno_Second(bool Smarty, char)" +
                  "  Dos_Second(bool Smarty, char)",
                  "  memset(&Mock, 0, sizeof(Mock));\n",
                  "}\n\n"
@@ -259,6 +280,29 @@ class CMockGeneratorTest < Test::Unit::TestCase
     @plugins.expect.run(:mock_destroy, functions[1]).returns(["  Uno_Second(bool Smarty, char)","  Dos_Second(bool Smarty, char)"])
     
     @cmock_generator.create_mock_destroy_function(output, functions)
+    
+    assert_equal(expected, output.flatten)
+  end
+  
+  should "create mock destroy functions in source file when extra functions specified with strict ordering" do
+    functions = [ { :name => "First", :args => "int Candy", :return_type => "int" }, 
+                  { :name => "Second", :args => "bool Smarty", :return_type => "char" } 
+                ]
+    output = []
+    expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
+                 "  Uno_First(int Candy, int)" +
+                 "  Dos_First(int Candy, int)" +
+                 "  Uno_Second(bool Smarty, char)" +
+                 "  Dos_Second(bool Smarty, char)",
+                 "  memset(&Mock, 0, sizeof(Mock));\n",
+                 "  GlobalExpectCount = 0;\n",
+                 "  GlobalVerifyOrder = 0;\n",
+                 "}\n\n"
+               ]
+    @plugins.expect.run(:mock_destroy, functions[0]).returns(["  Uno_First(int Candy, int)","  Dos_First(int Candy, int)"])
+    @plugins.expect.run(:mock_destroy, functions[1]).returns(["  Uno_Second(bool Smarty, char)","  Dos_Second(bool Smarty, char)"])
+    
+    @cmock_generator_strict.create_mock_destroy_function(output, functions)
     
     assert_equal(expected, output.flatten)
   end
@@ -285,7 +329,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                ]
     @plugins.expect.run(:mock_implementation_prefix, function).returns(["  PreSupaFunctionUno.bool","  PreSupaFunctionDos.bool"])
     @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches, const char* named)","  MockSupaFunctionDos(uint32 sandwiches, const char* named)"])
-    @utils.expect.code_handle_return_value(function,"  ").returns("  UtilsSupaFunction.bool")
+    @utils.expect.code_handle_return_value(function,"  ").returns(["  UtilsSupaFunction.bool"])
     
     @cmock_generator.create_mock_implementation(output, function)
     
@@ -313,7 +357,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                ]
     @plugins.expect.run(:mock_implementation_prefix, function).returns(["  PreSupaFunctionUno.int","  PreSupaFunctionDos.int"])
     @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches)","  MockSupaFunctionDos(uint32 sandwiches)"])
-    @utils.expect.code_handle_return_value(function,"  ").returns("  UtilsSupaFunction.int")
+    @utils.expect.code_handle_return_value(function,"  ").returns(["  UtilsSupaFunction.int"])
     
     @cmock_generator.create_mock_implementation(output, function)
     

@@ -26,21 +26,21 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
     function = {:name => "Grass", :args => [], :return_type => "void"}
     @config.expect.ignore_bool_type.returns("BOOL")
   
-    expected = "  BOOL Grass_IgnoreBool;\n"
+    expected = ["  BOOL Grass_IgnoreBool;\n"]
     returned = @cmock_generator_plugin_ignore.instance_structure(function)
     assert_equal(expected, returned)
   end
   
   should "handle function declarations for functions without return values" do
     function = {:name => "Mold", :args_string => "void", :return_type => "void"}
-    expected = "void Mold_Ignore(void);\n"
+    expected = ["void Mold_Ignore(void);\n"]
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "handle function declarations for functions that returns something" do
     function = {:name => "Fungus", :args_string => "void", :return_type => "const char*", :return_string => "const char* #{CMOCK_RETURN_PARAM_NAME}"}
-    expected = "void Fungus_IgnoreAndReturn(const char* #{CMOCK_RETURN_PARAM_NAME});\n"
+    expected = ["void Fungus_IgnoreAndReturn(const char* #{CMOCK_RETURN_PARAM_NAME});\n"]
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end

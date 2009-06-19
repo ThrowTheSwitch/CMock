@@ -39,7 +39,10 @@ class CMockHeaderParser
     # void must be void for cmock _ExpectAndReturn calls to process properly.
     # to a certain extent, this action assumes we're chewing on pre-processed header files
     void_types = source.scan(/typedef\s+(\(\s*)?void(\s*\))?\s+([\w\d]+)\s*;/)
-    void_types.each {|type| source.gsub!(/#{type}/, 'void')} if void_types.size > 0
+    if void_types
+      void_types = void_types.flatten.uniq - ['(',')',nil]
+      void_types.each {|type| source.gsub!(/#{type}/, 'void')} if void_types.size > 0
+    end
     
     source.gsub!(/\s*\\\s*/m, ' ')    # smush multiline statements into single line
     source.gsub!(/\/\*.*?\*\//m, '')  # remove block comments (do it first to avoid trouble with embedded line comments)
