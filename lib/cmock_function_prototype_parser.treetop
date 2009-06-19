@@ -24,7 +24,7 @@ grammar CMockFunctionPrototype
 
   rule argument_list
     # without a priori knowledge of all custom types (i.e. typedefs), the parser can only recognize
-    #  a list of primitives followed by an optional name or a single custom type followed by an optional name.
+    # a list of primitives followed by an optional name or a single custom type followed by an optional name.
     # otherwise, there's no way to distinguish the last type in a list from a possibly non-existent argument name;
     # the rules in the grammar enforce this idea to ensure the parser fails rather than do something wonky
     left_paren arguments:( argument:argument (comma)? )* right_paren <ArgumentListNode>
@@ -79,7 +79,8 @@ grammar CMockFunctionPrototype
   rule type_primitive
     # - at least one clause has to exist, not all can be '?' optional;
     #   hence the long and int variations instead of an optional long followed by optional everything else
-    # - !name_no_space limits matches to only primitives (allowing custom types to begin with primitive names)
+    # - !name_no_space limits matches to only primitives allowing custom types to be successfully 
+    #   recognized though their strings may begin with primitives (ex. integer value1, character value2)
     (('unsigned' / 'signed') space_mandatory)?
     (('long' space_mandatory 'int') / ('long' space_mandatory 'long') / 'long' / 'int' / 'short' / 'char' / 'float' / 'double') !name_no_space
     type_const_and_ptr_suffix?
@@ -101,9 +102,8 @@ grammar CMockFunctionPrototype
   end
 
   rule lookahead_const
-    # fancy lookahead statement that allows const type suffix to be distinguished 
-    # from a parameter name that might begin with word 'const' 
-    # (ex. "int const_param" or "char* const constant")
+    # fancy lookahead statement that allows const type suffix to be distinguished from a parameter 
+    # name that might begin with word 'const' (ex. "int const_param" or "char* const constant")
     'const' ( (space_mandatory &name) / (space_optional &comma) / (space_optional &right_paren) / (space_optional &left_paren) )
   end
 
@@ -120,7 +120,7 @@ grammar CMockFunctionPrototype
   end
 
   rule void
-    # in reality, 'void' is something different than the 'void*' type so limit to 'void' here and handle 'void*' in type rule;
+    # in reality, 'void' is different than 'void*' type so limit to 'void' here and handle 'void*' in type rule;
     # recognizing the VoidNode uniquely in programming is helpful
     'void' space_optional !asterisk <VoidNode>
   end
