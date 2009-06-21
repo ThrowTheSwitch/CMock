@@ -7,6 +7,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     create_mocks :config, :prototype_parser, :parsed
     @test_name = 'test_file.h'
     @config.expect.attributes.returns(['__ramfunc', 'funky_attrib'])
+    @config.expect.when_no_prototypes.returns(:error)
   end
 
   def teardown
@@ -256,7 +257,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     begin
       @parser.parse      
     rescue RuntimeError => e
-      assert_equal("No function prototypes found in 'thinger.h'", e.message)
+      assert_equal("ERROR: No function prototypes found in 'thinger.h'", e.message)
     end    
   end
 
@@ -281,7 +282,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     begin
       @parser.parse      
     rescue RuntimeError => e
-      assert_equal("No function prototypes found in 'hello_world.h'", e.message)
+      assert_equal("ERROR: No function prototypes found in 'hello_world.h'", e.message)
     end    
   end
 

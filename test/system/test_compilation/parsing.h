@@ -1,5 +1,6 @@
 
 typedef unsigned short U16;
+typedef signed int int32_t;
 
 typedef struct _POINT_T
 {
@@ -48,3 +49,5 @@ void const_variants2(
 	struct _DUMMY_T const * const param1,
 	const unsigned long int const * const param2,
 	const struct _DUMMY_T const * param3 ); 
+
+int32_t example_c99_type(int32_t param1);
