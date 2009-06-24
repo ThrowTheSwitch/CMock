@@ -2,7 +2,8 @@
 :cmock:
   :enforce_strict_ordering: 1
   :plugins:
-  - # none
+  - ignore
+  - cexception
 
 :systest:
   :types: |
@@ -11,14 +12,18 @@
     typedef signed int custom_type;
 
   :mockable: |
+    #include  "Exception.h"
     UINT32 foo(custom_type a);
     UINT32 bar(custom_type b);
+    void baz(custom_type c);
 
   :source: 
-    :header: |    
+    :header: |
+      #include "Exception.h"
       UINT32 function_a(int a, int b);
       void function_b(void);
       void function_c(void);
+      void function_d(void);
 
     :code: |
       UINT32 function_a(int a, int b)    
@@ -26,7 +31,16 @@
         return foo((custom_type)a) + bar((custom_type)b);
       }    
 
-      void function_b(void) { }
+      void function_b(void) 
+      { 
+        baz((custom_type)1);
+        foo((custom_type)2);
+        bar((custom_type)3);
+        baz((custom_type)4);
+        foo((custom_type)5);
+        bar((custom_type)6);
+        baz((custom_type)7);
+      }
 
       void function_c(void) 
       {
@@ -37,8 +51,29 @@
         foo((custom_type)5);
       }
       
+      void function_d(void)
+      {
+        EXCEPTION_T e;
+        Try
+        {
+          foo((custom_type)1);
+        }
+        Catch(e) {}
+        Try
+        {
+          bar((custom_type)2);
+        }
+        Catch(e) {}
+        Try
+        {
+          foo((custom_type)3);
+        }
+        Catch(e) {}
+      }
+      
   :tests:
     :common: |
+      #include "CException.h"
       void setUp(void) {}
       void tearDown(void) {}
       
@@ -61,14 +96,16 @@
           foo_ExpectAndReturn((custom_type)1, 10);
           TEST_ASSERT_EQUAL(30, function_a(1, 2));
         }
-
+      
     - :pass: FALSE
-      :should: 'fail because bar() is called but is not expected'
+      :should: 'fail because bar() is called twice but is expected once'
       :code: |
         test()
         {
-          bar_ExpectAndReturn((custom_type)1, 10);
-          function_b();
+          foo_ExpectAndReturn((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)2, 20);
+          bar_ExpectAndReturn((custom_type)3, 30);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
         }
 
     - :pass: FALSE
@@ -82,7 +119,7 @@
         }
 
     - :pass: TRUE
-      :should: 'fail because bar and foo called out of order'
+      :should: 'pass because bar and foo called in order with multiple params'
       :code: |
         test()
         {
@@ -120,4 +157,51 @@
           function_c();
         }
 
+    - :pass: TRUE
+      :should: 'pass because we are properly ignoring baz'
+      :code: |
+        test()
+        {
+          baz_Ignore();
+          foo_ExpectAndReturn((custom_type)2, 10);
+          bar_ExpectAndReturn((custom_type)3, 20);
+          foo_ExpectAndReturn((custom_type)5, 10);
+          bar_ExpectAndReturn((custom_type)6, 10);
+          function_b();
+        }
+
+    - :pass: FALSE
+      :should: 'fail because bar and foo out of order, even though baz is ignored'
+      :code: |
+        test()
+        {
+          baz_Ignore();
+          foo_ExpectAndReturn((custom_type)2, 10);
+          foo_ExpectAndReturn((custom_type)5, 10);
+          bar_ExpectAndReturn((custom_type)3, 20);
+          bar_ExpectAndReturn((custom_type)6, 10);
+          function_b();
+        }
+        
+    - :pass: TRUE
+      :should: 'pass when using cexception, as long as the order is right'
+      :code: |
+        test()
+        {
+          foo_ExpectAndThrow((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)2, 20);
+          foo_ExpectAndReturn((custom_type)3, 10);
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'fail when an throw call is made out of order'
+      :code: |
+        test()
+        {
+          bar_ExpectAndReturn((custom_type)2, 20);
+          foo_ExpectAndThrow((custom_type)1, 10);
+          foo_ExpectAndReturn((custom_type)3, 10);
+          function_d();
+        }
 ...

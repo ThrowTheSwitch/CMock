@@ -66,7 +66,14 @@ class CMockGeneratorPluginExpect
                  "#{@tab}#{@tab}++GlobalVerifyOrder;\n",
                  "#{@tab}#{@tab}if (Mock.#{function[:name]}_CallOrder != Mock.#{function[:name]}_CallOrder_Tail)\n",
                  "#{@tab}#{@tab}#{@tab}Mock.#{function[:name]}_CallOrder++;\n",
-                 @utils.expect_helper('int', '*p_expected', 'GlobalVerifyOrder', "\"Function '#{function[:name]}' Called Out Of Order.\"","#{@tab}#{@tab}"),
+                 #@utils.expect_helper('int', '*p_expected', 'GlobalVerifyOrder', "\"Function '#{function[:name]}' Called Out Of Order.\"","#{@tab}#{@tab}"),
+                 "#{@tab}#{@tab}if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
+                 "#{@tab}#{@tab}{\n",
+                 "#{@tab}#{@tab}#{@tab}const char* ErrStr = \"Function '#{function[:name]}' Called Out Of Order.\";\n",
+                 "#{@tab}#{@tab}#{@tab}GlobalOrderError = malloc(#{"Function '#{function[:name]}' Called Out Of Order.".size+1});\n",
+                 "#{@tab}#{@tab}#{@tab}if (GlobalOrderError)\n",
+                 "#{@tab}#{@tab}#{@tab}#{@tab}strcpy(GlobalOrderError, ErrStr);\n",
+                 "#{@tab}#{@tab}}\n",
                  "#{@tab}}\n" ]
     end
     
@@ -115,7 +122,7 @@ class CMockGeneratorPluginExpect
   end
   
   def mock_verify(function)
-    return ["#{@tab}TEST_ASSERT_EQUAL_MESSAGE(Mock.#{function[:name]}_CallsExpected, Mock.#{function[:name]}_CallCount, \"Function '#{function[:name]}' called unexpected number of times.\");\n"]
+    ["#{@tab}TEST_ASSERT_EQUAL_MESSAGE(Mock.#{function[:name]}_CallsExpected, Mock.#{function[:name]}_CallCount, \"Function '#{function[:name]}' called unexpected number of times.\");\n"]
   end
   
   def mock_destroy(function)

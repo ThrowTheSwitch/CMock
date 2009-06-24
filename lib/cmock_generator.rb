@@ -107,6 +107,7 @@ class CMockGenerator
     if (@ordered)
       file << "extern int GlobalExpectCount;\n"
       file << "extern int GlobalVerifyOrder;\n"
+      file << "extern char* GlobalOrderError;\n"
     end
     file << "\n"
   end
@@ -115,6 +116,10 @@ class CMockGenerator
     file << "void #{@mock_name}_Verify(void)\n{\n"
     file << "#{@tab}TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n"
     file << functions.collect {|function| @plugins.run(:mock_verify, function)}.join
+    if (@ordered)
+      file << "#{@tab}if (GlobalOrderError)\n"
+      file << "#{@tab}#{@tab}TEST_FAIL(GlobalOrderError);\n"
+    end
     file << "}\n\n"
   end
   
@@ -131,6 +136,11 @@ class CMockGenerator
     if (@ordered)
       file << "#{@tab}GlobalExpectCount = 0;\n"
       file << "#{@tab}GlobalVerifyOrder = 0;\n"
+      file << "#{@tab}if (GlobalOrderError)\n"
+      file << "#{@tab}{\n"
+      file << "#{@tab}#{@tab}free(GlobalOrderError);\n"
+      file << "#{@tab}#{@tab}GlobalOrderError = NULL;\n"
+      file << "#{@tab}}\n"
     end
     file << "}\n\n"
   end
