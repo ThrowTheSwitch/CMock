@@ -89,7 +89,8 @@
         }
       
     - :pass: FALSE
-      :should: 'fail because bar() is not called but is expected'
+      :should: 'fail because bar() is called but is not expected'
+      :verify_error: 'Called More Times Than Expected'
       :code: |
         test()
         {
@@ -99,6 +100,7 @@
       
     - :pass: FALSE
       :should: 'fail because bar() is called twice but is expected once'
+      :verify_error: 'called unexpected number of times'
       :code: |
         test()
         {
@@ -110,6 +112,7 @@
 
     - :pass: FALSE
       :should: 'fail because bar and foo called in reverse order'
+      :verify_error: 'Called Out Of Order'
       :code: |
         test()
         {

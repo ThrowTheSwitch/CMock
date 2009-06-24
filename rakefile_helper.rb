@@ -250,6 +250,9 @@ module RakefileHelpers
           total_failures += 1
           test_results =~ /test#{index+1}:(.+)/
           failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:#{$1}"
+        elsif (test[:verify_error]) and not (test_results =~ /test#{index+1}:.*#{test[:verify_error]}/)
+          total_failures += 1
+          failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:should have output matching '#{test[:verify_error]}'"
         end
       end
     end

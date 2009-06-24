@@ -172,7 +172,6 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock function implementation using ordering if needed" do
-    @utils.expect.expect_helper('int','*p_expected','GlobalVerifyOrder',"\"Function 'Apple' Called Out Of Order.\"", '    ').returns("    mocked_retval")
     function = {:name => "Apple", :args => [], :return_type => "void"}
     expected = ["  Mock.Apple_CallCount++;\n",
                 "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
@@ -184,7 +183,13 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "    ++GlobalVerifyOrder;\n",
                 "    if (Mock.Apple_CallOrder != Mock.Apple_CallOrder_Tail)\n",
                 "      Mock.Apple_CallOrder++;\n",
-                "    mocked_retval",
+                "    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
+                "    {\n",
+                "      const char* ErrStr = \"Function 'Apple' Called Out Of Order.\";\n",
+                "      GlobalOrderError = malloc(38);\n",
+                "      if (GlobalOrderError)\n",
+                "        strcpy(GlobalOrderError, ErrStr);\n",
+                "    }\n",
                 "  }\n"
                ]
     @cmock_generator_plugin_expect.ordered = true
@@ -204,10 +209,15 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "    ++GlobalVerifyOrder;\n",
                 "    if (Mock.Apple_CallOrder != Mock.Apple_CallOrder_Tail)\n",
                 "      Mock.Apple_CallOrder++;\n",
-                "    BLEH",
+                "    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
+                "    {\n",
+                "      const char* ErrStr = \"Function 'Apple' Called Out Of Order.\";\n",
+                "      GlobalOrderError = malloc(38);\n",
+                "      if (GlobalOrderError)\n",
+                "        strcpy(GlobalOrderError, ErrStr);\n",
+                "    }\n",
                 "  }\n"
                ]
-    @utils.expect.expect_helper('int', '*p_expected', 'GlobalVerifyOrder', "\"Function 'Apple' Called Out Of Order.\"","    ").returns("    BLEH")
     returned = @cmock_generator_plugin_expect_strict.mock_implementation(function)
     assert_equal(expected, returned)
   end
