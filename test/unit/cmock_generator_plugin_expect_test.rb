@@ -122,7 +122,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock function declaration for functions of style 'int func(void)'" do
-    function = {:name => "Spruce", :args_string => "void", :return_string => "int #{CMOCK_RETURN_PARAM_NAME}"}
+    function = {:name => "Spruce", :args_string => "void", :return_string => "int toReturn"}
     
     expected = ["void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"]
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
@@ -130,7 +130,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock function declaration for functions of style 'const char* func(int tofu)'" do
-    function = {:name => "Pine", :args_string => "int tofu", :return_string => "const char* #{CMOCK_RETURN_PARAM_NAME}"}
+    function = {:name => "Pine", :args_string => "int tofu", :return_string => "const char* toReturn"}
     
     expected = ["void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"]
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
@@ -146,7 +146,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = ["  Mock.Apple_CallCount++;\n",
                 "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
                 "  {\n",
-                "    TEST_FAIL(\"Apple Called More Times Than Expected\");\n",
+                "    TEST_FAIL(\"Function 'Apple' called more times than expected\");\n",
                 "  }\n"
                ]
     returned = @cmock_generator_plugin_expect.mock_implementation(function)
@@ -162,7 +162,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = ["  Mock.Cherry_CallCount++;\n",
                 "  if (Mock.Cherry_CallCount > Mock.Cherry_CallsExpected)\n",
                 "  {\n",
-                "    TEST_FAIL(\"Cherry Called More Times Than Expected\");\n",
+                "    TEST_FAIL(\"Function 'Cherry' called more times than expected\");\n",
                 "  }\n",
                 "mocked_retval_1",
                 "mocked_retval_2"
@@ -176,7 +176,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = ["  Mock.Apple_CallCount++;\n",
                 "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
                 "  {\n",
-                "    TEST_FAIL(\"Apple Called More Times Than Expected\");\n",
+                "    TEST_FAIL(\"Function 'Apple' called more times than expected\");\n",
                 "  }\n",
                 "  {\n",
                 "    int* p_expected = Mock.Apple_CallOrder;\n",
@@ -185,8 +185,8 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "      Mock.Apple_CallOrder++;\n",
                 "    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
                 "    {\n",
-                "      const char* ErrStr = \"Function 'Apple' Called Out Of Order.\";\n",
-                "      GlobalOrderError = malloc(38);\n",
+                "      const char* ErrStr = \"Out of order function calls. Function 'Apple'\";\n",
+                "      GlobalOrderError = malloc(46);\n",
                 "      if (GlobalOrderError)\n",
                 "        strcpy(GlobalOrderError, ErrStr);\n",
                 "    }\n",
@@ -202,7 +202,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = ["  Mock.Apple_CallCount++;\n",
                 "  if (Mock.Apple_CallCount > Mock.Apple_CallsExpected)\n",
                 "  {\n",
-                "    TEST_FAIL(\"Apple Called More Times Than Expected\");\n",
+                "    TEST_FAIL(\"Function 'Apple' called more times than expected\");\n",
                 "  }\n",
                 "  {\n",
                 "    int* p_expected = Mock.Apple_CallOrder;\n",
@@ -211,8 +211,8 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "      Mock.Apple_CallOrder++;\n",
                 "    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
                 "    {\n",
-                "      const char* ErrStr = \"Function 'Apple' Called Out Of Order.\";\n",
-                "      GlobalOrderError = malloc(38);\n",
+                "      const char* ErrStr = \"Out of order function calls. Function 'Apple'\";\n",
+                "      GlobalOrderError = malloc(46);\n",
                 "      if (GlobalOrderError)\n",
                 "        strcpy(GlobalOrderError, ErrStr);\n",
                 "    }\n",
@@ -235,11 +235,11 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock interfaces for functions of style 'unsigned short func(void)'" do
-    function = {:name => "Orange", :args => [], :args_string => "void", :return_type => "unsigned short", :return_string => "unsigned short #{CMOCK_RETURN_PARAM_NAME}"}
+    function = {:name => "Orange", :args => [], :args_string => "void", :return_type => "unsigned short", :return_string => "unsigned short toReturn"}
     @utils.expect.code_add_base_expectation("Orange").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Orange_Return_Head","toReturn").returns("mock_retval_1")
     
-    expected = ["void Orange_ExpectAndReturn(unsigned short #{CMOCK_RETURN_PARAM_NAME})\n",
+    expected = ["void Orange_ExpectAndReturn(unsigned short toReturn)\n",
                 "{\n",
                 "mock_retval_0",
                 "mock_retval_1",
@@ -252,17 +252,17 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock interfaces for functions of style 'int func(char* pescado)'" do
-    function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return_type => "int", :return_string => "int #{CMOCK_RETURN_PARAM_NAME}"}
+    function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return_type => "int", :return_string => "int toReturn"}
     @utils.expect.code_add_an_arg_expectation(function, "char*", "pescado").returns("mock_retval_2")
     @utils.expect.code_add_base_expectation("Lemon").returns("mock_retval_0")
     @utils.expect.create_call_list(function).returns("mock_retval_3")
-    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return_Head", CMOCK_RETURN_PARAM_NAME).returns("mock_retval_1")
+    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return_Head", 'toReturn').returns("mock_retval_1")
     
     expected = ["void ExpectParameters_Lemon(char* pescado)\n",
                 "{\n",
                 "mock_retval_2",
                 "}\n\n",
-                "void Lemon_ExpectAndReturn(char* pescado, int #{CMOCK_RETURN_PARAM_NAME})\n",
+                "void Lemon_ExpectAndReturn(char* pescado, int toReturn)\n",
                 "{\n",
                 "mock_retval_0",
                 "  ExpectParameters_Lemon(mock_retval_3);\n",
@@ -308,9 +308,10 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = ["  if (Mock.Palm_Return_Head)\n",
                 "  {\n",
                 "    free(Mock.Palm_Return_Head);\n",
-                "    Mock.Palm_Return_Head=NULL;\n",
-                "    Mock.Palm_Return_Tail=NULL;\n",
-                "  }\n"
+                "  }\n",
+                "  Mock.Palm_Return=NULL;\n",
+                "  Mock.Palm_Return_Head=NULL;\n",
+                "  Mock.Palm_Return_Tail=NULL;\n"
                ]
     returned = @cmock_generator_plugin_expect.mock_destroy(function)
     assert_equal(expected, returned)
@@ -321,15 +322,17 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = ["  if (Mock.Coconut_Return_Head)\n",
                 "  {\n",
                 "    free(Mock.Coconut_Return_Head);\n",
-                "    Mock.Coconut_Return_Head=NULL;\n",
-                "    Mock.Coconut_Return_Tail=NULL;\n",
                 "  }\n",
+                "  Mock.Coconut_Return=NULL;\n",
+                "  Mock.Coconut_Return_Head=NULL;\n",
+                "  Mock.Coconut_Return_Tail=NULL;\n",
                 "  if (Mock.Coconut_Expected_grease_Head)\n",
                 "  {\n",
                 "    free(Mock.Coconut_Expected_grease_Head);\n",
-                "    Mock.Coconut_Expected_grease_Head=NULL;\n",
-                "    Mock.Coconut_Expected_grease_Tail=NULL;\n",
-                "  }\n"
+                "  }\n",
+                "  Mock.Coconut_Expected_grease=NULL;\n",
+                "  Mock.Coconut_Expected_grease_Head=NULL;\n",
+                "  Mock.Coconut_Expected_grease_Tail=NULL;\n"
                ]
     returned = @cmock_generator_plugin_expect.mock_destroy(function)
     assert_equal(expected, returned)
@@ -340,9 +343,11 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = [ "  if (Mock.Peach_CallOrder_Head)\n",
                  "  {\n",
                  "    free(Mock.Peach_CallOrder_Head);\n",
-                 "    Mock.Peach_CallOrder_Head=NULL;\n",
-                 "    Mock.Peach_CallOrder_Tail=NULL;\n",
-                 "  }\n" ]
+                 "  }\n",
+                 "  Mock.Peach_CallOrder=NULL;\n",
+                 "  Mock.Peach_CallOrder_Head=NULL;\n",
+                 "  Mock.Peach_CallOrder_Tail=NULL;\n"
+               ]
     returned = @cmock_generator_plugin_expect_strict.mock_destroy(function)
     assert_equal(expected, returned)
   end

@@ -57,20 +57,20 @@ class CMockGeneratorPluginExpect
     lines = [ "#{@tab}Mock.#{function[:name]}_CallCount++;\n",
               "#{@tab}if (Mock.#{function[:name]}_CallCount > Mock.#{function[:name]}_CallsExpected)\n",
               "#{@tab}{\n",
-              "#{@tab}#{@tab}TEST_FAIL(\"#{function[:name]} Called More Times Than Expected\");\n",
+              "#{@tab}#{@tab}TEST_FAIL(\"Function '#{function[:name]}' called more times than expected\");\n",
               "#{@tab}}\n" ]
     
     if (@ordered)
+      err_msg = "Out of order function calls. Function '#{function[:name]}'" #" expected to be call %i but was call %i"
       lines << [ "#{@tab}{\n",
                  "#{@tab}#{@tab}int* p_expected = Mock.#{function[:name]}_CallOrder;\n",
                  "#{@tab}#{@tab}++GlobalVerifyOrder;\n",
                  "#{@tab}#{@tab}if (Mock.#{function[:name]}_CallOrder != Mock.#{function[:name]}_CallOrder_Tail)\n",
                  "#{@tab}#{@tab}#{@tab}Mock.#{function[:name]}_CallOrder++;\n",
-                 #@utils.expect_helper('int', '*p_expected', 'GlobalVerifyOrder', "\"Function '#{function[:name]}' Called Out Of Order.\"","#{@tab}#{@tab}"),
                  "#{@tab}#{@tab}if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
                  "#{@tab}#{@tab}{\n",
-                 "#{@tab}#{@tab}#{@tab}const char* ErrStr = \"Function '#{function[:name]}' Called Out Of Order.\";\n",
-                 "#{@tab}#{@tab}#{@tab}GlobalOrderError = malloc(#{"Function '#{function[:name]}' Called Out Of Order.".size+1});\n",
+                 "#{@tab}#{@tab}#{@tab}const char* ErrStr = \"#{err_msg}\";\n",
+                 "#{@tab}#{@tab}#{@tab}GlobalOrderError = malloc(#{err_msg.size + 1});\n",
                  "#{@tab}#{@tab}#{@tab}if (GlobalOrderError)\n",
                  "#{@tab}#{@tab}#{@tab}#{@tab}strcpy(GlobalOrderError, ErrStr);\n",
                  "#{@tab}#{@tab}}\n",
@@ -114,7 +114,7 @@ class CMockGeneratorPluginExpect
     end
     
     if (function[:return_type] != "void")
-      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return_Head", CMOCK_RETURN_PARAM_NAME)
+      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return_Head", 'toReturn')
       lines << "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n"
       lines << "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
     end
@@ -131,25 +131,31 @@ class CMockGeneratorPluginExpect
       lines << [ "#{@tab}if (Mock.#{function[:name]}_Return_Head)\n",
                  "#{@tab}{\n",
                  "#{@tab}#{@tab}free(Mock.#{function[:name]}_Return_Head);\n",
-                 "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Head=NULL;\n",
-                 "#{@tab}#{@tab}Mock.#{function[:name]}_Return_Tail=NULL;\n",
-                 "#{@tab}}\n" ]
+                 "#{@tab}}\n",
+                 "#{@tab}Mock.#{function[:name]}_Return=NULL;\n",
+                 "#{@tab}Mock.#{function[:name]}_Return_Head=NULL;\n",
+                 "#{@tab}Mock.#{function[:name]}_Return_Tail=NULL;\n"
+               ]
     end
     if (@ordered)
       lines << [ "#{@tab}if (Mock.#{function[:name]}_CallOrder_Head)\n",
                  "#{@tab}{\n",
                  "#{@tab}#{@tab}free(Mock.#{function[:name]}_CallOrder_Head);\n",
-                 "#{@tab}#{@tab}Mock.#{function[:name]}_CallOrder_Head=NULL;\n",
-                 "#{@tab}#{@tab}Mock.#{function[:name]}_CallOrder_Tail=NULL;\n",
-                 "#{@tab}}\n" ]
+                 "#{@tab}}\n",
+                 "#{@tab}Mock.#{function[:name]}_CallOrder=NULL;\n",
+                 "#{@tab}Mock.#{function[:name]}_CallOrder_Head=NULL;\n",
+                 "#{@tab}Mock.#{function[:name]}_CallOrder_Tail=NULL;\n"
+                ]
     end
     function[:args].each do |arg|
       lines << [ "#{@tab}if (Mock.#{function[:name]}_Expected_#{arg[:name]}_Head)\n",
                  "#{@tab}{\n",
                  "#{@tab}#{@tab}free(Mock.#{function[:name]}_Expected_#{arg[:name]}_Head);\n",
-                 "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Head=NULL;\n",
-                 "#{@tab}#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Tail=NULL;\n",
-                 "#{@tab}}\n" ]
+                 "#{@tab}}\n",
+                 "#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}=NULL;\n",
+                 "#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Head=NULL;\n",
+                 "#{@tab}Mock.#{function[:name]}_Expected_#{arg[:name]}_Tail=NULL;\n"
+               ]
     end
     lines.flatten
   end

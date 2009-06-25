@@ -26,10 +26,28 @@ class CMockGeneratorPluginIgnore
   end
   
   def mock_implementation_prefix(function)
-    [ "#{@tab}if (Mock.#{function[:name]}_IgnoreBool)\n",
-      "#{@tab}{\n",  
-      (function[:return_type] == "void") ? "#{@tab}#{@tab}return;\n" : @utils.code_handle_return_value(function, "#{@tab}#{@tab}"),
-      "#{@tab}}\n" ]
+    lines = [ "#{@tab}if (Mock.#{function[:name]}_IgnoreBool)\n",
+              "#{@tab}{\n" 
+            ] 
+    if (function[:return_type] == "void")
+      lines << ["#{@tab*2}return;\n"]
+    else
+      lines << [ "#{@tab*2}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_Tail)\n",
+                 "#{@tab*2}{\n",
+                 "#{@tab*3}#{function[:return_type]} toReturn = *Mock.#{function[:name]}_Return;\n",
+                 "#{@tab*3}Mock.#{function[:name]}_Return++;\n",
+                 "#{@tab*3}Mock.#{function[:name]}_CallCount++;\n",
+                 "#{@tab*3}Mock.#{function[:name]}_CallsExpected++;\n",
+                 "#{@tab*3}return toReturn;\n",
+                 "#{@tab*2}}\n",
+                 "#{@tab*2}else\n",
+                 "#{@tab*2}{\n",
+                 "#{@tab*3}return *(Mock.#{function[:name]}_Return_Tail - 1);\n",
+                 "#{@tab*2}}\n" 
+               ]
+    end
+    lines << [ "#{@tab}}\n" ]
+    lines.flatten
   end
   
   def mock_interfaces(function)
@@ -42,7 +60,7 @@ class CMockGeneratorPluginIgnore
       [ "void #{function[:name]}_IgnoreAndReturn(#{function[:return_string]})\n",
         "{\n",
         "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n",
-        @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return_Head", CMOCK_RETURN_PARAM_NAME),
+        @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return_Head", 'toReturn'),
         "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n",
         "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n",
         "}\n\n" ]

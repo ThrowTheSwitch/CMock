@@ -91,5 +91,33 @@
           foo_char_strings_ExpectAndReturn("larry", "curly", "moe");
           TEST_ASSERT_EQUAL_STRING("moe", function_d("larry", "curly"));
         }
+        
+    - :pass: TRUE
+      :should: 'successfully exercise multiple cycles of expecting and mocking and pass'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)2, 20);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+          
+          foo_ExpectAndReturn((custom_type)3, 30);
+          bar_ExpectAndReturn((custom_type)4, 40);
+          TEST_ASSERT_EQUAL(70, function_a(3, 4));
+        }
+        
+    - :pass: FALSE
+      :should: 'successfully exercise multiple cycles of expecting and mocking and fail'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)2, 20);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+          
+          foo_ExpectAndReturn((custom_type)3, 30);
+          bar_ExpectAndReturn((custom_type)4, 40);
+          TEST_ASSERT_EQUAL(70, function_a(3, 5));
+        }
 
 ...

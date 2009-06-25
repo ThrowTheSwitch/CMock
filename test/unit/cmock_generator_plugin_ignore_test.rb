@@ -39,8 +39,8 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   end
   
   should "handle function declarations for functions that returns something" do
-    function = {:name => "Fungus", :args_string => "void", :return_type => "const char*", :return_string => "const char* #{CMOCK_RETURN_PARAM_NAME}"}
-    expected = ["void Fungus_IgnoreAndReturn(const char* #{CMOCK_RETURN_PARAM_NAME});\n"]
+    function = {:name => "Fungus", :args_string => "void", :return_type => "const char*", :return_string => "const char* toReturn"}
+    expected = ["void Fungus_IgnoreAndReturn(const char* toReturn);\n"]
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -58,11 +58,20 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   
   should "add required code to implementation prefix with return functions" do
     function = {:name => "Fungus", :args_string => "void", :return_type => "int"}
-    @utils.expect.code_handle_return_value(function, "    ").returns("    mock_return_1")
-    
     expected = ["  if (Mock.Fungus_IgnoreBool)\n",
                 "  {\n",
-                "    mock_return_1",
+                "    if (Mock.Fungus_Return != Mock.Fungus_Return_Tail)\n",
+                "    {\n",
+                "      int toReturn = *Mock.Fungus_Return;\n",
+                "      Mock.Fungus_Return++;\n",
+                "      Mock.Fungus_CallCount++;\n",
+                "      Mock.Fungus_CallsExpected++;\n",
+                "      return toReturn;\n",
+                "    }\n",
+                "    else\n",
+                "    {\n",
+                "      return *(Mock.Fungus_Return_Tail - 1);\n",
+                "    }\n",
                 "  }\n"
                ]
     returned = @cmock_generator_plugin_ignore.mock_implementation_prefix(function)
@@ -85,10 +94,10 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   end
   
   should "add a new mock interface for ignoring when function has return value" do
-    function = {:name => "Slime", :args => [], :args_string => "void", :return_type => "uint32", :return_string => "uint32 #{CMOCK_RETURN_PARAM_NAME}"}
+    function = {:name => "Slime", :args => [], :args_string => "void", :return_type => "uint32", :return_string => "uint32 toReturn"}
     @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Slime_Return_Head", "toReturn").returns("mock_return_1")
     
-    expected = ["void Slime_IgnoreAndReturn(uint32 #{CMOCK_RETURN_PARAM_NAME})\n",
+    expected = ["void Slime_IgnoreAndReturn(uint32 toReturn)\n",
                 "{\n",
                 "  Mock.Slime_IgnoreBool = (unsigned char)1;\n",
                 "mock_return_1",

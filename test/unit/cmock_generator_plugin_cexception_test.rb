@@ -104,11 +104,14 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
                 "{\n",
                 "mock_retval_0",
                 "mock_return_1",
-                "  Mock.Pear_ThrowOnCallCount = Mock.Pear_ThrowOnCallCount_Head;\n",
-                "  Mock.Pear_ThrowOnCallCount += Mock.Pear_CallCount;\n",
                 "mock_return_2",
                 "  Mock.Pear_ThrowValue = Mock.Pear_ThrowValue_Head;\n",
-                "  Mock.Pear_ThrowValue += Mock.Pear_CallCount;\n",
+                "  Mock.Pear_ThrowOnCallCount = Mock.Pear_ThrowOnCallCount_Head;\n",
+                "  while ((*Mock.Pear_ThrowOnCallCount <= Mock.Pear_CallCount) && (Mock.Pear_ThrowOnCallCount < Mock.Pear_ThrowOnCallCount_Tail))\n",
+                "  {\n",
+                "    Mock.Pear_ThrowValue++;\n",
+                "    Mock.Pear_ThrowOnCallCount++;\n",
+                "  }\n",
                 "}\n\n"
                ]
     returned = @cmock_generator_plugin_cexception.mock_interfaces(function)
@@ -128,11 +131,14 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
                 "{\n",
                 "mock_retval_0",
                 "mock_return_1",
-                "  Mock.Pear_ThrowOnCallCount = Mock.Pear_ThrowOnCallCount_Head;\n",
-                "  Mock.Pear_ThrowOnCallCount += Mock.Pear_CallCount;\n",
                 "mock_return_2",
                 "  Mock.Pear_ThrowValue = Mock.Pear_ThrowValue_Head;\n",
-                "  Mock.Pear_ThrowValue += Mock.Pear_CallCount;\n",
+                "  Mock.Pear_ThrowOnCallCount = Mock.Pear_ThrowOnCallCount_Head;\n",
+                "  while ((*Mock.Pear_ThrowOnCallCount <= Mock.Pear_CallCount) && (Mock.Pear_ThrowOnCallCount < Mock.Pear_ThrowOnCallCount_Tail))\n",
+                "  {\n",
+                "    Mock.Pear_ThrowValue++;\n",
+                "    Mock.Pear_ThrowOnCallCount++;\n",
+                "  }\n",
                 "  ExpectParameters_Pear(mock_return_3);\n",
                 "}\n\n"
                ]
@@ -149,15 +155,17 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
     expected = ["  if(Mock.Banana_ThrowOnCallCount_Head)\n",
                 "  {\n",
                 "    free(Mock.Banana_ThrowOnCallCount_Head);\n",
-                "    Mock.Banana_ThrowOnCallCount_Head=NULL;\n",
-                "    Mock.Banana_ThrowOnCallCount_Tail=NULL;\n",
                 "  }\n",
+                "  Mock.Banana_ThrowOnCallCount=NULL;\n",
+                "  Mock.Banana_ThrowOnCallCount_Head=NULL;\n",
+                "  Mock.Banana_ThrowOnCallCount_Tail=NULL;\n",
                 "  if(Mock.Banana_ThrowValue_Head)\n",
                 "  {\n",
                 "    free(Mock.Banana_ThrowValue_Head);\n",
-                "    Mock.Banana_ThrowValue_Head=NULL;\n",
-                "    Mock.Banana_ThrowValue_Tail=NULL;\n",
-                "  }\n"
+                "  }\n",
+                "  Mock.Banana_ThrowValue=NULL;\n",
+                "  Mock.Banana_ThrowValue_Head=NULL;\n",
+                "  Mock.Banana_ThrowValue_Tail=NULL;\n"
                ]
     returned = @cmock_generator_plugin_cexception.mock_destroy(function)
     assert_equal(expected, returned)

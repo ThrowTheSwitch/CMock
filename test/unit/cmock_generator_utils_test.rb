@@ -94,7 +94,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "[tab]}\n",
                 "[tab]else\n",
                 "[tab]{\n",
-                "[tab]  return *Mock.Spatula_Return_Head;\n",
+                "[tab]  return *(Mock.Spatula_Return_Tail - 1);\n",
                 "[tab]}\n"
                ]
     returned = @cmock_generator_utils.code_handle_return_value(function, indent)

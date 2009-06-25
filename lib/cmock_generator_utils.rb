@@ -96,18 +96,18 @@ class CMockGeneratorUtils
         return "#{indent}#{unity_func}(#{expected}, #{actual}#{unity_msg});\n" 
     end  
   end
-
+  
   def code_handle_return_value(function, indent)
     [ "\n",
       "#{indent}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_Tail)\n",
       "#{indent}{\n",
-      "#{indent}#{@tab}#{function[:return_type]} #{CMOCK_RETURN_PARAM_NAME} = *Mock.#{function[:name]}_Return;\n",
+      "#{indent}#{@tab}#{function[:return_type]} toReturn = *Mock.#{function[:name]}_Return;\n",
       "#{indent}#{@tab}Mock.#{function[:name]}_Return++;\n",
-      "#{indent}#{@tab}return #{CMOCK_RETURN_PARAM_NAME};\n",
+      "#{indent}#{@tab}return toReturn;\n",
       "#{indent}}\n",
       "#{indent}else\n",
       "#{indent}{\n",
-      "#{indent}#{@tab}return *Mock.#{function[:name]}_Return_Head;\n",
+      "#{indent}#{@tab}return *(Mock.#{function[:name]}_Return_Tail - 1);\n",
       "#{indent}}\n" ]
   end
 end

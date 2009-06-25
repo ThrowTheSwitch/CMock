@@ -76,11 +76,13 @@
         test()
         {
           foo_ExpectAndReturn((custom_type)1, 10);
-          foo_ExpectAndReturn((custom_type)1, 20);
-          foo_ExpectAndThrow((custom_type)1, 15);
+          foo_ExpectAndReturn((custom_type)2, 20);
+          foo_ExpectAndThrow((custom_type)3, 15);
+          foo_ExpectAndReturn((custom_type)4, 40);
           TEST_ASSERT_EQUAL(10, function_a(1));
-          TEST_ASSERT_EQUAL(20, function_a(1));
-          TEST_ASSERT_EQUAL(30, function_a(1));
+          TEST_ASSERT_EQUAL(20, function_a(2));
+          TEST_ASSERT_EQUAL(30, function_a(3));
+          TEST_ASSERT_EQUAL(40, function_a(4));
         }
       
     - :pass: TRUE
@@ -114,6 +116,55 @@
           {
             TEST_ASSERT_EQUAL(3, e);
           }
+        }
+      
+    - :pass: TRUE
+      :should: 'successfully throw an error on consecutive calls'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          foo_ExpectAndReturn((custom_type)1, 20);
+          foo_ExpectAndThrow((custom_type)1, 15);
+          foo_ExpectAndThrow((custom_type)3, 40);
+          TEST_ASSERT_EQUAL(10, function_a(1));
+          TEST_ASSERT_EQUAL(20, function_a(1));
+          TEST_ASSERT_EQUAL(30, function_a(1));
+          TEST_ASSERT_EQUAL(80, function_a(3));
+        }
+      
+    - :pass: TRUE
+      :should: 'successfully throw an error on later calls and after a previous mock call'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          foo_ExpectAndReturn((custom_type)1, 20);
+          foo_ExpectAndThrow((custom_type)1, 15);
+          TEST_ASSERT_EQUAL(10, function_a(1));
+          TEST_ASSERT_EQUAL(20, function_a(1));
+          TEST_ASSERT_EQUAL(30, function_a(1));
+          
+          foo_ExpectAndReturn((custom_type)2, 20);
+          foo_ExpectAndThrow((custom_type)3, 40);
+          TEST_ASSERT_EQUAL(20, function_a(2));
+          TEST_ASSERT_EQUAL(80, function_a(3));
+        }
+      
+    - :pass: TRUE
+      :should: 'successfully throw an error if expects and mocks called before it'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          foo_ExpectAndReturn((custom_type)1, 20);
+          TEST_ASSERT_EQUAL(10, function_a(1));
+          TEST_ASSERT_EQUAL(20, function_a(1));
+          
+          foo_ExpectAndReturn((custom_type)2, 20);
+          foo_ExpectAndThrow((custom_type)3, 40);
+          TEST_ASSERT_EQUAL(20, function_a(2));
+          TEST_ASSERT_EQUAL(80, function_a(3));
         }
         
 ...

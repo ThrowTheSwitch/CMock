@@ -12,12 +12,12 @@
 
   :source: 
     :header: |
-      int function(int a, int b);
+      int function(int a, int b, int c);
     :code: |
-      int function(int a, int b)
+      int function(int a, int b, int c)
       {
         bar(b);
-        return foo(a) + foo(b);
+        return foo(a) + foo(b) + foo(c);
       }    
 
   :tests:
@@ -33,7 +33,8 @@
           bar_Expect(2);
           foo_ExpectAndReturn(1, 10);
           foo_ExpectAndReturn(2, 20);
-          TEST_ASSERT_EQUAL(30, function(1, 2));
+          foo_ExpectAndReturn(3, 30);
+          TEST_ASSERT_EQUAL(60, function(1, 2, 3));
         }
       
     - :pass: TRUE
@@ -43,7 +44,30 @@
         {
           bar_Expect(4);
           foo_IgnoreAndReturn(10);
-          TEST_ASSERT_EQUAL(20, function(3, 4));
+          foo_IgnoreAndReturn(40);
+          foo_IgnoreAndReturn(80);
+          TEST_ASSERT_EQUAL(130, function(3, 4, 3));
+        }
+      
+    - :pass: TRUE
+      :should: 'ignore foo() calls and always return last item if we run out'
+      :code: |
+        test()
+        {
+          bar_Expect(4);
+          foo_IgnoreAndReturn(20);
+          foo_IgnoreAndReturn(30);
+          TEST_ASSERT_EQUAL(80, function(3, 4, 9));
+        }
+      
+    - :pass: TRUE
+      :should: 'ignore foo() calls and always return only item if only one specified'
+      :code: |
+        test()
+        {
+          bar_Expect(4);
+          foo_IgnoreAndReturn(20);
+          TEST_ASSERT_EQUAL(60, function(3, 4, 9));
         }
       
     - :pass: TRUE
@@ -53,7 +77,77 @@
         {
           bar_Ignore();
           foo_IgnoreAndReturn(50);
-          TEST_ASSERT_EQUAL(100, function(0, 0));
+          TEST_ASSERT_EQUAL(150, function(0, 0, 0));
+        }
+      
+    - :pass: TRUE
+      :should: 'ignore foo() calls over multiple mock calls'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_IgnoreAndReturn(50);
+          foo_IgnoreAndReturn(60);
+          foo_IgnoreAndReturn(70);
+          TEST_ASSERT_EQUAL(180, function(0, 0, 0));
+          
+          bar_Ignore();
+          foo_IgnoreAndReturn(30);
+          foo_IgnoreAndReturn(80);
+          foo_IgnoreAndReturn(10);
+          TEST_ASSERT_EQUAL(120, function(0, 0, 0));
+          
+          foo_IgnoreAndReturn(70);
+          foo_IgnoreAndReturn(20);
+          TEST_ASSERT_EQUAL(110, function(0, 0, 0));
+        }
+      
+    - :pass: TRUE
+      :should: 'multiple cycles of expects still pass when ignores enabled'
+      :code: |
+        test()
+        {
+          bar_Expect(2);
+          foo_ExpectAndReturn(1, 50);
+          foo_ExpectAndReturn(2, 60);
+          foo_ExpectAndReturn(3, 70);
+          TEST_ASSERT_EQUAL(180, function(1, 2, 3));
+          
+          bar_Expect(5);
+          foo_ExpectAndReturn(4, 30);
+          foo_ExpectAndReturn(5, 80);
+          foo_ExpectAndReturn(6, 10);
+          TEST_ASSERT_EQUAL(120, function(4, 5, 6));
+          
+          bar_Expect(8);
+          foo_ExpectAndReturn(7, 70);
+          foo_ExpectAndReturn(8, 20);
+          foo_ExpectAndReturn(9, 20);
+          TEST_ASSERT_EQUAL(110, function(7, 8, 9));
+        }
+      
+    - :pass: FALSE
+      :should: 'multiple cycles of expects still fail when ignores enabled'
+      :code: |
+        test()
+        {
+          bar_Expect(2);
+          foo_ExpectAndReturn(1, 50);
+          foo_ExpectAndReturn(2, 60);
+          foo_ExpectAndReturn(3, 70);
+          TEST_ASSERT_EQUAL(180, function(1, 2, 3));
+          
+          bar_Expect(5);
+          foo_ExpectAndReturn(4, 30);
+          foo_ExpectAndReturn(5, 80);
+          foo_ExpectAndReturn(6, 10);
+          TEST_ASSERT_EQUAL(120, function(4, 5, 6));
+          
+          bar_Expect(8);
+          foo_ExpectAndReturn(7, 70);
+          foo_ExpectAndReturn(8, 20);
+          foo_ExpectAndReturn(9, 20);
+          TEST_ASSERT_EQUAL(110, function(0, 8, 9));
         }
 
 ...

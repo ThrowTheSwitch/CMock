@@ -1,7 +1,5 @@
 $here = File.dirname __FILE__
 
-CMOCK_RETURN_PARAM_NAME = 'toReturn'
-
 class CMockGenerator
 
   attr_reader :config, :file_writer, :tab, :module_name, :mock_name, :utils, :plugins
@@ -118,7 +116,9 @@ class CMockGenerator
     file << functions.collect {|function| @plugins.run(:mock_verify, function)}.join
     if (@ordered)
       file << "#{@tab}if (GlobalOrderError)\n"
+      file << "#{@tab}{\n"
       file << "#{@tab}#{@tab}TEST_FAIL(GlobalOrderError);\n"
+      file << "#{@tab}}\n"
     end
     file << "}\n\n"
   end

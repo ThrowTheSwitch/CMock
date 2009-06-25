@@ -90,7 +90,7 @@
       
     - :pass: FALSE
       :should: 'fail because bar() is called but is not expected'
-      :verify_error: 'Called More Times Than Expected'
+      :verify_error: 'called more times than expected'
       :code: |
         test()
         {
@@ -112,7 +112,7 @@
 
     - :pass: FALSE
       :should: 'fail because bar and foo called in reverse order'
-      :verify_error: 'Called Out Of Order'
+      :verify_error: 'Out of order function calls'
       :code: |
         test()
         {
@@ -206,5 +206,42 @@
           foo_ExpectAndThrow((custom_type)1, 10);
           foo_ExpectAndReturn((custom_type)3, 10);
           function_d();
+        }
+        
+    - :pass: TRUE
+      :should: 'successfully handle back to back ExpectAndReturn setup and mock calls'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)2, 20);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+          
+          foo_ExpectAndReturn((custom_type)3, 30);
+          bar_ExpectAndReturn((custom_type)4, 40);
+          TEST_ASSERT_EQUAL(70, function_a(3, 4));
+          
+          foo_ExpectAndReturn((custom_type)1, 50);
+          bar_ExpectAndReturn((custom_type)9, 60);
+          TEST_ASSERT_EQUAL(110, function_a(1, 9));
+        }
+      
+    - :pass: FALSE
+      :should: 'successfully catch errors during back to back ExpectAndReturn setup and mock calls'
+      :verify_error: 'Out of order function calls'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 10);
+          bar_ExpectAndReturn((custom_type)2, 20);
+          TEST_ASSERT_EQUAL(30, function_a(1, 2));
+          
+          foo_ExpectAndReturn((custom_type)3, 30);
+          bar_ExpectAndReturn((custom_type)4, 40);
+          TEST_ASSERT_EQUAL(70, function_a(3, 4));
+          
+          bar_ExpectAndReturn((custom_type)9, 60);
+          foo_ExpectAndReturn((custom_type)1, 50);
+          TEST_ASSERT_EQUAL(110, function_a(1, 9));
         }
 ...

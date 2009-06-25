@@ -62,11 +62,14 @@ class CMockGeneratorPluginCException
       "{\n",
       @utils.code_add_base_expectation(function[:name]),
       @utils.code_insert_item_into_expect_array(call_count_type, "Mock.#{function[:name]}_ThrowOnCallCount_Head", "Mock.#{function[:name]}_CallsExpected"),
-      "#{@tab}Mock.#{function[:name]}_ThrowOnCallCount = Mock.#{function[:name]}_ThrowOnCallCount_Head;\n",
-      "#{@tab}Mock.#{function[:name]}_ThrowOnCallCount += Mock.#{function[:name]}_CallCount;\n",
       @utils.code_insert_item_into_expect_array(throw_type, "Mock.#{function[:name]}_ThrowValue_Head", "toThrow"),
       "#{@tab}Mock.#{function[:name]}_ThrowValue = Mock.#{function[:name]}_ThrowValue_Head;\n", 
-      "#{@tab}Mock.#{function[:name]}_ThrowValue += Mock.#{function[:name]}_CallCount;\n",
+      "#{@tab}Mock.#{function[:name]}_ThrowOnCallCount = Mock.#{function[:name]}_ThrowOnCallCount_Head;\n",
+      "#{@tab}while ((*Mock.#{function[:name]}_ThrowOnCallCount <= Mock.#{function[:name]}_CallCount) && (Mock.#{function[:name]}_ThrowOnCallCount < Mock.#{function[:name]}_ThrowOnCallCount_Tail))\n",
+      "#{@tab}{\n",
+      "#{@tab}#{@tab}Mock.#{function[:name]}_ThrowValue++;\n",
+      "#{@tab}#{@tab}Mock.#{function[:name]}_ThrowOnCallCount++;\n",
+      "#{@tab}}\n",
       (function[:args_string] != "void") ? "#{@tab}ExpectParameters_#{function[:name]}(#{@utils.create_call_list(function)});\n" : nil,
       "}\n\n" ].compact
   end
@@ -75,14 +78,17 @@ class CMockGeneratorPluginCException
     [ "#{@tab}if(Mock.#{function[:name]}_ThrowOnCallCount_Head)\n",
       "#{@tab}{\n",
       "#{@tab}#{@tab}free(Mock.#{function[:name]}_ThrowOnCallCount_Head);\n",
-      "#{@tab}#{@tab}Mock.#{function[:name]}_ThrowOnCallCount_Head=NULL;\n",
-      "#{@tab}#{@tab}Mock.#{function[:name]}_ThrowOnCallCount_Tail=NULL;\n",
       "#{@tab}}\n",
+      "#{@tab}Mock.#{function[:name]}_ThrowOnCallCount=NULL;\n",
+      "#{@tab}Mock.#{function[:name]}_ThrowOnCallCount_Head=NULL;\n",
+      "#{@tab}Mock.#{function[:name]}_ThrowOnCallCount_Tail=NULL;\n",
     	"#{@tab}if(Mock.#{function[:name]}_ThrowValue_Head)\n",
       "#{@tab}{\n",
       "#{@tab}#{@tab}free(Mock.#{function[:name]}_ThrowValue_Head);\n",
-      "#{@tab}#{@tab}Mock.#{function[:name]}_ThrowValue_Head=NULL;\n",
-      "#{@tab}#{@tab}Mock.#{function[:name]}_ThrowValue_Tail=NULL;\n",
-      "#{@tab}}\n" ]
+      "#{@tab}}\n",
+      "#{@tab}Mock.#{function[:name]}_ThrowValue=NULL;\n",
+      "#{@tab}Mock.#{function[:name]}_ThrowValue_Head=NULL;\n",
+      "#{@tab}Mock.#{function[:name]}_ThrowValue_Tail=NULL;\n"
+    ]
   end
 end
