@@ -13,7 +13,6 @@ class CMockPluginManagerTest < Test::Unit::TestCase
   end
   
   should "return all plugins by default" do
-    @config.stubs!(:tab).returns("  ")
     @config.expect.plugins.returns(['cexception','ignore'])
     @utils.expect.helpers.returns({})
     
@@ -32,7 +31,6 @@ class CMockPluginManagerTest < Test::Unit::TestCase
   end
   
   should "return restricted plugins based on config" do
-    @config.stubs!(:tab).returns("  ")
     @config.expect.plugins.returns([])
     @utils.expect.helpers.returns({})
     
@@ -51,7 +49,6 @@ class CMockPluginManagerTest < Test::Unit::TestCase
   end
   
   should "run a desired method over each plugin requested and return the results" do
-    @config.stubs!(:tab).returns("  ")
     @config.expect.plugins.returns([])
     @utils.expect.helpers.returns({})
     @cmock_plugins = CMockPluginManager.new(@config, @utils)
@@ -66,7 +63,6 @@ class CMockPluginManagerTest < Test::Unit::TestCase
   end
   
   should "run a desired method and arg list over each plugin requested and return the results" do
-    @config.stubs!(:tab).returns("  ")
     @config.expect.plugins.returns([])
     @utils.expect.helpers.returns({})
     @cmock_plugins = CMockPluginManager.new(@config, @utils)

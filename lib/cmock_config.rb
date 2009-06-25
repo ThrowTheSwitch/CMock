@@ -8,7 +8,6 @@ class CMockConfig
     :plugins => ['cexception', 'ignore'],
     :includes => [],
     :attributes => ['__ramfunc', '__irq', '__fiq'],
-    :tab => '  ',
     :expect_call_count_type => 'unsigned short',
     :enforce_strict_ordering => false,
     :ignore_bool_type => 'unsigned char',

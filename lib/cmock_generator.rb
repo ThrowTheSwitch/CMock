@@ -2,7 +2,7 @@ $here = File.dirname __FILE__
 
 class CMockGenerator
 
-  attr_reader :config, :file_writer, :tab, :module_name, :mock_name, :utils, :plugins
+  attr_reader :config, :file_writer, :module_name, :mock_name, :utils, :plugins
   
   def initialize(config, module_name, file_writer, utils, plugins=[])
     @file_writer = file_writer
@@ -10,7 +10,6 @@ class CMockGenerator
     @utils       = utils
     @plugins     = plugins
     @config      = config
-    @tab         = @config.tab
     @mock_name   = @config.mock_prefix + @module_name
     @ordered     = @config.enforce_strict_ordering
   end
@@ -93,9 +92,9 @@ class CMockGenerator
     file << "static struct #{@mock_name}Instance\n"
     file << "{\n"
     if (functions.size == 0)
-      file << "#{@tab}unsigned char placeHolder;\n"
+      file << "  unsigned char placeHolder;\n"
     end
-    file << "#{@tab}unsigned char allocFailure;\n"
+    file << "  unsigned char allocFailure;\n"
     file << functions.collect{|function| @plugins.run(:instance_structure, function)}.join
     file << "} Mock;\n\n"
   end
@@ -112,35 +111,35 @@ class CMockGenerator
   
   def create_mock_verify_function(file, functions)
     file << "void #{@mock_name}_Verify(void)\n{\n"
-    file << "#{@tab}TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n"
+    file << "  TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n"
     file << functions.collect {|function| @plugins.run(:mock_verify, function)}.join
     if (@ordered)
-      file << "#{@tab}if (GlobalOrderError)\n"
-      file << "#{@tab}{\n"
-      file << "#{@tab}#{@tab}TEST_FAIL(GlobalOrderError);\n"
-      file << "#{@tab}}\n"
+      file << "  if (GlobalOrderError)\n"
+      file << "  {\n"
+      file << "    TEST_FAIL(GlobalOrderError);\n"
+      file << "  }\n"
     end
     file << "}\n\n"
   end
   
   def create_mock_init_function(file)
     file << "void #{@mock_name}_Init(void)\n{\n"
-    file << "#{@tab}#{@mock_name}_Destroy();\n"
+    file << "  #{@mock_name}_Destroy();\n"
     file << "}\n\n"
   end
   
   def create_mock_destroy_function(file, functions)
     file << "void #{@mock_name}_Destroy(void)\n{\n"
     file << functions.collect {|function| @plugins.run(:mock_destroy, function) }.join
-    file << "#{@tab}memset(&Mock, 0, sizeof(Mock));\n"
+    file << "  memset(&Mock, 0, sizeof(Mock));\n"
     if (@ordered)
-      file << "#{@tab}GlobalExpectCount = 0;\n"
-      file << "#{@tab}GlobalVerifyOrder = 0;\n"
-      file << "#{@tab}if (GlobalOrderError)\n"
-      file << "#{@tab}{\n"
-      file << "#{@tab}#{@tab}free(GlobalOrderError);\n"
-      file << "#{@tab}#{@tab}GlobalOrderError = NULL;\n"
-      file << "#{@tab}}\n"
+      file << "  GlobalExpectCount = 0;\n"
+      file << "  GlobalVerifyOrder = 0;\n"
+      file << "  if (GlobalOrderError)\n"
+      file << "  {\n"
+      file << "    free(GlobalOrderError);\n"
+      file << "    GlobalOrderError = NULL;\n"
+      file << "  }\n"
     end
     file << "}\n\n"
   end
@@ -165,7 +164,7 @@ class CMockGenerator
     
     # Return expected value, if necessary
     if (function[:return_type] != "void")
-      file << @utils.code_handle_return_value(function, "#{@tab}").join
+      file << @utils.code_handle_return_value(function, "  ").join
     end
     
     # Close out the function

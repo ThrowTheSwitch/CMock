@@ -4,7 +4,6 @@ require 'cmock_generator_plugin_cexception'
 class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
-    @config.expect.tab.returns("  ")
     @config.stubs!(:respond_to?).returns(true)
     @cmock_generator_plugin_cexception = CMockGeneratorPluginCException.new(@config, @utils)
   end
@@ -15,7 +14,6 @@ class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_plugin_cexception.config)
     assert_equal(@utils,  @cmock_generator_plugin_cexception.utils)
-    assert_equal("  ",    @cmock_generator_plugin_cexception.tab)
   end
   
   should "include the cexception library" do 

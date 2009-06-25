@@ -1,11 +1,10 @@
 
 class CMockGeneratorPluginIgnore
 
-  attr_reader :config, :utils, :tab
+  attr_reader :config, :utils
   
   def initialize(config, utils)
     @config = config
-	  @tab = @config.tab
     @utils = utils
 
     ["ignore_bool_type"].each do |req|
@@ -14,7 +13,7 @@ class CMockGeneratorPluginIgnore
   end
   
   def instance_structure(function)
-    return ["#{@tab}#{@config.ignore_bool_type} #{function[:name]}_IgnoreBool;\n"]
+    return ["  #{@config.ignore_bool_type} #{function[:name]}_IgnoreBool;\n"]
   end
   
   def mock_function_declarations(function)
@@ -26,27 +25,27 @@ class CMockGeneratorPluginIgnore
   end
   
   def mock_implementation_prefix(function)
-    lines = [ "#{@tab}if (Mock.#{function[:name]}_IgnoreBool)\n",
-              "#{@tab}{\n" 
+    lines = [ "  if (Mock.#{function[:name]}_IgnoreBool)\n",
+              "  {\n" 
             ] 
     if (function[:return_type] == "void")
-      lines << ["#{@tab*2}return;\n"]
+      lines << ["    return;\n"]
     else
-      lines << [ "#{@tab*2}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_Tail)\n",
-                 "#{@tab*2}{\n",
-                 "#{@tab*3}#{function[:return_type]} toReturn = *Mock.#{function[:name]}_Return;\n",
-                 "#{@tab*3}Mock.#{function[:name]}_Return++;\n",
-                 "#{@tab*3}Mock.#{function[:name]}_CallCount++;\n",
-                 "#{@tab*3}Mock.#{function[:name]}_CallsExpected++;\n",
-                 "#{@tab*3}return toReturn;\n",
-                 "#{@tab*2}}\n",
-                 "#{@tab*2}else\n",
-                 "#{@tab*2}{\n",
-                 "#{@tab*3}return *(Mock.#{function[:name]}_Return_Tail - 1);\n",
-                 "#{@tab*2}}\n" 
+      lines << [ "    if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_Tail)\n",
+                 "    {\n",
+                 "      #{function[:return_type]} toReturn = *Mock.#{function[:name]}_Return;\n",
+                 "      Mock.#{function[:name]}_Return++;\n",
+                 "      Mock.#{function[:name]}_CallCount++;\n",
+                 "      Mock.#{function[:name]}_CallsExpected++;\n",
+                 "      return toReturn;\n",
+                 "    }\n",
+                 "    else\n",
+                 "    {\n",
+                 "      return *(Mock.#{function[:name]}_Return_Tail - 1);\n",
+                 "    }\n" 
                ]
     end
-    lines << [ "#{@tab}}\n" ]
+    lines << [ "  }\n" ]
     lines.flatten
   end
   
@@ -54,15 +53,15 @@ class CMockGeneratorPluginIgnore
     if (function[:return_type] == "void")
       [ "void #{function[:name]}_Ignore(void)\n",
         "{\n",
-        "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n",
+        "  Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n",
         "}\n\n" ]
     else
       [ "void #{function[:name]}_IgnoreAndReturn(#{function[:return_string]})\n",
         "{\n",
-        "#{@tab}Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n",
+        "  Mock.#{function[:name]}_IgnoreBool = (unsigned char)1;\n",
         @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return_Head", 'toReturn'),
-        "#{@tab}Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n",
-        "#{@tab}Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n",
+        "  Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n",
+        "  Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n",
         "}\n\n" ]
     end
   end

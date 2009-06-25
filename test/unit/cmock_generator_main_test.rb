@@ -40,13 +40,11 @@ class CMockGeneratorTest < Test::Unit::TestCase
     @module_name = "PoutPoutFish"
     
     #no strict handling
-    @config.expect.tab.returns("  ")
     @config.expect.mock_prefix.returns("Mock")
     @config.expect.enforce_strict_ordering.returns(false)
     @cmock_generator = CMockGenerator.new(@config, @module_name, @file_writer, @utils, @plugins)
     
     #strict handling
-    @config.expect.tab.returns("  ")
     @config.expect.mock_prefix.returns("Mock")
     @config.expect.enforce_strict_ordering.returns(true)
     @cmock_generator_strict = CMockGenerator.new(@config, @module_name, @file_writer, @utils, @plugins)
@@ -62,7 +60,6 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(@utils,        @cmock_generator.utils)
     assert_equal(@plugins,      @cmock_generator.plugins)
     assert_equal("Mock#{@module_name}", @cmock_generator.mock_name)
-    assert_equal("  ",          @cmock_generator.tab)
   end
   
   should "create the top of a header file" do

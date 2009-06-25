@@ -6,7 +6,6 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     create_mocks :config, :utils
     
     #no strict ordering
-    @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(false)
     @config.stubs!(:respond_to?).returns(true)
@@ -14,7 +13,6 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)
     
     #strict ordering
-    @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(true)
     @config.stubs!(:respond_to?).returns(true)
@@ -28,7 +26,6 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_plugin_expect.config)
     assert_equal(@utils,  @cmock_generator_plugin_expect.utils)
-    assert_equal("  ",    @cmock_generator_plugin_expect.tab)
     assert_equal(nil,     @cmock_generator_plugin_expect.unity_helper)
   end
   

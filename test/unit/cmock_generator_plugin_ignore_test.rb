@@ -4,7 +4,6 @@ require 'cmock_generator_plugin_ignore'
 class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
-    @config.expect.tab.returns("  ")
     @config.stubs!(:respond_to?).returns(true)
     @cmock_generator_plugin_ignore = CMockGeneratorPluginIgnore.new(@config, @utils)
   end
@@ -15,7 +14,6 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_plugin_ignore.config)
     assert_equal(@utils,  @cmock_generator_plugin_ignore.utils)
-    assert_equal("  ",    @cmock_generator_plugin_ignore.tab)
   end
   
   should "not have any additional include file requirements" do

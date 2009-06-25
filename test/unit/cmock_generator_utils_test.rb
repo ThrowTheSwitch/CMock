@@ -4,7 +4,6 @@ require 'cmock_generator_utils'
 class CMockGeneratorUtilsTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :unity_helper
-    @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(false)
     @cmock_generator_utils = CMockGeneratorUtils.new(@config)
@@ -15,18 +14,15 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_utils.config)
-    assert_equal("  ",    @cmock_generator_utils.tab)
     assert_equal({},      @cmock_generator_utils.helpers)
   end
   
   should "have set up internal accessors correctly on init, complete with passed helpers" do
     create_mocks :config
-    @config.expect.tab.returns("  ")
     @config.expect.when_ptr_star.returns(:compare_ptr)
     @config.expect.enforce_strict_ordering.returns(false)
     @cmock_generator_utils = CMockGeneratorUtils.new(@config, {:A=>1, :B=>2})
     assert_equal(@config, @cmock_generator_utils.config)
-    assert_equal("  ",    @cmock_generator_utils.tab)
     assert_equal({:A=>1, :B=>2},@cmock_generator_utils.helpers)
   end
   
@@ -84,20 +80,19 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   
   should "make handle return" do 
     function = { :name => "Spatula", :return_type => "uint64"}
-    indent = "[tab]"
     expected = ["\n",
-                "[tab]if (Mock.Spatula_Return != Mock.Spatula_Return_Tail)\n",
-                "[tab]{\n",
-                "[tab]  uint64 toReturn = *Mock.Spatula_Return;\n",
-                "[tab]  Mock.Spatula_Return++;\n",
-                "[tab]  return toReturn;\n",
-                "[tab]}\n",
-                "[tab]else\n",
-                "[tab]{\n",
-                "[tab]  return *(Mock.Spatula_Return_Tail - 1);\n",
-                "[tab]}\n"
+                "  if (Mock.Spatula_Return != Mock.Spatula_Return_Tail)\n",
+                "  {\n",
+                "    uint64 toReturn = *Mock.Spatula_Return;\n",
+                "    Mock.Spatula_Return++;\n",
+                "    return toReturn;\n",
+                "  }\n",
+                "  else\n",
+                "  {\n",
+                "    return *(Mock.Spatula_Return_Tail - 1);\n",
+                "  }\n"
                ]
-    returned = @cmock_generator_utils.code_handle_return_value(function, indent)
+    returned = @cmock_generator_utils.code_handle_return_value(function, '  ')
     assert_equal(expected, returned)
   end
   
