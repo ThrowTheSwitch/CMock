@@ -22,23 +22,21 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   
   should "add a required variable to the instance structure" do
     function = {:name => "Grass", :args => [], :return_type => "void"}
-    @config.expect.ignore_bool_type.returns("BOOL")
-  
-    expected = ["  BOOL Grass_IgnoreBool;\n"]
+    expected = "  int Grass_IgnoreBool;\n"
     returned = @cmock_generator_plugin_ignore.instance_structure(function)
     assert_equal(expected, returned)
   end
   
   should "handle function declarations for functions without return values" do
     function = {:name => "Mold", :args_string => "void", :return_type => "void"}
-    expected = ["void Mold_Ignore(void);\n"]
+    expected = "void Mold_Ignore(void);\n"
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "handle function declarations for functions that returns something" do
     function = {:name => "Fungus", :args_string => "void", :return_type => "const char*", :return_string => "const char* toReturn"}
-    expected = ["void Fungus_IgnoreAndReturn(const char* toReturn);\n"]
+    expected = "void Fungus_IgnoreAndReturn(const char* toReturn);\n"
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -49,7 +47,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
                 "  {\n",
                 "    return;\n",
                 "  }\n"
-               ]
+               ].join
     returned = @cmock_generator_plugin_ignore.mock_implementation_prefix(function)
     assert_equal(expected, returned)
   end
@@ -71,7 +69,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
                 "      return *(Mock.Fungus_Return_Tail - 1);\n",
                 "    }\n",
                 "  }\n"
-               ]
+               ].join
     returned = @cmock_generator_plugin_ignore.mock_implementation_prefix(function)
     assert_equal(expected, returned)
   end
@@ -82,27 +80,29 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   
   should "add a new mock interface for ignoring when function had no return value" do
     function = {:name => "Slime", :args => [], :args_string => "void", :return_type => "void"}
-    expected = ["void Slime_Ignore(void)\n",
+    expected = ["\n",
+                "void Slime_Ignore(void)\n",
                 "{\n",
-                "  Mock.Slime_IgnoreBool = (unsigned char)1;\n",
+                "  Mock.Slime_IgnoreBool = (int)1;\n",
                 "}\n\n"
-               ]
+               ].join
     returned = @cmock_generator_plugin_ignore.mock_interfaces(function)
     assert_equal(expected, returned)
   end
   
   should "add a new mock interface for ignoring when function has return value" do
     function = {:name => "Slime", :args => [], :args_string => "void", :return_type => "uint32", :return_string => "uint32 toReturn"}
-    @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Slime_Return_Head", "toReturn").returns("mock_return_1")
+    @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Slime_Return", "toReturn").returns("mock_return_1")
     
-    expected = ["void Slime_IgnoreAndReturn(uint32 toReturn)\n",
+    expected = ["\n",
+                "void Slime_IgnoreAndReturn(uint32 toReturn)\n",
                 "{\n",
-                "  Mock.Slime_IgnoreBool = (unsigned char)1;\n",
-                "mock_return_1",
+                "  Mock.Slime_IgnoreBool = (int)1;\n",
+                "mock_return_1\n",
                 "  Mock.Slime_Return = Mock.Slime_Return_Head;\n",
                 "  Mock.Slime_Return += Mock.Slime_CallCount;\n",
                 "}\n\n"
-               ]
+               ].join
     returned = @cmock_generator_plugin_ignore.mock_interfaces(function)
     assert_equal(expected, returned)
   end

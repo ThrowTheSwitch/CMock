@@ -2,4 +2,4 @@
   :plugins:
     - 'soda'
     - 'pizza'
-  :cexception_throw_type: 'uint32'
+  :cexception_include: 'MySillyException.h'

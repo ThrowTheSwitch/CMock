@@ -23,59 +23,33 @@ class CMockGeneratorUtils
   end
   
   def code_insert_item_into_expect_array(type, array, newValue)
-    tail = array.gsub(/Head$/,'Tail')
-    lines = ["\n"]
-    lines << "  {\n"
-    lines << "    int sz = 0;\n"
-    lines << "    #{type} *pointer = #{array};\n"
-    lines << "    while (pointer && pointer != #{tail}) { sz++; pointer++; }\n"
-    lines << "    if (sz == 0)\n"
-    lines << "    {\n"
-    lines << "      #{array} = (#{type}*)malloc(2*sizeof(#{type}));\n"
-    lines << "      if (!#{array})\n"
-    lines << "        Mock.allocFailure++;\n"
-    lines << "    }\n"
-    lines << "    else\n"
-    lines << "    {\n"
-    lines << "      #{type} *ptmp = (#{type}*)realloc(#{array}, sizeof(#{type}) * (sz+1));\n"
-    lines << "      if (!ptmp)\n"
-    lines << "        Mock.allocFailure++;\n"
-    lines << "      else\n"
-    lines << "        #{array} = ptmp;\n"
-    lines << "    }\n"
-    lines << "    memcpy(&#{array}[sz], &#{newValue}, sizeof(#{type}));\n"
-    lines << "    #{tail} = &#{array}[sz+1];\n"
-    lines << "  }\n"
+    INSERT_EXPECT_CODE_SNIPPET % [type, array, newValue]
   end
   
   def code_add_an_arg_expectation(function, arg_type, expected)
-    lines = code_insert_item_into_expect_array(arg_type, "Mock.#{function[:name]}_Expected_#{expected}_Head", expected)
-    lines << "  Mock.#{function[:name]}_Expected_#{expected} = Mock.#{function[:name]}_Expected_#{expected}_Head;\n"
-    lines << "  Mock.#{function[:name]}_Expected_#{expected} += Mock.#{function[:name]}_CallCount;\n"
+    var = "Mock.#{function[:name]}_Expected_#{expected}"
+    lines = code_insert_item_into_expect_array(arg_type, var, expected)
+    lines << INSERT_EXPECT_SETUP_SNIPPET % [var, function[:name]]
   end
   
   def code_add_base_expectation(func_name)
-    lines = ["  Mock.#{func_name}_CallsExpected++;\n"]
+    lines = "  Mock.#{func_name}_CallsExpected++;\n"
     if (@ordered)
-      lines << [ "  ++GlobalExpectCount;\n",
-                 code_insert_item_into_expect_array("int", "Mock.#{func_name}_CallOrder_Head", "GlobalExpectCount"),
-                 "  Mock.#{func_name}_CallOrder = Mock.#{func_name}_CallOrder_Head;\n",
-                 "  Mock.#{func_name}_CallOrder += Mock.#{func_name}_CallCount;\n" ]
+      var = "Mock.#{func_name}_CallOrder"
+      lines << "  ++GlobalExpectCount;\n"
+      lines << code_insert_item_into_expect_array('int', var, 'GlobalExpectCount')
+      lines << INSERT_EXPECT_SETUP_SNIPPET % [var, func_name]
     end
-    lines.flatten
+    lines
   end
   
-  def code_verify_an_arg_expectation(function, arg_type, actual)
-    [ "\n",
-      "  if (Mock.#{function[:name]}_Expected_#{actual} != Mock.#{function[:name]}_Expected_#{actual}_Tail)\n",
-      "  {\n",
-      "    #{arg_type}* p_expected = Mock.#{function[:name]}_Expected_#{actual};\n",
-      "    Mock.#{function[:name]}_Expected_#{actual}++;\n",
-      expect_helper(arg_type, '*p_expected', actual, "\"Function '#{function[:name]}' called with unexpected value for argument '#{actual}'.\"","    "),
-      "  }\n" ].flatten
+  def code_verify_an_arg_expectation(function, arg_type, arg) 
+    (INSERT_ARG_VERIFY_START_SNIPPET % ["#{function[:name]}_Expected_#{arg}", arg_type]) +
+    expect_helper(arg_type, '*p_expected', arg, "\"Function '#{function[:name]}' called with unexpected value for argument '#{arg}'.\"") +
+    "  }\n" 
   end
   
-  def expect_helper(c_type, expected, actual, msg, indent)
+  def expect_helper(c_type, expected, arg, msg)
     if ((c_type.strip[-1] == 42) and (@ptr_handling == :compare_ptr))
       unity_func = "TEST_ASSERT_EQUAL_INT_MESSAGE"
     else
@@ -85,28 +59,65 @@ class CMockGeneratorUtils
     case(unity_func)
       when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE"
         full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "&(#{expected})"
-        return "#{indent}#{unity_func}((void*)#{full_expected}, (void*)&(#{actual}), sizeof(#{c_type})#{unity_msg});\n"  
+        return "    #{unity_func}((void*)#{full_expected}, (void*)&(#{arg}), sizeof(#{c_type})#{unity_msg});\n"  
       when /_ARRAY/
-        return [ "#{indent}if (*p_expected == NULL)\n",
-                 "#{indent}  { TEST_ASSERT_NULL(#{actual}); }\n",
-                 "#{indent}else\n",
-                 "#{indent}  { #{unity_func}(#{expected}, #{actual}, 1#{unity_msg}); }\n" ]
+        return "    if (*p_expected == NULL)\n      { TEST_ASSERT_NULL(#{arg}); }\n    else\n      { #{unity_func}(#{expected}, #{arg}, 1#{unity_msg}); }\n"
       else
-        return "#{indent}#{unity_func}(#{expected}, #{actual}#{unity_msg});\n" 
+        return "    #{unity_func}(#{expected}, #{arg}#{unity_msg});\n" 
     end  
   end
   
-  def code_handle_return_value(function, indent)
-    [ "\n",
-      "#{indent}if (Mock.#{function[:name]}_Return != Mock.#{function[:name]}_Return_Tail)\n",
-      "#{indent}{\n",
-      "#{indent}  #{function[:return_type]} toReturn = *Mock.#{function[:name]}_Return;\n",
-      "#{indent}  Mock.#{function[:name]}_Return++;\n",
-      "#{indent}  return toReturn;\n",
-      "#{indent}}\n",
-      "#{indent}else\n",
-      "#{indent}{\n",
-      "#{indent}  return *(Mock.#{function[:name]}_Return_Tail - 1);\n",
-      "#{indent}}\n" ]
+  def code_handle_return_value(function)
+    INSERT_RETURN_TYPE_SNIPPET % [ function[:name], function[:return_type] ]
   end
+  
+  private ###################
+  
+  INSERT_EXPECT_CODE_SNIPPET = %q[
+  {
+    int sz = 0;
+    %1$s *pointer = %2$s_Head;
+    while (pointer && pointer != %2$s_Tail) { sz++; pointer++; }
+    if (sz == 0)
+    {
+      %2$s_Head = (%1$s*)malloc(2*sizeof(%1$s));
+      if (!%2$s_Head)
+        Mock.allocFailure++;
+    }
+    else
+    {
+      %1$s *ptmp = (%1$s*)realloc(%2$s_Head, sizeof(%1$s) * (sz+1));
+      if (!ptmp)
+        Mock.allocFailure++;
+      else
+        %2$s_Head = ptmp;
+    }
+    memcpy(&%2$s_Head[sz], &%3$s, sizeof(%1$s));
+    %2$s_Tail = &%2$s_Head[sz+1];
+  }
+]
+ 
+  INSERT_EXPECT_SETUP_SNIPPET = 
+  "  %1$s = %1$s_Head;\n  %1$s += Mock.%2$s_CallCount;\n"
+  
+  INSERT_RETURN_TYPE_SNIPPET = %q[
+  if (Mock.%1$s_Return != Mock.%1$s_Return_Tail)
+  {
+    %2$s toReturn = *Mock.%1$s_Return;
+    Mock.%1$s_Return++;
+    return toReturn;
+  }
+  else
+  {
+    return *(Mock.%1$s_Return_Tail - 1);
+  }
+]
+
+  INSERT_ARG_VERIFY_START_SNIPPET = %q[
+  if (Mock.%1$s != Mock.%1$s_Tail)
+  {
+    %2$s* p_expected = Mock.%1$s;
+    Mock.%1$s++;
+]
+
 end

@@ -332,7 +332,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                ]
     @plugins.expect.run(:mock_implementation_prefix, function).returns(["  PreSupaFunctionUno.bool","  PreSupaFunctionDos.bool"])
     @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches, const char* named)","  MockSupaFunctionDos(uint32 sandwiches, const char* named)"])
-    @utils.expect.code_handle_return_value(function,"  ").returns(["  UtilsSupaFunction.bool"])
+    @utils.expect.code_handle_return_value(function).returns(["  UtilsSupaFunction.bool"])
     
     @cmock_generator.create_mock_implementation(output, function)
     
@@ -360,7 +360,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                ]
     @plugins.expect.run(:mock_implementation_prefix, function).returns(["  PreSupaFunctionUno.int","  PreSupaFunctionDos.int"])
     @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches)","  MockSupaFunctionDos(uint32 sandwiches)"])
-    @utils.expect.code_handle_return_value(function,"  ").returns(["  UtilsSupaFunction.int"])
+    @utils.expect.code_handle_return_value(function).returns(["  UtilsSupaFunction.int"])
     
     @cmock_generator.create_mock_implementation(output, function)
     

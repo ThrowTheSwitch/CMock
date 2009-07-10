@@ -49,31 +49,31 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   
   should "make expand array" do
     the_type = "int"
-    the_array = "arrayHead"
+    the_array = "array"
     new_value = "new_value"
     
     expected = ["\n",
                 "  {\n",
                 "    int sz = 0;\n",
-                "    int *pointer = arrayHead;\n",
-                "    while (pointer && pointer != arrayTail) { sz++; pointer++; }\n",
+                "    int *pointer = array_Head;\n",
+                "    while (pointer && pointer != array_Tail) { sz++; pointer++; }\n",
                 "    if (sz == 0)\n",
                 "    {\n",
-                "      arrayHead = (int*)malloc(2*sizeof(int));\n",
-                "      if (!arrayHead)\n",
+                "      array_Head = (int*)malloc(2*sizeof(int));\n",
+                "      if (!array_Head)\n",
                 "        Mock.allocFailure++;\n",
                 "    }\n",
                 "    else\n",
                 "    {\n",
-                "      int *ptmp = (int*)realloc(arrayHead, sizeof(int) * (sz+1));\n",
+                "      int *ptmp = (int*)realloc(array_Head, sizeof(int) * (sz+1));\n",
                 "      if (!ptmp)\n",
                 "        Mock.allocFailure++;\n",
                 "      else\n",
-                "        arrayHead = ptmp;\n","    }\n",
-                "    memcpy(&arrayHead[sz], &new_value, sizeof(int));\n",
-                "    arrayTail = &arrayHead[sz+1];\n",
+                "        array_Head = ptmp;\n","    }\n",
+                "    memcpy(&array_Head[sz], &new_value, sizeof(int));\n",
+                "    array_Tail = &array_Head[sz+1];\n",
                 "  }\n"
-               ]
+               ].join
     returned = @cmock_generator_utils.code_insert_item_into_expect_array(the_type, the_array, new_value)
     assert_equal(expected, returned)
   end
@@ -91,8 +91,8 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    return *(Mock.Spatula_Return_Tail - 1);\n",
                 "  }\n"
-               ]
-    returned = @cmock_generator_utils.code_handle_return_value(function, '  ')
+               ].join
+    returned = @cmock_generator_utils.code_handle_return_value(function)
     assert_equal(expected, returned)
   end
   
@@ -125,13 +125,13 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  }\n",
                 "  Mock.PizzaCutter_Expected_Spork = Mock.PizzaCutter_Expected_Spork_Head;\n",
                 "  Mock.PizzaCutter_Expected_Spork += Mock.PizzaCutter_CallCount;\n"
-               ]
+               ].join
     returned = @cmock_generator_utils.code_add_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
   
   should "add base expectations, with nothing else when strict ordering not turned on" do
-    expected = ["  Mock.Nectarine_CallsExpected++;\n"]
+    expected = "  Mock.Nectarine_CallsExpected++;\n"
     returned = @cmock_generator_utils.code_add_base_expectation("Nectarine")
     
     assert_equal(expected, returned)
@@ -163,7 +163,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    Mock.Nectarine_CallOrder_Tail = &Mock.Nectarine_CallOrder_Head[sz+1];\n",
                 "  }\n",
                 "  Mock.Nectarine_CallOrder = Mock.Nectarine_CallOrder_Head;\n",
-                "  Mock.Nectarine_CallOrder += Mock.Nectarine_CallCount;\n" ]
+                "  Mock.Nectarine_CallOrder += Mock.Nectarine_CallCount;\n" ].join
     @cmock_generator_utils.ordered = true
     returned = @cmock_generator_utils.code_add_base_expectation("Nectarine")
     assert_equal(expected, returned)
@@ -181,7 +181,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    Mock.CanOpener_Expected_CorkScrew++;\n",
                 "    TEST_ASSERT_EQUAL_MESSAGE(*p_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for argument 'CorkScrew'.\");\n",
                 "  }\n"
-               ]
+               ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
@@ -201,7 +201,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    Mock.MeasureCup_Expected_TeaSpoon++;\n",
                 "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected value for argument 'TeaSpoon'.\");\n",
                 "  }\n"
-               ]
+               ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
@@ -221,7 +221,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    Mock.TeaPot_Expected_TeaSpoon++;\n",
                 "    TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE(*p_expected, TeaSpoon, \"Function 'TeaPot' called with unexpected value for argument 'TeaSpoon'.\");\n",
                 "  }\n"
-               ]
+               ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
@@ -241,7 +241,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    Mock.Toaster_Expected_Bread++;\n",
                 "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)p_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\");\n",
                 "  }\n"
-               ]
+               ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
@@ -264,7 +264,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    else\n",
                 "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY_MESSAGE(*p_expected, Strawberry, 1, \"Function 'Blender' called with unexpected value for argument 'Strawberry'.\"); }\n",
                 "  }\n"
-               ]
+               ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end

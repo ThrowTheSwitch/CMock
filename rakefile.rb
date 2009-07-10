@@ -54,4 +54,10 @@ namespace :test do
     
     run_system_test_compilations(FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'])
   end
+  
+  desc "Profile Mock Generation"
+  task :profile => [:clobber] do
+    run_system_test_profiles(FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'])
+  end
+  
 end

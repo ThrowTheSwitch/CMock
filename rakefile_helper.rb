@@ -276,6 +276,25 @@ module RakefileHelpers
     return total_failures
   end
   
+  def profile_this(filename)
+    profile = true
+    begin
+      require 'ruby-prof'
+      RubyProf.start
+    rescue
+      profile = false
+    end
+    
+    yield
+    
+    if (profile)
+      profile_result = RubyProf.stop
+      File.open("Profile_#{filename}.html", 'w') do |f|
+        RubyProf::GraphHtmlPrinter.new(profile_result).print(f)
+      end
+    end
+  end
+  
   def run_system_test_compilations(mockables)
     require 'cmock'
     
@@ -288,12 +307,32 @@ module RakefileHelpers
     puts "------------------------------------\n"
     mockables.each do |header|
       mock_filename = 'mock_' + File.basename(header).ext('.c')
-      cmock = CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml')
-      cmock.setup_mocks(header)
+      CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml').setup_mocks(header)
       puts "Compiling #{mock_filename}..."
       compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
     end
   end
   
+  def run_system_test_profiles(mockables)
+    require 'cmock'
+    
+    load_configuration($cfg_file)
+    $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
+
+    puts "\n"
+    puts "--------------------------\n"
+    puts "SYSTEM TEST MOCK PROFILING\n"
+    puts "--------------------------\n"
+    mockables.each do |header|
+      mock_filename = 'mock_' + File.basename(header).ext('.c')
+      profile_this(mock_filename.gsub('.c','')) do 
+        2.times do 
+          CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml').setup_mocks(header)
+        end
+      end
+      puts "Compiling #{mock_filename}..."
+      compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
+    end
+  end
 end
 

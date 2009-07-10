@@ -12,83 +12,57 @@ class CMockGeneratorPluginExpect
   end
   
   def instance_structure(function)
-    call_count_type = @config.expect_call_count_type
-    lines = [ "  #{call_count_type} #{function[:name]}_CallCount;\n",
-              "  #{call_count_type} #{function[:name]}_CallsExpected;\n" ]
-      
+    lines = INSTANCE_STRUCTURE_CALL_SNIPPET % function[:name]
+    
     if (function[:return_type] != "void")
-      lines << [ "  #{function[:return_type]} *#{function[:name]}_Return;\n",
-                 "  #{function[:return_type]} *#{function[:name]}_Return_Head;\n",
-                 "  #{function[:return_type]} *#{function[:name]}_Return_Tail;\n" ]
+      lines << INSTANCE_STRUCTURE_ITEM_SNIPPET % "#{function[:return_type]} *#{function[:name]}_Return"
     end
-
+    
     if (@ordered)
-      lines << [ "  int *#{function[:name]}_CallOrder;\n",
-                 "  int *#{function[:name]}_CallOrder_Head;\n",
-                 "  int *#{function[:name]}_CallOrder_Tail;\n" ]
+      lines << INSTANCE_STRUCTURE_ITEM_SNIPPET % "int *#{function[:name]}_CallOrder"
     end
     
     function[:args].each do |arg|
-      lines << [ "  #{arg[:type]} *#{function[:name]}_Expected_#{arg[:name]};\n",
-                 "  #{arg[:type]} *#{function[:name]}_Expected_#{arg[:name]}_Head;\n",
-                 "  #{arg[:type]} *#{function[:name]}_Expected_#{arg[:name]}_Tail;\n" ]
+      lines << INSTANCE_STRUCTURE_ITEM_SNIPPET % "#{arg[:type]} *#{function[:name]}_Expected_#{arg[:name]}"
     end
-    lines.flatten
+    lines
   end
   
   def mock_function_declarations(function)
     if (function[:args_string] == "void")
       if (function[:return_type] == 'void')
-        return ["void #{function[:name]}_Expect(void);\n"]
+        return "void #{function[:name]}_Expect(void);\n"
       else
-        return ["void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"]
+        return "void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"
       end
     else        
       if (function[:return_type] == 'void')
-        return ["void #{function[:name]}_Expect(#{function[:args_string]});\n"]
+        return "void #{function[:name]}_Expect(#{function[:args_string]});\n"
       else
-        return ["void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"]
+        return "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"
       end
     end
   end
   
   def mock_implementation(function)
-    lines = [ "  Mock.#{function[:name]}_CallCount++;\n",
-              "  if (Mock.#{function[:name]}_CallCount > Mock.#{function[:name]}_CallsExpected)\n",
-              "  {\n",
-              "    TEST_FAIL(\"Function '#{function[:name]}' called more times than expected\");\n",
-              "  }\n" ]
-    
+    lines = MOCK_IMPLEMENT_SNIPPET % function[:name]
     if (@ordered)
-      err_msg = "Out of order function calls. Function '#{function[:name]}'" #" expected to be call %i but was call %i"
-      lines << [ "  {\n",
-                 "    int* p_expected = Mock.#{function[:name]}_CallOrder;\n",
-                 "    ++GlobalVerifyOrder;\n",
-                 "    if (Mock.#{function[:name]}_CallOrder != Mock.#{function[:name]}_CallOrder_Tail)\n",
-                 "      Mock.#{function[:name]}_CallOrder++;\n",
-                 "    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
-                 "    {\n",
-                 "      const char* ErrStr = \"#{err_msg}\";\n",
-                 "      GlobalOrderError = malloc(#{err_msg.size + 1});\n",
-                 "      if (GlobalOrderError)\n",
-                 "        strcpy(GlobalOrderError, ErrStr);\n",
-                 "    }\n",
-                 "  }\n" ]
+      err_msg = "Out of order function calls. Function '#{function[:name]}'" #would eventually like to be " expected to be call %i but was call %i"
+      lines << MOCK_IMPLEMENT_ORDERED_SNIPPET % [function[:name], err_msg, (err_msg.size + 1).to_s]
     end
-    
     function[:args].each do |arg|
       lines << @utils.code_verify_an_arg_expectation(function, arg[:type], arg[:name])
     end
-    lines.flatten
+    lines
   end
   
   def mock_interfaces(function)
     lines = []
+    func_name = function[:name]
     
     # Parameter Helper Function
     if (function[:args_string] != "void")
-      lines << "void ExpectParameters_#{function[:name]}(#{function[:args_string]})\n"
-      lines << "{\n"
+      lines << "void ExpectParameters_#{func_name}(#{function[:args_string]})\n{\n"
       function[:args].each do |arg|
         lines << @utils.code_add_an_arg_expectation(function, arg[:type], arg[:name])
       end
@@ -97,65 +71,115 @@ class CMockGeneratorPluginExpect
     
     #Main Mock Interface
     if (function[:return_type] == "void")
-      lines << "void #{function[:name]}_Expect(#{function[:args_string]})\n"
+      lines << "void #{func_name}_Expect(#{function[:args_string]})\n"
     else
       if (function[:args_string] == "void")
-        lines << "void #{function[:name]}_ExpectAndReturn(#{function[:return_string]})\n"
+        lines << "void #{func_name}_ExpectAndReturn(#{function[:return_string]})\n"
       else
-        lines << "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]})\n"
+        lines << "void #{func_name}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]})\n"
       end
     end
     lines << "{\n"
-    lines << @utils.code_add_base_expectation(function[:name])
+    lines << @utils.code_add_base_expectation(func_name)
     
     if (function[:args_string] != "void")
-      lines << "  ExpectParameters_#{function[:name]}(#{@utils.create_call_list(function)});\n"
+      lines << "  ExpectParameters_#{func_name}(#{@utils.create_call_list(function)});\n"
     end
     
     if (function[:return_type] != "void")
-      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return_Head", 'toReturn')
-      lines << "  Mock.#{function[:name]}_Return = Mock.#{function[:name]}_Return_Head;\n"
-      lines << "  Mock.#{function[:name]}_Return += Mock.#{function[:name]}_CallCount;\n"
+      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{func_name}_Return", 'toReturn')
+      lines << "  Mock.#{func_name}_Return = Mock.#{func_name}_Return_Head;\n"
+      lines << "  Mock.#{func_name}_Return += Mock.#{func_name}_CallCount;\n"
     end
     lines << "}\n\n"
   end
   
   def mock_verify(function)
-    ["  TEST_ASSERT_EQUAL_MESSAGE(Mock.#{function[:name]}_CallsExpected, Mock.#{function[:name]}_CallCount, \"Function '#{function[:name]}' called unexpected number of times.\");\n"]
+    func_name = function[:name]
+    "  TEST_ASSERT_EQUAL_MESSAGE(Mock.#{func_name}_CallsExpected, Mock.#{func_name}_CallCount, \"Function '#{func_name}' called unexpected number of times.\");\n"
   end
   
   def mock_destroy(function)
     lines = []
+    func_name = function[:name]
     if (function[:return_type] != "void")
-      lines << [ "  if (Mock.#{function[:name]}_Return_Head)\n",
-                 "  {\n",
-                 "    free(Mock.#{function[:name]}_Return_Head);\n",
-                 "  }\n",
-                 "  Mock.#{function[:name]}_Return=NULL;\n",
-                 "  Mock.#{function[:name]}_Return_Head=NULL;\n",
-                 "  Mock.#{function[:name]}_Return_Tail=NULL;\n"
-               ]
+      lines << DESTROY_RETURN_SNIPPET % func_name
     end
+    
     if (@ordered)
-      lines << [ "  if (Mock.#{function[:name]}_CallOrder_Head)\n",
-                 "  {\n",
-                 "    free(Mock.#{function[:name]}_CallOrder_Head);\n",
-                 "  }\n",
-                 "  Mock.#{function[:name]}_CallOrder=NULL;\n",
-                 "  Mock.#{function[:name]}_CallOrder_Head=NULL;\n",
-                 "  Mock.#{function[:name]}_CallOrder_Tail=NULL;\n"
-                ]
+      lines << DESTROY_CALL_ORDER_SNIPPET % func_name
     end
+    
     function[:args].each do |arg|
-      lines << [ "  if (Mock.#{function[:name]}_Expected_#{arg[:name]}_Head)\n",
-                 "  {\n",
-                 "    free(Mock.#{function[:name]}_Expected_#{arg[:name]}_Head);\n",
-                 "  }\n",
-                 "  Mock.#{function[:name]}_Expected_#{arg[:name]}=NULL;\n",
-                 "  Mock.#{function[:name]}_Expected_#{arg[:name]}_Head=NULL;\n",
-                 "  Mock.#{function[:name]}_Expected_#{arg[:name]}_Tail=NULL;\n"
-               ]
+      lines << DESTROY_BASE_SNIPPET % "#{func_name}_Expected_#{arg[:name]}"
     end
     lines.flatten
   end
+  
+  private #####################
+  
+  INSTANCE_STRUCTURE_CALL_SNIPPET = %q[
+  int %1$s_CallCount;
+  int %1$s_CallsExpected;
+]
+
+  INSTANCE_STRUCTURE_ITEM_SNIPPET = %q[
+  %1$s;
+  %1$s_Head;
+  %1$s_Tail;
+]
+
+  MOCK_IMPLEMENT_SNIPPET = %q[
+  Mock.%1$s_CallCount++;
+  if (Mock.%1$s_CallCount > Mock.%1$s_CallsExpected)
+  {
+    TEST_FAIL("Function '%1$s' called more times than expected");
+  }
+]
+
+  MOCK_IMPLEMENT_ORDERED_SNIPPET = %q[  {
+    int* p_expected = Mock.%1$s_CallOrder;
+    ++GlobalVerifyOrder;
+    if (Mock.%1$s_CallOrder != Mock.%1$s_CallOrder_Tail)
+      Mock.%1$s_CallOrder++;
+    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))
+    {
+      const char* ErrStr = "%2$s";
+      GlobalOrderError = malloc(%3$s);
+      if (GlobalOrderError)
+        strcpy(GlobalOrderError, ErrStr);
+    }
+  }
+]
+
+  DESTROY_RETURN_SNIPPET = %q[
+  if (Mock.%1$s_Return_Head)
+  {
+    free(Mock.%1$s_Return_Head);
+  }
+  Mock.%1$s_Return=NULL;
+  Mock.%1$s_Return_Head=NULL;
+  Mock.%1$s_Return_Tail=NULL;
+]
+
+  DESTROY_CALL_ORDER_SNIPPET = %q[
+  if (Mock.%1$s_CallOrder_Head)
+  {
+    free(Mock.%1$s_CallOrder_Head);
+  }
+  Mock.%1$s_CallOrder=NULL;
+  Mock.%1$s_CallOrder_Head=NULL;
+  Mock.%1$s_CallOrder_Tail=NULL;
+]
+
+  DESTROY_BASE_SNIPPET = %q[
+  if (Mock.%1$s_Head)
+  {
+    free(Mock.%1$s_Head);
+  }
+  Mock.%1$s=NULL;
+  Mock.%1$s_Head=NULL;
+  Mock.%1$s_Tail=NULL;
+]
+  
 end

@@ -164,7 +164,7 @@ class CMockGenerator
     
     # Return expected value, if necessary
     if (function[:return_type] != "void")
-      file << @utils.code_handle_return_value(function, "  ").join
+      file << @utils.code_handle_return_value(function)
     end
     
     # Close out the function
