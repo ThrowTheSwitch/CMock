@@ -204,9 +204,7 @@ module RakefileHelpers
       # Generate and build the test suite runner
       runner_name = test_base + '_runner.c'
       runner_path = $cfg['compiler']['source_path'] + runner_name
-      test_gen = UnityTestRunnerGenerator.new
-      gen_inc, gen_opt = UnityTestRunnerGenerator::grab_config(SYSTEST_GENERATED_FILES_PATH + cmock_config)
-      test_gen.run(test, runner_path, gen_inc, gen_opt)
+      UnityTestRunnerGenerator.new(SYSTEST_GENERATED_FILES_PATH + cmock_config).run(test, runner_path)
       compile(runner_path)
       obj_list << runner_name.ext($cfg['compiler']['object_files']['extension'])
       
