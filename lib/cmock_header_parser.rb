@@ -1,133 +1,213 @@
-
 class CMockHeaderParser
 
-  attr_reader :src_lines, :prototypes, :attributes
+  attr_accessor :funcs, :c_attributes, :treat_as_void
   
-  def initialize(parser, source, config, name)
-    @src_lines = []
-    @prototypes = []
-    @function_names = []
-    @prototype_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]]*)\)$/m
-
-    @attributes = config.attributes
-    @when_no_prototypes = config.when_no_prototypes
-    @parser = parser
-    @name = name
-    
-    import_source(source)
+  def initialize(cfg)
+    @funcs = []
+    @c_attributes = (['const'] + cfg.attributes).uniq
+    @treat_as_void = (['void'] + cfg.treat_as_void).uniq
+    @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]]*)\)$/m
+    @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
+    @when_no_prototypes = cfg.when_no_prototypes
+    @local_as_void = @treat_as_void
   end
   
-  def parse
-    hash = {:functions => []}
-    # build prototype list
-    extract_prototypes
-    # parse all prototyes into hashes of components and add to array
-    @prototypes.each do |prototype|
-      parsed_hash = parse_prototype(prototype)
-      # protect against multiple prototypes (can happen when externs are pulled into preprocessed headers)
-      if (!@function_names.include?(parsed_hash[:name]))
-        @function_names  << parsed_hash[:name]
-        hash[:functions] << parsed_hash
+  def parse(source)
+    @typedefs = []
+    @funcs = []
+    function_names = []
+    
+    parse_functions( import_source(source) ).map do |decl| 
+      func = parse_declaration(decl)
+      unless (function_names.include? func[:name])
+        @funcs << func
+        function_names << func[:name]
       end
     end
-    return hash
+    
+    { :includes  => nil,
+      :functions => @funcs,
+      :typedefs  => @typedefs
+    }
   end
   
-  private
+  private unless $ThisIsOnlyATest ################
   
   def import_source(source)
-    # look for any edge cases of typedef'd void;
-    # void must be void for cmock _ExpectAndReturn calls to process properly.
-    # to a certain extent, this action assumes we're chewing on pre-processed header files
-    void_types = source.scan(/typedef\s+(\(\s*)?void(\s*\))?\s+([\w\d]+)\s*;/)
+
+    # void must be void for cmock _ExpectAndReturn calls to process properly, not some weird typedef which equates to void
+    # to a certain extent, this action assumes we're chewing on pre-processed header files, otherwise we'll most likely just get stuff from @treat_as_void
+    @local_as_void = @treat_as_void
+    void_types = source.scan(/typedef\s+(?:\(\s*)?void(?:\s*\))?\s+([\w\d]+)\s*;/)
     if void_types
-      void_types = void_types.flatten.uniq - ['(',')',nil]
-      void_types.each {|type| source.gsub!(/#{type}/, 'void')} if void_types.size > 0
+      @local_as_void += void_types.flatten.uniq.compact
+    end
+  
+    # smush multiline macros into single line (checking for continuation character at end of line '\')
+    source.gsub!(/\s*\\\s*/m, ' ')
+   
+    #remove comments (block and line, in three steps to ensure correct precedence)
+    source.gsub!(/\/\/(?:.+\/\*|\*(?:$|[^\/])).*$/, '')  # remove line comments that comment out the start of blocks
+    source.gsub!(/\/\*.*?\*\//m, '')                     # remove block comments 
+    source.gsub!(/\/\/.*$/, '')                          # remove line comments (all that remain)
+    
+    # remove preprocessor statements
+    source.gsub!(/^\s*#.*/, '')
+    
+    # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
+    # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
+    source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                         # remove forward declared structs
+    source.gsub!(/^[\w\s]*(enum|union|struct)[\w\s]*\{[^\}]+\}[\w\s]*;/m, '') # remove struct definitions
+    source.gsub!(/(\W)(register|auto|static|restrict)(\W)/, '\1\3')           # remove problem keywords
+    source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                           # remove default value statements from argument lists
+    source.gsub!(/typedef.*/, '')                                             # remove typedef statements
+    
+    #scan for functions which return function pointers, because they are a pain
+    source.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s]+)\s*\(([\w\s,]+)\)\)\s*\(([\w\s,]+)\)\)*/) do |m|
+      functype = "cmock_func_ptr#{@typedefs.size + 1}"
+      @typedefs << "typedef #{$1.strip}(*#{functype})(#{$4});"
+      "#{functype} #{$2.strip}(#{$3});"
     end
     
-    source.gsub!(/\s*\\\s*/m, ' ')    # smush multiline statements into single line
-    source.gsub!(/\/\*.*?\*\//m, '')  # remove block comments (do it first to avoid trouble with embedded line comments)
-    source.gsub!(/\/\/.*$/, '')       # remove line comments
-    source.gsub!(/#.*/, '')           # remove preprocessor statements
-
-    # unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them;
-    # enums might cause trouble or might not - pull 'em just to be safe
-    source.gsub!(/^[\w\s]*enum[\w\s]*\{[^\}]+\}[\w\s]*;/m, '')   # remove enum definitions
-    source.gsub!(/^[\w\s]*union[\w\s]*\{[^\}]+\}[\w\s]*;/m, '')  # remove union definitions
-    source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')            # remove forward declared structs but leave function prototypes having struct in types
-                                                                 # (do before struct definitions so as to not mess up recognizing full struct definitions)
-    source.gsub!(/^[\w\s]*struct[\w\s]*\{[^\}]+\}[\w\s]*;/m, '') # remove struct definitions
-    
-    source.gsub!(/typedef.*/, '')                   # remove typedef statements
-    
-    source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '') # remove default value statements from argument lists
-
+    #drop extra white space to make the rest go faster
     source.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
     source.gsub!(/\s+$/, '')          # remove extra white space from end of line
     source.gsub!(/\s*\(\s*/, '(')     # remove extra white space from before left parens
     source.gsub!(/\s*\)\s*/, ')')     # remove extra white space from before right parens
     source.gsub!(/\s+/, ' ')          # remove remaining extra white space
-
-    # split source at end of statements (removing any remaining extra white space)
-    @src_lines = source.split(/\s*;\s*/)
     
-    # remove function pointer array declarations (they're erroneously recognized as function prototypes);
-    # look for something like (* blah [#]) - this can't be a function parameter list
-    @src_lines.delete_if {|line| !(line =~ /\(\s*\*(.*\[\d*\])??\s*\)/).nil?}
-    # remove functions that are externed - mocking an extern'd function in a header file is a weird condition
-    @src_lines.delete_if {|line| !(line =~ /(^|\s+)extern\s+/).nil?}
-    # remove functions that are inlined - mocking an inine function will either break compilation or lead to other oddities
-    @src_lines.delete_if {|line| !(line =~ /(^|\s+)inline\s+/).nil?}
-    # remove blank lines
-    @src_lines.delete_if {|line| line.strip.length == 0}
+    #split lines on semicolons and remove things that are obviously not what we are looking for
+    src_lines = source.split(/\s*;\s*/)
+    src_lines.delete_if {|line| !(line =~ /\(\s*\*(?:.*\[\d*\])??\s*\)/).nil?}   #remove function pointer arrays
+    src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern|inline)\s+/).nil?} #remove inline and extern functions
+    src_lines.delete_if {|line| line.strip.length == 0}                          # remove blank lines
   end
 
-  def extract_prototypes
-    # build array of function prototypes
-    @src_lines.each do |line|
-      @prototypes << line if (line =~ @prototype_parse_matcher)
-    end
-    if @prototypes.empty?
+  def parse_functions(source)
+    funcs = []
+    source.each {|line| funcs << line.strip.gsub(/\s+/, ' ') if (line =~ @declaration_parse_matcher)}
+    if funcs.empty?
       case @when_no_prototypes
         when :error
-          raise "ERROR: No function prototypes found in '#{@name}'" 
+          raise "ERROR: No function prototypes found!" 
         when :warn
-          puts "WARNING: No function prototypes found in '#{@name}'"
+          puts "WARNING: No function prototypes found!"
       end
+    end
+    return funcs
+  end
+  
+  def parse_args(arg_list)
+    args = []
+    arg_list.split(',').each do |arg|
+      arg.strip! 
+      return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)                          # we're done if we reach void by itself or ...
+      arg_elements = arg.split - @c_attributes                                     # split up words and remove known attributes
+      args << {:type => arg_elements[0..-2].join(' '), :name => arg_elements[-1]}  # add the lucky winners to the list
+    end
+    return args
+  end
+
+  def clean_args(arg_list)
+    if ((@local_as_void.include?(arg_list.strip)) or (arg_list.empty?))
+      return 'void'
+    else
+      c=0
+      arg_list.gsub!(/(\w)\s*\[[\s\d]*\]/,'*\1') # magically turn brackets into asterisks
+      arg_list.gsub!(/\s+\*/,'*')                # remove space to place asterisks with type (where they belong)
+      arg_list.gsub!(/\*(\w)/,'* \1')            # pull asterisks away from arg to place asterisks with type (where they belong)
+      
+      #scan argument list for function pointers and replace them with custom types
+      arg_list.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s]+)\)\s*\(([\w\s,]+)\)\)*/) do |m|
+        functype = "cmock_func_ptr#{@typedefs.size + 1}"
+        funcret  = $1.strip
+        funcname = $2.strip
+        funcargs = $3.strip
+        funconst = ''
+        if (funcname.include? 'const')
+          funcname.gsub!('const','').strip!
+          funconst = 'const '
+        end
+        @typedefs << "typedef #{funcret}(*#{functype})(#{funcargs});"
+        funcname = "cmock_arg#{c+=1}" if (funcname.empty?)
+        "#{functype} #{funconst}#{funcname}"
+      end
+      
+      #automatically name unnamed arguments (those that only had a type)
+      arg_list.split(/\s*,\s*/).map { |arg| 
+        parts = (arg.split - ['signed', 'unsigned', 'struct', 'union', 'enum', 'const', 'const*'])
+        if ((parts.size < 2) or (parts[-1][-1] == 42) or (@standards.include?(parts[-1])))
+          "#{arg} cmock_arg#{c+=1}" 
+        else
+          arg
+        end
+      }.join(', ')
     end
   end
   
-  def parse_prototype(prototype)
-    hash = {}
+  def parse_declaration(declaration)
+    decl = {}
+      
+    regex_match = @declaration_parse_matcher.match(declaration)
+    raise "Failed parsing function declaration: '#{declaration}'" if regex_match.nil? 
     
-    modifiers = []
-    # grab special attributes from function prototype and remove them from prototype
-    @attributes.each do |attribute|
-      if (prototype =~ /#{attribute}\s+/)
-        modifiers << attribute
-        prototype.gsub!(/#{attribute}\s+/, '')
+    #grab argument list
+    args = regex_match[2].strip
+
+    #process function attributes, return type, and name
+    descriptors = regex_match[1]
+    descriptors.gsub!(/\s+\*/,'*')     #remove space to place asterisks with return type (where they belong)
+    descriptors.gsub!(/\*(\w)/,'* \1') #pull asterisks away from function name to place asterisks with return type (where they belong)
+    descriptors = descriptors.split    #array of all descriptor strings
+
+    #grab name
+    decl[:name] = descriptors[-1]      #snag name as last array item
+
+    #build attribute and return type strings
+    decl[:modifier] = []
+    decl[:return_type]  = []    
+    descriptors[0..-2].each do |word|
+      if @c_attributes.include?(word)
+        decl[:modifier] << word
+      else
+        decl[:return_type] << word
       end
     end
-    hash[:modifier] = modifiers.join(' ')
-
-    # excise these keywords from prototype (entire 'inline' and 'extern' prototypes are already gone)
-    ['auto', 'register', 'static', 'restrict', 'volatile'].each do |keyword|
-      prototype.gsub!(/(,\s*|\(\s*|\*\s*|^\s*|\s+)#{keyword}\s*(,|\)|\w)/, "\\1\\2")
+    decl[:modifier] = decl[:modifier].join(' ')
+    decl[:return_type] = decl[:return_type].join(' ')
+    decl[:return_type] = 'void' if (@local_as_void.include?(decl[:return_type].strip))
+    decl[:return_string] = decl[:return_type] + " toReturn"
+        
+    #remove default argument statements from mock definitions
+    args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
+    args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
+    
+    #check for var args
+    if (args =~ /\.\.\./)
+      decl[:var_arg] = args.match( /[\w\s]*\.\.\./ ).to_s.strip
+      if (args =~ /\,[\w\s]*\.\.\./)
+        args = args.gsub!(/\,[\w\s]*\.\.\./,'')
+      else
+        args = 'void'
+      end
+    else
+      decl[:var_arg] = nil
+    end
+    args = clean_args(args)
+    decl[:args_string] = args
+    decl[:args] = parse_args(args)
+      
+    if (decl[:return_type].nil?   or decl[:name].nil?   or decl[:args].nil? or
+        decl[:return_type].empty? or decl[:name].empty?)
+      raise "Failed Parsing Declaration Prototype!\n" +
+        "  declaration: #{declaration}\n" +
+        "  modifier: #{decl[:modifier]}\n" +
+        "  return: #{decl[:return_type]}\n" +
+        "  function: #{decl[:name]}\n" +
+        "  args:#{decl[:args]}\n"
     end
     
-    parsed = @parser.parse(prototype)
-
-    raise "Failed parsing function prototype: '#{prototype}' in file '#{@name}'" if parsed.nil? 
-    
-    hash[:name]          = parsed.get_function_name
-    hash[:args_string]   = parsed.get_argument_list
-    hash[:args]          = parsed.get_arguments
-    hash[:return_type]   = parsed.get_return_type
-    hash[:return_string] = parsed.get_return_type_with_name
-    hash[:var_arg]       = parsed.get_var_arg
-    hash[:typedefs]      = parsed.get_typedefs
-
-    return hash
+    return decl
   end
 
 end

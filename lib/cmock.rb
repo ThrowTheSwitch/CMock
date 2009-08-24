@@ -1,7 +1,5 @@
 require File.expand_path(File.dirname(__FILE__)) + "/../config/production_environment"
 
-require "cmock_function_prototype_node_classes"
-require "cmock_function_prototype_parser"
 require "cmock_header_parser"
 require "cmock_generator"
 require "cmock_file_writer"
@@ -10,18 +8,16 @@ require "cmock_plugin_manager"
 require "cmock_generator_utils"
 require "cmock_unityhelper_parser"
 
-#gem install test-unit -v 1.2.3
-ruby_version = RUBY_VERSION.split('.')
-if (ruby_version[1].to_i == 9) and (ruby_version[2].to_i > 1)
-  require 'gems'
-  gem 'test-unit'
-  require 'test/unit'
-end
-
 class CMock
   
   def initialize(options=nil)
-    @cfg = CMockConfig.new(options)
+    cm_config      = CMockConfig.new(options)    
+    cm_unityhelper = CMockUnityHelperParser.new(cm_config)
+    cm_writer      = CMockFileWriter.new(cm_config)
+    cm_gen_utils   = CMockGeneratorUtils.new(cm_config, {:unity_helper => cm_unityhelper})
+    cm_gen_plugins = CMockPluginManager.new(cm_config, cm_gen_utils)
+    @cm_parser     = CMockHeaderParser.new(cm_config)
+    @cm_generator  = CMockGenerator.new(cm_config, cm_writer, cm_gen_utils, cm_gen_plugins)
   end
   
   def setup_mocks(files)
@@ -34,23 +30,13 @@ class CMock
 
   def generate_mock(src)
     name = File.basename(src, '.h')
-    path = File.dirname(src)
-    @cfg.set_path(path)
-    
-    cm_parser      = CMockHeaderParser.new(CMockFunctionPrototypeParser.new, File.read(src), @cfg, "#{name}.h")
-    cm_unityhelper = CMockUnityHelperParser.new(@cfg)
-    cm_writer      = CMockFileWriter.new(@cfg)
-    cm_gen_utils   = CMockGeneratorUtils.new(@cfg, {:unity_helper => cm_unityhelper})
-    cm_gen_plugins = CMockPluginManager.new(@cfg, cm_gen_utils)
-    cm_generator   = CMockGenerator.new(@cfg, name, cm_writer, cm_gen_utils, cm_gen_plugins)
-    
     puts "Creating mock for #{name}..."
-    
-    parsed_stuff = cm_parser.parse
-    cm_generator.create_mock(parsed_stuff)
+    @cm_generator.create_mock(name, @cm_parser.parse(File.read(src)))
   end
 end
 
+  # Command Line Support ###############################
+  
 if ($0 == __FILE__)
   usage = "usage: ruby #{__FILE__} (-oOptionsFile) File(s)ToMock"
   

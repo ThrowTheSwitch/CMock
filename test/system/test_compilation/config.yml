@@ -1,7 +1,10 @@
 --- 
 :cmock: 
   :plugins: 
-  - 
+  - #none
   :includes: 
   :mock_path: test/system/generated/
   :mock_prefix: mock_
+  :treat_as_void: 
+  - OSEK_TASK
+  - VOID_TYPE_CRAZINESS

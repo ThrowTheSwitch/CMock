@@ -42,12 +42,16 @@ class CMockGeneratorTest < Test::Unit::TestCase
     #no strict handling
     @config.expect.mock_prefix.returns("Mock")
     @config.expect.enforce_strict_ordering.returns(false)
-    @cmock_generator = CMockGenerator.new(@config, @module_name, @file_writer, @utils, @plugins)
+    @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
+    @cmock_generator.module_name = @module_name
+    @cmock_generator.mock_name = "Mock#{@module_name}"
     
     #strict handling
     @config.expect.mock_prefix.returns("Mock")
     @config.expect.enforce_strict_ordering.returns(true)
-    @cmock_generator_strict = CMockGenerator.new(@config, @module_name, @file_writer, @utils, @plugins)
+    @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
+    @cmock_generator_strict.module_name = @module_name
+    @cmock_generator_strict.mock_name = "Mock#{@module_name}"
   end
 
   def teardown
@@ -55,11 +59,9 @@ class CMockGeneratorTest < Test::Unit::TestCase
   
   should "have set up internal accessors correctly on init" do
     assert_equal(@config,       @cmock_generator.config)
-    assert_equal(@module_name,  @cmock_generator.module_name)
     assert_equal(@file_writer,  @cmock_generator.file_writer)
     assert_equal(@utils,        @cmock_generator.utils)
     assert_equal(@plugins,      @cmock_generator.plugins)
-    assert_equal("Mock#{@module_name}", @cmock_generator.mock_name)
   end
   
   should "create the top of a header file" do
@@ -80,8 +82,9 @@ class CMockGeneratorTest < Test::Unit::TestCase
   end
 
   should "write typedefs" do
-    functions = [ { :typedefs => ['typedef unsigned char U8;', 'typedef char S8;'] },
-                  { :typedefs => ['typedef unsigned long U32;'] } 
+    typedefs = [ 'typedef unsigned char U8;', 
+                 'typedef char S8;',
+                 'typedef unsigned long U32;'
                 ]
     output = []
     expected = [ "\n",
@@ -91,7 +94,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "\n\n"
                ]
     
-    @cmock_generator.create_source_typedefs(output, functions)
+    @cmock_generator.create_typedefs(output, typedefs)
     
     assert_equal(expected, output.flatten)
   end

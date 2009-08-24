@@ -4,30 +4,30 @@ require 'cmock_header_parser'
 class CMockHeaderParserTest < Test::Unit::TestCase
 
   def setup
-    create_mocks :config, :prototype_parser, :parsed
+    create_mocks :config
     @test_name = 'test_file.h'
     @config.expect.attributes.returns(['__ramfunc', 'funky_attrib'])
+    @config.expect.treat_as_void.returns(['MY_FUNKY_VOID'])
+    @config.expect.treat_as.returns({ "BANJOS" => "INT", "TUBAS" => "HEX16"} )
     @config.expect.when_no_prototypes.returns(:error)
+    
+    @parser = CMockHeaderParser.new(@config)
   end
 
   def teardown
   end
   
-  
   should "create and initialize variables to defaults appropriately" do
-    @parser = CMockHeaderParser.new(@prototype_parser, "", @config, @test_name)
-    assert_equal([], @parser.prototypes)
-    assert_equal([], @parser.src_lines)
-    assert_equal(['__ramfunc', 'funky_attrib'], @parser.attributes)
+    assert_equal([], @parser.funcs)
+    assert_equal(['const', '__ramfunc', 'funky_attrib'], @parser.c_attributes)
+    assert_equal(['void','MY_FUNKY_VOID'], @parser.treat_as_void)
   end
-  
   
   should "strip out line comments" do
     source = 
       " abcd;\n" +
       "// hello;\n" +
       "who // is you\n"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
     expected =
     [
@@ -35,25 +35,41 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "who"
     ]
     
-    assert_equal(expected, @parser.src_lines)
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
   
   
   should "remove block comments" do
     source = 
-      " abcd;\n" +
-      "/* hello;*/\n" +
-      "who /* is you\n" +
-      "// embedded line comment */\n"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
+      " no_comments;\n" +
+      "// basic_line_comment;\n" +
+      "/* basic_block_comment;*/\n" +
+      "pre_block; /* start_of_block_comment;\n" +
+      "// embedded_line_comment_in_block_comment; */\n" +
+      "// /* commented_out_block_comment_line\n" +
+      "shown_because_block_comment_invalid_from_line_comment;\n" +
+      "// */\n" +
+      "//* shorter_commented_out_block_comment_line; \n" +
+      "shown_because_block_comment_invalid_from_shorter_line_comment;\n" +
+      "/*/\n" +
+      "not_shown_because_line_above_started_comment;\n" +
+      "//*/\n" +
+      "/* \n" +
+      "not_shown_because_block_comment_started_this_time;\n" +
+      "/*/\n" +
+      "shown_because_line_above_ended_comment_this_time;\n" +
+      "//*/\n"
     
     expected =
     [
-      "abcd",
-      "who"
+      "no_comments",
+      "pre_block",
+      "shown_because_block_comment_invalid_from_line_comment",
+      "shown_because_block_comment_invalid_from_shorter_line_comment",
+      "shown_because_line_above_ended_comment_this_time"
     ]
     
-    assert_equal(expected, @parser.src_lines)
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
   
   
@@ -62,11 +78,10 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#when stuff_happens\n" +
       "#ifdef _TEST\n" +
       "#pragma stack_switch"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
     expected = []
     
-    assert_equal(expected, @parser.src_lines)
+    assert_equal(expected, @parser.import_source(source))
   end
   
   
@@ -74,14 +89,26 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     source = 
       "hoo hah \\\n" +
       "when \\ \n"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
     expected =
     [
       "hoo hah when"
     ]
     
-    assert_equal(expected, @parser.src_lines)
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
+  
+  
+  should "remove C macro definitions" do
+    source = 
+      "#define this is the first line\\\n" +
+      "and the second\\\n" +
+      "and the third that should be removed\n" +
+      "but I'm here\n"
+    
+    expected = ["but I'm here"]
+    
+    assert_equal(expected, @parser.import_source(source))
   end
   
   
@@ -92,14 +119,13 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "typedef who cares what really comes here \\\n" + # exercise multiline typedef
       "   continuation;\n" +
       "this should remain!"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
     expected =
     [
       "whack me? this should remain!"
     ]
     
-    assert_equal(expected, @parser.src_lines)
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
 
@@ -116,9 +142,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " THING2,\n" +
       "} Thinger;\n" +
       "or me!!\n"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
-    assert_equal(["don't delete me!! or me!!"], @parser.src_lines)
+    assert_equal(["don't delete me!! or me!!"], @parser.import_source(source).map!{|s|s.strip})
   end
 
 
@@ -135,9 +160,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " char b;\n" +
       "} Whatever;\n" +
       "me too!!\n"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
-    assert_equal(["I want to live!! me too!!"], @parser.src_lines)
+    assert_equal(["I want to live!! me too!!"], @parser.import_source(source).map!{|s|s.strip})
   end
 
 
@@ -158,9 +182,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " signed char b;\n" +
       "}Thinger;\n" +
       "I want to live!!\n"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
 
-    assert_equal(["void foo(void)", "struct THINGER foo(void)", "I want to live!!"], @parser.src_lines)
+    assert_equal(["void foo(void)", "struct THINGER foo(void)", "I want to live!!"], 
+                 @parser.import_source(source).map!{|s|s.strip})
   end
   
   
@@ -170,8 +194,9 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "uint32 extern_name_func(unsigned int);\n" +
       "uint32 funcinline(unsigned int);\n" +
       "extern void bar(unsigned int);\n" +
-      "inline void bar(unsigned int);\n"
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
+      "inline void bar(unsigned int);\n" +
+      "extern\n" +
+      "void kinda_ugly_on_the_next_line(unsigned int);\n"
     
     expected =
     [
@@ -179,7 +204,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "uint32 funcinline(unsigned int)"
     ]
     
-    assert_equal(expected, @parser.src_lines)
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
     
   
@@ -190,39 +215,65 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#DEFINE I JUST DON'T CARE\n" +
       "#deFINE\n" +
       "#define get_foo() \\\n   ((Thing)foo.bar)" # exercise multiline define
-          
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
     
     expected =
     [
       "void hello(void)",
     ]
     
-    assert_equal(expected, @parser.src_lines)
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
+    
+  
+  should "remove keywords that would keep things from going smoothly in the future" do
+    source =
+      "const int TheMatrix(register int Trinity, unsigned int *restrict Neo)"
+    
+    expected =
+    [
+      "const int TheMatrix(int Trinity, unsigned int * Neo)",
+    ]
+    
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
 
-  should "handle odd case of typedef'd void" do  
-    # some code actually typedef's void even though it's not ANSI C and is, frankly, weird
-    # since cmock treats void specially, we can't let void be obfuscated
-    source =
-      "typedef void SILLY_VOID_TYPE1;\n" +
-      "typedef (void) SILLY_VOID_TYPE2 ;\n" +
-      "typedef ( void ) (*FUNCPTR)(void);\n\n" + # don't get fooled by function pointer typedef with void as return type
-      "SILLY_VOID_TYPE2 Foo(int a, unsigned int b);\n" +
-      "void\n shiz(SILLY_VOID_TYPE1 *);\n" +
-      "void tat(FUNCPTR);\n"
-      
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
-
-    expected =
-    [
-      "void Foo(int a, unsigned int b)",
-      "void shiz(void *)",
-      "void tat(FUNCPTR)"
-    ]
-    
-    assert_equal(expected, @parser.src_lines)
+  # some code actually typedef's void even though it's not ANSI C and is, frankly, weird
+  # since cmock treats void specially, we can't let void be obfuscated
+  should "handle odd case of typedef'd void returned" do  
+    source = "MY_FUNKY_VOID FunkyVoidReturned(int a)"
+    expected = { :var_arg=>nil,
+                 :return_string=>"void toReturn",
+                 :name=>"FunkyVoidReturned",
+                 :return_type=>"void",
+                 :modifier=>"",
+                 :args=>[{:type=>"int", :name=>"a"}],
+                 :args_string=>"int a" }
+    assert_equal(expected, @parser.parse_declaration(source))
+  end
+  
+  should "handle odd case of typedef'd void as arg" do 
+    source = "int FunkyVoidAsArg(MY_FUNKY_VOID)"
+    expected = { :var_arg=>nil,
+                 :return_string=>"int toReturn",
+                 :name=>"FunkyVoidAsArg",
+                 :return_type=>"int",
+                 :modifier=>"",
+                 :args=>[],
+                 :args_string=>"void" }
+    assert_equal(expected, @parser.parse_declaration(source))
+  end
+  
+  should "handle odd case of typedef'd void as arg pointer" do 
+    source = "char FunkyVoidPointer(MY_FUNKY_VOID* bluh)"
+    expected = { :var_arg=>nil,
+                 :return_string=>"char toReturn",
+                 :name=>"FunkyVoidPointer",
+                 :return_type=>"char",
+                 :modifier=>"",
+                 :args=>[{:type=>"MY_FUNKY_VOID*", :name=>"bluh"}],
+                 :args_string=>"MY_FUNKY_VOID* bluh" }
+    assert_equal(expected, @parser.parse_declaration(source))        
   end
 
 
@@ -230,34 +281,30 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     source =
       "void Foo(int a = 57, float b=37.52, char c= 'd', char* e=\"junk\");\n"
 
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
-
     expected =
     [
       "void Foo(int a, float b, char c, char* e)"
     ]
     
-    assert_equal(expected, @parser.src_lines)
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
 
   should "raise upon empty file" do  
     source = ''
-    
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, 'thinger.h')
         
     # ensure it's expected type of exception
     assert_raise RuntimeError do
-      @parser.parse
+      @parser.parse("")
     end
 
-    assert_equal([], @parser.prototypes)
+    assert_equal([], @parser.funcs)
     
     # verify exception message
     begin
-      @parser.parse      
+      @parser.parse("")
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found in 'thinger.h'", e.message)
+      assert_equal("ERROR: No function prototypes found!", e.message)
     end    
   end
 
@@ -268,306 +315,216 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "typedef (void) SILLY_VOID_TYPE2 ;\n" +
       "typedef ( void ) (*FUNCPTR)(void);\n\n" + 
       "#define get_foo() \\\n   ((Thing)foo.bar)"
-    
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, 'hello_world.h')
 
     # ensure it's expected type of exception
     assert_raise(RuntimeError) do
-      @parser.parse
+      @parser.parse(source)
     end
 
-    assert_equal([], @parser.prototypes)    
+    assert_equal([], @parser.funcs)    
 
     # verify exception message
     begin
-      @parser.parse      
+      @parser.parse(source)    
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found in 'hello_world.h'", e.message)
+      assert_equal("ERROR: No function prototypes found!", e.message)
     end    
   end
 
 
   should "raise upon prototype parsing failure" do
-    source =
-      "int Foo(int a, unsigned int b);\n" +
-      "void  bar \n(uint la, int de, bool da) ; \n"
-    
-    @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(nil)
-    @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(nil)
-    
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
+    source = "void (int, )" 
 
     # ensure it's expected type of exception
     assert_raise(RuntimeError) do
-      @parser.parse
+      @parser.parse(source)
     end
 
     # verify exception message
     begin
-      @parser.parse      
+      @parser.parse(source) 
     rescue RuntimeError => e
-      assert_equal("Failed parsing function prototype: 'int Foo(int a, unsigned int b)' in file '#{@test_name}'", e.message)
+      assert(e.message.include? "Failed Parsing Declaration Prototype!")
     end    
   end
 
-
-  should "extract and return function declarations" do  
-    source =
-      "int Foo(int a, unsigned int b);\n" +
-      "void FunkyChicken (\n   uint la,\n   int de,\n   bool da) ; \n" +
-      "  void \n tat();\n" +
-      # following lines should yield no function prototypes:
-      "#define get_foo() \\\n   (Thing)foo())\n" +
-      "ARRAY_TYPE array[((U8)10)];\n" +
-      "enum {\n" +
-      "  THINGER_MASK1 = (0x0001),\n" +
-      "  THINGER_MASK2 = (0x0001 << 1),\n" +
-      "  THINGER_MASK3 = (0x0001 << 2) };\n" +
-      "void ( ( * const Tasks [10] ) ( void ) );\n" # array of function pointers
-
-    @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('buzz lightyear')
-    @parsed.expect.get_argument_list.returns('woody')
-    @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
-    @parsed.expect.get_return_type.returns('little')
-    @parsed.expect.get_return_type_with_name.returns('bo peep')
-    @parsed.expect.get_var_arg.returns('...')
-    @parsed.expect.get_typedefs.returns([])
-    
-    @prototype_parser.expect.parse('void FunkyChicken(uint la, int de, bool da)').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('marty')
-    @parsed.expect.get_argument_list.returns('mcfly')
-    @parsed.expect.get_arguments.returns([{:type => 'back', :name => 'to'}])
-    @parsed.expect.get_return_type.returns('the future')
-    @parsed.expect.get_return_type_with_name.returns('doc')
-    @parsed.expect.get_var_arg.returns(nil)
-    @parsed.expect.get_typedefs.returns([])
-
-    @prototype_parser.expect.parse('void tat()').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('neo')
-    @parsed.expect.get_argument_list.returns('the matrix')
-    @parsed.expect.get_arguments.returns([{:type => 'trinity', :name => 'the one'}])
-    @parsed.expect.get_return_type.returns('agent smith')
-    @parsed.expect.get_return_type_with_name.returns('morpheus')
-    @parsed.expect.get_var_arg.returns('...')
-    @parsed.expect.get_typedefs.returns(['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'])
-
-    expected_prototypes = 
-    [
-      'int Foo(int a, unsigned int b)',
-      'void FunkyChicken(uint la, int de, bool da)',
-      'void tat()'
-    ]
-    
-    expected_hashes =
-    [
-      {
-        :modifier => '',
-        :args_string => 'woody',
-        :return_type => 'little',
-        :return_string => 'bo peep',
-        :var_arg => '...',
-        :args => [{:type => 'what up', :name => 'dawg'}],
-        :name => 'buzz lightyear',
-        :typedefs => [],
-      },
-      
-      {
-        :modifier => '',
-        :args_string => 'mcfly',
-        :return_type => 'the future',
-        :return_string => 'doc',
-        :var_arg => nil,
-        :args => [{:type => 'back', :name => 'to'}],
-        :name => 'marty',
-        :typedefs => [],
-      },
-
-      {
-        :modifier => '',
-        :args_string => 'the matrix',
-        :return_type => 'agent smith',
-        :return_string => 'morpheus',
-        :var_arg => '...',
-        :args => [{:type => 'trinity', :name => 'the one'}],
-        :name => 'neo',
-        :typedefs => ['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'],
-      },
-    ]
-
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
-    parsed_stuff = @parser.parse
-    
-    assert_equal(expected_prototypes, @parser.prototypes)
-    assert_equal(expected_hashes, parsed_stuff[:functions])
-  end
+  should "extract and return function declarations with retval and args" do
   
-  
-  should "extract custom function attributes and also scrub certain C keywords" do
-    source =
-      " static int Foo( register int a, unsigned int* restrict b);\n" +
-      "register __ramfunc funky_attrib void \n tat();\n"
-
-    @prototype_parser.expect.parse('int Foo(int a, unsigned int* b)').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('buzz lightyear')
-    @parsed.expect.get_argument_list.returns('woody')
-    @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
-    @parsed.expect.get_return_type.returns('little')
-    @parsed.expect.get_return_type_with_name.returns('bo peep')
-    @parsed.expect.get_var_arg.returns('...')
-    @parsed.expect.get_typedefs.returns([])
-    
-    @prototype_parser.expect.parse('void tat()').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('neo')
-    @parsed.expect.get_argument_list.returns('the matrix')
-    @parsed.expect.get_arguments.returns([{:type => 'trinity', :name => 'the one'}])
-    @parsed.expect.get_return_type.returns('agent smith')
-    @parsed.expect.get_return_type_with_name.returns('morpheus')
-    @parsed.expect.get_var_arg.returns('...')
-    @parsed.expect.get_typedefs.returns([])
-
-    expected_prototypes = 
-    [
-      'int Foo(int a, unsigned int* b)',
-      'void tat()'
-    ]
-    
-    expected_hashes =
-    [
-      {
-        :modifier => '',
-        :args_string => 'woody',
-        :return_type => 'little',
-        :return_string => 'bo peep',
-        :var_arg => '...',
-        :args => [{:type => 'what up', :name => 'dawg'}],
-        :name => 'buzz lightyear',
-        :typedefs => []
-      },
-
-      {
-        :modifier => '__ramfunc funky_attrib',
-        :args_string => 'the matrix',
-        :return_type => 'agent smith',
-        :return_string => 'morpheus',
-        :var_arg => '...',
-        :args => [{:type => 'trinity', :name => 'the one'}],
-        :name => 'neo',
-        :typedefs => []
-      },
-    ]
-
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
-    parsed_stuff = @parser.parse
-    
-    assert_equal(expected_prototypes, @parser.prototypes)
-    assert_equal(expected_hashes, parsed_stuff[:functions])
+    source = "int Foo(int a, unsigned int b)"
+    expected = { :var_arg=>nil,
+                 :return_string=>"int toReturn",
+                 :name=>"Foo",
+                 :return_type=>"int",
+                 :modifier=>"",
+                 :args=>[ {:type=>"int", :name=>"a"}, 
+                          {:type=>"unsigned int", :name=>"b"}
+                        ],
+                 :args_string=>"int a, unsigned int b" }
+    assert_equal(expected, @parser.parse_declaration(source))
   end
 
+  should "extract and return function declarations with no retval" do
+  
+    source = "void    FunkyChicken(    uint la,  int     de, bool da)"
+    expected = { :var_arg=>nil,
+                 :return_string=>"void toReturn",
+                 :name=>"FunkyChicken",
+                 :return_type=>"void",
+                 :modifier=>"",
+                 :args=>[ {:type=>"uint", :name=>"la"}, 
+                          {:type=>"int",  :name=>"de"},
+                          {:type=>"bool", :name=>"da"}
+                        ],
+                 :args_string=>"uint la, int     de, bool da" }
+    assert_equal(expected, @parser.parse_declaration(source))
+  end
 
+  should "extract and return function declarations with implied voids" do
+  
+    source = "void tat()"
+    expected = { :var_arg=>nil,
+                 :return_string=>"void toReturn",
+                 :name=>"tat",
+                 :return_type=>"void",
+                 :modifier=>"",
+                 :args=>[ ],
+                 :args_string=>"void" }
+    assert_equal(expected, @parser.parse_declaration(source))
+  end
+  
+  should "extract modifiers properly" do
+  
+    source = "const int TheMatrix(int Trinity, unsigned int * Neo)"
+    expected = { :var_arg=>nil,
+                 :return_string=>"int toReturn",
+                 :name=>"TheMatrix",
+                 :return_type=>"int",
+                 :modifier=>"const",
+                 :args=>[ {:type=>"int",           :name=>"Trinity"}, 
+                          {:type=>"unsigned int*", :name=>"Neo"}
+                        ],
+                 :args_string=>"int Trinity, unsigned int* Neo" }
+    assert_equal(expected, @parser.parse_declaration(source))
+  end
+  
+  should "should fully parse multiple prototypes" do
+  
+    source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" + 
+             "int Morpheus(int, unsigned int*);\n"
+             
+    expected = [{ :var_arg=>nil,
+                  :return_string=>"int toReturn",
+                  :name=>"TheMatrix",
+                  :return_type=>"int",
+                  :modifier=>"const",
+                  :args=>[ {:type=>"int",           :name=>"Trinity"}, 
+                           {:type=>"unsigned int*", :name=>"Neo"}
+                         ],
+                  :args_string=>"int Trinity, unsigned int* Neo" },
+                { :var_arg=>nil,
+                  :return_string=>"int toReturn",
+                  :name=>"Morpheus",
+                  :return_type=>"int",
+                  :modifier=>"",
+                  :args=>[ {:type=>"int",           :name=>"cmock_arg1"}, 
+                           {:type=>"unsigned int*", :name=>"cmock_arg2"}
+                         ],
+                  :args_string=>"int cmock_arg1, unsigned int* cmock_arg2" 
+                }]
+    assert_equal(expected, @parser.parse(source)[:functions])
+  end
+  
   should "not extract for mocking multiply defined prototypes" do
-    # just in case a function is defined multiple times and we haven't already dealt with it
-    source =
-      "int Foo(int a, unsigned int b);\n" +
-      "void FunkyChicken (\n   uint la,\n   int de,\n   bool da) ; \n" +
-      "  void \n tat();\n" +
-      "int Foo (int, unsigned int);"
-
-    @prototype_parser.expect.parse('int Foo(int a, unsigned int b)').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('Foo')
-    @parsed.expect.get_argument_list.returns('woody')
-    @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
-    @parsed.expect.get_return_type.returns('little')
-    @parsed.expect.get_return_type_with_name.returns('bo peep')
-    @parsed.expect.get_var_arg.returns('...')
-    @parsed.expect.get_typedefs.returns([])
-    
-    @prototype_parser.expect.parse('void FunkyChicken(uint la, int de, bool da)').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('marty')
-    @parsed.expect.get_argument_list.returns('mcfly')
-    @parsed.expect.get_arguments.returns([{:type => 'back', :name => 'to'}])
-    @parsed.expect.get_return_type.returns('the future')
-    @parsed.expect.get_return_type_with_name.returns('doc')
-    @parsed.expect.get_var_arg.returns(nil)
-    @parsed.expect.get_typedefs.returns([])
-
-    @prototype_parser.expect.parse('void tat()').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('neo')
-    @parsed.expect.get_argument_list.returns('the matrix')
-    @parsed.expect.get_arguments.returns([{:type => 'trinity', :name => 'the one'}])
-    @parsed.expect.get_return_type.returns('agent smith')
-    @parsed.expect.get_return_type_with_name.returns('morpheus')
-    @parsed.expect.get_var_arg.returns('...')
-    @parsed.expect.get_typedefs.returns(['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'])
-
-    @prototype_parser.expect.parse('int Foo(int, unsigned int)').returns(@parsed)
-
-    @parsed.expect.get_function_name.returns('Foo')
-    @parsed.expect.get_argument_list.returns('woody')
-    @parsed.expect.get_arguments.returns([{:type => 'what up', :name => 'dawg'}])
-    @parsed.expect.get_return_type.returns('little')
-    @parsed.expect.get_return_type_with_name.returns('bo peep')
-    @parsed.expect.get_var_arg.returns('...')
-    @parsed.expect.get_typedefs.returns([])
-
-
-    expected_prototypes = 
-    [
-      'int Foo(int a, unsigned int b)',
-      'void FunkyChicken(uint la, int de, bool da)',
-      'void tat()',
-      'int Foo(int, unsigned int)'
-    ]
-    
-    expected_hashes =
-    [
-      {
-        :modifier => '',
-        :args_string => 'woody',
-        :return_type => 'little',
-        :return_string => 'bo peep',
-        :var_arg => '...',
-        :args => [{:type => 'what up', :name => 'dawg'}],
-        :name => 'Foo',
-        :typedefs => [],
-      },
-      
-      {
-        :modifier => '',
-        :args_string => 'mcfly',
-        :return_type => 'the future',
-        :return_string => 'doc',
-        :var_arg => nil,
-        :args => [{:type => 'back', :name => 'to'}],
-        :name => 'marty',
-        :typedefs => [],
-      },
-
-      {
-        :modifier => '',
-        :args_string => 'the matrix',
-        :return_type => 'agent smith',
-        :return_string => 'morpheus',
-        :var_arg => '...',
-        :args => [{:type => 'trinity', :name => 'the one'}],
-        :name => 'neo',
-        :typedefs => ['typedef unsigned int UINT;', 'typedef unsigned short USHORT;'],
-      },
-    ]
-
-    @parser = CMockHeaderParser.new(@prototype_parser, source, @config, @test_name)
-    parsed_stuff = @parser.parse
-    
-    assert_equal(expected_prototypes, @parser.prototypes)
-    assert_equal(expected_hashes, parsed_stuff[:functions])
+  
+    source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" + 
+             "const int TheMatrix(int, unsigned int*);\n"
+             
+    expected = [{ :var_arg=>nil,
+                  :return_string=>"int toReturn",
+                  :name=>"TheMatrix",
+                  :return_type=>"int",
+                  :modifier=>"const",
+                  :args=>[ {:type=>"int",           :name=>"Trinity"}, 
+                           {:type=>"unsigned int*", :name=>"Neo"}
+                         ],
+                  :args_string=>"int Trinity, unsigned int* Neo" 
+                }]
+    assert_equal(expected, @parser.parse(source)[:functions])
+  end
+  
+  should "properly detect typedef'd variants of void and use those" do
+  
+    source = "typedef (void) FUNKY_VOID_T;\n" + 
+             "typedef void CHUNKY_VOID_T;\n" +
+             "FUNKY_VOID_T DrHorrible(int SingAlong);\n" +
+             "int CaptainHammer(CHUNKY_VOID_T);\n"
+             
+    expected = [{ :var_arg=>nil,
+                  :return_string=>"void toReturn",
+                  :name=>"DrHorrible",
+                  :return_type=>"void",
+                  :modifier=>"",
+                  :args=>[ {:type=>"int", :name=>"SingAlong"} ],
+                  :args_string=>"int SingAlong" 
+                },
+                { :var_arg=>nil,
+                  :return_string=>"int toReturn",
+                  :name=>"CaptainHammer",
+                  :return_type=>"int",
+                  :modifier=>"",
+                  :args=>[ ],
+                  :args_string=>"void" 
+                }]
+    assert_equal(expected, @parser.parse(source)[:functions])
+  end
+  
+  should "be ok with structs inside of function declarations" do
+  
+    source = "int DrHorrible(struct SingAlong Blog);\n" +
+             "void Penny(struct const _KeepYourHeadUp_ * const BillyBuddy);\n" +
+             "struct TheseArentTheHammer CaptainHammer(void);\n"
+             
+    expected = [{ :var_arg=>nil,
+                  :return_string=>"int toReturn",
+                  :name=>"DrHorrible",
+                  :return_type=>"int",
+                  :modifier=>"",
+                  :args=>[ {:type=>"struct SingAlong", :name=>"Blog"} ],
+                  :args_string=>"struct SingAlong Blog" 
+                },
+                { :var_arg=>nil,
+                  :return_string=>"void toReturn",
+                  :name=>"Penny",
+                  :return_type=>"void",
+                  :modifier=>"",
+                  :args=>[ {:type=>"struct _KeepYourHeadUp_*", :name=>"BillyBuddy"} ],
+                  :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy" 
+                },
+                { :var_arg=>nil,
+                  :return_string=>"struct TheseArentTheHammer toReturn",
+                  :name=>"CaptainHammer",
+                  :return_type=>"struct TheseArentTheHammer",
+                  :modifier=>"",
+                  :args=>[ ],
+                  :args_string=>"void" 
+                }]
+    assert_equal(expected, @parser.parse(source)[:functions])
+  end
+  
+  should "extract functions with varargs" do
+  
+    source = "int XFiles(int Scully, int Mulder, ...);\n"
+    expected = [{ :var_arg=>"...",
+                  :return_string=>"int toReturn",
+                  :name=>"XFiles",
+                  :return_type=>"int",
+                  :modifier=>"",
+                  :args=>[ {:type=>"int", :name=>"Scully"}, 
+                           {:type=>"int", :name=>"Mulder"}
+                         ],
+                  :args_string=>"int Scully, int Mulder" 
+               }]
+    assert_equal(expected, @parser.parse(source)[:functions])
   end
 
 end

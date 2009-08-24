@@ -109,7 +109,7 @@ void OSEKOS_ISR_LINError_SCI1(void);
 void OSEKOS_ISR_SysCounter(void);
 
 
-// defined multiple times (slightly different forms)
+// defined multiple times (slightly different forms)  These should be ignored because they are externed
 extern void OSEKOS_ISR_CanTxInterrupt( void );
 extern void OSEKOS_ISR_CanRxInterrupt( void );
 
@@ -242,7 +242,7 @@ void OSEKOSV850SyncContextLoadFromIRQ(OSEKOSSaveType);
 void OSEKOSV850ASyncContextLoad(OSEKOSSaveType);
 void OSEKOSV850ASyncContextLoadFromIRQ(OSEKOSSaveType);
 
-// arrays of function pointers - the look like function prototypes
+// arrays of function pointers - they look like function prototypes
 void ( ( * const OSEKOStaskStartAddress [10] ) ( void ) );
 StatusType (* OSEKOStaskStatuses [10][5]) ( void );
 
@@ -256,7 +256,6 @@ void OSEKOSV850StartContextFromIRQ
     OSEK_TASK (( * const ) ( void )),
     OSEK_U8 * const
 );
-
 
 void OSEKOSSuspendOSInterrupts(void);
 void OSEKOSResumeOSInterrupts(void);

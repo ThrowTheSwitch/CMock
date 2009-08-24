@@ -23,19 +23,6 @@ task :config, :config_file do |t, args|
   configure_toolchain(args[:config_file])
 end
 
-desc "Generate parser(s) from Treetop grammar(s)"
-task :treetop do
-  require 'rubygems'
-  require 'treetop'
-
-  treetop_files = FileList.new('lib/*.treetop')
-  compiler = Treetop::Compiler::GrammarCompiler.new
-
-  treetop_files.each do |file|
-    compiler.compile(file)
-  end
-end
-
 namespace :test do
   desc "Run all unit and system tests"
   task :all => ['test:units', 'test:system']

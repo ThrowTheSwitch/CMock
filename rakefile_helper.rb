@@ -326,7 +326,7 @@ module RakefileHelpers
     mockables.each do |header|
       mock_filename = 'mock_' + File.basename(header).ext('.c')
       profile_this(mock_filename.gsub('.c','')) do 
-        2.times do 
+        10.times do 
           CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml').setup_mocks(header)
         end
       end

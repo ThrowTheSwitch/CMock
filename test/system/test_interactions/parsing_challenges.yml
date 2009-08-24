@@ -2,7 +2,9 @@
 :cmock:
   :plugins:
   - # no plugins
-
+  :treat_as_void: 
+  - VOID_TYPE_CRAZINESS_CFG
+  
 :systest:
   :types: |
     typedef unsigned short U16;
@@ -11,14 +13,15 @@
       int x;
       int y;
     } POINT_T;
+    typedef void VOID_TYPE_CRAZINESS_CFG;
 
   :mockable: |
     // typedef edge case; must be in mockable.h for test to compile
     // not ANSI C but it has been done and will break cmock if not handled
-    typedef void VOID_TYPE_CRAZINESS;
+    typedef void VOID_TYPE_CRAZINESS_LCL;
     
-    VOID_TYPE_CRAZINESS void_type_craziness1(int * a, int *b, int* c);
-    void void_type_craziness2(VOID_TYPE_CRAZINESS);
+    VOID_TYPE_CRAZINESS_LCL void_type_craziness1(int * a, int *b, int* c);
+    void void_type_craziness2(VOID_TYPE_CRAZINESS_CFG);
 
     // pointer parsing exercise
     U16  *ptr_return1(int a);

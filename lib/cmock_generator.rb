@@ -2,19 +2,20 @@ $here = File.dirname __FILE__
 
 class CMockGenerator
 
-  attr_reader :config, :file_writer, :module_name, :mock_name, :utils, :plugins
+  attr_accessor :config, :file_writer, :module_name, :mock_name, :utils, :plugins
   
-  def initialize(config, module_name, file_writer, utils, plugins=[])
+  def initialize(config, file_writer, utils, plugins=[])
     @file_writer = file_writer
-    @module_name = module_name
     @utils       = utils
     @plugins     = plugins
     @config      = config
-    @mock_name   = @config.mock_prefix + @module_name
+    @prefix      = @config.mock_prefix
     @ordered     = @config.enforce_strict_ordering
   end
 
-  def create_mock(parsed_stuff)
+  def create_mock(module_name, parsed_stuff)
+    @module_name = module_name
+    @mock_name   = @prefix + @module_name
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
@@ -25,6 +26,7 @@ class CMockGenerator
     @file_writer.create_file(@mock_name + ".h") do |file, filename|
       create_mock_header_header(file, filename)
       create_mock_header_service_call_declarations(file)
+      create_typedefs(file, parsed_stuff[:typedefs])
       parsed_stuff[:functions].each do |function|
         file << @plugins.run(:mock_function_declarations, function)
       end
@@ -35,7 +37,6 @@ class CMockGenerator
   def create_mock_source_file(parsed_stuff)
     @file_writer.create_file(@mock_name + ".c") do |file, filename|
       create_source_header_section(file, filename)
-      create_source_typedefs(file, parsed_stuff[:functions])
       create_instance_structure(file, parsed_stuff[:functions])
       create_extern_declarations(file)
       create_mock_verify_function(file, parsed_stuff[:functions])
@@ -57,11 +58,9 @@ class CMockGenerator
     file << "#include \"#{orig_filename}\"\n\n"
   end
   
-  def create_source_typedefs(file, functions)
+  def create_typedefs(file, typedefs)
     file << "\n"
-    functions.each do |function|
-      function[:typedefs].each {|typedef| file << "#{typedef}\n" }
-    end
+    typedefs.each {|typedef| file << "#{typedef}\n" }
     file << "\n\n"
   end
 

@@ -5,13 +5,14 @@ class CMockConfig
   {
     :mock_path => 'mocks',
     :mock_prefix => 'Mock',
-    :plugins => ['cexception', 'ignore'],
+    :plugins => [],
     :includes => [],
-    :attributes => ['__ramfunc', '__irq', '__fiq'],
+    :attributes => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],
     :enforce_strict_ordering => false,
     :cexception_include => nil,
     :unity_helper => false,
     :treat_as => {},
+    :treat_as_void => [],
     :memcmp_if_unknown => true,
     :when_no_prototypes => :warn, #the options being :ignore, :warn, or :error
     :when_ptr_star =>:compare_data, #the options being :compare_ptr, :compare_data, :compare_array
