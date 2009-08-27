@@ -59,7 +59,9 @@ class CMockGeneratorUtils
     case(unity_func)
       when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE"
         full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "&(#{expected})"
-        return "    #{unity_func}((void*)#{full_expected}, (void*)&(#{arg}), sizeof(#{c_type})#{unity_msg});\n"  
+        return "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)#{full_expected}, (void*)&(#{arg}), sizeof(#{c_type})#{unity_msg});\n"
+      when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE_ARRAY"
+        return "    if (*p_expected == NULL)\n      { TEST_ASSERT_NULL(#{arg}); }\n    else\n      { TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)(#{expected}), (void*)#{arg}, sizeof(#{c_type.sub('*','')})#{unity_msg}); }\n"  
       when /_ARRAY/
         return "    if (*p_expected == NULL)\n      { TEST_ASSERT_NULL(#{arg}); }\n    else\n      { #{unity_func}(#{expected}, #{arg}, 1#{unity_msg}); }\n"
       else

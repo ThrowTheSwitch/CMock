@@ -1,0 +1,166 @@
+---
+:cmock:
+  :plugins:
+  - # none
+
+:systest:
+  :types: |
+    typedef struct _POINT_T {
+      int x;
+      int y;
+    } POINT_T;
+
+  :mockable: |
+    void foo(POINT_T* a);
+    POINT_T* bar(void);
+    void fooa(POINT_T a[]);
+    void foos(const char const * a);
+    const char const * bars(void);
+
+  :source: 
+    :header: |    
+      void function_a(void);
+      void function_b(void);
+
+    :code: |
+      void function_a(void)    
+      {
+        foo(bar());
+      }    
+
+      void function_b(void) {
+        fooa(bar());
+      }
+      
+      void function_c(void) {
+        foos(bars());
+      }
+      
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+      
+    :units:
+    - :pass: TRUE
+      :should: 'handle the situation where we pass nulls to pointers'
+      :code: |
+        test()
+        {
+          bar_ExpectAndReturn(NULL);
+          foo_Expect(NULL);
+          
+          function_a();
+        }
+        
+    - :pass: TRUE
+      :should: 'handle the situation where we pass single object with expect'
+      :code: |
+        test()
+        {
+          POINT_T pt = {1, 2};
+          POINT_T ex = {1, 2};
+          bar_ExpectAndReturn(&pt);
+          foo_Expect(&ex);
+          
+          function_a();
+        }
+        
+    - :pass: FALSE
+      :should: 'handle the situation where we pass single object with expect and it is wrong'
+      :code: |
+        test()
+        {
+          POINT_T pt = {1, 2};
+          POINT_T ex = {1, 3};
+          bar_ExpectAndReturn(&pt);
+          foo_Expect(&ex);
+          
+          function_a();
+        }
+        
+    - :pass: FALSE
+      :should: 'handle the situation where we pass nulls to pointers and fail'
+      :code: |
+        test()
+        {
+          POINT_T pt = {1, 2};
+          bar_ExpectAndReturn(&pt);
+          foo_Expect(NULL);
+          
+          function_a();
+        }
+      
+    - :pass: TRUE
+      :should: 'handle the situation where we pass nulls to arrays'
+      :code: |
+        test()
+        {
+          bar_ExpectAndReturn(NULL);
+          fooa_Expect(NULL);
+          
+          function_b();
+        }
+
+    - :pass: TRUE
+      :should: 'handle the situation where we pass single array element with expect'
+      :code: |
+        test()
+        {
+          POINT_T pt = {1, 2};
+          POINT_T ex = {1, 2};
+          bar_ExpectAndReturn(&pt);
+          fooa_Expect(&ex);
+          
+          function_b();
+        }
+        
+    - :pass: FALSE
+      :should: 'handle the situation where we pass single array element with expect and it is wrong'
+      :code: |
+        test()
+        {
+          POINT_T pt = {1, 2};
+          POINT_T ex = {1, 3};
+          bar_ExpectAndReturn(&pt);
+          fooa_Expect(&ex);
+          
+          function_b();
+        }
+        
+    - :pass: FALSE
+      :should: 'handle the situation where we pass nulls to arrays and fail'
+      :code: |
+        test()
+        {
+          POINT_T pt = {1, 2};
+          bar_ExpectAndReturn(&pt);
+          fooa_Expect(NULL);
+          
+          function_b();
+        }
+
+    - :pass: TRUE
+      :should: 'handle standard c string as null terminated on not do crappy memory compares of a byte, passing'
+      :code: |
+        test()
+        {
+          bars_ExpectAndReturn("This is a\0 silly string");
+          foos_Expect("This is a\0 wacky string");
+          
+          function_c();
+        }
+        
+    - :pass: FALSE
+      :should: 'handle standard c string as null terminated on not do crappy memory compares of a byte, finding failures'
+      :code: |
+        test()
+        {
+          bars_ExpectAndReturn("This is a silly string");
+          foos_Expect("This is a wacky string");
+          
+          function_c();
+        }
+
+
+...

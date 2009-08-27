@@ -245,6 +245,29 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
     assert_equal(expected, returned)
   end
+
+  should "make handle default types with memory compares and arrays, which involves extra work" do
+    function = { :name => "Toaster", :return_type => "uint64"}
+    var_type = "SOME_STRUCT*"
+    var_name = "Bread"
+    
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_MEMORY_MESSAGE_ARRAY")
+    
+    expected = ["\n",
+                "  if (Mock.Toaster_Expected_Bread != Mock.Toaster_Expected_Bread_Tail)\n",
+                "  {\n",
+                "    SOME_STRUCT** p_expected = Mock.Toaster_Expected_Bread;\n",
+                "    Mock.Toaster_Expected_Bread++;\n",
+                "    if (*p_expected == NULL)\n",
+                "      { TEST_ASSERT_NULL(Bread); }\n",
+                "    else\n",
+                "      { TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)(*p_expected), (void*)Bread, sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\"); }\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    assert_equal(expected, returned)
+  end
   
   should "make handle default types with array compares, which involves extra work" do
     function = { :name => "Blender", :return_type => "uint16*"}

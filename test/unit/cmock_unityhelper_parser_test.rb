@@ -170,9 +170,14 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       'SPINACH' => "TEST_ASSERT_EQUAL_SPINACH",
     }
   
-    ["UINT16","UINT8*","SPINACH_T","SALAD","PINEAPPLE"].each do |ctype|
+    ["UINT16","SPINACH_T","SALAD","PINEAPPLE"].each do |ctype|
       @config.expect.memcmp_if_unknown.returns(true)
       assert_equal("TEST_ASSERT_EQUAL_MEMORY_MESSAGE", @parser.get_helper(ctype))  
+    end
+  
+    ["UINT8*","SPINACH_T*"].each do |ctype|
+      @config.expect.memcmp_if_unknown.returns(true)
+      assert_equal("TEST_ASSERT_EQUAL_MEMORY_MESSAGE_ARRAY", @parser.get_helper(ctype))  
     end
   end
   

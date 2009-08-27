@@ -8,10 +8,14 @@ class CMockUnityHelperParser
   end
 
   def get_helper(ctype)
-    lookup = ctype.gsub(/const\s+/,'').strip.gsub(/\s+/,'_')
+    lookup = ctype.gsub(/(?:^|(\S?)(\s*)|(\W))const(?:$|(\s*)(\S)|(\W))/,'\1\3\5\6').strip.gsub(/\s+/,'_')
     return @c_types[lookup] if (@c_types[lookup])
     raise("Don't know how to test #{ctype} and memory tests are disabled!") unless @config.memcmp_if_unknown
-    return 'TEST_ASSERT_EQUAL_MEMORY_MESSAGE'
+    if (ctype =~ /\*/)
+      return 'TEST_ASSERT_EQUAL_MEMORY_MESSAGE_ARRAY'
+    else
+      return 'TEST_ASSERT_EQUAL_MEMORY_MESSAGE'
+    end
   end
   
   private ###########################
