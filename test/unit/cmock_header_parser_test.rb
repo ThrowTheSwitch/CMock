@@ -83,6 +83,21 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     
     assert_equal(expected, @parser.import_source(source))
   end
+
+
+  should "remove assembler pragma sections" do
+    source =
+      " #pragma\tasm\n" +
+      "  .foo\n" +
+      "  lda %m\n" +
+      "  nop\n" +
+      "# pragma  endasm \n" +
+      "foo"
+      
+    expected = ["foo"]
+        
+    assert_equal(expected, @parser.import_source(source))
+  end
   
   
   should "smush lines together that contain continuation characters" do

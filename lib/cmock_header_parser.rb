@@ -50,6 +50,9 @@ class CMockHeaderParser
     source.gsub!(/\/\/(?:.+\/\*|\*(?:$|[^\/])).*$/, '')  # remove line comments that comment out the start of blocks
     source.gsub!(/\/\*.*?\*\//m, '')                     # remove block comments 
     source.gsub!(/\/\/.*$/, '')                          # remove line comments (all that remain)
+
+    # remove assembler pragma sections
+    source.gsub!(/^\s*#\s*pragma\s+asm\s+.*?#\s*pragma\s+endasm/m, '')
     
     # remove preprocessor statements
     source.gsub!(/^\s*#.*/, '')
