@@ -207,7 +207,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     functions = []
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
-                 "  TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n",
+                 "  TEST_ASSERT_EQUAL_MESSAGE(0, Mock.allocFailure, \"Unable to allocate memory for mock\");\n",
                  "",
                  "}\n\n"
                ]
@@ -223,7 +223,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                 ]
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
-                 "  TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n",
+                 "  TEST_ASSERT_EQUAL_MESSAGE(0, Mock.allocFailure, \"Unable to allocate memory for mock\");\n",
                  "  Uno_First" +
                  "  Dos_First" +
                  "  Uno_Second" +

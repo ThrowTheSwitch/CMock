@@ -110,7 +110,7 @@ class CMockGenerator
   
   def create_mock_verify_function(file, functions)
     file << "void #{@mock_name}_Verify(void)\n{\n"
-    file << "  TEST_ASSERT_EQUAL(0, Mock.allocFailure);\n"
+    file << "  TEST_ASSERT_EQUAL_MESSAGE(0, Mock.allocFailure, \"Unable to allocate memory for mock\");\n"
     file << functions.collect {|function| @plugins.run(:mock_verify, function)}.join
     if (@ordered)
       file << "  if (GlobalOrderError)\n"
