@@ -104,11 +104,20 @@ class CMockHeaderParser
     args = []
     arg_list.split(',').each do |arg|
       arg.strip! 
-      return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)                          # we're done if we reach void by itself or ...
-      arg_elements = arg.split - @c_attributes                                     # split up words and remove known attributes
-      args << {:type => arg_elements[0..-2].join(' '), :name => arg_elements[-1]}  # add the lucky winners to the list
+      return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)   # we're done if we reach void by itself or ...
+      arg_elements = arg.split - @c_attributes              # split up words and remove known attributes
+      args << { :type => (arg_type =arg_elements[0..-2].join(' ')), 
+                :name => arg_elements[-1], 
+                :ptr? => divine_ptr(arg_type)
+              }
     end
     return args
+  end
+
+  def divine_ptr(arg_type)
+    return false unless arg_type.include? '*'
+    return false if arg_type.gsub(/(const|char|\*|\s)+/,'').empty?
+    return true
   end
 
   def clean_args(arg_list)
@@ -199,6 +208,7 @@ class CMockHeaderParser
     args = clean_args(args)
     decl[:args_string] = args
     decl[:args] = parse_args(args)
+    decl[:contains_ptr?] = decl[:args].inject(false) {|ptr, arg| arg[:ptr?] ? true : ptr }
       
     if (decl[:return_type].nil?   or decl[:name].nil?   or decl[:args].nil? or
         decl[:return_type].empty? or decl[:name].empty?)

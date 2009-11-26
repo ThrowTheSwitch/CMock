@@ -1,5 +1,5 @@
 
-class CMockGeneratorPluginCException
+class CMockGeneratorPluginCexception
 
   attr_reader :config, :utils
 

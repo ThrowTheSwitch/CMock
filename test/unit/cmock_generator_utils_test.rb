@@ -6,6 +6,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     create_mocks :config, :unity_helper
     @config.expect.when_ptr_star.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(false)
+    @config.expect.plugins.returns([:arrays])
     @cmock_generator_utils = CMockGeneratorUtils.new(@config)
   end
 
@@ -21,6 +22,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     create_mocks :config
     @config.expect.when_ptr_star.returns(:compare_ptr)
     @config.expect.enforce_strict_ordering.returns(false)
+    @config.expect.plugins.returns([])
     @cmock_generator_utils = CMockGeneratorUtils.new(@config, {:A=>1, :B=>2})
     assert_equal(@config, @cmock_generator_utils.config)
     assert_equal({:A=>1, :B=>2},@cmock_generator_utils.helpers)
@@ -126,7 +128,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  Mock.PizzaCutter_Expected_Spork = Mock.PizzaCutter_Expected_Spork_Head;\n",
                 "  Mock.PizzaCutter_Expected_Spork += Mock.PizzaCutter_CallCount;\n"
                ].join
-    returned = @cmock_generator_utils.code_add_an_arg_expectation(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_add_an_arg_expectation(function, {:type => var_type, :name => var_name})
     assert_equal(expected, returned)
   end
   
@@ -179,10 +181,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    uint16* p_expected = Mock.CanOpener_Expected_CorkScrew;\n",
                 "    Mock.CanOpener_Expected_CorkScrew++;\n",
-                "    TEST_ASSERT_EQUAL_MESSAGE(*p_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for argument 'CorkScrew'.\");\n",
+                "    TEST_ASSERT_EQUAL_MESSAGE(*p_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for argument 'CorkScrew'.\");\n\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
     assert_equal(expected, returned)
   end
 
@@ -199,10 +201,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    const char** p_expected = Mock.MeasureCup_Expected_TeaSpoon;\n",
                 "    Mock.MeasureCup_Expected_TeaSpoon++;\n",
-                "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected value for argument 'TeaSpoon'.\");\n",
+                "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected value for argument 'TeaSpoon'.\");\n\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
     assert_equal(expected, returned)
   end
   
@@ -219,10 +221,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    MANDELBROT_SET_T* p_expected = Mock.TeaPot_Expected_TeaSpoon;\n",
                 "    Mock.TeaPot_Expected_TeaSpoon++;\n",
-                "    TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE(*p_expected, TeaSpoon, \"Function 'TeaPot' called with unexpected value for argument 'TeaSpoon'.\");\n",
+                "    TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE(*p_expected, TeaSpoon, \"Function 'TeaPot' called with unexpected value for argument 'TeaSpoon'.\");\n\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
     assert_equal(expected, returned)
   end
 
@@ -239,10 +241,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  {\n",
                 "    SOME_STRUCT* p_expected = Mock.Toaster_Expected_Bread;\n",
                 "    Mock.Toaster_Expected_Bread++;\n",
-                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)p_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\");\n",
+                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)p_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\");\n\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
     assert_equal(expected, returned)
   end
 
@@ -265,7 +267,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "      { TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)(*p_expected), (void*)Bread, sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\"); }\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
     assert_equal(expected, returned)
   end
   
@@ -275,7 +277,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     var_name = "Strawberry"
     
     @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
-    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_FRUIT_ARRAY_MESSAGE")
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_FRUIT_ARRAY")
     
     expected = ["\n",
                 "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
@@ -285,10 +287,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "    if (*p_expected == NULL)\n",
                 "      { TEST_ASSERT_NULL(Strawberry); }\n",
                 "    else\n",
-                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY_MESSAGE(*p_expected, Strawberry, 1, \"Function 'Blender' called with unexpected value for argument 'Strawberry'.\"); }\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*p_expected, Strawberry, 1); }\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, var_type, var_name)
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
     assert_equal(expected, returned)
   end
 end

@@ -23,7 +23,7 @@ class CMockPluginManagerTest < Test::Unit::TestCase
     test_plugins.each do |plugin|
       contained[:expect]     = true   if plugin.instance_of?(CMockGeneratorPluginExpect)
       contained[:ignore]     = true   if plugin.instance_of?(CMockGeneratorPluginIgnore)
-      contained[:cexception] = true   if plugin.instance_of?(CMockGeneratorPluginCException)
+      contained[:cexception] = true   if plugin.instance_of?(CMockGeneratorPluginCexception)
     end
     assert_equal(true, contained[:expect])
     assert_equal(true, contained[:ignore])
@@ -41,7 +41,7 @@ class CMockPluginManagerTest < Test::Unit::TestCase
     test_plugins.each do |plugin|
       contained[:expect]     = true   if plugin.instance_of?(CMockGeneratorPluginExpect)
       contained[:ignore]     = true   if plugin.instance_of?(CMockGeneratorPluginIgnore)
-      contained[:cexception] = true   if plugin.instance_of?(CMockGeneratorPluginCException)
+      contained[:cexception] = true   if plugin.instance_of?(CMockGeneratorPluginCexception)
     end
     assert_equal(true, contained[:expect])
     assert_equal(false,contained[:ignore])

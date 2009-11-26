@@ -51,7 +51,7 @@ class CMockGeneratorPluginExpect
       lines << MOCK_IMPLEMENT_ORDERED_SNIPPET % [function[:name], err_msg, (err_msg.size + 1).to_s]
     end
     function[:args].each do |arg|
-      lines << @utils.code_verify_an_arg_expectation(function, arg[:type], arg[:name])
+      lines << @utils.code_verify_an_arg_expectation(function, arg)
     end
     lines
   end
@@ -64,7 +64,7 @@ class CMockGeneratorPluginExpect
     if (function[:args_string] != "void")
       lines << "void ExpectParameters_#{func_name}(#{function[:args_string]})\n{\n"
       function[:args].each do |arg|
-        lines << @utils.code_add_an_arg_expectation(function, arg[:type], arg[:name])
+        lines << @utils.code_add_an_arg_expectation(function, arg)
       end
       lines << "}\n\n"
     end

@@ -1,11 +1,11 @@
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require 'cmock_generator_plugin_cexception'
 
-class CMockGeneratorPluginCExceptionTest < Test::Unit::TestCase
+class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
     @config.stubs!(:respond_to?).returns(true)
-    @cmock_generator_plugin_cexception = CMockGeneratorPluginCException.new(@config, @utils)
+    @cmock_generator_plugin_cexception = CMockGeneratorPluginCexception.new(@config, @utils)
   end
 
   def teardown

@@ -1,7 +1,7 @@
 ---
 :cmock:
   :plugins:
-  - # none
+  - :array
 
 :systest:
   :types: |

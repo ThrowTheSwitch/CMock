@@ -150,8 +150,8 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   should "add mock function implementation for functions of style 'int func(int veal, unsigned int sushi)'" do
     function = {:name => "Cherry", :args => [ { :type => "int", :name => "veal" }, { :type => "unsigned int", :name => "sushi" } ], :return_type => "int"}
     
-    @utils.expect.code_verify_an_arg_expectation(function, function[:args][0][:type], function[:args][0][:name]).returns("mocked_retval_1")
-    @utils.expect.code_verify_an_arg_expectation(function, function[:args][1][:type], function[:args][1][:name]).returns("mocked_retval_2")
+    @utils.expect.code_verify_an_arg_expectation(function, function[:args][0]).returns("mocked_retval_1")
+    @utils.expect.code_verify_an_arg_expectation(function, function[:args][1]).returns("mocked_retval_2")
     
     expected = ["\n",
                 "  Mock.Cherry_CallCount++;\n",
@@ -250,7 +250,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   
   should "add mock interfaces for functions of style 'int func(char* pescado)'" do
     function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return_type => "int", :return_string => "int toReturn"}
-    @utils.expect.code_add_an_arg_expectation(function, "char*", "pescado").returns("mock_retval_2")
+    @utils.expect.code_add_an_arg_expectation(function, {:type => "char*", :name => "pescado"}).returns("mock_retval_2")
     @utils.expect.code_add_base_expectation("Lemon").returns("mock_retval_0")
     @utils.expect.create_call_list(function).returns("mock_retval_3")
     @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return", 'toReturn').returns("mock_retval_1")
