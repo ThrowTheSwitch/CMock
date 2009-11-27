@@ -252,7 +252,6 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return_type => "int", :return_string => "int toReturn"}
     @utils.expect.code_add_an_arg_expectation(function, {:type => "char*", :name => "pescado"}).returns("mock_retval_2")
     @utils.expect.code_add_base_expectation("Lemon").returns("mock_retval_0")
-    @utils.expect.create_call_list(function).returns("mock_retval_3")
     @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return", 'toReturn').returns("mock_retval_1")
     
     expected = ["void ExpectParameters_Lemon(char* pescado)\n",
@@ -262,7 +261,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "void Lemon_ExpectAndReturn(char* pescado, int toReturn)\n",
                 "{\n",
                 "mock_retval_0",
-                "  ExpectParameters_Lemon(mock_retval_3);\n",
+                "  ExpectParameters_Lemon(pescado);\n",
                 "mock_retval_1",
                 "  Mock.Lemon_Return = Mock.Lemon_Return_Head;\n",
                 "  Mock.Lemon_Return += Mock.Lemon_CallCount;\n",

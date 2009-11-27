@@ -15,8 +15,8 @@ class CMockConfig
     :treat_as_void => [],
     :memcmp_if_unknown => true,
     :when_no_prototypes => :warn, #the options being :ignore, :warn, or :error
-    :when_ptr_star =>:compare_data, #the options being :compare_ptr, :compare_data, :compare_array
-    :when_ptr_brackets => :compare_array, #not really supported yet
+    :when_ptr_star =>:compare_data, #the options being :compare_ptr, :compare_data
+    :when_ptr_brackets => :compare_data, #not really supported yet
   }
   
   def initialize(options=nil)

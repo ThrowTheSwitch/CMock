@@ -83,7 +83,7 @@ class CMockGeneratorPluginExpect
     lines << @utils.code_add_base_expectation(func_name)
     
     if (function[:args_string] != "void")
-      lines << "  ExpectParameters_#{func_name}(#{@utils.create_call_list(function)});\n"
+      lines << "  ExpectParameters_#{func_name}(#{function[:args].map{|m| m[:name]}.join(', ')});\n"
     end
     
     if (function[:return_type] != "void")

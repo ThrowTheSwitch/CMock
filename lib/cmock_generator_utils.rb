@@ -11,18 +11,6 @@ class CMockGeneratorUtils
 	  @helpers = helpers
   end
   
-  def create_call_list(function)
-    call_list = ""
-    function[:args].each do |arg|
-      if call_list.empty?
-        call_list = arg[:name]
-      else
-        call_list += ", " + arg[:name]
-      end
-    end
-    return call_list
-  end
-  
   def code_insert_item_into_expect_array(type, array, newValue)
     INSERT_EXPECT_CODE_SNIPPET % [type, array, newValue]
   end

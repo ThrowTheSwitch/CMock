@@ -112,7 +112,6 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array("int", "Mock.Pear_ThrowOnCallCount", "Mock.Pear_CallsExpected").returns("mock_return_1")
     @utils.expect.code_insert_item_into_expect_array("EXCEPTION_T", "Mock.Pear_ThrowValue", "toThrow").returns("mock_return_2")
-    @utils.expect.create_call_list(function).returns("mock_return_3")
     
     expected = ["void Pear_ExpectAndThrow(int blah, EXCEPTION_T toThrow)\n",
                 "{\n",
@@ -127,7 +126,7 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
                 "    Mock.Pear_ThrowValue++;\n",
                 "    Mock.Pear_ThrowOnCallCount++;\n",
                 "  }\n",
-                "  ExpectParameters_Pear(mock_return_3);\n",
+                "  ExpectParameters_Pear(blah);\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_cexception.mock_interfaces(function)

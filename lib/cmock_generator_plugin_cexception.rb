@@ -34,12 +34,13 @@ class CMockGeneratorPluginCexception
   
   def mock_interfaces(function)
     arg_insert = (function[:args_string] == "void") ? "" : "#{function[:args_string]}, "
+    call_string = function[:args].map{|m| m[:name]}.join(', ')
     [ "void #{function[:name]}_ExpectAndThrow(#{arg_insert}EXCEPTION_T toThrow)\n{\n",
       @utils.code_add_base_expectation(function[:name]),
       @utils.code_insert_item_into_expect_array('int', "Mock.#{function[:name]}_ThrowOnCallCount", "Mock.#{function[:name]}_CallsExpected"),
       @utils.code_insert_item_into_expect_array('EXCEPTION_T', "Mock.#{function[:name]}_ThrowValue", "toThrow"),
       (MOCK_INTERFACE_THROW_HANDLING_SNIPPET % function[:name]),
-      (function[:args_string] != "void") ? "  ExpectParameters_#{function[:name]}(#{@utils.create_call_list(function)});\n" : nil,
+      (function[:args_string] != "void") ? "  ExpectParameters_#{function[:name]}(#{call_string});\n" : nil,
       "}\n\n" ].join
   end
   

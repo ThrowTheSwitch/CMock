@@ -1,7 +1,10 @@
 ---
 :cmock:
+  :enforce_strict_ordering: 1
   :plugins:
   - :array
+  - :cexception
+  - :ignore
 
 :systest:
   :types: |
@@ -11,6 +14,7 @@
     } POINT_T;
 
   :mockable: |
+    #include  "Exception.h"
     void foo(POINT_T* a);
     POINT_T* bar(void);
     void fooa(POINT_T a[]);
@@ -20,7 +24,8 @@
     int mixed(int a, int* b, int c);
 
   :source: 
-    :header: |    
+    :header: |   
+      #include "Exception.h" 
       void function_a(void);
       void function_b(void);
       void function_c(void);
@@ -37,7 +42,10 @@
       }
       
       void function_c(void) {
-        foos(bars());
+        EXCEPTION_T e;
+        Try {
+          foos(bars());
+        } Catch(e) { foos("err"); }
       }
       
       int function_d(void) {
@@ -48,6 +56,7 @@
       
   :tests:
     :common: |
+      #include "CException.h"
       void setUp(void) {}
       void tearDown(void) {}
       
@@ -82,31 +91,6 @@
         {
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(NULL);
-          foo_Expect(&ex);
-          
-          function_a();
-        }
-        
-    - :pass: FALSE
-      :should: 'handle the situation where it fails because you asked it to compare nothing at all'
-      :code: |
-        test()
-        {
-          POINT_T ex = {1, 2};
-          bar_ExpectAndReturn(&ex);
-          foo_ExpectWithArray(&ex, 0);
-          
-          function_a();
-        }
-        
-    - :pass: TRUE
-      :should: 'handle the situation where we pass single object with expect'
-      :code: |
-        test()
-        {
-          POINT_T pt = {1, 2};
-          POINT_T ex = {1, 2};
-          bar_ExpectAndReturn(&pt);
           foo_Expect(&ex);
           
           function_a();
@@ -165,19 +149,6 @@
         }
         
     - :pass: FALSE
-      :should: 'handle the situation where we pass multiple objects with expect and use array handler and it is wrong at start'
-      :code: |
-        test()
-        {
-          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
-          POINT_T ex[] = {{9, 2}, {3, 4}, {5, 6}};
-          bar_ExpectAndReturn(pt);
-          foo_ExpectWithArray(ex, 3);
-          
-          function_a();
-        }
-        
-    - :pass: FALSE
       :should: 'handle the situation where we pass multiple objects with expect and use array handler and it is wrong at end'
       :code: |
         test()
@@ -189,42 +160,6 @@
           
           function_a();
         }
-        
-    - :pass: FALSE
-      :should: 'handle the situation where we pass multiple objects with expect and use array handler and it is wrong in middle'
-      :code: |
-        test()
-        {
-          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
-          POINT_T ex[] = {{1, 2}, {3, 9}, {5, 6}};
-          bar_ExpectAndReturn(pt);
-          foo_ExpectWithArray(ex, 3);
-          
-          function_a();
-        }
-        
-    - :pass: FALSE
-      :should: 'handle the situation where we pass nulls to pointers and fail'
-      :code: |
-        test()
-        {
-          POINT_T pt = {1, 2};
-          bar_ExpectAndReturn(&pt);
-          foo_Expect(NULL);
-          
-          function_a();
-        }
-      
-    - :pass: TRUE
-      :should: 'handle the situation where we pass nulls to arrays'
-      :code: |
-        test()
-        {
-          bar_ExpectAndReturn(NULL);
-          fooa_Expect(NULL);
-          
-          function_b();
-        }
 
     - :pass: TRUE
       :should: 'handle the situation where we pass single array element with expect'
@@ -235,31 +170,6 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(&pt);
           fooa_Expect(&ex);
-          
-          function_b();
-        }
-        
-    - :pass: FALSE
-      :should: 'handle the situation where we pass single array element with expect and it is wrong'
-      :code: |
-        test()
-        {
-          POINT_T pt = {1, 2};
-          POINT_T ex = {1, 3};
-          bar_ExpectAndReturn(&pt);
-          fooa_Expect(&ex);
-          
-          function_b();
-        }
-        
-    - :pass: FALSE
-      :should: 'handle the situation where we pass nulls to arrays and fail'
-      :code: |
-        test()
-        {
-          POINT_T pt = {1, 2};
-          bar_ExpectAndReturn(&pt);
-          fooa_Expect(NULL);
           
           function_b();
         }
@@ -334,5 +244,52 @@
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
+    - :pass: TRUE
+      :should: 'handle an exception being caught'
+      :code: |
+        test()
+        {
+          bars_ExpectAndReturn("This is a\0 silly string");
+          foos_ExpectAndThrow("This is a\0 wacky string", 55);
+          foos_Expect("err");
+          
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'handle an exception being caught but still catch following errors'
+      :code: |
+        test()
+        {
+          bars_ExpectAndReturn("This is a\0 silly string");
+          foos_ExpectAndThrow("This is a\0 wacky string", 55);
+          foos_Expect("wrong error");
+          
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'fail strict ordering problems even though we would otherwise have passed'
+      :code: |
+        test()
+        {
+          int expect_list[] = { 1, 2, 3, 4, 6 };
+          mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
+          no_pointers_Expect(1, "silly");
+          
+          TEST_ASSERT_EQUAL(13, function_d());
+        }
+
+    - :pass: TRUE
+      :should: 'that we can properly ignore one of the function but the other will work properly'
+      :code: |
+        test()
+        {
+          int expect_list[] = { 1, 2, 3, 4, 6 };
+          mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
+          no_pointers_Ignore();
+          
+          TEST_ASSERT_EQUAL(13, function_d());
+        }
 
 ...

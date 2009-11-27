@@ -28,27 +28,6 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     assert_equal({:A=>1, :B=>2},@cmock_generator_utils.helpers)
   end
   
-  should "set up an empty call list if no arguments passed" do
-    function = {:args => []}
-    expected = ""
-    returned = @cmock_generator_utils.create_call_list(function)
-    assert_equal(expected, returned)
-  end
-  
-  should "set up a single call list if one arguments passed" do
-    function = {:args => [{ :type => "const char*", :name => "spoon"}]}
-    expected = "spoon"
-    returned = @cmock_generator_utils.create_call_list(function)
-    assert_equal(expected, returned)
-  end
-  
-  should "set up a call list if multiple arguments passed" do
-    function = {:args => [{ :type => "const char*", :name => "spoon"}, { :type => "int", :name => "fork"}, { :type => "unsigned int", :name => "knife"}] }
-    expected = "spoon, fork, knife"
-    returned = @cmock_generator_utils.create_call_list(function)
-    assert_equal(expected, returned)
-  end
-  
   should "make expand array" do
     the_type = "int"
     the_array = "array"
