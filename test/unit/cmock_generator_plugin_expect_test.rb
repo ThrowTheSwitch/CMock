@@ -6,14 +6,14 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     create_mocks :config, :utils
     
     #no strict ordering
-    @config.expect.when_ptr_star.returns(:compare_data)
+    @config.expect.when_ptr.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(false)
     @config.stubs!(:respond_to?).returns(true)
     @utils.expect.helpers.returns({})
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)
     
     #strict ordering
-    @config.expect.when_ptr_star.returns(:compare_data)
+    @config.expect.when_ptr.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(true)
     @config.stubs!(:respond_to?).returns(true)
     @utils.expect.helpers.returns({})

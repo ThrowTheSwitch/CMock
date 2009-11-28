@@ -5,7 +5,7 @@ class CMockPluginManagerTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils, :pluginA, :pluginB
     @config.stubs!(:respond_to?).returns(true)
-    @config.stubs!(:when_ptr_star).returns(:compare_data)
+    @config.stubs!(:when_ptr).returns(:compare_data)
     @config.stubs!(:enforce_strict_ordering).returns(false)
   end
 

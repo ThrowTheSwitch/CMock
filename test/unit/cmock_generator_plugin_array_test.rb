@@ -6,7 +6,7 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
     create_mocks :config, :utils
     
     #no strict ordering
-    @config.expect.when_ptr_star.returns(:compare_data)
+    @config.expect.when_ptr.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(false)
     @config.stubs!(:respond_to?).returns(true)
     @utils.expect.helpers.returns({})
@@ -83,19 +83,19 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
     assert(!@cmock_generator_plugin_array.respond_to?(:mock_implementation_prefix))
   end
   
-  should "add not have a mock function implementation for functions of style 'int* func(void)'" do
+  should "not have a mock function implementation for functions of style 'int* func(void)'" do
     function = {:name => "Apple", :args => [], :return_type => "int*", :contains_ptr? => false}
     returned = @cmock_generator_plugin_array.mock_implementation(function)
     assert_nil(returned)
   end
   
-  should "add not have a mock function implementation for functions containing pointers either (handled in expect)" do
+  should "not have a mock function implementation for functions containing pointers either (handled in expect)" do
     function = {:name => "Apple", :args => [{ :type => 'int*', :name => 'sausage', :ptr? => true}], :return_type => "int*", :contains_ptr? => true}
     returned = @cmock_generator_plugin_array.mock_implementation(function)
     assert_nil(returned)
   end
 
-  should "add not have a mock interfaces for functions of style 'int* func(void)'" do
+  should "not have a mock interfaces for functions of style 'int* func(void)'" do
     function = {:name => "Pear", :args => [], :args_string => "void", :return_type => "int*"}
     returned = @cmock_generator_plugin_array.mock_interfaces(function)
     assert_nil(returned)

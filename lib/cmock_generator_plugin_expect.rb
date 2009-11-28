@@ -5,7 +5,7 @@ class CMockGeneratorPluginExpect
 
   def initialize(config, utils)
     @config       = config
-    @ptr_handling = @config.when_ptr_star
+    @ptr_handling = @config.when_ptr
     @ordered      = @config.enforce_strict_ordering
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]

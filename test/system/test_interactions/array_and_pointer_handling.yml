@@ -1,5 +1,6 @@
 ---
 :cmock:
+  :when_ptr: :smart
   :plugins:
   - :array
 
@@ -87,13 +88,26 @@
           function_a();
         }
         
-    - :pass: FALSE
-      :should: 'handle the situation where it fails because you asked it to compare nothing at all'
+    - :pass: TRUE
+      :should: 'handle the situation where it falls back to pointers because you asked it to compare 0 elements'
       :code: |
         test()
         {
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(&ex);
+          foo_ExpectWithArray(&ex, 0);
+          
+          function_a();
+        }
+        
+    - :pass: FALSE
+      :should: 'handle the situation where it fails because you asked it to compare zero elements and the pointers do not match'
+      :code: |
+        test()
+        {
+          POINT_T ex = {1, 2};
+          POINT_T pt = {1, 2};
+          bar_ExpectAndReturn(&pt);
           foo_ExpectWithArray(&ex, 0);
           
           function_a();

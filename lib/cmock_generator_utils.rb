@@ -1,11 +1,11 @@
 
 class CMockGeneratorUtils
 
-  attr_accessor :config, :helpers, :ordered
+  attr_accessor :config, :helpers, :ordered, :ptr_handling, :arrays
 
   def initialize(config, helpers={})
     @config = config
-    @ptr_handling = @config.when_ptr_star
+    @ptr_handling = @config.when_ptr
     @ordered = @config.enforce_strict_ordering
     @arrays  = @config.plugins.include? :array
 	  @helpers = helpers
@@ -48,7 +48,7 @@ class CMockGeneratorUtils
     c_type = arg[:type]
     name   = arg[:name]
     if ((arg[:ptr?]) and (@ptr_handling == :compare_ptr))
-      unity_func = "TEST_ASSERT_EQUAL_INT_MESSAGE"
+      unity_func = "TEST_ASSERT_EQUAL_HEX32_MESSAGE"
     else
       unity_func = (@helpers.nil? or @helpers[:unity_helper].nil?) ? "TEST_ASSERT_EQUAL_MESSAGE" : @helpers[:unity_helper].get_helper(c_type)
     end
@@ -62,8 +62,9 @@ class CMockGeneratorUtils
           [ (INSERT_ARG_DEPTH_START_SNIPPET % [depth_name]),
             "    if (*p_expected == NULL)",
             "      { TEST_ASSERT_NULL(#{name}); }",
+            ((@ptr_handling == :smart) ? "    else if (Depth == 0)\n      { TEST_ASSERT_EQUAL_HEX32(*p_expected, #{name}); }" : nil),
             "    else",
-            "      { TEST_ASSERT_EQUAL_MEMORY_ARRAY_MESSAGE((void*)(#{expected}), (void*)#{name}, sizeof(#{c_type.sub('*','')}), Depth#{unity_msg}); }"].join("\n")
+            "      { TEST_ASSERT_EQUAL_MEMORY_ARRAY_MESSAGE((void*)(#{expected}), (void*)#{name}, sizeof(#{c_type.sub('*','')}), Depth#{unity_msg}); }"].compact.join("\n")
         else
           [ "    if (*p_expected == NULL)",
             "      { TEST_ASSERT_NULL(#{name}); }",
@@ -73,11 +74,12 @@ class CMockGeneratorUtils
         end
       when /_ARRAY/
         if (@arrays)
-          [ (INSERT_ARG_DEPTH_START_SNIPPET % ["#{function[:name]}_Expected_#{name}_Depth"]),
+          [ (INSERT_ARG_DEPTH_START_SNIPPET % [depth_name]),
             "    if (*p_expected == NULL)",
             "      { TEST_ASSERT_NULL(#{name}); }",
+            ((@ptr_handling == :smart) ? "    else if (Depth == 0)\n      { TEST_ASSERT_EQUAL_HEX32(*p_expected, #{name}); }" : nil),
             "    else",
-            "      { #{unity_func}(#{expected}, #{name}, Depth); }"].join("\n")
+            "      { #{unity_func}(#{expected}, #{name}, Depth); }"].compact.join("\n")
         else
           [ "    if (*p_expected == NULL)",
             "      { TEST_ASSERT_NULL(#{name}); }",

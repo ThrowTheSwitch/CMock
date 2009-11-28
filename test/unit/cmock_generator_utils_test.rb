@@ -4,9 +4,9 @@ require 'cmock_generator_utils'
 class CMockGeneratorUtilsTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :unity_helper
-    @config.expect.when_ptr_star.returns(:compare_data)
+    @config.expect.when_ptr.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(false)
-    @config.expect.plugins.returns([:arrays])
+    @config.expect.plugins.returns([])
     @cmock_generator_utils = CMockGeneratorUtils.new(@config)
   end
 
@@ -16,16 +16,18 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_utils.config)
     assert_equal({},      @cmock_generator_utils.helpers)
+    assert_equal(false,   @cmock_generator_utils.arrays)
   end
   
   should "have set up internal accessors correctly on init, complete with passed helpers" do
     create_mocks :config
-    @config.expect.when_ptr_star.returns(:compare_ptr)
+    @config.expect.when_ptr.returns(:compare_ptr)
     @config.expect.enforce_strict_ordering.returns(false)
-    @config.expect.plugins.returns([])
+    @config.expect.plugins.returns([:array])
     @cmock_generator_utils = CMockGeneratorUtils.new(@config, {:A=>1, :B=>2})
     assert_equal(@config, @cmock_generator_utils.config)
     assert_equal({:A=>1, :B=>2},@cmock_generator_utils.helpers)
+    assert_equal(true, @cmock_generator_utils.arrays)
   end
   
   should "make expand array" do
@@ -270,6 +272,107 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
+    assert_equal(expected, returned)
+  end
+  
+  should "make handle default types with array compares using smart mode but only a single item" do
+    function = { :name => "Blender", :return_type => "uint16*"}
+    var_type = "FRUIT*"
+    var_name = "Strawberry"
+    
+    @cmock_generator_utils.ptr_handling = :smart
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_FRUIT_ARRAY")
+    
+    expected = ["\n",
+                "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
+                "  {\n",
+                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    Mock.Blender_Expected_Strawberry++;\n",
+                "    if (*p_expected == NULL)\n",
+                "      { TEST_ASSERT_NULL(Strawberry); }\n",
+                "    else\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*p_expected, Strawberry, 1); }\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
+    assert_equal(expected, returned)
+  end
+  
+  should "make handle default types when working in pointer only mode" do
+    function = { :name => "Blender", :return_type => "uint16*"}
+    var_type = "FRUIT*"
+    var_name = "Strawberry"
+    
+    @cmock_generator_utils.ptr_handling = :compare_ptr
+    @cmock_generator_utils.arrays = true
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    
+    expected = ["\n",
+                "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
+                "  {\n",
+                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    Mock.Blender_Expected_Strawberry++;\n",
+                "    TEST_ASSERT_EQUAL_HEX32_MESSAGE(*p_expected, Strawberry, \"Function 'Blender' called with unexpected value for argument 'Strawberry'.\");\n\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name, :ptr? => true})
+    assert_equal(expected, returned)
+  end
+  
+  should "make handle default types with array compares using array mode and multiple items" do
+    function = { :name => "Blender", :return_type => "uint16*"}
+    var_type = "FRUIT*"
+    var_name = "Strawberry"
+    
+    @cmock_generator_utils.ptr_handling = :compare_data
+    @cmock_generator_utils.arrays = true
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_FRUIT_ARRAY")
+    
+    expected = ["\n",
+                "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
+                "  {\n",
+                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    Mock.Blender_Expected_Strawberry++;\n\n",
+                "    int Depth = *Mock.Blender_Expected_Strawberry_Depth;\n",
+                "    Mock.Blender_Expected_Strawberry_Depth++;\n\n",
+                "    if (*p_expected == NULL)\n",
+                "      { TEST_ASSERT_NULL(Strawberry); }\n",
+                "    else\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*p_expected, Strawberry, Depth); }\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name, :ptr? => true})
+    assert_equal(expected, returned)
+  end
+  
+  should "make handle default types with array compares using smart mode and multiple items" do
+    function = { :name => "Blender", :return_type => "uint16*"}
+    var_type = "FRUIT*"
+    var_name = "Strawberry"
+    
+    @cmock_generator_utils.ptr_handling = :smart
+    @cmock_generator_utils.arrays = true
+    @cmock_generator_utils.helpers = {:unity_helper => @unity_helper}
+    @unity_helper.expect.get_helper(var_type).returns("TEST_ASSERT_EQUAL_FRUIT_ARRAY")
+    
+    expected = ["\n",
+                "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
+                "  {\n",
+                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    Mock.Blender_Expected_Strawberry++;\n\n",
+                "    int Depth = *Mock.Blender_Expected_Strawberry_Depth;\n",
+                "    Mock.Blender_Expected_Strawberry_Depth++;\n\n",
+                "    if (*p_expected == NULL)\n",
+                "      { TEST_ASSERT_NULL(Strawberry); }\n",
+                "    else if (Depth == 0)\n",
+                "      { TEST_ASSERT_EQUAL_HEX32(*p_expected, Strawberry); }\n",
+                "    else\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*p_expected, Strawberry, Depth); }\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name, :ptr? => true})
     assert_equal(expected, returned)
   end
 end
