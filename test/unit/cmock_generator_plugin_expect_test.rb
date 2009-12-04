@@ -27,6 +27,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     assert_equal(@config, @cmock_generator_plugin_expect.config)
     assert_equal(@utils,  @cmock_generator_plugin_expect.utils)
     assert_equal(nil,     @cmock_generator_plugin_expect.unity_helper)
+    assert_equal(5,       @cmock_generator_plugin_expect.priority)
   end
   
   should "not include any additional include files" do 
@@ -128,10 +129,6 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
     expected = "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
     assert_equal(expected, returned)
-  end
-    
-  should "not require anything for implementation prefix" do
-    assert(!@cmock_generator_plugin_expect.respond_to?(:mock_implementation_prefix))
   end
   
   should "add mock function implementation for functions of style 'void func(void)'" do

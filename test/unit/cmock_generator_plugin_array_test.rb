@@ -20,6 +20,7 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
     assert_equal(@config, @cmock_generator_plugin_array.config)
     assert_equal(@utils,  @cmock_generator_plugin_array.utils)
     assert_equal(nil,     @cmock_generator_plugin_array.unity_helper)
+    assert_equal(8,       @cmock_generator_plugin_array.priority)
   end
   
   should "not include any additional include files" do 
@@ -78,21 +79,9 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
     returned = @cmock_generator_plugin_array.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
-    
-  should "not require anything for implementation prefix" do
-    assert(!@cmock_generator_plugin_array.respond_to?(:mock_implementation_prefix))
-  end
   
-  should "not have a mock function implementation for functions of style 'int* func(void)'" do
-    function = {:name => "Apple", :args => [], :return_type => "int*", :contains_ptr? => false}
-    returned = @cmock_generator_plugin_array.mock_implementation(function)
-    assert_nil(returned)
-  end
-  
-  should "not have a mock function implementation for functions containing pointers either (handled in expect)" do
-    function = {:name => "Apple", :args => [{ :type => 'int*', :name => 'sausage', :ptr? => true}], :return_type => "int*", :contains_ptr? => true}
-    returned = @cmock_generator_plugin_array.mock_implementation(function)
-    assert_nil(returned)
+  should "not have a mock function implementation" do
+    assert(!@cmock_generator_plugin_array.respond_to?(:mock_implementation))
   end
 
   should "not have a mock interfaces for functions of style 'int* func(void)'" do

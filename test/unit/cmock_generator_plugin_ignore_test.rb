@@ -14,6 +14,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_plugin_ignore.config)
     assert_equal(@utils,  @cmock_generator_plugin_ignore.utils)
+    assert_equal(2,       @cmock_generator_plugin_ignore.priority)
   end
   
   should "not have any additional include file requirements" do
@@ -41,18 +42,18 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "add required code to implementation prefix with void function" do
+  should "add required code to implementation with void function" do
     function = {:name => "Mold", :args_string => "void", :return_type => "void"}
     expected = ["  if (Mock.Mold_IgnoreBool)\n",
                 "  {\n",
                 "    return;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_ignore.mock_implementation_prefix(function)
+    returned = @cmock_generator_plugin_ignore.mock_implementation(function)
     assert_equal(expected, returned)
   end
   
-  should "add required code to implementation prefix with return functions" do
+  should "add required code to implementation with return functions" do
     function = {:name => "Fungus", :args_string => "void", :return_type => "int"}
     expected = ["  if (Mock.Fungus_IgnoreBool)\n",
                 "  {\n",
@@ -70,12 +71,8 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
                 "    }\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_ignore.mock_implementation_prefix(function)
+    returned = @cmock_generator_plugin_ignore.mock_implementation(function)
     assert_equal(expected, returned)
-  end
-  
-  should "have nothing new for mock implementation" do
-    assert(!@cmock_generator_plugin_ignore.respond_to?(:mock_implementation))
   end
   
   should "add a new mock interface for ignoring when function had no return value" do

@@ -1,11 +1,13 @@
 
 class CMockGeneratorPluginIgnore
 
+  attr_reader :priority
   attr_reader :config, :utils
   
   def initialize(config, utils)
     @config = config
     @utils = utils
+    @priority = 2
   end
   
   def instance_structure(function)
@@ -20,7 +22,7 @@ class CMockGeneratorPluginIgnore
     end 
   end
   
-  def mock_implementation_prefix(function)
+  def mock_implementation(function)
     lines = "  if (Mock.#{function[:name]}_IgnoreBool)\n  {" 
     if (function[:return_type] == "void")
       lines << "\n    return;\n"

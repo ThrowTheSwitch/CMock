@@ -25,10 +25,6 @@ class MockedPluginHelper
     return "  #{@return_this}_#{name}(#{args}, #{rettype})"
   end
   
-  def mock_implementation_prefix(name, rettype)
-    return "  Pre#{name}#{@return_this}.#{rettype}"
-  end
-  
   def mock_implementation(name, args)
     return "  Mock#{name}#{@return_this}(#{args.join(", ")})"
   end
@@ -326,14 +322,11 @@ class CMockGeneratorTest < Test::Unit::TestCase
     expected = [ "__inline ",
                  "static bool SupaFunction(uint32 sandwiches, const char* named)\n",
                  "{\n",
-                 "  PreSupaFunctionUno.bool",
-                 "  PreSupaFunctionDos.bool",
                  "  MockSupaFunctionUno(uint32 sandwiches, const char* named)",
                  "  MockSupaFunctionDos(uint32 sandwiches, const char* named)",
                  "  UtilsSupaFunction.bool",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_implementation_prefix, function).returns(["  PreSupaFunctionUno.bool","  PreSupaFunctionDos.bool"])
     @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches, const char* named)","  MockSupaFunctionDos(uint32 sandwiches, const char* named)"])
     @utils.expect.code_handle_return_value(function).returns(["  UtilsSupaFunction.bool"])
     
@@ -354,14 +347,11 @@ class CMockGeneratorTest < Test::Unit::TestCase
     output = []
     expected = [ "int SupaFunction(uint32 sandwiches, corn ...)\n",
                  "{\n",
-                 "  PreSupaFunctionUno.int",
-                 "  PreSupaFunctionDos.int",
                  "  MockSupaFunctionUno(uint32 sandwiches)",
                  "  MockSupaFunctionDos(uint32 sandwiches)",
                  "  UtilsSupaFunction.int",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_implementation_prefix, function).returns(["  PreSupaFunctionUno.int","  PreSupaFunctionDos.int"])
     @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches)","  MockSupaFunctionDos(uint32 sandwiches)"])
     @utils.expect.code_handle_return_value(function).returns(["  UtilsSupaFunction.int"])
     

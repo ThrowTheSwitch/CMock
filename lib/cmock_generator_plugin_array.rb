@@ -1,6 +1,7 @@
 
 class CMockGeneratorPluginArray
   
+  attr_reader :priority
   attr_accessor :config, :utils, :unity_helper, :ordered
   
   def initialize(config, utils)
@@ -9,6 +10,7 @@ class CMockGeneratorPluginArray
     @ordered      = @config.enforce_strict_ordering
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
+    @priority     = 8
   end
   
   def instance_structure(function)
@@ -35,10 +37,6 @@ class CMockGeneratorPluginArray
         return "void #{function[:name]}_ExpectWithArrayAndReturn(#{args_string}, #{function[:return_string]});\n"
       end
     end
-  end
-  
-  def mock_implementation(function)
-    nil
   end
   
   def mock_interfaces(function)

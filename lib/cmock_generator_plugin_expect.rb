@@ -1,6 +1,7 @@
 
 class CMockGeneratorPluginExpect
 
+  attr_reader :priority
   attr_accessor :config, :utils, :unity_helper, :ordered
 
   def initialize(config, utils)
@@ -9,6 +10,7 @@ class CMockGeneratorPluginExpect
     @ordered      = @config.enforce_strict_ordering
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
+    @priority     = 5
   end
   
   def instance_structure(function)

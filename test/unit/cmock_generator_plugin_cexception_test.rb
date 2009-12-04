@@ -14,6 +14,7 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_plugin_cexception.config)
     assert_equal(@utils,  @cmock_generator_plugin_cexception.utils)
+    assert_equal(7,       @cmock_generator_plugin_cexception.priority)
   end
   
   should "include the cexception library" do 
@@ -58,17 +59,13 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "add nothing during implementation prefix" do
-    assert(!@cmock_generator_plugin_cexception.respond_to?(:mock_implementation_prefix))
-  end
-  
   should "add a mock implementation" do
     function = {:name => "Cherry", :args => [], :return_type => "void"}
     expected = ["\n",
                 "  if ((Mock.Cherry_ThrowOnCallCount != Mock.Cherry_ThrowOnCallCount_Tail) &&\n",
                 "     (Mock.Cherry_ThrowValue != Mock.Cherry_ThrowValue_Tail))\n",
                 "  {\n",
-                "    if (*Mock.Cherry_ThrowOnCallCount && \n",
+                "    if (*Mock.Cherry_ThrowOnCallCount &&\n",
                 "      (Mock.Cherry_CallCount == *Mock.Cherry_ThrowOnCallCount))\n",
                 "    {\n",
                 "      EXCEPTION_T toThrow = *Mock.Cherry_ThrowValue;\n",

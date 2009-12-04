@@ -158,7 +158,6 @@ class CMockGenerator
     file << "#{function[:attributes]} " if (!function[:attributes].nil? && function[:attributes].length > 0)
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
-    file << @plugins.run(:mock_implementation_prefix, function)
     file << @plugins.run(:mock_implementation, function)
     
     # Return expected value, if necessary

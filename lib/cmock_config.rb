@@ -25,6 +25,7 @@ class CMockConfig
       when Hash     then options = CMockDefaultOptions.clone.merge(options)
       else          raise "If you specify arguments, it should be a filename or a hash of options"
     end
+    options[:plugins] ||= []
     @options = options
     @options.each_key { |key| eval("def #{key}() return @options[:#{key}] end") }
   end
