@@ -12,14 +12,14 @@
     typedef signed int custom_type;
 
   :mockable: |
-    #include  "Exception.h"
+    #include  "CException.h"
     UINT32 foo(custom_type a);
     UINT32 bar(custom_type b);
     void baz(custom_type c);
 
   :source: 
     :header: |
-      #include "Exception.h"
+      #include "CException.h"
       UINT32 function_a(int a, int b);
       void function_b(void);
       void function_c(void);
@@ -53,7 +53,7 @@
       
       void function_d(void)
       {
-        EXCEPTION_T e;
+        CEXCEPTION_T e;
         Try
         {
           foo((custom_type)1);

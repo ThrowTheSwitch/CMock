@@ -18,15 +18,15 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
   end
   
   should "include the cexception library" do 
-    expected = "#include \"Exception.h\"\n"
+    expected = "#include \"CException.h\"\n"
     @config.expect.cexception_include.returns(nil)
     returned = @cmock_generator_plugin_cexception.include_files
     assert_equal(expected, returned)
   end
   
   should "include the cexception library with a custom path if specified" do 
-    expected = "#include \"../cexception/lib/Exception.h\"\n"
-    @config.expect.cexception_include.returns("../cexception/lib/Exception.h")
+    expected = "#include \"../cexception/lib/CException.h\"\n"
+    @config.expect.cexception_include.returns("../cexception/lib/CException.h")
     returned = @cmock_generator_plugin_cexception.include_files
     assert_equal(expected, returned)
   end
@@ -37,9 +37,9 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
                 "  int *Oak_ThrowOnCallCount;\n",
                 "  int *Oak_ThrowOnCallCount_Head;\n",
                 "  int *Oak_ThrowOnCallCount_Tail;\n",
-                "  EXCEPTION_T *Oak_ThrowValue;\n",
-                "  EXCEPTION_T *Oak_ThrowValue_Head;\n",
-                "  EXCEPTION_T *Oak_ThrowValue_Tail;\n"
+                "  CEXCEPTION_T *Oak_ThrowValue;\n",
+                "  CEXCEPTION_T *Oak_ThrowValue_Head;\n",
+                "  CEXCEPTION_T *Oak_ThrowValue_Tail;\n"
                ].join
     returned = @cmock_generator_plugin_cexception.instance_structure(function)
     assert_equal(expected, returned)
@@ -47,14 +47,14 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
   
   should "add mock function declarations for functions without arguments" do
     function = { :name => "Spruce", :args_string => "void", :return_type => "void" }
-    expected = "void Spruce_ExpectAndThrow(EXCEPTION_T toThrow);\n"
+    expected = "void Spruce_ExpectAndThrow(CEXCEPTION_T toThrow);\n"
     returned = @cmock_generator_plugin_cexception.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declarations for functions with arguments" do
     function = { :name => "Spruce", :args_string => "const char* Petunia, uint32_t Lily", :return_type => "void" }
-    expected = "void Spruce_ExpectAndThrow(const char* Petunia, uint32_t Lily, EXCEPTION_T toThrow);\n"
+    expected = "void Spruce_ExpectAndThrow(const char* Petunia, uint32_t Lily, CEXCEPTION_T toThrow);\n"
     returned = @cmock_generator_plugin_cexception.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -68,7 +68,7 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
                 "    if (*Mock.Cherry_ThrowOnCallCount &&\n",
                 "      (Mock.Cherry_CallCount == *Mock.Cherry_ThrowOnCallCount))\n",
                 "    {\n",
-                "      EXCEPTION_T toThrow = *Mock.Cherry_ThrowValue;\n",
+                "      CEXCEPTION_T toThrow = *Mock.Cherry_ThrowValue;\n",
                 "      Mock.Cherry_ThrowOnCallCount++;\n",
                 "      Mock.Cherry_ThrowValue++;\n",
                 "      Throw(toThrow);\n",
@@ -83,9 +83,9 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
     function = {:name => "Pear", :args_string => "void", :args => [], :return_type => "void"}
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array("int", "Mock.Pear_ThrowOnCallCount", "Mock.Pear_CallsExpected").returns("mock_return_1")
-    @utils.expect.code_insert_item_into_expect_array("EXCEPTION_T", "Mock.Pear_ThrowValue", "toThrow").returns("mock_return_2")
+    @utils.expect.code_insert_item_into_expect_array("CEXCEPTION_T", "Mock.Pear_ThrowValue", "toThrow").returns("mock_return_2")
   
-    expected = ["void Pear_ExpectAndThrow(EXCEPTION_T toThrow)\n",
+    expected = ["void Pear_ExpectAndThrow(CEXCEPTION_T toThrow)\n",
                 "{\n",
                 "mock_retval_0",
                 "mock_return_1",
@@ -108,9 +108,9 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
     function = {:name => "Pear", :args_string => "int blah", :args => [{ :type => "int", :name => "blah" }], :return_type => "void"}
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_insert_item_into_expect_array("int", "Mock.Pear_ThrowOnCallCount", "Mock.Pear_CallsExpected").returns("mock_return_1")
-    @utils.expect.code_insert_item_into_expect_array("EXCEPTION_T", "Mock.Pear_ThrowValue", "toThrow").returns("mock_return_2")
+    @utils.expect.code_insert_item_into_expect_array("CEXCEPTION_T", "Mock.Pear_ThrowValue", "toThrow").returns("mock_return_2")
     
-    expected = ["void Pear_ExpectAndThrow(int blah, EXCEPTION_T toThrow)\n",
+    expected = ["void Pear_ExpectAndThrow(int blah, CEXCEPTION_T toThrow)\n",
                 "{\n",
                 "mock_retval_0",
                 "mock_return_1",

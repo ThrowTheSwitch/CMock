@@ -13,7 +13,7 @@ class CMockGeneratorPluginCexception
 
   def include_files
     include = @config.cexception_include
-    include = "Exception.h" if (include.nil?)
+    include = "CException.h" if (include.nil?)
     return "#include \"#{include}\"\n"
   end
 
@@ -23,9 +23,9 @@ class CMockGeneratorPluginCexception
 
   def mock_function_declarations(function)
     if (function[:args_string] == "void")
-      return "void #{function[:name]}_ExpectAndThrow(EXCEPTION_T toThrow);\n"
+      return "void #{function[:name]}_ExpectAndThrow(CEXCEPTION_T toThrow);\n"
     else
-      return "void #{function[:name]}_ExpectAndThrow(#{function[:args_string]}, EXCEPTION_T toThrow);\n"
+      return "void #{function[:name]}_ExpectAndThrow(#{function[:args_string]}, CEXCEPTION_T toThrow);\n"
     end
   end
 
@@ -36,10 +36,10 @@ class CMockGeneratorPluginCexception
   def mock_interfaces(function)
     arg_insert = (function[:args_string] == "void") ? "" : "#{function[:args_string]}, "
     call_string = function[:args].map{|m| m[:name]}.join(', ')
-    [ "void #{function[:name]}_ExpectAndThrow(#{arg_insert}EXCEPTION_T toThrow)\n{\n",
+    [ "void #{function[:name]}_ExpectAndThrow(#{arg_insert}CEXCEPTION_T toThrow)\n{\n",
       @utils.code_add_base_expectation(function[:name]),
       @utils.code_insert_item_into_expect_array('int', "Mock.#{function[:name]}_ThrowOnCallCount", "Mock.#{function[:name]}_CallsExpected"),
-      @utils.code_insert_item_into_expect_array('EXCEPTION_T', "Mock.#{function[:name]}_ThrowValue", "toThrow"),
+      @utils.code_insert_item_into_expect_array('CEXCEPTION_T', "Mock.#{function[:name]}_ThrowValue", "toThrow"),
       (MOCK_INTERFACE_THROW_HANDLING_SNIPPET % function[:name]),
       (function[:args_string] != "void") ? "  ExpectParameters_#{function[:name]}(#{call_string});\n" : nil,
       "}\n\n" ].join
@@ -55,9 +55,9 @@ class CMockGeneratorPluginCexception
   int *%1$s_ThrowOnCallCount;
   int *%1$s_ThrowOnCallCount_Head;
   int *%1$s_ThrowOnCallCount_Tail;
-  EXCEPTION_T *%1$s_ThrowValue;
-  EXCEPTION_T *%1$s_ThrowValue_Head;
-  EXCEPTION_T *%1$s_ThrowValue_Tail;
+  CEXCEPTION_T *%1$s_ThrowValue;
+  CEXCEPTION_T *%1$s_ThrowValue_Head;
+  CEXCEPTION_T *%1$s_ThrowValue_Tail;
 ]
 
   MOCK_IMPLEMENTATION_SNIPPET = %q[
@@ -67,7 +67,7 @@ class CMockGeneratorPluginCexception
     if (*Mock.%1$s_ThrowOnCallCount &&
       (Mock.%1$s_CallCount == *Mock.%1$s_ThrowOnCallCount))
     {
-      EXCEPTION_T toThrow = *Mock.%1$s_ThrowValue;
+      CEXCEPTION_T toThrow = *Mock.%1$s_ThrowValue;
       Mock.%1$s_ThrowOnCallCount++;
       Mock.%1$s_ThrowValue++;
       Throw(toThrow);

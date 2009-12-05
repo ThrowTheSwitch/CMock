@@ -14,7 +14,7 @@
     } POINT_T;
 
   :mockable: |
-    #include  "Exception.h"
+    #include  "CException.h"
     void foo(POINT_T* a);
     POINT_T* bar(void);
     void fooa(POINT_T a[]);
@@ -25,7 +25,7 @@
 
   :source: 
     :header: |   
-      #include "Exception.h" 
+      #include "CException.h" 
       void function_a(void);
       void function_b(void);
       void function_c(void);
@@ -42,7 +42,7 @@
       }
       
       void function_c(void) {
-        EXCEPTION_T e;
+        CEXCEPTION_T e;
         Try {
           foos(bars());
         } Catch(e) { foos("err"); }
