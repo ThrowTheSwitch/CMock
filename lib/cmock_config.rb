@@ -16,6 +16,7 @@ class CMockConfig
     :memcmp_if_unknown => true,
     :when_no_prototypes => :warn, #the options being :ignore, :warn, or :error
     :when_ptr =>:compare_data, #the options being :compare_ptr, :compare_data, or :smart
+    :verbosity => 2, #0 errors only, #1 warnings and errors, #2 normal info, #3 verbose
   }
   
   def initialize(options=nil)

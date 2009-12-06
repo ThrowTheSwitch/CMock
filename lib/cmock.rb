@@ -18,6 +18,7 @@ class CMock
     cm_gen_plugins = CMockPluginManager.new(cm_config, cm_gen_utils)
     @cm_parser     = CMockHeaderParser.new(cm_config)
     @cm_generator  = CMockGenerator.new(cm_config, cm_writer, cm_gen_utils, cm_gen_plugins)
+    @silent        = (cm_config.verbosity < 2)
   end
   
   def setup_mocks(files)
@@ -30,7 +31,7 @@ class CMock
 
   def generate_mock(src)
     name = File.basename(src, '.h')
-    puts "Creating mock for #{name}..."
+    puts "Creating mock for #{name}..." unless @silent
     @cm_generator.create_mock(name, @cm_parser.parse(File.read(src)))
   end
 end

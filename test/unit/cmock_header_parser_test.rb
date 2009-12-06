@@ -10,6 +10,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @config.expect.treat_as_void.returns(['MY_FUNKY_VOID'])
     @config.expect.treat_as.returns({ "BANJOS" => "INT", "TUBAS" => "HEX16"} )
     @config.expect.when_no_prototypes.returns(:error)
+    @config.expect.verbosity.returns(1)
     
     @parser = CMockHeaderParser.new(@config)
   end

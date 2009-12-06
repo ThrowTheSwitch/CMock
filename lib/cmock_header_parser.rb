@@ -10,6 +10,7 @@ class CMockHeaderParser
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
     @when_no_prototypes = cfg.when_no_prototypes
     @local_as_void = @treat_as_void
+    @verbosity = cfg.verbosity
   end
   
   def parse(source)
@@ -94,7 +95,7 @@ class CMockHeaderParser
         when :error
           raise "ERROR: No function prototypes found!" 
         when :warn
-          puts "WARNING: No function prototypes found!"
+          puts "WARNING: No function prototypes found!" unless (@verbosity < 1)
       end
     end
     return funcs
