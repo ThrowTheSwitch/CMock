@@ -4,6 +4,8 @@
   - # no plugins
   :treat_as_void: 
   - VOID_TYPE_CRAZINESS_CFG
+  :treat_as:
+    TypeDefInt: HEX8
   
 :systest:
   :types: |
@@ -14,8 +16,17 @@
       int y;
     } POINT_T;
     typedef void VOID_TYPE_CRAZINESS_CFG;
+    typedef int TypeDefInt;
 
   :mockable: |
+    /* Make sure we ignore the following
+    #include "NonExistantFile.h
+    */
+    //#include "AndIgnoreThisToo.h"
+    
+    #define SHOULD_IGNORE_NEXT_FUNC_DEF_AS_PART_OF_MACRO   \
+            void IgnoredFunction(NotAValidType ToMakeItFailIfWeActuallyMockedThis);
+    
     // typedef edge case; must be in mockable.h for test to compile
     // not ANSI C but it has been done and will break cmock if not handled
     typedef void VOID_TYPE_CRAZINESS_LCL;
@@ -45,6 +56,8 @@
     
     unsigned long int incredible_descriptors(register const unsigned short a);
     
+    TypeDefInt uses_typedef_like_names(TypeDefInt typedefvar);
+    
   :source: 
     :header: |
       U16* exercise_return_pointers(int a);
@@ -52,7 +65,8 @@
       void exercise_arglist_pointers(void);
       char exercise_multiline_declarations(int a, unsigned int b);
       void exercise_double_pointers(unsigned int a);
-      int  exercise_many_descriptors(int a);      
+      int  exercise_many_descriptors(int a); 
+      TypeDefInt exercise_typedef_like_names(TypeDefInt a);     
 
     :code: |
       int A, B, C;
@@ -92,6 +106,11 @@
       int exercise_many_descriptors(int a)
       {
         return (int)incredible_descriptors((unsigned short)a);
+      }
+      
+      TypeDefInt exercise_typedef_like_names(TypeDefInt a)
+      {
+        return uses_typedef_like_names(a);
       }
       
   :tests:
@@ -161,6 +180,24 @@
         {
           incredible_descriptors_ExpectAndReturn(888, 777);
           TEST_ASSERT_EQUAL(777, exercise_many_descriptors(888));
+        }
+
+    - :pass: TRUE
+      :should: 'handle words like typdef as PART of a variable or type'
+      :code: |
+        test()
+        {
+          uses_typedef_like_names_ExpectAndReturn((TypeDefInt)54, (TypeDefInt)53);
+          TEST_ASSERT_EQUAL(53, exercise_typedef_like_names((TypeDefInt)54));
+        }
+
+    - :pass: FALSE
+      :should: 'handle words like typdef as PART of a variable or type during failing tests'
+      :code: |
+        test()
+        {
+          uses_typedef_like_names_ExpectAndReturn((TypeDefInt)52, (TypeDefInt)53);
+          TEST_ASSERT_EQUAL(53, exercise_typedef_like_names((TypeDefInt)54));
         }
 
 

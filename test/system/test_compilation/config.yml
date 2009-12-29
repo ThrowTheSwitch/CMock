@@ -1,8 +1,7 @@
 --- 
 :cmock: 
-  :plugins: 
-  - #none
-  :includes: 
+  :plugins: []
+  :includes: []
   :mock_path: test/system/generated/
   :mock_prefix: mock_
   :treat_as_void: 

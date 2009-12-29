@@ -3,7 +3,6 @@
   :plugins:
   - # none
   :memcmp_if_unknown: false
-  :tab: '    '
   
 :systest:
   :types: |

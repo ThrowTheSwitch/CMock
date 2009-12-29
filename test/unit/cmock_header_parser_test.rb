@@ -131,14 +131,18 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "remove typedef statements" do
     source = 
       "typedef uint32 (unsigned int);\n" +
-      "whack me? typedef int INT;\n" +
-      "typedef who cares what really comes here \\\n" + # exercise multiline typedef
+      "whack me! typedef int INT;\n" +
+      "int notatypedef;\n" +
+      "int typedef_isnt_me;\n" +
+      " typedef who cares what really comes here \\\n" + # exercise multiline typedef
       "   continuation;\n" +
-      "this should remain!"
+      "this should remain!\n" 
     
     expected =
     [
-      "whack me? this should remain!"
+      "int notatypedef",
+      "int typedef_isnt_me",
+      "this should remain!"
     ]
     
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
