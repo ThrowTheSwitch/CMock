@@ -36,7 +36,7 @@ class CMockGeneratorPluginIgnore
     if (function[:return_type] == "void")
       MOCK_INTERFACE_VOID_SNIPPET % function[:name]
     else
-      item_insert = @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return", 'toReturn')
+      item_insert = @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return", 'cmock_to_return')
       MOCK_INTERFACE_FULL_SNIPPET % [function[:name], function[:return_string], item_insert]
     end
   end
@@ -46,11 +46,11 @@ class CMockGeneratorPluginIgnore
   MOCK_IMPLEMENT_PREFIX_SNIPPET = %q[
     if (Mock.%1$s_Return != Mock.%1$s_Return_Tail)
     {
-      %2$s toReturn = *Mock.%1$s_Return;
+      %2$s cmock_to_return = *Mock.%1$s_Return;
       Mock.%1$s_Return++;
       Mock.%1$s_CallCount++;
       Mock.%1$s_CallsExpected++;
-      return toReturn;
+      return cmock_to_return;
     }
     else
     {

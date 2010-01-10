@@ -116,7 +116,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock function declaration for functions of style 'int func(void)'" do
-    function = {:name => "Spruce", :args_string => "void", :return_string => "int toReturn"}
+    function = {:name => "Spruce", :args_string => "void", :return_string => "int cmock_to_return"}
     
     expected = "void #{function[:name]}_ExpectAndReturn(#{function[:return_string]});\n"
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
@@ -124,7 +124,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock function declaration for functions of style 'const char* func(int tofu)'" do
-    function = {:name => "Pine", :args_string => "int tofu", :return_string => "const char* toReturn"}
+    function = {:name => "Pine", :args_string => "int tofu", :return_string => "const char* cmock_to_return"}
     
     expected = "void #{function[:name]}_ExpectAndReturn(#{function[:args_string]}, #{function[:return_string]});\n"
     returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
@@ -172,16 +172,16 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "    TEST_FAIL(\"Function 'Apple' called more times than expected\");\n",
                 "  }\n",
                 "  {\n",
-                "    int* p_expected = Mock.Apple_CallOrder;\n",
+                "    int* cmock_val_expected = Mock.Apple_CallOrder;\n",
                 "    ++GlobalVerifyOrder;\n",
                 "    if (Mock.Apple_CallOrder != Mock.Apple_CallOrder_Tail)\n",
                 "      Mock.Apple_CallOrder++;\n",
-                "    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
+                "    if ((*cmock_val_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
                 "    {\n",
-                "      const char* ErrStr = \"Out of order function calls. Function 'Apple'\";\n",
+                "      const char* cmock_err_str = \"Out of order function calls. Function 'Apple'\";\n",
                 "      GlobalOrderError = malloc(46);\n",
                 "      if (GlobalOrderError)\n",
-                "        strcpy(GlobalOrderError, ErrStr);\n",
+                "        strcpy(GlobalOrderError, cmock_err_str);\n",
                 "    }\n",
                 "  }\n"
                ].join
@@ -199,16 +199,16 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
                 "    TEST_FAIL(\"Function 'Apple' called more times than expected\");\n",
                 "  }\n",
                 "  {\n",
-                "    int* p_expected = Mock.Apple_CallOrder;\n",
+                "    int* cmock_val_expected = Mock.Apple_CallOrder;\n",
                 "    ++GlobalVerifyOrder;\n",
                 "    if (Mock.Apple_CallOrder != Mock.Apple_CallOrder_Tail)\n",
                 "      Mock.Apple_CallOrder++;\n",
-                "    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
+                "    if ((*cmock_val_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))\n",
                 "    {\n",
-                "      const char* ErrStr = \"Out of order function calls. Function 'Apple'\";\n",
+                "      const char* cmock_err_str = \"Out of order function calls. Function 'Apple'\";\n",
                 "      GlobalOrderError = malloc(46);\n",
                 "      if (GlobalOrderError)\n",
-                "        strcpy(GlobalOrderError, ErrStr);\n",
+                "        strcpy(GlobalOrderError, cmock_err_str);\n",
                 "    }\n",
                 "  }\n"
                ].join
@@ -229,11 +229,11 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock interfaces for functions of style 'unsigned short func(void)'" do
-    function = {:name => "Orange", :args => [], :args_string => "void", :return_type => "unsigned short", :return_string => "unsigned short toReturn"}
+    function = {:name => "Orange", :args => [], :args_string => "void", :return_type => "unsigned short", :return_string => "unsigned short cmock_to_return"}
     @utils.expect.code_add_base_expectation("Orange").returns("mock_retval_0")
-    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Orange_Return","toReturn").returns("mock_retval_1")
+    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Orange_Return","cmock_to_return").returns("mock_retval_1")
     
-    expected = ["void Orange_ExpectAndReturn(unsigned short toReturn)\n",
+    expected = ["void Orange_ExpectAndReturn(unsigned short cmock_to_return)\n",
                 "{\n",
                 "mock_retval_0",
                 "mock_retval_1",
@@ -246,19 +246,19 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   end
   
   should "add mock interfaces for functions of style 'int func(char* pescado)'" do
-    function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return_type => "int", :return_string => "int toReturn"}
+    function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return_type => "int", :return_string => "int cmock_to_return"}
     @utils.expect.code_add_an_arg_expectation(function, {:type => "char*", :name => "pescado"}).returns("mock_retval_2")
     @utils.expect.code_add_base_expectation("Lemon").returns("mock_retval_0")
-    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return", 'toReturn').returns("mock_retval_1")
+    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return", 'cmock_to_return').returns("mock_retval_1")
     
-    expected = ["void ExpectParameters_Lemon(char* pescado)\n",
+    expected = ["void CMockExpectParameters_Lemon(char* pescado)\n",
                 "{\n",
                 "mock_retval_2",
                 "}\n\n",
-                "void Lemon_ExpectAndReturn(char* pescado, int toReturn)\n",
+                "void Lemon_ExpectAndReturn(char* pescado, int cmock_to_return)\n",
                 "{\n",
                 "mock_retval_0",
-                "  ExpectParameters_Lemon(pescado);\n",
+                "  CMockExpectParameters_Lemon(pescado);\n",
                 "mock_retval_1",
                 "  Mock.Lemon_Return = Mock.Lemon_Return_Head;\n",
                 "  Mock.Lemon_Return += Mock.Lemon_CallCount;\n",

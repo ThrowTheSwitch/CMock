@@ -1,9 +1,7 @@
-
 class CMockGeneratorPluginArray
-  
+
   attr_reader :priority
   attr_accessor :config, :utils, :unity_helper, :ordered
-  
   def initialize(config, utils)
     @config       = config
     @ptr_handling = @config.when_ptr
@@ -12,7 +10,7 @@ class CMockGeneratorPluginArray
     @unity_helper = @utils.helpers[:unity_helper]
     @priority     = 8
   end
-  
+
   def instance_structure(function)
     lines = ""
     function[:args].each do |arg|
@@ -20,7 +18,7 @@ class CMockGeneratorPluginArray
     end
     lines
   end
-  
+
   def mock_function_declarations(function)
     return nil unless function[:contains_ptr?]
     if (function[:args_string] == "void")
@@ -29,7 +27,7 @@ class CMockGeneratorPluginArray
       else
         return "void #{function[:name]}_ExpectWithArrayAndReturn(#{function[:return_string]});\n"
       end
-    else        
+    else
       args_string = function[:args].map{|m| m[:ptr?] ? "#{m[:type]} #{m[:name]}, int #{m[:name]}_Depth" : "#{m[:type]} #{m[:name]}"}.join(', ')
       if (function[:return_type] == 'void')
         return "void #{function[:name]}_ExpectWithArray(#{args_string});\n"
@@ -38,7 +36,7 @@ class CMockGeneratorPluginArray
       end
     end
   end
-  
+
   def mock_interfaces(function)
     return nil unless function[:contains_ptr?]
 
@@ -46,7 +44,7 @@ class CMockGeneratorPluginArray
     func_name = function[:name]
     args_string = function[:args].map{|m| m[:ptr?] ? "#{m[:type]} #{m[:name]}, int #{m[:name]}_Depth" : "#{m[:type]} #{m[:name]}"}.join(', ')
     call_string = function[:args].map{|m| m[:ptr?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name]}.join(', ')
-    
+
     # Parameter Helper Function
     if (function[:args_string] != "void")
       lines << "void ExpectParametersWithArray_#{func_name}(#{args_string})\n{\n"
@@ -55,7 +53,7 @@ class CMockGeneratorPluginArray
       end
       lines << "}\n\n"
     end
-    
+
     #Main Mock Interface
     if (function[:return_type] == "void")
       lines << "void #{func_name}_ExpectWithArray(#{args_string})\n"
@@ -65,15 +63,15 @@ class CMockGeneratorPluginArray
     lines << "{\n"
     lines << @utils.code_add_base_expectation(func_name)
     lines << "  ExpectParametersWithArray_#{func_name}(#{call_string});\n"
-    
+
     if (function[:return_type] != "void")
-      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{func_name}_Return", 'toReturn')
+      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{func_name}_Return", 'cmock_to_return')
       lines << "  Mock.#{func_name}_Return = Mock.#{func_name}_Return_Head;\n"
       lines << "  Mock.#{func_name}_Return += Mock.#{func_name}_CallCount;\n"
     end
     lines << "}\n\n"
   end
-  
+
   def mock_destroy(function)
     lines = []
     function[:args].each do |arg|
@@ -81,9 +79,9 @@ class CMockGeneratorPluginArray
     end
     lines.flatten
   end
-  
+
   private #####################
-  
+
   INSTANCE_STRUCTURE_DEPTH_SNIPPET = %q[
   int* %1$s_Depth;
   int* %1$s_Depth_Head;

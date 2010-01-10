@@ -263,7 +263,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "handle odd case of typedef'd void returned" do  
     source = "MY_FUNKY_VOID FunkyVoidReturned(int a)"
     expected = { :var_arg=>nil,
-                 :return_string=>"void toReturn",
+                 :return_string=>"void cmock_to_return",
                  :name=>"FunkyVoidReturned",
                  :return_type=>"void",
                  :modifier=>"",
@@ -276,7 +276,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "handle odd case of typedef'd void as arg" do 
     source = "int FunkyVoidAsArg(MY_FUNKY_VOID)"
     expected = { :var_arg=>nil,
-                 :return_string=>"int toReturn",
+                 :return_string=>"int cmock_to_return",
                  :name=>"FunkyVoidAsArg",
                  :return_type=>"int",
                  :modifier=>"",
@@ -289,7 +289,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "handle odd case of typedef'd void as arg pointer" do 
     source = "char FunkyVoidPointer(MY_FUNKY_VOID* bluh)"
     expected = { :var_arg=>nil,
-                 :return_string=>"char toReturn",
+                 :return_string=>"char cmock_to_return",
                  :name=>"FunkyVoidPointer",
                  :return_type=>"char",
                  :modifier=>"",
@@ -375,7 +375,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "int Foo(int a, unsigned int b)"
     expected = { :var_arg=>nil,
-                 :return_string=>"int toReturn",
+                 :return_string=>"int cmock_to_return",
                  :name=>"Foo",
                  :return_type=>"int",
                  :modifier=>"",
@@ -391,7 +391,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "void    FunkyChicken(    uint la,  int     de, bool da)"
     expected = { :var_arg=>nil,
-                 :return_string=>"void toReturn",
+                 :return_string=>"void cmock_to_return",
                  :name=>"FunkyChicken",
                  :return_type=>"void",
                  :modifier=>"",
@@ -408,7 +408,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "void tat()"
     expected = { :var_arg=>nil,
-                 :return_string=>"void toReturn",
+                 :return_string=>"void cmock_to_return",
                  :name=>"tat",
                  :return_type=>"void",
                  :modifier=>"",
@@ -422,7 +422,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "const int TheMatrix(int Trinity, unsigned int * Neo)"
     expected = { :var_arg=>nil,
-                 :return_string=>"int toReturn",
+                 :return_string=>"int cmock_to_return",
                  :name=>"TheMatrix",
                  :return_type=>"int",
                  :modifier=>"const",
@@ -440,7 +440,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
              "int Morpheus(int, unsigned int*);\n"
              
     expected = [{ :var_arg=>nil,
-                  :return_string=>"int toReturn",
+                  :return_string=>"int cmock_to_return",
                   :name=>"TheMatrix",
                   :return_type=>"int",
                   :modifier=>"const",
@@ -450,7 +450,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                          ],
                   :args_string=>"int Trinity, unsigned int* Neo" },
                 { :var_arg=>nil,
-                  :return_string=>"int toReturn",
+                  :return_string=>"int cmock_to_return",
                   :name=>"Morpheus",
                   :return_type=>"int",
                   :modifier=>"",
@@ -469,7 +469,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
              "const int TheMatrix(int, unsigned int*);\n"
              
     expected = [{ :var_arg=>nil,
-                  :return_string=>"int toReturn",
+                  :return_string=>"int cmock_to_return",
                   :name=>"TheMatrix",
                   :return_type=>"int",
                   :modifier=>"const",
@@ -490,7 +490,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
              "int CaptainHammer(CHUNKY_VOID_T);\n"
              
     expected = [{ :var_arg=>nil,
-                  :return_string=>"void toReturn",
+                  :return_string=>"void cmock_to_return",
                   :name=>"DrHorrible",
                   :return_type=>"void",
                   :modifier=>"",
@@ -499,7 +499,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_string=>"int SingAlong" 
                 },
                 { :var_arg=>nil,
-                  :return_string=>"int toReturn",
+                  :return_string=>"int cmock_to_return",
                   :name=>"CaptainHammer",
                   :return_type=>"int",
                   :modifier=>"",
@@ -517,7 +517,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
              "struct TheseArentTheHammer CaptainHammer(void);\n"
              
     expected = [{ :var_arg=>nil,
-                  :return_string=>"int toReturn",
+                  :return_string=>"int cmock_to_return",
                   :name=>"DrHorrible",
                   :return_type=>"int",
                   :modifier=>"",
@@ -526,7 +526,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_string=>"struct SingAlong Blog" 
                 },
                 { :var_arg=>nil,
-                  :return_string=>"void toReturn",
+                  :return_string=>"void cmock_to_return",
                   :name=>"Penny",
                   :return_type=>"void",
                   :modifier=>"",
@@ -535,7 +535,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy" 
                 },
                 { :var_arg=>nil,
-                  :return_string=>"struct TheseArentTheHammer toReturn",
+                  :return_string=>"struct TheseArentTheHammer cmock_to_return",
                   :name=>"CaptainHammer",
                   :return_type=>"struct TheseArentTheHammer",
                   :modifier=>"",
@@ -550,7 +550,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "int XFiles(int Scully, int Mulder, ...);\n"
     expected = [{ :var_arg=>"...",
-                  :return_string=>"int toReturn",
+                  :return_string=>"int cmock_to_return",
                   :name=>"XFiles",
                   :return_type=>"int",
                   :modifier=>"",

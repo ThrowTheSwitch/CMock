@@ -123,7 +123,7 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
                 "    Mock.Pear_ThrowValue++;\n",
                 "    Mock.Pear_ThrowOnCallCount++;\n",
                 "  }\n",
-                "  ExpectParameters_Pear(blah);\n",
+                "  CMockExpectParameters_Pear(blah);\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_cexception.mock_interfaces(function)

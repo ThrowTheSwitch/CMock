@@ -189,7 +189,7 @@ class CMockHeaderParser
     decl[:modifier] = decl[:modifier].join(' ')
     decl[:return_type] = decl[:return_type].join(' ')
     decl[:return_type] = 'void' if (@local_as_void.include?(decl[:return_type].strip))
-    decl[:return_string] = decl[:return_type] + " toReturn"
+    decl[:return_string] = decl[:return_type] + " cmock_to_return"
         
     #remove default argument statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')

@@ -36,8 +36,8 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   end
   
   should "handle function declarations for functions that returns something" do
-    function = {:name => "Fungus", :args_string => "void", :return_type => "const char*", :return_string => "const char* toReturn"}
-    expected = "void Fungus_IgnoreAndReturn(const char* toReturn);\n"
+    function = {:name => "Fungus", :args_string => "void", :return_type => "const char*", :return_string => "const char* cmock_to_return"}
+    expected = "void Fungus_IgnoreAndReturn(const char* cmock_to_return);\n"
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -59,11 +59,11 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
                 "  {\n",
                 "    if (Mock.Fungus_Return != Mock.Fungus_Return_Tail)\n",
                 "    {\n",
-                "      int toReturn = *Mock.Fungus_Return;\n",
+                "      int cmock_to_return = *Mock.Fungus_Return;\n",
                 "      Mock.Fungus_Return++;\n",
                 "      Mock.Fungus_CallCount++;\n",
                 "      Mock.Fungus_CallsExpected++;\n",
-                "      return toReturn;\n",
+                "      return cmock_to_return;\n",
                 "    }\n",
                 "    else\n",
                 "    {\n",
@@ -88,11 +88,11 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   end
   
   should "add a new mock interface for ignoring when function has return value" do
-    function = {:name => "Slime", :args => [], :args_string => "void", :return_type => "uint32", :return_string => "uint32 toReturn"}
-    @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Slime_Return", "toReturn").returns("mock_return_1")
+    function = {:name => "Slime", :args => [], :args_string => "void", :return_type => "uint32", :return_string => "uint32 cmock_to_return"}
+    @utils.expect.code_insert_item_into_expect_array("uint32", "Mock.Slime_Return", "cmock_to_return").returns("mock_return_1")
     
     expected = ["\n",
-                "void Slime_IgnoreAndReturn(uint32 toReturn)\n",
+                "void Slime_IgnoreAndReturn(uint32 cmock_to_return)\n",
                 "{\n",
                 "  Mock.Slime_IgnoreBool = (int)1;\n",
                 "mock_return_1\n",

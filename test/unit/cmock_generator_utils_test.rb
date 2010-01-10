@@ -38,8 +38,8 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  {\n",
                 "    int sz = 0;\n",
-                "    int *pointer = array_Head;\n",
-                "    while (pointer && pointer != array_Tail) { sz++; pointer++; }\n",
+                "    int *cmock_pointer = array_Head;\n",
+                "    while (cmock_pointer && cmock_pointer != array_Tail) { sz++; cmock_pointer++; }\n",
                 "    if (sz == 0)\n",
                 "    {\n",
                 "      array_Head = (int*)malloc(2*sizeof(int));\n",
@@ -66,9 +66,9 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.Spatula_Return != Mock.Spatula_Return_Tail)\n",
                 "  {\n",
-                "    uint64 toReturn = *Mock.Spatula_Return;\n",
+                "    uint64 cmock_to_return = *Mock.Spatula_Return;\n",
                 "    Mock.Spatula_Return++;\n",
-                "    return toReturn;\n",
+                "    return cmock_to_return;\n",
                 "  }\n",
                 "  else\n",
                 "  {\n",
@@ -87,8 +87,8 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  {\n",
                 "    int sz = 0;\n",
-                "    uint16 *pointer = Mock.PizzaCutter_Expected_Spork_Head;\n",
-                "    while (pointer && pointer != Mock.PizzaCutter_Expected_Spork_Tail) { sz++; pointer++; }\n",
+                "    uint16 *cmock_pointer = Mock.PizzaCutter_Expected_Spork_Head;\n",
+                "    while (cmock_pointer && cmock_pointer != Mock.PizzaCutter_Expected_Spork_Tail) { sz++; cmock_pointer++; }\n",
                 "    if (sz == 0)\n",
                 "    {\n",
                 "      Mock.PizzaCutter_Expected_Spork_Head = (uint16*)malloc(2*sizeof(uint16));\n",
@@ -126,8 +126,8 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                 "\n",
                 "  {\n",
                 "    int sz = 0;\n",
-                "    int *pointer = Mock.Nectarine_CallOrder_Head;\n",
-                "    while (pointer && pointer != Mock.Nectarine_CallOrder_Tail) { sz++; pointer++; }\n",
+                "    int *cmock_pointer = Mock.Nectarine_CallOrder_Head;\n",
+                "    while (cmock_pointer && cmock_pointer != Mock.Nectarine_CallOrder_Tail) { sz++; cmock_pointer++; }\n",
                 "    if (sz == 0)\n",
                 "    {\n",
                 "      Mock.Nectarine_CallOrder_Head = (int*)malloc(2*sizeof(int));\n",
@@ -160,9 +160,9 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.CanOpener_Expected_CorkScrew != Mock.CanOpener_Expected_CorkScrew_Tail)\n",
                 "  {\n",
-                "    uint16* p_expected = Mock.CanOpener_Expected_CorkScrew;\n",
+                "    uint16* cmock_val_expected = Mock.CanOpener_Expected_CorkScrew;\n",
                 "    Mock.CanOpener_Expected_CorkScrew++;\n",
-                "    TEST_ASSERT_EQUAL_MESSAGE(*p_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for argument 'CorkScrew'.\");\n\n",
+                "    TEST_ASSERT_EQUAL_MESSAGE(*cmock_val_expected, CorkScrew, \"Function 'CanOpener' called with unexpected value for argument 'CorkScrew'.\");\n\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
@@ -180,9 +180,9 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.MeasureCup_Expected_TeaSpoon != Mock.MeasureCup_Expected_TeaSpoon_Tail)\n",
                 "  {\n",
-                "    const char** p_expected = Mock.MeasureCup_Expected_TeaSpoon;\n",
+                "    const char** cmock_val_expected = Mock.MeasureCup_Expected_TeaSpoon;\n",
                 "    Mock.MeasureCup_Expected_TeaSpoon++;\n",
-                "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*p_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected value for argument 'TeaSpoon'.\");\n\n",
+                "    TEST_ASSERT_EQUAL_STRING_MESSAGE(*cmock_val_expected, TeaSpoon, \"Function 'MeasureCup' called with unexpected value for argument 'TeaSpoon'.\");\n\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
@@ -200,9 +200,9 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.TeaPot_Expected_TeaSpoon != Mock.TeaPot_Expected_TeaSpoon_Tail)\n",
                 "  {\n",
-                "    MANDELBROT_SET_T* p_expected = Mock.TeaPot_Expected_TeaSpoon;\n",
+                "    MANDELBROT_SET_T* cmock_val_expected = Mock.TeaPot_Expected_TeaSpoon;\n",
                 "    Mock.TeaPot_Expected_TeaSpoon++;\n",
-                "    TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE(*p_expected, TeaSpoon, \"Function 'TeaPot' called with unexpected value for argument 'TeaSpoon'.\");\n\n",
+                "    TEST_ASSERT_EQUAL_MANDELBROT_SET_T_MESSAGE(*cmock_val_expected, TeaSpoon, \"Function 'TeaPot' called with unexpected value for argument 'TeaSpoon'.\");\n\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
@@ -220,9 +220,9 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.Toaster_Expected_Bread != Mock.Toaster_Expected_Bread_Tail)\n",
                 "  {\n",
-                "    SOME_STRUCT* p_expected = Mock.Toaster_Expected_Bread;\n",
+                "    SOME_STRUCT* cmock_val_expected = Mock.Toaster_Expected_Bread;\n",
                 "    Mock.Toaster_Expected_Bread++;\n",
-                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)p_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\");\n\n",
+                "    TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)cmock_val_expected, (void*)&(Bread), sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\");\n\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
@@ -240,12 +240,12 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.Toaster_Expected_Bread != Mock.Toaster_Expected_Bread_Tail)\n",
                 "  {\n",
-                "    SOME_STRUCT** p_expected = Mock.Toaster_Expected_Bread;\n",
+                "    SOME_STRUCT** cmock_val_expected = Mock.Toaster_Expected_Bread;\n",
                 "    Mock.Toaster_Expected_Bread++;\n",
-                "    if (*p_expected == NULL)\n",
+                "    if (*cmock_val_expected == NULL)\n",
                 "      { TEST_ASSERT_NULL(Bread); }\n",
                 "    else\n",
-                "      { TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)(*p_expected), (void*)Bread, sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\"); }\n",
+                "      { TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)(*cmock_val_expected), (void*)Bread, sizeof(SOME_STRUCT), \"Function 'Toaster' called with unexpected value for argument 'Bread'.\"); }\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
@@ -263,12 +263,12 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
                 "  {\n",
-                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    FRUIT** cmock_val_expected = Mock.Blender_Expected_Strawberry;\n",
                 "    Mock.Blender_Expected_Strawberry++;\n",
-                "    if (*p_expected == NULL)\n",
+                "    if (*cmock_val_expected == NULL)\n",
                 "      { TEST_ASSERT_NULL(Strawberry); }\n",
                 "    else\n",
-                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*p_expected, Strawberry, 1); }\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*cmock_val_expected, Strawberry, 1); }\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
@@ -287,19 +287,19 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
                 "  {\n",
-                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    FRUIT** cmock_val_expected = Mock.Blender_Expected_Strawberry;\n",
                 "    Mock.Blender_Expected_Strawberry++;\n",
-                "    if (*p_expected == NULL)\n",
+                "    if (*cmock_val_expected == NULL)\n",
                 "      { TEST_ASSERT_NULL(Strawberry); }\n",
                 "    else\n",
-                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*p_expected, Strawberry, 1); }\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*cmock_val_expected, Strawberry, 1); }\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name})
     assert_equal(expected, returned)
   end
   
-  should "make handle default types when working in pointer only mode" do
+  should "make handle default types when working in cmock_pointer only mode" do
     function = { :name => "Blender", :return_type => "uint16*"}
     var_type = "FRUIT*"
     var_name = "Strawberry"
@@ -311,9 +311,9 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
                 "  {\n",
-                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    FRUIT** cmock_val_expected = Mock.Blender_Expected_Strawberry;\n",
                 "    Mock.Blender_Expected_Strawberry++;\n",
-                "    TEST_ASSERT_EQUAL_HEX32_MESSAGE(*p_expected, Strawberry, \"Function 'Blender' called with unexpected value for argument 'Strawberry'.\");\n\n",
+                "    TEST_ASSERT_EQUAL_HEX32_MESSAGE(*cmock_val_expected, Strawberry, \"Function 'Blender' called with unexpected value for argument 'Strawberry'.\");\n\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name, :ptr? => true})
@@ -333,14 +333,14 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
                 "  {\n",
-                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    FRUIT** cmock_val_expected = Mock.Blender_Expected_Strawberry;\n",
                 "    Mock.Blender_Expected_Strawberry++;\n\n",
-                "    int Depth = *Mock.Blender_Expected_Strawberry_Depth;\n",
+                "    int cmock_depth = *Mock.Blender_Expected_Strawberry_Depth;\n",
                 "    Mock.Blender_Expected_Strawberry_Depth++;\n\n",
-                "    if (*p_expected == NULL)\n",
+                "    if (*cmock_val_expected == NULL)\n",
                 "      { TEST_ASSERT_NULL(Strawberry); }\n",
                 "    else\n",
-                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*p_expected, Strawberry, Depth); }\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*cmock_val_expected, Strawberry, cmock_depth); }\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name, :ptr? => true})
@@ -360,16 +360,16 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = ["\n",
                 "  if (Mock.Blender_Expected_Strawberry != Mock.Blender_Expected_Strawberry_Tail)\n",
                 "  {\n",
-                "    FRUIT** p_expected = Mock.Blender_Expected_Strawberry;\n",
+                "    FRUIT** cmock_val_expected = Mock.Blender_Expected_Strawberry;\n",
                 "    Mock.Blender_Expected_Strawberry++;\n\n",
-                "    int Depth = *Mock.Blender_Expected_Strawberry_Depth;\n",
+                "    int cmock_depth = *Mock.Blender_Expected_Strawberry_Depth;\n",
                 "    Mock.Blender_Expected_Strawberry_Depth++;\n\n",
-                "    if (*p_expected == NULL)\n",
+                "    if (*cmock_val_expected == NULL)\n",
                 "      { TEST_ASSERT_NULL(Strawberry); }\n",
-                "    else if (Depth == 0)\n",
-                "      { TEST_ASSERT_EQUAL_HEX32(*p_expected, Strawberry); }\n",
+                "    else if (cmock_depth == 0)\n",
+                "      { TEST_ASSERT_EQUAL_HEX32(*cmock_val_expected, Strawberry); }\n",
                 "    else\n",
-                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*p_expected, Strawberry, Depth); }\n",
+                "      { TEST_ASSERT_EQUAL_FRUIT_ARRAY(*cmock_val_expected, Strawberry, cmock_depth); }\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_utils.code_verify_an_arg_expectation(function, {:type => var_type, :name => var_name, :ptr? => true})

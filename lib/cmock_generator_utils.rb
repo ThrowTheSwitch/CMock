@@ -40,7 +40,7 @@ class CMockGeneratorUtils
   
   def code_verify_an_arg_expectation(function, arg) 
     (INSERT_ARG_VERIFY_START_SNIPPET % ["#{function[:name]}_Expected_#{arg[:name]}", arg[:type]]) +
-    expect_helper(arg, '*p_expected', "\"Function '#{function[:name]}' called with unexpected value for argument '#{arg[:name]}'.\"", "#{function[:name]}_Expected_#{arg[:name]}_Depth") +
+    expect_helper(arg, '*cmock_val_expected', "\"Function '#{function[:name]}' called with unexpected value for argument '#{arg[:name]}'.\"", "#{function[:name]}_Expected_#{arg[:name]}_Depth") +
     "\n  }\n" 
   end
   
@@ -60,13 +60,13 @@ class CMockGeneratorUtils
       when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE_ARRAY"
         if (@arrays)
           [ (INSERT_ARG_DEPTH_START_SNIPPET % [depth_name]),
-            "    if (*p_expected == NULL)",
+            "    if (*cmock_val_expected == NULL)",
             "      { TEST_ASSERT_NULL(#{name}); }",
-            ((@ptr_handling == :smart) ? "    else if (Depth == 0)\n      { TEST_ASSERT_EQUAL_HEX32(*p_expected, #{name}); }" : nil),
+            ((@ptr_handling == :smart) ? "    else if (cmock_depth == 0)\n      { TEST_ASSERT_EQUAL_HEX32(*cmock_val_expected, #{name}); }" : nil),
             "    else",
-            "      { TEST_ASSERT_EQUAL_MEMORY_ARRAY_MESSAGE((void*)(#{expected}), (void*)#{name}, sizeof(#{c_type.sub('*','')}), Depth#{unity_msg}); }"].compact.join("\n")
+            "      { TEST_ASSERT_EQUAL_MEMORY_ARRAY_MESSAGE((void*)(#{expected}), (void*)#{name}, sizeof(#{c_type.sub('*','')}), cmock_depth#{unity_msg}); }"].compact.join("\n")
         else
-          [ "    if (*p_expected == NULL)",
+          [ "    if (*cmock_val_expected == NULL)",
             "      { TEST_ASSERT_NULL(#{name}); }",
             "    else",
             "      { TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)(#{expected}), (void*)#{name}, sizeof(#{c_type.sub('*','')})#{unity_msg}); }"].join("\n")
@@ -75,13 +75,13 @@ class CMockGeneratorUtils
       when /_ARRAY/
         if (@arrays)
           [ (INSERT_ARG_DEPTH_START_SNIPPET % [depth_name]),
-            "    if (*p_expected == NULL)",
+            "    if (*cmock_val_expected == NULL)",
             "      { TEST_ASSERT_NULL(#{name}); }",
-            ((@ptr_handling == :smart) ? "    else if (Depth == 0)\n      { TEST_ASSERT_EQUAL_HEX32(*p_expected, #{name}); }" : nil),
+            ((@ptr_handling == :smart) ? "    else if (cmock_depth == 0)\n      { TEST_ASSERT_EQUAL_HEX32(*cmock_val_expected, #{name}); }" : nil),
             "    else",
-            "      { #{unity_func}(#{expected}, #{name}, Depth); }"].compact.join("\n")
+            "      { #{unity_func}(#{expected}, #{name}, cmock_depth); }"].compact.join("\n")
         else
-          [ "    if (*p_expected == NULL)",
+          [ "    if (*cmock_val_expected == NULL)",
             "      { TEST_ASSERT_NULL(#{name}); }",
             "    else",
             "      { #{unity_func}(#{expected}, #{name}, 1); }"].join("\n")
@@ -100,8 +100,8 @@ class CMockGeneratorUtils
   INSERT_EXPECT_CODE_SNIPPET = %q[
   {
     int sz = 0;
-    %1$s *pointer = %2$s_Head;
-    while (pointer && pointer != %2$s_Tail) { sz++; pointer++; }
+    %1$s *cmock_pointer = %2$s_Head;
+    while (cmock_pointer && cmock_pointer != %2$s_Tail) { sz++; cmock_pointer++; }
     if (sz == 0)
     {
       %2$s_Head = (%1$s*)malloc(2*sizeof(%1$s));
@@ -124,8 +124,8 @@ class CMockGeneratorUtils
   INSERT_EXPECT_SHORT_CODE_SNIPPET = %q[
   {
     int sz = 0;
-    %1$s *pointer = %2$s_Head;
-    while (pointer && pointer != %2$s_Tail) { sz++; pointer++; }
+    %1$s *cmock_pointer = %2$s_Head;
+    while (cmock_pointer && cmock_pointer != %2$s_Tail) { sz++; cmock_pointer++; }
     if (sz == 0)
     {
       %2$s_Head = (%1$s*)malloc(2*sizeof(%1$s));
@@ -151,9 +151,9 @@ class CMockGeneratorUtils
   INSERT_RETURN_TYPE_SNIPPET = %q[
   if (Mock.%1$s_Return != Mock.%1$s_Return_Tail)
   {
-    %2$s toReturn = *Mock.%1$s_Return;
+    %2$s cmock_to_return = *Mock.%1$s_Return;
     Mock.%1$s_Return++;
-    return toReturn;
+    return cmock_to_return;
   }
   else
   {
@@ -164,12 +164,12 @@ class CMockGeneratorUtils
   INSERT_ARG_VERIFY_START_SNIPPET = %q[
   if (Mock.%1$s != Mock.%1$s_Tail)
   {
-    %2$s* p_expected = Mock.%1$s;
+    %2$s* cmock_val_expected = Mock.%1$s;
     Mock.%1$s++;
 ]
 
   INSERT_ARG_DEPTH_START_SNIPPET = %q[
-    int Depth = *Mock.%1$s;
+    int cmock_depth = *Mock.%1$s;
     Mock.%1$s++;
 ]
 

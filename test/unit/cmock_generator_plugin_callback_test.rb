@@ -122,7 +122,7 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
                 :args => [{ :type => "char*", :name => "pescado"}], 
                 :args_string => "char* pescado",
                 :return_type => "int", 
-                :return_string => "int toReturn" }
+                :return_string => "int cmock_to_return" }
      
     expected = ["\n",
                 "void Lemon_StubWithCallback(CMOCK_Lemon_CALLBACK Callback)\n",

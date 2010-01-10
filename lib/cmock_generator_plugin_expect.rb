@@ -64,7 +64,7 @@ class CMockGeneratorPluginExpect
     
     # Parameter Helper Function
     if (function[:args_string] != "void")
-      lines << "void ExpectParameters_#{func_name}(#{function[:args_string]})\n{\n"
+      lines << "void CMockExpectParameters_#{func_name}(#{function[:args_string]})\n{\n"
       function[:args].each do |arg|
         lines << @utils.code_add_an_arg_expectation(function, arg)
       end
@@ -85,11 +85,11 @@ class CMockGeneratorPluginExpect
     lines << @utils.code_add_base_expectation(func_name)
     
     if (function[:args_string] != "void")
-      lines << "  ExpectParameters_#{func_name}(#{function[:args].map{|m| m[:name]}.join(', ')});\n"
+      lines << "  CMockExpectParameters_#{func_name}(#{function[:args].map{|m| m[:name]}.join(', ')});\n"
     end
     
     if (function[:return_type] != "void")
-      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{func_name}_Return", 'toReturn')
+      lines << @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{func_name}_Return", 'cmock_to_return')
       lines << "  Mock.#{func_name}_Return = Mock.#{func_name}_Return_Head;\n"
       lines << "  Mock.#{func_name}_Return += Mock.#{func_name}_CallCount;\n"
     end
@@ -140,16 +140,16 @@ class CMockGeneratorPluginExpect
 ]
 
   MOCK_IMPLEMENT_ORDERED_SNIPPET = %q[  {
-    int* p_expected = Mock.%1$s_CallOrder;
+    int* cmock_val_expected = Mock.%1$s_CallOrder;
     ++GlobalVerifyOrder;
     if (Mock.%1$s_CallOrder != Mock.%1$s_CallOrder_Tail)
       Mock.%1$s_CallOrder++;
-    if ((*p_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))
+    if ((*cmock_val_expected != GlobalVerifyOrder) && (GlobalOrderError == NULL))
     {
-      const char* ErrStr = "%2$s";
+      const char* cmock_err_str = "%2$s";
       GlobalOrderError = malloc(%3$s);
       if (GlobalOrderError)
-        strcpy(GlobalOrderError, ErrStr);
+        strcpy(GlobalOrderError, cmock_err_str);
     }
   }
 ]

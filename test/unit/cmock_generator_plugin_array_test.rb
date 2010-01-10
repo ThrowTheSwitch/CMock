@@ -72,10 +72,10 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
                            :ptr? => true,
                          }],
                 :return_type => "const char*", 
-                :return_string => "const char* toReturn",
+                :return_string => "const char* cmock_to_return",
                 :contains_ptr? => true }
     
-    expected = "void #{function[:name]}_ExpectWithArrayAndReturn(int* tofu, int tofu_Depth, const char* toReturn);\n"
+    expected = "void #{function[:name]}_ExpectWithArrayAndReturn(int* tofu, int tofu_Depth, const char* cmock_to_return);\n"
     returned = @cmock_generator_plugin_array.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -95,19 +95,19 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
                 :args => [{ :type => "int*", :name => "pescado", :ptr? => true}, { :type => "int", :name => "pes", :ptr? => false}], 
                 :args_string => "int* pescado, int pes", 
                 :return_type => "int", 
-                :return_string => "int toReturn", 
+                :return_string => "int cmock_to_return", 
                 :contains_ptr? => true }
     @utils.expect.code_add_an_arg_expectation(function, function[:args][0], "pescado_Depth").returns("mock_retval_2")
     @utils.expect.code_add_an_arg_expectation(function, function[:args][1], "1").returns("mock_retval_3")
     @utils.expect.code_add_base_expectation("Lemon").returns("mock_retval_0")
-    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return", 'toReturn').returns("mock_retval_1")
+    @utils.expect.code_insert_item_into_expect_array(function[:return_type], "Mock.Lemon_Return", 'cmock_to_return').returns("mock_retval_1")
     
     expected = ["void ExpectParametersWithArray_Lemon(int* pescado, int pescado_Depth, int pes)\n",
                 "{\n",
                 "mock_retval_2",
                 "mock_retval_3",
                 "}\n\n",
-                "void Lemon_ExpectWithArrayAndReturn(int* pescado, int pescado_Depth, int pes, int toReturn)\n",
+                "void Lemon_ExpectWithArrayAndReturn(int* pescado, int pescado_Depth, int pes, int cmock_to_return)\n",
                 "{\n",
                 "mock_retval_0",
                 "  ExpectParametersWithArray_Lemon(pescado, pescado_Depth, pes);\n",

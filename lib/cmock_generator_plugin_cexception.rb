@@ -41,7 +41,7 @@ class CMockGeneratorPluginCexception
       @utils.code_insert_item_into_expect_array('int', "Mock.#{function[:name]}_ThrowOnCallCount", "Mock.#{function[:name]}_CallsExpected"),
       @utils.code_insert_item_into_expect_array('CEXCEPTION_T', "Mock.#{function[:name]}_ThrowValue", "toThrow"),
       (MOCK_INTERFACE_THROW_HANDLING_SNIPPET % function[:name]),
-      (function[:args_string] != "void") ? "  ExpectParameters_#{function[:name]}(#{call_string});\n" : nil,
+      (function[:args_string] != "void") ? "  CMockExpectParameters_#{function[:name]}(#{call_string});\n" : nil,
       "}\n\n" ].join
   end
 
