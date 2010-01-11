@@ -58,6 +58,9 @@
     
     TypeDefInt uses_typedef_like_names(TypeDefInt typedefvar);
     
+    void oh_brackets1(int fudge[5]);
+    void oh_brackets2(int caramel[]);
+    
   :source: 
     :header: |
       U16* exercise_return_pointers(int a);
@@ -66,7 +69,7 @@
       char exercise_multiline_declarations(int a, unsigned int b);
       void exercise_double_pointers(unsigned int a);
       int  exercise_many_descriptors(int a); 
-      TypeDefInt exercise_typedef_like_names(TypeDefInt a);     
+      TypeDefInt exercise_typedef_like_names(TypeDefInt a);
 
     :code: |
       int A, B, C;

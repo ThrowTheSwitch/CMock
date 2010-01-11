@@ -17,11 +17,13 @@
     MY_INT foo(MY_HEX a);
     MY_INT bar(MY_HEX b);
     MY_STRING foo_char_strings(MY_STRING a, MY_STRING b);
+    float float_adder(float a, float b);
 
   :source: 
     :header: |    
       MY_INT function_a(MY_INT a, MY_INT b);
       MY_STRING function_b(MY_STRING a, MY_STRING b);
+      float function_c(float a, float b);
 
     :code: |
       MY_INT function_a(MY_INT a, MY_INT b)    
@@ -32,6 +34,11 @@
       MY_STRING function_b(MY_STRING a, MY_STRING b)
       {
         return foo_char_strings(a, b);
+      }
+      
+      float function_c(float a, float b)
+      {
+        return float_adder(b, a);
       }
       
   :tests:
@@ -75,6 +82,24 @@
         {
           foo_char_strings_ExpectAndReturn((MY_STRING)"jello", (MY_STRING)"jiggle", (MY_STRING)"boing!");
           TEST_ASSERT_EQUAL_STRING("boing!", function_b((MY_STRING)"jello", (MY_STRING)"jiggle"));
+        }
+
+    - :pass: TRUE
+      :should: 'handle floating point numbers with Unity support: pass'
+      :code: |
+        test()
+        {
+          float_adder_ExpectAndReturn(1.2345, 6.7890, 8.0235);
+          TEST_ASSERT_EQUAL_FLOAT(8.0235, function_c(6.7890, 1.2345));
+        }
+
+    - :pass: FALSE
+      :should: 'handle floating point numbers with Unity support: fail'
+      :code: |
+        test()
+        {
+          float_adder_ExpectAndReturn(1.2345, 6.7892, 8.0235);
+          TEST_ASSERT_EQUAL_FLOAT(8.0235, function_c(6.7890, 1.2345));
         }
 
 ...

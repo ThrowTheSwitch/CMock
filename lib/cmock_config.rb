@@ -94,6 +94,8 @@ class CMockConfig
       'pCHAR'           => 'STRING',
       'cstring'         => 'STRING',
       'CSTRING'         => 'STRING',
+      'float'           => 'FLOAT',
+      'double'          => 'FLOAT',
     }
   end
 end

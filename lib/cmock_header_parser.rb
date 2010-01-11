@@ -126,9 +126,9 @@ class CMockHeaderParser
       return 'void'
     else
       c=0
-      arg_list.gsub!(/(\w)\s*\[[\s\d]*\]/,'*\1') # magically turn brackets into asterisks
-      arg_list.gsub!(/\s+\*/,'*')                # remove space to place asterisks with type (where they belong)
-      arg_list.gsub!(/\*(\w)/,'* \1')            # pull asterisks away from arg to place asterisks with type (where they belong)
+      arg_list.gsub!(/(\w+)(?:\s*\[[\s\d]*\])+/,'*\1')    # magically turn brackets into asterisks
+      arg_list.gsub!(/\s+\*/,'*')                         # remove space to place asterisks with type (where they belong)
+      arg_list.gsub!(/\*(\w)/,'* \1')                     # pull asterisks away from arg to place asterisks with type (where they belong)
       
       #scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s]+)\)\s*\(([\w\s,]+)\)\)*/) do |m|
@@ -160,7 +160,7 @@ class CMockHeaderParser
   
   def parse_declaration(declaration)
     decl = {}
-      
+    
     regex_match = @declaration_parse_matcher.match(declaration)
     raise "Failed parsing function declaration: '#{declaration}'" if regex_match.nil? 
     
