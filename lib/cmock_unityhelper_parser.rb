@@ -22,10 +22,8 @@ class CMockUnityHelperParser
   
   def map_C_types
     c_types = {}
-    [@config.standard_treat_as_map, @config.treat_as].each do |pairs|
-      pairs.each_pair do |ctype, expecttype|
-        c_types[ctype.gsub(/\s+/,'_')] = "TEST_ASSERT_EQUAL_#{expecttype}_MESSAGE"
-      end unless pairs.nil?
+    @config.treat_as.each_pair do |ctype, expecttype|
+      c_types[ctype.gsub(/\s+/,'_')] = "TEST_ASSERT_EQUAL_#{expecttype}_MESSAGE"
     end
     c_types
   end

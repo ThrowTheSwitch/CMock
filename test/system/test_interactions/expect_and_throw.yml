@@ -1,7 +1,7 @@
 ---
 :cmock:
   :plugins:
-  - cexception
+  - :cexception
 
 :systest:
   :types: |

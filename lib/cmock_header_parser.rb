@@ -106,10 +106,12 @@ class CMockHeaderParser
     arg_list.split(',').each do |arg|
       arg.strip! 
       return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)   # we're done if we reach void by itself or ...
-      arg_elements = arg.split - @c_attributes              # split up words and remove known attributes
-      args << { :type => (arg_type =arg_elements[0..-2].join(' ')), 
-                :name => arg_elements[-1], 
-                :ptr? => divine_ptr(arg_type)
+      arg_array = arg.split
+      arg_elements = arg_array - @c_attributes              # split up words and remove known attributes
+      args << { :type   => (arg_type =arg_elements[0..-2].join(' ')), 
+                :name   => arg_elements[-1], 
+                :ptr?   => divine_ptr(arg_type),
+                :const? => arg_array.include?('const')
               }
     end
     return args
@@ -178,18 +180,24 @@ class CMockHeaderParser
 
     #build attribute and return type strings
     decl[:modifier] = []
-    decl[:return_type]  = []    
+    rettype = []
     descriptors[0..-2].each do |word|
       if @c_attributes.include?(word)
         decl[:modifier] << word
       else
-        decl[:return_type] << word
+        rettype << word
       end
     end
     decl[:modifier] = decl[:modifier].join(' ')
-    decl[:return_type] = decl[:return_type].join(' ')
-    decl[:return_type] = 'void' if (@local_as_void.include?(decl[:return_type].strip))
-    decl[:return_string] = decl[:return_type] + " cmock_to_return"
+    rettype = rettype.join(' ')
+    rettype = 'void' if (@local_as_void.include?(rettype.strip))
+    decl[:return] = { :type   => rettype, 
+                      :name   => 'cmock_to_return', 
+                      :ptr?   => divine_ptr(rettype),
+                      :const? => rettype.split(/\s/).include?('const'),
+                      :str    => "#{rettype} cmock_to_return",
+                      :void?  => (rettype == 'void')
+                    }
         
     #remove default argument statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
@@ -211,12 +219,12 @@ class CMockHeaderParser
     decl[:args] = parse_args(args)
     decl[:contains_ptr?] = decl[:args].inject(false) {|ptr, arg| arg[:ptr?] ? true : ptr }
       
-    if (decl[:return_type].nil?   or decl[:name].nil?   or decl[:args].nil? or
-        decl[:return_type].empty? or decl[:name].empty?)
+    if (decl[:return][:type].nil?   or decl[:name].nil?   or decl[:args].nil? or
+        decl[:return][:type].empty? or decl[:name].empty?)
       raise "Failed Parsing Declaration Prototype!\n" +
         "  declaration: #{declaration}\n" +
         "  modifier: #{decl[:modifier]}\n" +
-        "  return: #{decl[:return_type]}\n" +
+        "  return: #{decl[:return]}\n" +
         "  function: #{decl[:name]}\n" +
         "  args:#{decl[:args]}\n"
     end

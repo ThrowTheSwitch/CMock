@@ -15,7 +15,6 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       " abcd;\n" +
       "// #define TEST_ASSERT_EQUAL_CHICKENS(a,b) {...};\n" +
       "or maybe // #define TEST_ASSERT_EQUAL_CHICKENS(a,b) {...};\n\n"
-    @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns({})
     @config.expects.load_unity_helper.returns(source)
     @parser = CMockUnityHelperParser.new(@config)
@@ -29,7 +28,6 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       " abcd; /*\n" +
       "#define TEST_ASSERT_EQUAL_CHICKENS(a,b) {...};\n" +
       "#define TEST_ASSERT_EQUAL_CHICKENS(a,b) {...};\n */\n"
-    @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns({})
     @config.expect.load_unity_helper.returns(source)
     @parser = CMockUnityHelperParser.new(@config)
@@ -47,7 +45,6 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       "#define TEST_ASSERT_WRONG_NAME_EQUAL(a,b) {...};\n" +
       "#define TEST_ASSERT_EQUAL_unsigned_funky_rabbits(a,b) {...};\n" +
       "abcd;\n"
-    @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns({})
     @config.expect.load_unity_helper.returns(source)
     @parser = CMockUnityHelperParser.new(@config)
@@ -68,7 +65,6 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       "#define TEST_ASSERT_WRONG_NAME_EQUAL_ARRAY(a,b,c) {...};\n" +
       "#define TEST_ASSERT_EQUAL_unsigned_funky_rabbits_ARRAY(a,b,c) {...};\n" +
       "abcd;\n"
-    @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns({})
     @config.expect.load_unity_helper.returns(source)
     @parser = CMockUnityHelperParser.new(@config)
@@ -89,8 +85,7 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       "UINT"          => "TEST_ASSERT_EQUAL_HEX32_MESSAGE",
       "unsigned_long" => "TEST_ASSERT_EQUAL_HEX64_MESSAGE",
     }
-    @config.expects.standard_treat_as_map.returns(pairs)
-    @config.expects.treat_as.returns({})
+    @config.expects.treat_as.returns(pairs)
     @config.expect.load_unity_helper.returns(nil)
     @parser = CMockUnityHelperParser.new(@config)
     
@@ -106,7 +101,6 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       "char*"         => "TEST_ASSERT_EQUAL_STRING_MESSAGE",
       "unsigned_int"  => "TEST_ASSERT_EQUAL_HEX32_MESSAGE",
     }
-    @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns(pairs)
     @config.expect.load_unity_helper.returns(nil)
     @parser = CMockUnityHelperParser.new(@config)
@@ -114,33 +108,7 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.c_types)
   end
   
-  should "merge standard and user specified helper into my list" do
-    default = {
-      "UINT"          => "HEX32",
-      "unsigned  int" => "HEX32",
-    }
-    user = {
-      "int"           => "INT",
-      "unsigned char" => "HEX8",
-    }
-    source = "#define TEST_ASSERT_EQUAL_TURKEYS_ARRAY(a,b,c) {...};\n"
-    expected = {
-      "UINT"          => "TEST_ASSERT_EQUAL_HEX32_MESSAGE",
-      "unsigned_int"  => "TEST_ASSERT_EQUAL_HEX32_MESSAGE",
-      "int"           => "TEST_ASSERT_EQUAL_INT_MESSAGE",
-      "unsigned_char" => "TEST_ASSERT_EQUAL_HEX8_MESSAGE",
-      "TURKEYS*"      => "TEST_ASSERT_EQUAL_TURKEYS_ARRAY",
-    }
-    @config.expects.standard_treat_as_map.returns(default)
-    @config.expects.treat_as.returns(user)
-    @config.expect.load_unity_helper.returns(source)
-    @parser = CMockUnityHelperParser.new(@config)
-    
-    assert_equal(expected, @parser.c_types)
-  end
-  
   should "be able to fetch helpers on my list" do
-    @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns({})
     @config.expect.load_unity_helper.returns("")
     @parser = CMockUnityHelperParser.new(@config)
@@ -160,7 +128,6 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
   end
 
   should "return memory comparison when asked to fetch helper of types not on my list" do
-    @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns({})
     @config.expects.load_unity_helper.returns("")
     @parser = CMockUnityHelperParser.new(@config)
@@ -182,7 +149,6 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
   end
   
   should "raise error when asked to fetch helper of type not on my list and not allowed to mem check" do
-    @config.expects.standard_treat_as_map.returns({})
     @config.expects.treat_as.returns({})
     @config.expect.load_unity_helper.returns("")
     @config.expect.memcmp_if_unknown.returns(false)

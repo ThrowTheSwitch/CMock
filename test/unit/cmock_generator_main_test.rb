@@ -125,6 +125,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "#include <stdlib.h>\n",
                  "#include <setjmp.h>\n",
                  "#include \"unity.h\"\n",
+                 "#include \"cmock.h\"\n",
                  "#include \"PluginRequiredHeader.h\"\n",
                  "#include \"ConfigRequiredHeader1.h\"\n",
                  "#include \"ConfigRequiredHeader2.h\"\n",
@@ -144,36 +145,42 @@ class CMockGeneratorTest < Test::Unit::TestCase
     expected = [ "static struct MockPoutPoutFishInstance\n",
                  "{\n",
                  "  unsigned char placeHolder;\n",
-                 "  unsigned char allocFailure;\n",
                  "",
                  "} Mock;\n\n"
-               ]
+               ].join
     
     @cmock_generator.create_instance_structure(output, functions)
     
-    assert_equal(expected, output.flatten)
+    assert_equal(expected, output.join)
   end
   
   should "create the instance structure where it is needed when functions required" do 
     output = []
-    functions = [ { :name => "First", :args => "int Candy", :return_type => "int" }, 
-                  { :name => "Second", :args => "bool Smarty", :return_type => "char" }
+    functions = [ { :name => "First", :args => "int Candy", :return => test_return[:int] }, 
+                  { :name => "Second", :args => "bool Smarty", :return => test_return[:string] }
                 ]
-    expected = [ "static struct MockPoutPoutFishInstance\n",
-                 "{\n",
-                 "  unsigned char allocFailure;\n",
-                 "  Uno_First(int Candy, int)" +
-                 "  Dos_First(int Candy, int)" +
-                 "  Uno_Second(bool Smarty, char)" +
-                 "  Dos_Second(bool Smarty, char)",
+    expected = [ "typedef struct _CMOCK_First_CALL_INSTANCE\n{\n",
+                 "  b1  b2",
+                 "\n} CMOCK_First_CALL_INSTANCE;\n\n",
+                 "typedef struct _CMOCK_Second_CALL_INSTANCE\n{\n",
+                 "  char PlaceHolder;\n",
+                 "\n} CMOCK_Second_CALL_INSTANCE;\n\n",
+                 "static struct MockPoutPoutFishInstance\n{\n",
+                 "  d1",
+                 "  CMOCK_First_CALL_INSTANCE* First_CallInstance;\n",
+                 "  e1  e2  e3",
+                 "  CMOCK_Second_CALL_INSTANCE* Second_CallInstance;\n",
                  "} Mock;\n\n"
-               ]
-    @plugins.expect.run(:instance_structure, functions[0]).returns(["  Uno_First(int Candy, int)","  Dos_First(int Candy, int)"])
-    @plugins.expect.run(:instance_structure, functions[1]).returns(["  Uno_Second(bool Smarty, char)","  Dos_Second(bool Smarty, char)"])
+               ].join
+    @plugins.expect.run(:instance_typedefs, functions[0]).returns(["  b1","  b2"])
+    @plugins.expect.run(:instance_typedefs, functions[1]).returns([])
+
+    @plugins.expect.run(:instance_structure, functions[0]).returns(["  d1"])
+    @plugins.expect.run(:instance_structure, functions[1]).returns(["  e1","  e2","  e3"])
     
     @cmock_generator.create_instance_structure(output, functions)
     
-    assert_equal(expected, output.flatten)
+    assert_equal(expected, output.join)
   end
   
   should "create extern declarations for source file" do
@@ -202,33 +209,30 @@ class CMockGeneratorTest < Test::Unit::TestCase
   should "create mock verify functions in source file when no functions specified" do
     functions = []
     output = []
-    expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
-                 "  TEST_ASSERT_EQUAL_MESSAGE(0, Mock.allocFailure, \"Unable to allocate memory for mock\");\n",
-                 "",
-                 "}\n\n"
-               ]
+    expected = "void MockPoutPoutFish_Verify(void)\n{\n}\n\n"
     
     @cmock_generator.create_mock_verify_function(output, functions)
     
-    assert_equal(expected, output.flatten)
+    assert_equal(expected, output.join)
   end
   
   should "create mock verify functions in source file when extra functions specified" do
-    functions = [ { :name => "First", :args => "int Candy", :return_type => "int" }, 
-                  { :name => "Second", :args => "bool Smarty", :return_type => "char" } 
+    functions = [ { :name => "First", :args => "int Candy", :return => test_return[:int] }, 
+                  { :name => "Second", :args => "bool Smarty", :return => test_return[:string] } 
                 ]
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
-                 "  TEST_ASSERT_EQUAL_MESSAGE(0, Mock.allocFailure, \"Unable to allocate memory for mock\");\n",
                  "  Uno_First" +
                  "  Dos_First" +
                  "  Uno_Second" +
                  "  Dos_Second",
+                 "  TEST_ASSERT_NULL_MESSAGE(GlobalOrderError, GlobalOrderError);\n",
                  "}\n\n"
                ]
     @plugins.expect.run(:mock_verify, functions[0]).returns(["  Uno_First","  Dos_First"])
     @plugins.expect.run(:mock_verify, functions[1]).returns(["  Uno_Second","  Dos_Second"])
     
+    @cmock_generator.ordered = true
     @cmock_generator.create_mock_verify_function(output, functions)
     
     assert_equal(expected, output.flatten)
@@ -240,58 +244,35 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  MockPoutPoutFish_Destroy();\n",
                  "}\n\n"
                ]
-    
+
     @cmock_generator.create_mock_init_function(output)
     
-    assert_equal(expected, output)
+    assert_equal(expected.join, output.join)
   end
   
-  should "create mock destroy functions in source file when no functions specified" do
+  should "create mock destroy functions in source file" do
     functions = []
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
-                 "",
+                 "  CMock_Guts_MemFreeAll();\n",
                  "  memset(&Mock, 0, sizeof(Mock));\n",
                  "}\n\n"
                ]
-    
+
     @cmock_generator.create_mock_destroy_function(output, functions)
-    
-    assert_equal(expected, output.flatten)
+
+    assert_equal(expected.join, output.join)
   end
   
-  should "create mock destroy functions in source file when extra functions specified" do
-    functions = [ { :name => "First", :args => "int Candy", :return_type => "int" }, 
-                  { :name => "Second", :args => "bool Smarty", :return_type => "char" } 
+  should "create mock destroy functions in source file when specified with strict ordering" do
+    functions = [ { :name => "First", :args => "int Candy", :return => test_return[:int] }, 
+                  { :name => "Second", :args => "bool Smarty", :return => test_return[:string] } 
                 ]
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
-                 "  Uno_First(int Candy, int)" +
-                 "  Dos_First(int Candy, int)" +
-                 "  Uno_Second(bool Smarty, char)" +
-                 "  Dos_Second(bool Smarty, char)",
+                 "  CMock_Guts_MemFreeAll();\n",
                  "  memset(&Mock, 0, sizeof(Mock));\n",
-                 "}\n\n"
-               ]
-    @plugins.expect.run(:mock_destroy, functions[0]).returns(["  Uno_First(int Candy, int)","  Dos_First(int Candy, int)"])
-    @plugins.expect.run(:mock_destroy, functions[1]).returns(["  Uno_Second(bool Smarty, char)","  Dos_Second(bool Smarty, char)"])
-    
-    @cmock_generator.create_mock_destroy_function(output, functions)
-    
-    assert_equal(expected, output.flatten)
-  end
-  
-  should "create mock destroy functions in source file when extra functions specified with strict ordering" do
-    functions = [ { :name => "First", :args => "int Candy", :return_type => "int" }, 
-                  { :name => "Second", :args => "bool Smarty", :return_type => "char" } 
-                ]
-    output = []
-    expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
-                 "  Uno_First(int Candy, int)" +
-                 "  Dos_First(int Candy, int)" +
-                 "  Uno_Second(bool Smarty, char)" +
-                 "  Dos_Second(bool Smarty, char)",
-                 "  memset(&Mock, 0, sizeof(Mock));\n",
+                 "  uno",
                  "  GlobalExpectCount = 0;\n",
                  "  GlobalVerifyOrder = 0;\n",
                  "  if (GlobalOrderError)\n",
@@ -301,17 +282,17 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  }\n",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_destroy, functions[0]).returns(["  Uno_First(int Candy, int)","  Dos_First(int Candy, int)"])
-    @plugins.expect.run(:mock_destroy, functions[1]).returns(["  Uno_Second(bool Smarty, char)","  Dos_Second(bool Smarty, char)"])
+    @plugins.expect.run(:mock_destroy, functions[0]).returns([])
+    @plugins.expect.run(:mock_destroy, functions[1]).returns(["  uno"])
     
     @cmock_generator_strict.create_mock_destroy_function(output, functions)
-    
-    assert_equal(expected, output.flatten)
+
+    assert_equal(expected.join, output.join)
   end
   
   should "create mock implementation functions in source file" do
     function = { :modifier => "static", 
-                 :return_type => "bool", 
+                 :return => test_return[:int], 
                  :args_string => "uint32 sandwiches, const char* named", 
                  :args => ["uint32 sandwiches", "const char* named"],
                  :var_arg => nil,
@@ -319,25 +300,28 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  :attributes => "__inline"
                }
     output = []
-    expected = [ "__inline ",
-                 "static bool SupaFunction(uint32 sandwiches, const char* named)\n",
+    expected = [ "__inline static int SupaFunction(uint32 sandwiches, const char* named)\n",
                  "{\n",
-                 "  MockSupaFunctionUno(uint32 sandwiches, const char* named)",
-                 "  MockSupaFunctionDos(uint32 sandwiches, const char* named)",
-                 "  UtilsSupaFunction.bool",
+                 "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = Mock.SupaFunction_CallInstance;\n",
+                 "  Mock.SupaFunction_CallInstance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
+                 "  uno",
+                 "  TEST_ASSERT_NOT_NULL_MESSAGE(cmock_call_instance, \"Function 'SupaFunction' called more times than expected\");\n",
+                 "  dos",
+                 "  tres",
+                 "  return cmock_call_instance->ReturnVal;\n",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches, const char* named)","  MockSupaFunctionDos(uint32 sandwiches, const char* named)"])
-    @utils.expect.code_handle_return_value(function).returns(["  UtilsSupaFunction.bool"])
+    @plugins.expect.run(:mock_implementation_precheck, function).returns(["  uno"])
+    @plugins.expect.run(:mock_implementation, function).returns(["  dos","  tres"])
     
     @cmock_generator.create_mock_implementation(output, function)
     
-    assert_equal(expected, output.flatten)
+    assert_equal(expected.join, output.join)
   end
   
   should "create mock implementation functions in source file with different options" do
     function = { :modifier => "", 
-                 :return_type => "int", 
+                 :return => test_return[:int], 
                  :args_string => "uint32 sandwiches", 
                  :args => ["uint32 sandwiches"],
                  :var_arg => "corn ...",
@@ -347,16 +331,20 @@ class CMockGeneratorTest < Test::Unit::TestCase
     output = []
     expected = [ "int SupaFunction(uint32 sandwiches, corn ...)\n",
                  "{\n",
-                 "  MockSupaFunctionUno(uint32 sandwiches)",
-                 "  MockSupaFunctionDos(uint32 sandwiches)",
-                 "  UtilsSupaFunction.int",
+                 "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = Mock.SupaFunction_CallInstance;\n",
+                 "  Mock.SupaFunction_CallInstance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
+                 "  uno",
+                 "  TEST_ASSERT_NOT_NULL_MESSAGE(cmock_call_instance, \"Function 'SupaFunction' called more times than expected\");\n",
+                 "  dos",
+                 "  tres",
+                 "  return cmock_call_instance->ReturnVal;\n",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_implementation, function).returns(["  MockSupaFunctionUno(uint32 sandwiches)","  MockSupaFunctionDos(uint32 sandwiches)"])
-    @utils.expect.code_handle_return_value(function).returns(["  UtilsSupaFunction.int"])
+    @plugins.expect.run(:mock_implementation_precheck, function).returns(["  uno"])
+    @plugins.expect.run(:mock_implementation, function).returns(["  dos","  tres"])
     
     @cmock_generator.create_mock_implementation(output, function)
     
-    assert_equal(expected, output.flatten)
+    assert_equal(expected.join, output.join)
   end
 end

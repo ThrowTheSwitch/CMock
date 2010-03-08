@@ -11,70 +11,51 @@ class CMockGeneratorPluginIgnore
   end
   
   def instance_structure(function)
-    return "  int #{function[:name]}_IgnoreBool;\n"
+    if (function[:return][:void?])
+      "  int #{function[:name]}_IgnoreBool;\n"
+    else
+      "  int #{function[:name]}_IgnoreBool;\n  #{function[:return][:type]} #{function[:name]}_FinalReturn;\n"
+    end
   end
   
   def mock_function_declarations(function)
-    if (function[:return_type] == "void")
+    if (function[:return][:void?])
       return "void #{function[:name]}_Ignore(void);\n"
     else        
-      return "void #{function[:name]}_IgnoreAndReturn(#{function[:return_string]});\n"
+      return "void #{function[:name]}_IgnoreAndReturn(#{function[:return][:str]});\n"
     end 
   end
   
-  def mock_implementation(function)
-    lines = "  if (Mock.#{function[:name]}_IgnoreBool)\n  {" 
-    if (function[:return_type] == "void")
-      lines << "\n    return;\n"
+  def mock_implementation_precheck(function)
+    lines = "  if (Mock.#{function[:name]}_IgnoreBool)\n  {\n" 
+    if (function[:return][:void?])
+      lines << "    return;\n  }\n"
     else
-      lines << MOCK_IMPLEMENT_PREFIX_SNIPPET % [function[:name], function[:return_type]]
+      retval = function[:return].merge( { :name => "cmock_call_instance->ReturnVal"} )
+      lines << "    if (cmock_call_instance == NULL)\n      return Mock.#{function[:name]}_FinalReturn;\n"
+      lines << "  " + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless (retval[:void?])
+      lines << "    return cmock_call_instance->ReturnVal;\n  }\n"
     end
-    lines << "  }\n"
+    lines
   end
   
   def mock_interfaces(function)
-    if (function[:return_type] == "void")
-      MOCK_INTERFACE_VOID_SNIPPET % function[:name]
+    lines = ""
+    if (function[:return][:void?])
+      lines << "void #{function[:name]}_Ignore(void)\n{\n"
     else
-      item_insert = @utils.code_insert_item_into_expect_array(function[:return_type], "Mock.#{function[:name]}_Return", 'cmock_to_return')
-      MOCK_INTERFACE_FULL_SNIPPET % [function[:name], function[:return_string], item_insert]
+      lines << "void #{function[:name]}_IgnoreAndReturn(#{function[:return][:str]})\n{\n"
     end
+    unless (function[:return][:void?])
+      lines << @utils.code_add_base_expectation(function[:name], false)
+      lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n"
+    end
+    lines << "  Mock.#{function[:name]}_IgnoreBool = (int)1;\n"
+    lines << "}\n\n"
   end
-  
-  private ##############
-  
-  MOCK_IMPLEMENT_PREFIX_SNIPPET = %q[
-    if (Mock.%1$s_Return != Mock.%1$s_Return_Tail)
-    {
-      %2$s cmock_to_return = *Mock.%1$s_Return;
-      Mock.%1$s_Return++;
-      Mock.%1$s_CallCount++;
-      Mock.%1$s_CallsExpected++;
-      return cmock_to_return;
-    }
-    else
-    {
-      return *(Mock.%1$s_Return_Tail - 1);
-    }
-]
 
-  MOCK_INTERFACE_VOID_SNIPPET = %q[
-void %1$s_Ignore(void)
-{
-  Mock.%1$s_IgnoreBool = (int)1;
-}
-
-]
-
-  MOCK_INTERFACE_FULL_SNIPPET = %q[
-void %1$s_IgnoreAndReturn(%2$s)
-{
-  Mock.%1$s_IgnoreBool = (int)1;
-%3$s
-  Mock.%1$s_Return = Mock.%1$s_Return_Head;
-  Mock.%1$s_Return += Mock.%1$s_CallCount;
-}
-
-]
-
+  def mock_verify(function)
+    func_name = function[:name]
+    "  if (Mock.#{func_name}_IgnoreBool)\n    Mock.#{func_name}_CallInstance = NULL;\n"
+  end
 end

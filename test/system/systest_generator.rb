@@ -8,6 +8,7 @@ CASES_PATH     = SYS_TEST_GEN_ROOT + 'cases/'
 
 TYPES_H          = 'types.h'
 UNITY_H          = 'unity.h'
+CMOCK_H          = 'cmock.h'
 UNITY_HELPER_H   = 'unity_helper.h'
 UNITY_HELPER_C   = 'unity_helper.c'
 MOCKABLE_H       = 'mockable.h'
@@ -97,7 +98,7 @@ class SystemTestGenerator
     tests = yaml_hash[:systest][:tests]
     return if tests.nil?
     
-    includes = [UNITY_H]
+    includes = [UNITY_H, CMOCK_H]
     includes << (namix + UNITY_HELPER_H) if not yaml_hash[:systest][:unity_helper].nil?
     includes << [MOCK_PREFIX + namix + MOCKABLE_H]
     includes << [name + H_EXTENSION]

@@ -12,9 +12,6 @@ typedef struct _POINT_T
 // not ANSI C but it has been done and will break cmock if not handled
 typedef void VOID_TYPE_CRAZINESS;
 
-struct _DUMMY_T { unsigned int a; float b; };
-
-
 /* fun parsing & mock generation cases */
 
 void var_args1(int a, ...);
@@ -41,13 +38,5 @@ unsigned int **ptr_ptr_return3(unsigned int **a);
 unsigned int ** ptr_ptr_return4(unsigned int ** a);
 
 extern unsigned long int incredible_descriptors(register const unsigned short a);
-
-void const_variants1( const char* a, int const, unsigned short const * c );
-
-// crazy const magic fairy dust
-void const_variants2( 
-	struct _DUMMY_T const * const param1,
-	const unsigned long int const * const param2,
-	const struct _DUMMY_T const * param3 ); 
 
 int32_t example_c99_type(int32_t param1);

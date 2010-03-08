@@ -1,3 +1,5 @@
+$ThisIsOnlyATest = true
+
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require 'cmock_header_parser'
 
@@ -263,12 +265,17 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "handle odd case of typedef'd void returned" do  
     source = "MY_FUNKY_VOID FunkyVoidReturned(int a)"
     expected = { :var_arg=>nil,
-                 :return_string=>"void cmock_to_return",
                  :name=>"FunkyVoidReturned",
-                 :return_type=>"void",
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[{:type=>"int", :name=>"a", :ptr? => false}],
+                 :args=>[{:type=>"int", :name=>"a", :ptr? => false, :const? => false}],
                  :args_string=>"int a" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
@@ -276,9 +283,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "handle odd case of typedef'd void as arg" do 
     source = "int FunkyVoidAsArg(MY_FUNKY_VOID)"
     expected = { :var_arg=>nil,
-                 :return_string=>"int cmock_to_return",
                  :name=>"FunkyVoidAsArg",
-                 :return_type=>"int",
+                 :return=>{ :type   => "int", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "int cmock_to_return",
+                            :void?  => false
+                          },
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[],
@@ -289,12 +301,17 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "handle odd case of typedef'd void as arg pointer" do 
     source = "char FunkyVoidPointer(MY_FUNKY_VOID* bluh)"
     expected = { :var_arg=>nil,
-                 :return_string=>"char cmock_to_return",
                  :name=>"FunkyVoidPointer",
-                 :return_type=>"char",
+                 :return=>{ :type   => "char", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "char cmock_to_return",
+                            :void?  => false
+                          },
                  :modifier=>"",
                  :contains_ptr? => true,
-                 :args=>[{:type=>"MY_FUNKY_VOID*", :name=>"bluh", :ptr? => true}],
+                 :args=>[{:type=>"MY_FUNKY_VOID*", :name=>"bluh", :ptr? => true, :const? => false}],
                  :args_string=>"MY_FUNKY_VOID* bluh" }
     assert_equal(expected, @parser.parse_declaration(source))        
   end
@@ -375,13 +392,18 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "int Foo(int a, unsigned int b)"
     expected = { :var_arg=>nil,
-                 :return_string=>"int cmock_to_return",
                  :name=>"Foo",
-                 :return_type=>"int",
+                 :return=>{ :type   => "int", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "int cmock_to_return",
+                            :void?  => false
+                          },
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false}, 
-                          {:type=>"unsigned int", :name=>"b", :ptr? => false}
+                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false}, 
+                          {:type=>"unsigned int", :name=>"b", :ptr? => false, :const? => false}
                         ],
                  :args_string=>"int a, unsigned int b" }
     assert_equal(expected, @parser.parse_declaration(source))
@@ -391,14 +413,19 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "void    FunkyChicken(    uint la,  int     de, bool da)"
     expected = { :var_arg=>nil,
-                 :return_string=>"void cmock_to_return",
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
                  :name=>"FunkyChicken",
-                 :return_type=>"void",
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"uint", :name=>"la", :ptr? => false}, 
-                          {:type=>"int",  :name=>"de", :ptr? => false},
-                          {:type=>"bool", :name=>"da", :ptr? => false}
+                 :args=>[ {:type=>"uint", :name=>"la", :ptr? => false, :const? => false}, 
+                          {:type=>"int",  :name=>"de", :ptr? => false, :const? => false},
+                          {:type=>"bool", :name=>"da", :ptr? => false, :const? => false}
                         ],
                  :args_string=>"uint la, int     de, bool da" }
     assert_equal(expected, @parser.parse_declaration(source))
@@ -408,9 +435,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "void tat()"
     expected = { :var_arg=>nil,
-                 :return_string=>"void cmock_to_return",
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
                  :name=>"tat",
-                 :return_type=>"void",
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ ],
@@ -422,13 +454,18 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "const int TheMatrix(int Trinity, unsigned int * Neo)"
     expected = { :var_arg=>nil,
-                 :return_string=>"int cmock_to_return",
+                 :return=>{ :type   => "int", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "int cmock_to_return",
+                            :void?  => false
+                          },
                  :name=>"TheMatrix",
-                 :return_type=>"int",
                  :modifier=>"const",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false}, 
-                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true}
+                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
+                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}
                         ],
                  :args_string=>"int Trinity, unsigned int* Neo" }
     assert_equal(expected, @parser.parse_declaration(source))
@@ -440,23 +477,33 @@ class CMockHeaderParserTest < Test::Unit::TestCase
              "int Morpheus(int, unsigned int*);\n"
              
     expected = [{ :var_arg=>nil,
-                  :return_string=>"int cmock_to_return",
+                  :return=> { :type   => "int", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
                   :name=>"TheMatrix",
-                  :return_type=>"int",
                   :modifier=>"const",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false}, 
-                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true}
+                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
+                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}
                          ],
                   :args_string=>"int Trinity, unsigned int* Neo" },
                 { :var_arg=>nil,
-                  :return_string=>"int cmock_to_return",
+                  :return=> { :type   => "int", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
                   :name=>"Morpheus",
-                  :return_type=>"int",
                   :modifier=>"",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false}, 
-                           {:type=>"unsigned int*", :name=>"cmock_arg2", :ptr? => true}
+                  :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false, :const? => false}, 
+                           {:type=>"unsigned int*", :name=>"cmock_arg2", :ptr? => true,  :const? => false}
                          ],
                   :args_string=>"int cmock_arg1, unsigned int* cmock_arg2" 
                 }]
@@ -469,13 +516,18 @@ class CMockHeaderParserTest < Test::Unit::TestCase
              "const int TheMatrix(int, unsigned int*);\n"
              
     expected = [{ :var_arg=>nil,
-                  :return_string=>"int cmock_to_return",
                   :name=>"TheMatrix",
-                  :return_type=>"int",
+                  :return=> { :type   => "int", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
                   :modifier=>"const",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false}, 
-                           {:type=>"unsigned int*", :name=>"Neo", :ptr? => true}
+                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
+                           {:type=>"unsigned int*", :name=>"Neo", :ptr? => true,      :const? => false}
                          ],
                   :args_string=>"int Trinity, unsigned int* Neo" 
                 }]
@@ -490,18 +542,28 @@ class CMockHeaderParserTest < Test::Unit::TestCase
              "int CaptainHammer(CHUNKY_VOID_T);\n"
              
     expected = [{ :var_arg=>nil,
-                  :return_string=>"void cmock_to_return",
                   :name=>"DrHorrible",
-                  :return_type=>"void",
+                  :return  => { :type   => "void", 
+                                :name   => 'cmock_to_return', 
+                                :ptr?   => false,
+                                :const? => false,
+                                :str    => "void cmock_to_return",
+                                :void?  => true
+                              },
                   :modifier=>"",
-      :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"SingAlong", :ptr? => false} ],
+                  :contains_ptr? => false,
+                  :args=>[ {:type=>"int", :name=>"SingAlong", :ptr? => false, :const? => false} ],
                   :args_string=>"int SingAlong" 
                 },
                 { :var_arg=>nil,
-                  :return_string=>"int cmock_to_return",
+                  :return=> { :type   => "int", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
                   :name=>"CaptainHammer",
-                  :return_type=>"int",
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ ],
@@ -517,27 +579,42 @@ class CMockHeaderParserTest < Test::Unit::TestCase
              "struct TheseArentTheHammer CaptainHammer(void);\n"
              
     expected = [{ :var_arg=>nil,
-                  :return_string=>"int cmock_to_return",
+                  :return =>{ :type   => "int", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
                   :name=>"DrHorrible",
-                  :return_type=>"int",
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"struct SingAlong", :name=>"Blog", :ptr? => false} ],
+                  :args=>[ {:type=>"struct SingAlong", :name=>"Blog", :ptr? => false, :const? => false} ],
                   :args_string=>"struct SingAlong Blog" 
                 },
                 { :var_arg=>nil,
-                  :return_string=>"void cmock_to_return",
+                  :return=> { :type   => "void", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "void cmock_to_return",
+                              :void?  => true
+                            },
                   :name=>"Penny",
-                  :return_type=>"void",
                   :modifier=>"",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"struct _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true} ],
+                  :args=>[ {:type=>"struct _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :const? => true} ],
                   :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy" 
                 },
                 { :var_arg=>nil,
-                  :return_string=>"struct TheseArentTheHammer cmock_to_return",
+                  :return=> { :type   => "struct TheseArentTheHammer", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "struct TheseArentTheHammer cmock_to_return",
+                              :void?  => false
+                            },
                   :name=>"CaptainHammer",
-                  :return_type=>"struct TheseArentTheHammer",
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ ],
@@ -550,13 +627,18 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
     source = "int XFiles(int Scully, int Mulder, ...);\n"
     expected = [{ :var_arg=>"...",
-                  :return_string=>"int cmock_to_return",
+                  :return=> { :type   => "int", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
                   :name=>"XFiles",
-                  :return_type=>"int",
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false}, 
-                           {:type=>"int", :name=>"Mulder", :ptr? => false}
+                  :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false, :const? => false}, 
+                           {:type=>"int", :name=>"Mulder", :ptr? => false, :const? => false}
                          ],
                   :args_string=>"int Scully, int Mulder" 
                }]

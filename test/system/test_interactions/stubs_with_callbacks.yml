@@ -108,6 +108,18 @@
           bar_StubWithCallback((CMOCK_bar_CALLBACK)FooAndBarHelper);
           TEST_ASSERT_EQUAL(12, function_b());
         }
+      
+    - :pass: TRUE
+      :should: 'successfully exercise using some basic callbacks even if there were expects'
+      :code: |
+        test()
+        {
+          custom_type exp = 500;
+          foo_ExpectAndReturn(&exp, 10);
+          foo_StubWithCallback((CMOCK_foo_CALLBACK)FooAndBarHelper);
+          bar_StubWithCallback((CMOCK_bar_CALLBACK)FooAndBarHelper);
+          TEST_ASSERT_EQUAL(12, function_b());
+        }
 
     - :pass: FALSE
       :should: 'successfully exercise using some basic callbacks and notice failures'

@@ -21,64 +21,58 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
     assert(!@cmock_generator_plugin_callback.respond_to?(:include_files))
   end
   
-  should "add to control structure" do
-    function = {:name => "Oak", :args => [:type => "int*", :name => "blah", :ptr? => true], :return_type => "int*"}
-    expected = "  CMOCK_Oak_CALLBACK Oak_CallbackFunctionPointer;\n"
+  should "add to instance structure" do
+    function = {:name => "Oak", :args => [:type => "int*", :name => "blah", :ptr? => true], :return => test_return[:int_ptr]}
+    expected = "  CMOCK_Oak_CALLBACK Oak_CallbackFunctionPointer;\n" +
+               "  int Oak_CallbackCalls;\n"
     returned = @cmock_generator_plugin_callback.instance_structure(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declaration for function without arguments" do
-    function = {:name => "Maple", :args_string => "void", :return_type => "void"}
-    expected = [ "\n",
-                 "typedef void (* CMOCK_Maple_CALLBACK)(int NumCalls);\n",
+    function = {:name => "Maple", :args_string => "void", :return => test_return[:void]}
+    expected = [ "typedef void (* CMOCK_Maple_CALLBACK)(int cmock_num_calls);\n",
                  "void Maple_StubWithCallback(CMOCK_Maple_CALLBACK Callback);\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declaration for function with arguments" do
-    function = {:name => "Maple", :args_string => "int* tofu", :return_type => "void"}
-    expected = [ "\n",
-                 "typedef void (* CMOCK_Maple_CALLBACK)(int* tofu, int NumCalls);\n",
+    function = {:name => "Maple", :args_string => "int* tofu", :return => test_return[:void]}
+    expected = [ "typedef void (* CMOCK_Maple_CALLBACK)(int* tofu, int cmock_num_calls);\n",
                  "void Maple_StubWithCallback(CMOCK_Maple_CALLBACK Callback);\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declaration for function with return values" do
-    function = {:name => "Maple", :args_string => "int* tofu", :return_type => "char*"}
-    expected = [ "\n",
-                 "typedef char* (* CMOCK_Maple_CALLBACK)(int* tofu, int NumCalls);\n",
+    function = {:name => "Maple", :args_string => "int* tofu", :return => test_return[:string]}
+    expected = [ "typedef const char* (* CMOCK_Maple_CALLBACK)(int* tofu, int cmock_num_calls);\n",
                  "void Maple_StubWithCallback(CMOCK_Maple_CALLBACK Callback);\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
 
   should "add mock function implementation for functions of style 'void func(void)'" do
-    function = {:name => "Apple", :args => [], :args_string => "void", :return_type => "void"}
-    expected = ["\n",
-                "  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+    function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:void]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
-                "    Mock.Apple_CallsExpected++;\n",
-                "    Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallCount++);\n",
+                "    Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
                 "    return;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_callback.mock_implementation(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
     assert_equal(expected, returned)
   end
 
   should "add mock function implementation for functions of style 'int func(void)'" do
-    function = {:name => "Apple", :args => [], :args_string => "void", :return_type => "int"}
-    expected = ["\n",
-                "  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+    function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:int]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
-                "    Mock.Apple_CallsExpected++;\n",
-                "    return Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallCount++);\n",
+                "    return Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_callback.mock_implementation(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
     assert_equal(expected, returned)
   end
 
@@ -87,16 +81,14 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
                 :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
                   { :type => 'uint8_t', :name => 'flag', :ptr? => false} ], 
                 :args_string => "int* steak, uint8_t flag",
-                :return_type => "void"}
-    expected = ["\n",
-                "  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                :return=> test_return[:void]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
-                "    Mock.Apple_CallsExpected++;\n",
-                "    Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallCount++);\n",
+                "    Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
                 "    return;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_callback.mock_implementation(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
     assert_equal(expected, returned)
   end
 
@@ -105,15 +97,13 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
                 :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
                   { :type => 'uint8_t', :name => 'flag', :ptr? => false} ],
                 :args_string => "int* steak, uint8_t flag", 
-                :return_type => "int16_t"}
-    expected = ["\n",
-                "  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                :return => test_return[:int]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
-                "    Mock.Apple_CallsExpected++;\n",
-                "    return Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallCount++);\n",
+                "    return Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_callback.mock_implementation(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
     assert_equal(expected, returned)
   end
   
@@ -121,23 +111,22 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
     function = {:name => "Lemon", 
                 :args => [{ :type => "char*", :name => "pescado"}], 
                 :args_string => "char* pescado",
-                :return_type => "int", 
-                :return_string => "int cmock_to_return" }
+                :return => test_return[:int]
+               }
      
-    expected = ["\n",
-                "void Lemon_StubWithCallback(CMOCK_Lemon_CALLBACK Callback)\n",
+    expected = ["void Lemon_StubWithCallback(CMOCK_Lemon_CALLBACK Callback)\n",
                 "{\n",
                 "  Mock.Lemon_CallbackFunctionPointer = Callback;\n",
-                "}\n"
+                "}\n\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_interfaces(function)
     assert_equal(expected, returned)
   end
 
   should "add mock destroy for functions" do
-    function = {:name => "Peach", :args => [], :return_type => "void" }
-    expected = ["\n",
-                "  Mock.Peach_CallbackFunctionPointer = NULL;\n" ].join
+    function = {:name => "Peach", :args => [], :return => test_return[:void] }
+    expected = "  Mock.Peach_CallbackFunctionPointer = NULL;\n" +
+               "  Mock.Peach_CallbackCalls = 0;\n"
     returned = @cmock_generator_plugin_callback.mock_destroy(function)
     assert_equal(expected, returned)
   end

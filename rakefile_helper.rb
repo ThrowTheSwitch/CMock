@@ -92,7 +92,7 @@ module RakefileHelpers
 
   def compile(file, defines=[])
     compiler = build_compiler_fields
-    cmd_str = "#{compiler[:command]}#{compiler[:defines]}#{compiler[:options]}#{compiler[:includes]} #{file} " +
+    cmd_str = "#{compiler[:command]}#{compiler[:defines]}#{defines.inject(''){|all, a| ' -D'+a+all }}#{compiler[:options]}#{compiler[:includes]} #{file} " +
       "#{$cfg['compiler']['object_files']['prefix']}#{$cfg['compiler']['object_files']['destination']}" +
       "#{File.basename(file, C_EXTENSION)}#{$cfg['compiler']['object_files']['extension']}"
     execute(cmd_str)
@@ -145,12 +145,22 @@ module RakefileHelpers
   end
   
   def execute(command_string, verbose=true)
+    #puts command_string
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
     if $?.exitstatus != 0
       raise "#{command_string} failed. (Returned #{$?.exitstatus})"
     end
     return output
+  end
+  
+  def tackit(strings)
+    if strings.is_a?(Array)
+      result = "\"#{strings.join}\""
+    else
+      result = strings
+    end
+    return result
   end
   
   def report_summary
@@ -330,6 +340,32 @@ module RakefileHelpers
       end
       puts "Compiling #{mock_filename}..."
       compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
+    end
+  end
+  
+  def build_and_test_c_files
+    puts "\n"
+    puts "----------------\n"
+    puts "UNIT TEST C CODE\n"
+    puts "----------------\n"
+    errors = false
+    FileList.new("test/c/*.yml").each do |yaml_file|
+      test = YAML.load(File.read(yaml_file))
+      puts "\nTesting #{yaml_file.sub('.yml','')}"
+      puts "(#{test[:options].join(', ')})"
+      test[:files].each { |f| compile(f, test[:options]) }
+      obj_files = test[:files].map { |f| f.gsub!(/.*\//,'').gsub!(C_EXTENSION, $cfg['compiler']['object_files']['extension']) }
+      link('TestCMockC', obj_files)
+      if $cfg['simulator'].nil?
+        execute($cfg['linker']['bin_files']['destination'] + 'TestCMockC' + $cfg['linker']['bin_files']['extension'])
+      else
+        execute(tackit($cfg['simulator']['path'].join) + ' ' +
+            $cfg['simulator']['pre_support'].map{|o| tackit(o)}.join(' ') + ' ' +
+            $cfg['linker']['bin_files']['destination'] +
+            'TestCMockC' +
+            $cfg['linker']['bin_files']['extension'] + ' ' +
+            $cfg['simulator']['post_support'].map{|o| tackit(o)}.join(' ') )
+      end
     end
   end
 end

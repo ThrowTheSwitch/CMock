@@ -10,70 +10,42 @@ class CMockGeneratorPluginCallback
   end
 
   def instance_structure(function)
-    INSTANCE_STRUCTURE_SNIPPET % [function[:name]]
+    func_name = function[:name]
+    "  CMOCK_#{func_name}_CALLBACK #{func_name}_CallbackFunctionPointer;\n" +
+    "  int #{func_name}_CallbackCalls;\n"
   end
 
   def mock_function_declarations(function)
-    if (function[:args_string] == "void")
-      MOCK_DECLARATION_SNIPPET % [function[:name], function[:return_type], '']
-    else
-      MOCK_DECLARATION_SNIPPET % [function[:name], function[:return_type], function[:args_string] + ', ']
-    end
+    func_name = function[:name]
+    "typedef #{function[:return][:type]} (* CMOCK_#{func_name}_CALLBACK)(#{(function[:args_string] == "void") ? '' : function[:args_string] + ', '}int cmock_num_calls);\n" +
+    "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback);\n"
   end
 
-  def mock_implementation(function)
+  def mock_implementation_precheck(function)
+    func_name   = function[:name]
     call_string = function[:args].empty? ? '' : function[:args].map{|m| m[:name]}.join(', ') + ', '
-    if (function[:return_type] == 'void')
-      return MOCK_IMPLEMENTATION_NORET_SNIPPET % [function[:name], call_string]
+    "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n  {\n" +
+    if (function[:return][:void?])
+      "    Mock.#{func_name}_CallbackFunctionPointer(#{call_string}Mock.#{func_name}_CallbackCalls++);\n    return;\n  }\n"
     else
-      return MOCK_IMPLEMENTATION_RETVAL_SNIPPET % [function[:name], call_string]
+      "    return Mock.#{func_name}_CallbackFunctionPointer(#{call_string}Mock.#{func_name}_CallbackCalls++);\n  }\n"
     end
   end
 
   def mock_interfaces(function)
-    MOCK_INTERFACE_SNIPPET % [function[:name]]
+    func_name = function[:name]
+    "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n" + 
+    "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
   end
 
   def mock_destroy(function)
-    MOCK_DESTROY_SNIPPET % function[:name]
+    "  Mock.#{function[:name]}_CallbackFunctionPointer = NULL;\n" +
+    "  Mock.#{function[:name]}_CallbackCalls = 0;\n"
   end
-
-  private ############
-
-  INSTANCE_STRUCTURE_SNIPPET = %q[  CMOCK_%1$s_CALLBACK %1$s_CallbackFunctionPointer;
-]
-
-  MOCK_DECLARATION_SNIPPET = %q[
-typedef %2$s (* CMOCK_%1$s_CALLBACK)(%3$sint NumCalls);
-void %1$s_StubWithCallback(CMOCK_%1$s_CALLBACK Callback);
-]
   
-  MOCK_IMPLEMENTATION_NORET_SNIPPET = %q[
-  if (Mock.%1$s_CallbackFunctionPointer != NULL)
-  {
-    Mock.%1$s_CallsExpected++;
-    Mock.%1$s_CallbackFunctionPointer(%2$sMock.%1$s_CallCount++);
-    return;
-  }
-]
-
-  MOCK_IMPLEMENTATION_RETVAL_SNIPPET = %q[
-  if (Mock.%1$s_CallbackFunctionPointer != NULL)
-  {
-    Mock.%1$s_CallsExpected++;
-    return Mock.%1$s_CallbackFunctionPointer(%2$sMock.%1$s_CallCount++);
-  }
-]
-
-  MOCK_INTERFACE_SNIPPET = %q[
-void %1$s_StubWithCallback(CMOCK_%1$s_CALLBACK Callback)
-{
-  Mock.%1$s_CallbackFunctionPointer = Callback;
-}
-]
-
-  MOCK_DESTROY_SNIPPET = %q[
-  Mock.%1$s_CallbackFunctionPointer = NULL;
-]
+  def mock_verify(function)
+    func_name = function[:name]
+    "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n    Mock.#{func_name}_CallInstance = NULL;\n"
+  end
 
 end

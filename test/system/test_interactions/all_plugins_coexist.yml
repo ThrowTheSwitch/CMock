@@ -5,6 +5,7 @@
   - :array
   - :cexception
   - :ignore
+  - :callback
 
 :systest:
   :types: |
@@ -18,8 +19,8 @@
     void foo(POINT_T* a);
     POINT_T* bar(void);
     void fooa(POINT_T a[]);
-    void foos(const char const * a);
-    const char const * bars(void);
+    void foos(const char * a);
+    const char * bars(void);
     void no_pointers(int a, char* b);
     int mixed(int a, int* b, int c);
 
@@ -281,13 +282,24 @@
         }
 
     - :pass: TRUE
-      :should: 'that we can properly ignore one of the function but the other will work properly'
+      :should: 'that we can properly ignore last  function but the other will work properly'
       :code: |
         test()
         {
           int expect_list[] = { 1, 2, 3, 4, 6 };
           mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
           no_pointers_Ignore();
+          
+          TEST_ASSERT_EQUAL(13, function_d());
+        }
+
+    - :pass: TRUE
+      :should: 'that we can properly ignore first function but the other will work properly'
+      :code: |
+        test()
+        {
+          mixed_IgnoreAndReturn(13);
+          no_pointers_Expect(1, "silly");
           
           TEST_ASSERT_EQUAL(13, function_d());
         }

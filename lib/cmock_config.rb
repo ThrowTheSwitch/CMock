@@ -36,6 +36,7 @@ class CMockConfig
     end
 
     @options = options
+    @options[:treat_as].merge!(standard_treat_as_map)
     @options.each_key { |key| eval("def #{key}() return @options[:#{key}] end") }
   end
   

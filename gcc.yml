@@ -16,6 +16,7 @@ compiler:
       - *systest_generated_path
       - *unit_tests_path
       - *systest_mocks_path
+      - 'src/'
       - 'vendor/unity/src/'
       - 'vendor/c_exception/lib/'
       - 'test/system/test_compilation/'
@@ -42,4 +43,4 @@ linker:
     extension: '.exe'
     destination: *systest_build_path
 
-
+unsupported: []

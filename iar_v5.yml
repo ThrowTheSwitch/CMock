@@ -36,6 +36,7 @@ compiler:
       - *systest_generated_path
       - *unit_tests_path
       - *systest_mocks_path
+      - 'src/'
       - 'vendor/unity/src/'
       - 'vendor/c_exception/lib/'
       - 'iar\iar_v5\incIAR\'
@@ -82,3 +83,7 @@ simulator:
     - [*tools_root, 'arm\config\debugger\Atmel\ioat91sam7X256.ddf']
     - -d
     - sim
+    
+unsupported:
+  - nonstandard_parsed_stuff_1
+  - const

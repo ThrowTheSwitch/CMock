@@ -2,8 +2,8 @@
 :cmock:
   :enforce_strict_ordering: 1
   :plugins:
-  - ignore
-  - cexception
+  - :ignore
+  - :cexception
 
 :systest:
   :types: |
@@ -100,7 +100,7 @@
       
     - :pass: FALSE
       :should: 'fail because bar() is called twice but is expected once'
-      :verify_error: 'called unexpected number of times'
+      :verify_error: 'called less times than expected'
       :code: |
         test()
         {

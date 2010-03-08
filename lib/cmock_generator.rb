@@ -2,9 +2,9 @@ $here = File.dirname __FILE__
 
 class CMockGenerator
 
-  attr_accessor :config, :file_writer, :module_name, :mock_name, :utils, :plugins
+  attr_accessor :config, :file_writer, :module_name, :mock_name, :utils, :plugins, :ordered
   
-  def initialize(config, file_writer, utils, plugins=[])
+  def initialize(config, file_writer, utils, plugins)
     @file_writer = file_writer
     @utils       = utils
     @plugins     = plugins
@@ -44,7 +44,7 @@ class CMockGenerator
       create_mock_destroy_function(file, parsed_stuff[:functions])
       parsed_stuff[:functions].each do |function|
         create_mock_implementation(file, function)
-        file << @plugins.run(:mock_interfaces, function)
+        create_mock_interfaces(file, function)
       end
     end
   end
@@ -81,6 +81,7 @@ class CMockGenerator
     file << "#include <stdlib.h>\n"
     file << "#include <setjmp.h>\n"
     file << "#include \"unity.h\"\n"
+    file << "#include \"cmock.h\"\n"
     file << @plugins.run(:include_files)
     includes = @config.includes
     includes.each {|inc| file << "#include \"#{inc}\"\n"} if (!includes.nil?)
@@ -88,13 +89,20 @@ class CMockGenerator
   end
   
   def create_instance_structure(file, functions)
-    file << "static struct #{@mock_name}Instance\n"
-    file << "{\n"
+    functions.each do |function| 
+      file << "typedef struct _CMOCK_#{function[:name]}_CALL_INSTANCE\n{\n"
+      stuff = @plugins.run(:instance_typedefs, function)
+      file << ((stuff.empty?) ? "  char PlaceHolder;\n" : stuff)
+      file << "\n} CMOCK_#{function[:name]}_CALL_INSTANCE;\n\n"
+    end
+    file << "static struct #{@mock_name}Instance\n{\n"
     if (functions.size == 0)
       file << "  unsigned char placeHolder;\n"
     end
-    file << "  unsigned char allocFailure;\n"
-    file << functions.collect{|function| @plugins.run(:instance_structure, function)}.join
+    functions.each do |function|
+      file << @plugins.run(:instance_structure, function)
+      file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* #{function[:name]}_CallInstance;\n"
+    end
     file << "} Mock;\n\n"
   end
   
@@ -110,14 +118,8 @@ class CMockGenerator
   
   def create_mock_verify_function(file, functions)
     file << "void #{@mock_name}_Verify(void)\n{\n"
-    file << "  TEST_ASSERT_EQUAL_MESSAGE(0, Mock.allocFailure, \"Unable to allocate memory for mock\");\n"
     file << functions.collect {|function| @plugins.run(:mock_verify, function)}.join
-    if (@ordered)
-      file << "  if (GlobalOrderError)\n"
-      file << "  {\n"
-      file << "    TEST_FAIL(GlobalOrderError);\n"
-      file << "  }\n"
-    end
+    file << "  TEST_ASSERT_NULL_MESSAGE(GlobalOrderError, GlobalOrderError);\n" if (@ordered)
     file << "}\n\n"
   end
   
@@ -129,8 +131,9 @@ class CMockGenerator
   
   def create_mock_destroy_function(file, functions)
     file << "void #{@mock_name}_Destroy(void)\n{\n"
-    file << functions.collect {|function| @plugins.run(:mock_destroy, function) }.join
+    file << "  CMock_Guts_MemFreeAll();\n"
     file << "  memset(&Mock, 0, sizeof(Mock));\n"
+    file << functions.collect {|function| @plugins.run(:mock_destroy, function)}.join
     if (@ordered)
       file << "  GlobalExpectCount = 0;\n"
       file << "  GlobalVerifyOrder = 0;\n"
@@ -144,13 +147,12 @@ class CMockGenerator
   end
   
   def create_mock_implementation(file, function)        
-    # create return value combo         
+    # prepare return value and arguments       
     if (function[:modifier].empty?)
-      function_mod_and_rettype = function[:return_type] 
+      function_mod_and_rettype = function[:return][:type] 
     else
-      function_mod_and_rettype = function[:modifier] + ' ' + function[:return_type] 
+      function_mod_and_rettype = function[:modifier] + ' ' + function[:return][:type] 
     end
-    
     args_string = function[:args_string]
     args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
     
@@ -158,14 +160,17 @@ class CMockGenerator
     file << "#{function[:attributes]} " if (!function[:attributes].nil? && function[:attributes].length > 0)
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
+    file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance = Mock.#{function[:name]}_CallInstance;\n"
+    file << "  Mock.#{function[:name]}_CallInstance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
+    file << @plugins.run(:mock_implementation_precheck, function)
+    file << "  TEST_ASSERT_NOT_NULL_MESSAGE(cmock_call_instance, \"Function '#{function[:name]}' called more times than expected\");\n"
     file << @plugins.run(:mock_implementation, function)
-    
-    # Return expected value, if necessary
-    if (function[:return_type] != "void")
-      file << @utils.code_handle_return_value(function)
-    end
-    
-    # Close out the function
+    file << "  return cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?]) 
     file << "}\n\n"
+  end
+  
+  def create_mock_interfaces(file, function)
+    file << @utils.code_add_argument_loader(function)
+    file << @plugins.run(:mock_interfaces, function)
   end
 end
