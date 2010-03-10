@@ -254,7 +254,7 @@ module RakefileHelpers
       tests.each_with_index do |test, index|
         # compare test's intended pass/fail state with pass/fail state in actual results;
         # if they don't match, the system test has failed
-        if (test[:pass] != !((test_results =~ /test#{index+1}::: PASS/).nil?))
+        if ((test[:pass] and (test_results =~ /:PASS/).nil?) or (!test[:pass] and (test_results =~ /:FAIL/).nil?))
           total_failures += 1
           test_results =~ /test#{index+1}:(.+)/
           failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:#{$1}"

@@ -29,13 +29,13 @@ int main(void)
   UnityBegin();
 
   // RUN_TEST calls runTest
-  RUN_TEST(test_MemNewWillReturnNullIfGivenIllegalSizes);
-  RUN_TEST(test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation);
-  RUN_TEST(test_MemNextWillReturnNullIfGivenABadRoot);
-  RUN_TEST(test_ThatWeCanClaimAndChainAFewElementsTogether);
-  RUN_TEST(test_ThatCMockStopsReturningMoreDataWhenItRunsOutOfMemory);
-  RUN_TEST(test_ThatCMockStopsReturningMoreDataWhenAskForMoreThanItHasLeftEvenIfNotAtExactEnd);
-  RUN_TEST(test_ThatWeCanAskForAllSortsOfSizes);
+  RUN_TEST(test_MemNewWillReturnNullIfGivenIllegalSizes, 15);
+  RUN_TEST(test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation, 25);
+  RUN_TEST(test_MemNextWillReturnNullIfGivenABadRoot, 39);
+  RUN_TEST(test_ThatWeCanClaimAndChainAFewElementsTogether, 50);
+  RUN_TEST(test_ThatCMockStopsReturningMoreDataWhenItRunsOutOfMemory, 132);
+  RUN_TEST(test_ThatCMockStopsReturningMoreDataWhenAskForMoreThanItHasLeftEvenIfNotAtExactEnd, 178);
+  RUN_TEST(test_ThatWeCanAskForAllSortsOfSizes, 225);
 
   UnityEnd();
   
