@@ -14,7 +14,38 @@ module RakefileHelpers
   RESULT_EXTENSION = '.result'
   
   def report(message)
-    puts message
+    unless ($cfg and $cfg['colour'])
+      puts($stdout.puts(message))
+    else
+      require 'vendor/unity/auto/colour_prompt.rb'
+      message.each_line do |line|
+        line.chomp!
+        if line.include?('Tests') &&
+           line.include?('Failures') &&
+           line.include?('Ignored')
+          if line.include?('0 Failures')
+            colour = :green
+          else
+            colour = :red
+          end
+        elsif line.include?('PASS') ||
+					line == 'OK'
+          colour = :green
+        elsif line.include? "Running Unity system tests..."
+          colour = :blue
+        elsif line.include?('FAIL') ||
+          line.include?('Expected') ||
+          line.include?('Memory Mismatch') ||
+          line.include?('not within delta')
+          colour  = :red
+        elsif line.include?(' IGNORED')
+          colour = :yellow
+        else
+          colour = :blue
+        end
+      colour_puts colour, line
+      end
+    end
     $stdout.flush
     $stderr.flush
   end
@@ -145,7 +176,7 @@ module RakefileHelpers
   end
   
   def execute(command_string, verbose=true)
-    #puts command_string
+    #report command_string
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
     if $?.exitstatus != 0
@@ -192,7 +223,7 @@ module RakefileHelpers
       test_base    = File.basename(test, C_EXTENSION)
       cmock_config = test_base.gsub(/test_/, '') + '_cmock.yml'
       
-      puts "Executing system test cases contained in #{File.basename(test)}..."
+      report "Executing system test cases contained in #{File.basename(test)}..."
       
       # Detect dependencies and build required required modules
       extract_headers(test).each do |header|
@@ -265,21 +296,21 @@ module RakefileHelpers
       end
     end
     
-    puts "\n"
-    puts "------------------------------------\n"
-    puts "SYSTEM TEST MOCK INTERACTION SUMMARY\n"
-    puts "------------------------------------\n"
-    puts "TOTAL TESTS: #{total_tests} TOTAL FAILURES: #{total_failures}\n"
-    puts "\n"
+    report "\n"
+    report "------------------------------------\n"
+    report "SYSTEM TEST MOCK INTERACTION SUMMARY\n"
+    report "------------------------------------\n"
+    report "#{total_tests} Tests #{total_failures} Failures 0 Ignored\n"
+    report "\n"
     
     if (failure_messages.size > 0)
-      puts 'System test failures:'
+      report 'System test failures:'
       failure_messages.each do |failure|
-        puts failure
+        report failure
       end
     end
     
-    puts ''
+    report ''
 
     return total_failures
   end
@@ -309,14 +340,14 @@ module RakefileHelpers
     load_configuration($cfg_file)
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
 
-    puts "\n"
-    puts "------------------------------------\n"
-    puts "SYSTEM TEST MOCK COMPILATION SUMMARY\n"
-    puts "------------------------------------\n"
+    report "\n"
+    report "------------------------------------\n"
+    report "SYSTEM TEST MOCK COMPILATION SUMMARY\n"
+    report "------------------------------------\n"
     mockables.each do |header|
       mock_filename = 'mock_' + File.basename(header).ext('.c')
       CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml').setup_mocks(header)
-      puts "Compiling #{mock_filename}..."
+      report "Compiling #{mock_filename}..."
       compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
     end
   end
@@ -327,10 +358,10 @@ module RakefileHelpers
     load_configuration($cfg_file)
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
 
-    puts "\n"
-    puts "--------------------------\n"
-    puts "SYSTEM TEST MOCK PROFILING\n"
-    puts "--------------------------\n"
+    report "\n"
+    report "--------------------------\n"
+    report "SYSTEM TEST MOCK PROFILING\n"
+    report "--------------------------\n"
     mockables.each do |header|
       mock_filename = 'mock_' + File.basename(header).ext('.c')
       profile_this(mock_filename.gsub('.c','')) do 
@@ -338,21 +369,21 @@ module RakefileHelpers
           CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml').setup_mocks(header)
         end
       end
-      puts "Compiling #{mock_filename}..."
+      report "Compiling #{mock_filename}..."
       compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
     end
   end
   
   def build_and_test_c_files
-    puts "\n"
-    puts "----------------\n"
-    puts "UNIT TEST C CODE\n"
-    puts "----------------\n"
+    report "\n"
+    report "----------------\n"
+    report "UNIT TEST C CODE\n"
+    report "----------------\n"
     errors = false
     FileList.new("test/c/*.yml").each do |yaml_file|
       test = YAML.load(File.read(yaml_file))
-      puts "\nTesting #{yaml_file.sub('.yml','')}"
-      puts "(#{test[:options].join(', ')})"
+      report "\nTesting #{yaml_file.sub('.yml','')}"
+      report "(#{test[:options].join(', ')})"
       test[:files].each { |f| compile(f, test[:options]) }
       obj_files = test[:files].map { |f| f.gsub!(/.*\//,'').gsub!(C_EXTENSION, $cfg['compiler']['object_files']['extension']) }
       link('TestCMockC', obj_files)

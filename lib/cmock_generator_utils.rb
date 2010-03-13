@@ -11,6 +11,16 @@ class CMockGeneratorUtils
     @cexception = @config.plugins.include? :cexception
     @treat_as = @config.treat_as
 	  @helpers = helpers
+    
+    if (@arrays)
+      case(@ptr_handling)
+        when :smart        then alias :code_verify_an_arg_expectation :code_verify_an_arg_expectation_with_smart_arrays 
+        when :compare_data then alias :code_verify_an_arg_expectation :code_verify_an_arg_expectation_with_normal_arrays 
+        when :compare_ptr  then raise "ERROR: the array plugin doesn't enjoy working with :compare_ptr only.  Disable one option."
+      end
+    else
+      alias :code_verify_an_arg_expectation :code_verify_an_arg_expectation_with_no_arrays
+    end
   end
   
   def code_add_base_expectation(func_name, global_ordering_supported=true)
@@ -39,7 +49,10 @@ class CMockGeneratorUtils
   def code_add_argument_loader(function)
     if (function[:args_string] != "void")
       if (@arrays)
-        args_string = function[:args].map{|m| m[:ptr?] ? "#{m[:type]} #{m[:name]}, int #{m[:name]}_Depth" : "#{m[:type]} #{m[:name]}"}.join(', ')
+        args_string = function[:args].map do |m| 
+          const_str = m[ :const? ] ? 'const ' : ''
+          m[:ptr?] ? "#{const_str}#{m[:type]} #{m[:name]}, int #{m[:name]}_Depth" : "#{const_str}#{m[:type]} #{m[:name]}"
+        end.join(', ')
         "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" + 
         function[:args].inject("") { |all, arg| all + code_add_an_arg_expectation(arg, (arg[:ptr?] ? "#{arg[:name]}_Depth" : 1) ) } +
         "}\n\n"
@@ -56,8 +69,7 @@ class CMockGeneratorUtils
   def code_call_argument_loader(function)
     if (function[:args_string] != "void")
       args = function[:args].map do |m|
-        arg = m[:const?] ? "(#{m[:type]})#{m[:name]}" : m[:name]
-        (@arrays and m[:ptr?]) ? "#{arg}, 1" : arg
+        (@arrays and m[:ptr?]) ? "#{m[:name]}, 1" : m[:name]
       end
       "  CMockExpectParameters_#{function[:name]}(cmock_call_instance, #{args.join(', ')});\n" 
     else
@@ -65,52 +77,86 @@ class CMockGeneratorUtils
     end
   end
   
-  def code_verify_an_arg_expectation(function, arg)
-    c_type = arg[:type]
-    arg_name = arg[:name]
-    expected = "cmock_call_instance->Expected_#{arg_name}"
-    msg = "\"Function '#{function[:name]}' called with unexpected value for argument '#{arg_name}'.\""
-    depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
-    if ((arg[:ptr?]) and (@ptr_handling == :compare_ptr))
-      unity_func = "TEST_ASSERT_EQUAL_HEX32_MESSAGE"
-    else
-      unity_func = (@helpers.nil? or @helpers[:unity_helper].nil?) ? "TEST_ASSERT_EQUAL_MESSAGE" : @helpers[:unity_helper].get_helper(c_type)
-    end
-    unity_msg  = (unity_func =~ /_MESSAGE/) ? ", #{msg}" : ''
+  #private ######################
+  
+  def lookup_expect_type(function, arg)
+    c_type     = arg[:type]
+    arg_name   = arg[:name]
+    expected   = "cmock_call_instance->Expected_#{arg_name}" 
+    unity_func = if ((arg[:ptr?]) and (@ptr_handling == :compare_ptr))
+                   "TEST_ASSERT_EQUAL_HEX32_MESSAGE"
+                 else
+                   (@helpers.nil? or @helpers[:unity_helper].nil?) ? "TEST_ASSERT_EQUAL_MESSAGE" : @helpers[:unity_helper].get_helper(c_type)
+                 end
+    unity_msg  = (unity_func =~ /_MESSAGE/) ? ", \"Function '#{function[:name]}' called with unexpected value for argument '#{arg_name}'.\"" : ''
+    return c_type, arg_name, expected, unity_func, unity_msg
+  end
+  
+  def code_verify_an_arg_expectation_with_no_arrays(function, arg)
+    c_type, arg_name, expected, unity_func, unity_msg = lookup_expect_type(function, arg)
     case(unity_func)
       when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE"
         full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "(&#{expected})"
         return "  TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)#{full_expected}, (void*)(&#{arg_name}), sizeof(#{c_type})#{unity_msg});\n"
       when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE_ARRAY"
-        if (@arrays)
-          [ "  if (#{expected} == NULL)",
-            "    { TEST_ASSERT_NULL(#{arg_name}); }",
-            (((@ptr_handling == :smart) and (depth_name != 1)) ? "  else if (#{depth_name} == 0)\n    { TEST_ASSERT_EQUAL_HEX32(#{expected}, #{arg_name}); }" : nil),
-            "  else",
-            "    { TEST_ASSERT_EQUAL_MEMORY_ARRAY_MESSAGE((void*)(#{expected}), (void*)#{arg_name}, sizeof(#{c_type.sub('*','')}), #{depth_name}#{unity_msg}); }\n"].compact.join("\n")
-        else
-          [ "  if (#{expected} == NULL)",
-            "    { TEST_ASSERT_NULL(#{arg_name}); }",
-            "  else",
-            "    { TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)(#{expected}), (void*)#{arg_name}, sizeof(#{c_type.sub('*','')})#{unity_msg}); }\n"].join("\n")
-
-        end
+        [ "  if (#{expected} == NULL)",
+          "    { TEST_ASSERT_NULL(#{arg_name}); }",
+          "  else",
+          "    { TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)(#{expected}), (void*)#{arg_name}, sizeof(#{c_type.sub('*','')})#{unity_msg}); }\n"].join("\n")
       when /_ARRAY/
-        if (@arrays)
-          [ "  if (#{expected} == NULL)",
-            "    { TEST_ASSERT_NULL(#{arg_name}); }",
-            (((@ptr_handling == :smart) and (depth_name != 1)) ? "  else if (#{depth_name} == 0)\n    { TEST_ASSERT_EQUAL_HEX32(#{expected}, #{arg_name}); }" : nil),
-            "  else",
-            "    { #{unity_func}(#{expected}, #{arg_name}, #{depth_name}); }\n"].compact.join("\n")
-        else
-          [ "  if (#{expected} == NULL)",
-            "    { TEST_ASSERT_NULL(#{arg_name}); }",
-            "  else",
-            "    { #{unity_func}(#{expected}, #{arg_name}, 1); }\n"].join("\n")
-        end
+        [ "  if (#{expected} == NULL)",
+          "    { TEST_ASSERT_NULL(#{arg_name}); }",
+          "  else",
+          "    { #{unity_func}(#{expected}, #{arg_name}, 1); }\n"].join("\n")
       else
         return "  #{unity_func}(#{expected}, #{arg_name}#{unity_msg});\n" 
     end  
+  end
+  
+  def code_verify_an_arg_expectation_with_normal_arrays(function, arg)
+    c_type, arg_name, expected, unity_func, unity_msg = lookup_expect_type(function, arg)
+    depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
+    case(unity_func)
+      when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE"
+        full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "(&#{expected})"
+        return "  TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)#{full_expected}, (void*)(&#{arg_name}), sizeof(#{c_type})#{unity_msg});\n"
+      when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE_ARRAY"
+        [ "  if (#{expected} == NULL)",
+          "    { TEST_ASSERT_NULL(#{arg_name}); }",
+          "  else",
+          "    { TEST_ASSERT_EQUAL_MEMORY_ARRAY_MESSAGE((void*)(#{expected}), (void*)#{arg_name}, sizeof(#{c_type.sub('*','')}), #{depth_name}#{unity_msg}); }\n"].compact.join("\n")
+      when /_ARRAY/
+        [ "  if (#{expected} == NULL)",
+          "    { TEST_ASSERT_NULL(#{arg_name}); }",
+          "  else",
+          "    { #{unity_func}(#{expected}, #{arg_name}, #{depth_name}); }\n"].compact.join("\n")
+      else
+        return "  #{unity_func}(#{expected}, #{arg_name}#{unity_msg});\n" 
+    end
+  end
+  
+  def code_verify_an_arg_expectation_with_smart_arrays(function, arg)
+    c_type, arg_name, expected, unity_func, unity_msg = lookup_expect_type(function, arg)
+    depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
+    case(unity_func)
+      when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE"
+        full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "(&#{expected})"
+        return "  TEST_ASSERT_EQUAL_MEMORY_MESSAGE((void*)#{full_expected}, (void*)(&#{arg_name}), sizeof(#{c_type})#{unity_msg});\n"
+      when "TEST_ASSERT_EQUAL_MEMORY_MESSAGE_ARRAY"
+        [ "  if (#{expected} == NULL)",
+          "    { TEST_ASSERT_NULL(#{arg_name}); }",
+          ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { TEST_ASSERT_EQUAL_HEX32(#{expected}, #{arg_name}); }" : nil),
+          "  else",
+          "    { TEST_ASSERT_EQUAL_MEMORY_ARRAY_MESSAGE((void*)(#{expected}), (void*)#{arg_name}, sizeof(#{c_type.sub('*','')}), #{depth_name}#{unity_msg}); }\n"].compact.join("\n")
+      when /_ARRAY/
+        [ "  if (#{expected} == NULL)",
+          "    { TEST_ASSERT_NULL(#{arg_name}); }",
+          ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { TEST_ASSERT_EQUAL_HEX32(#{expected}, #{arg_name}); }" : nil),
+          "  else",
+          "    { #{unity_func}(#{expected}, #{arg_name}, #{depth_name}); }\n"].compact.join("\n")
+      else
+        return "  #{unity_func}(#{expected}, #{arg_name}#{unity_msg});\n" 
+    end
   end
   
 end

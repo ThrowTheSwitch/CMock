@@ -1,4 +1,6 @@
 ---
+colour: true
+
 compiler:
   path: gcc
   source_path:     &systest_generated_path 'test/system/generated/'

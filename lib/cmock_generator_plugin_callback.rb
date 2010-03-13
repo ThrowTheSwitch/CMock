@@ -17,7 +17,8 @@ class CMockGeneratorPluginCallback
 
   def mock_function_declarations(function)
     func_name = function[:name]
-    "typedef #{function[:return][:type]} (* CMOCK_#{func_name}_CALLBACK)(#{(function[:args_string] == "void") ? '' : function[:args_string] + ', '}int cmock_num_calls);\n" +
+    return_type = function[:return][:const?] ? "const #{function[:return][:type]}" : function[:return][:type]
+    "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{(function[:args_string] == "void") ? '' : function[:args_string] + ', '}int cmock_num_calls);\n" +
     "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback);\n"
   end
 
