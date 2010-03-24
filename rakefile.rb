@@ -14,7 +14,7 @@ configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
 task :default => ['test:all']
-task :cruise => [:default]
+task :cruise => [:no_color, :default]
 
 desc "Load configuration"
 task :config, :config_file do |t, args|
@@ -46,14 +46,13 @@ namespace :test do
     build_and_test_c_files
   end
   
-  #get a list of all system tests, removing unsupported tests for this compiler
-  sys_unsupported  = $cfg['unsupported'].map {|a| 'test/system/test_interactions/'+a+'.yml'}
-  sys_tests_to_run = FileList['test/system/test_interactions/*.yml'] - sys_unsupported
-  compile_unsupported  = $cfg['unsupported'].map {|a| SYSTEST_COMPILE_MOCKABLES_PATH+a+'.h'}
-  compile_tests_to_run = FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'] - compile_unsupported
-  
   desc "Run System Tests"
   task :system => [:clobber] do
+    #get a list of all system tests, removing unsupported tests for this compiler
+    sys_unsupported  = $cfg['unsupported'].map {|a| 'test/system/test_interactions/'+a+'.yml'}
+    sys_tests_to_run = FileList['test/system/test_interactions/*.yml'] - sys_unsupported
+    compile_unsupported  = $cfg['unsupported'].map {|a| SYSTEST_COMPILE_MOCKABLES_PATH+a+'.h'}
+    compile_tests_to_run = FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'] - compile_unsupported
     unless (sys_unsupported.empty? and compile_unsupported.empty?)
       report "\nIgnoring these system tests..."
       sys_unsupported.each {|a| report a}
@@ -67,7 +66,7 @@ namespace :test do
   end
   
   #individual system tests
-  sys_tests_to_run.each do |test|
+  FileList['test/system/test_interactions/*.yml'].each do |test|
     desc "Run system test #{File.basename(test,'.*')}"
     task "test:#{File.basename(test,'.*')}" do
       run_system_test_interactions([test])
@@ -78,5 +77,9 @@ namespace :test do
   task :profile => [:clobber] do
     run_system_test_profiles(FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'])
   end
-  
 end
+
+task :no_color do
+  $colour_output = false
+end
+  

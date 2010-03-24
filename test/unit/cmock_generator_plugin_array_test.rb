@@ -55,7 +55,8 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
                 :return => test_return[:void], 
                 :contains_ptr? => true }
     
-    expected = "void #{function[:name]}_ExpectWithArray(int* tofu, int tofu_Depth);\n"
+    expected = "#define #{function[:name]}_ExpectWithArray(tofu, tofu_Depth) #{function[:name]}_CMockExpectWithArray(__LINE__, tofu, tofu_Depth)\n" +
+               "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, int* tofu, int tofu_Depth);\n"
     returned = @cmock_generator_plugin_array.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -69,7 +70,8 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
                 :return => test_return[:string],
                 :contains_ptr? => true }
     
-    expected = "void #{function[:name]}_ExpectWithArrayAndReturn(int* tofu, int tofu_Depth, const char* cmock_to_return);\n"
+    expected = "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, tofu, tofu_Depth, cmock_retval)\n" +
+               "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, int* tofu, int tofu_Depth, const char* cmock_to_return);\n"
     returned = @cmock_generator_plugin_array.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -92,7 +94,7 @@ class CMockGeneratorPluginArrayTest < Test::Unit::TestCase
                 :contains_ptr? => true }
     @utils.expect.code_add_base_expectation("Lemon").returns("mock_retval_0")
     
-    expected = ["void Lemon_ExpectWithArrayAndReturn(int* pescado, int pescado_Depth, int pes, int* cmock_to_return)\n",
+    expected = ["void Lemon_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, int* pescado, int pescado_Depth, int pes, int* cmock_to_return)\n",
                 "{\n",
                 "mock_retval_0",
                 "  CMockExpectParameters_Lemon(cmock_call_instance, pescado, pescado_Depth, pes);\n",

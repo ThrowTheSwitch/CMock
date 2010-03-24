@@ -161,7 +161,7 @@
 //*************************************************************************
 -D_CSTACK_SIZE=(100*4)
 -D_IRQ_STACK_SIZE=(3*8*4)
--D_HEAP_SIZE=(1024*1)
+-D_HEAP_SIZE=(1024*2)
 
 -Z(DATA)CSTACK+_CSTACK_SIZE=RAMSTART-RAMEND
 -Z(DATA)IRQ_STACK+_IRQ_STACK_SIZE=RAMSTART-RAMEND

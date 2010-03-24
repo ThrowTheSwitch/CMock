@@ -40,14 +40,16 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
   
   should "add mock function declarations for functions without arguments" do
     function = { :name => "Spruce", :args_string => "void", :return => test_return[:void] }
-    expected = "void Spruce_ExpectAndThrow(CEXCEPTION_T cmock_to_throw);\n"
+    expected = "#define Spruce_ExpectAndThrow(cmock_to_throw) Spruce_CMockExpectAndThrow(__LINE__, cmock_to_throw)\n"+
+               "void Spruce_CMockExpectAndThrow(UNITY_LINE_TYPE cmock_line, CEXCEPTION_T cmock_to_throw);\n"
     returned = @cmock_generator_plugin_cexception.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "add mock function declarations for functions with arguments" do
-    function = { :name => "Spruce", :args_string => "const char* Petunia, uint32_t Lily", :return  => test_return[:void] }
-    expected = "void Spruce_ExpectAndThrow(const char* Petunia, uint32_t Lily, CEXCEPTION_T cmock_to_throw);\n"
+    function = { :name => "Spruce", :args_string => "const char* Petunia, uint32_t Lily", :args_call => "Petunia, Lily", :return  => test_return[:void] }
+    expected = "#define Spruce_ExpectAndThrow(Petunia, Lily, cmock_to_throw) Spruce_CMockExpectAndThrow(__LINE__, Petunia, Lily, cmock_to_throw)\n" +
+               "void Spruce_CMockExpectAndThrow(UNITY_LINE_TYPE cmock_line, const char* Petunia, uint32_t Lily, CEXCEPTION_T cmock_to_throw);\n"
     returned = @cmock_generator_plugin_cexception.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -65,7 +67,7 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_call_argument_loader(function).returns("")
   
-    expected = ["void Pear_ExpectAndThrow(CEXCEPTION_T cmock_to_throw)\n",
+    expected = ["void Pear_CMockExpectAndThrow(UNITY_LINE_TYPE cmock_line, CEXCEPTION_T cmock_to_throw)\n",
                 "{\n",
                 "mock_retval_0",
                 "",
@@ -81,7 +83,7 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
     @utils.expect.code_add_base_expectation("Pear").returns("mock_retval_0")
     @utils.expect.code_call_argument_loader(function).returns("mock_return_1")
     
-    expected = ["void Pear_ExpectAndThrow(int blah, CEXCEPTION_T cmock_to_throw)\n",
+    expected = ["void Pear_CMockExpectAndThrow(UNITY_LINE_TYPE cmock_line, int blah, CEXCEPTION_T cmock_to_throw)\n",
                 "{\n",
                 "mock_retval_0",
                 "mock_return_1",

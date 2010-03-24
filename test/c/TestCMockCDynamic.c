@@ -148,8 +148,8 @@ void test_ThatWeCanAskForAllSortsOfSizes(void)
   unsigned int  i;
   unsigned int* first = NULL;
   unsigned int* next;
-  unsigned int  sizes[10]          = {3, 1, 80, 5, 4, 31, 7,  911, 2, 80};
-  unsigned int  sizes_buffered[10] = {8, 4, 84, 8, 8, 36, 12, 916, 4, 84}; //includes counter
+  unsigned int  sizes[10]          = {3, 1, 80, 5,  4, 31, 7,  911, 2, 80};
+  unsigned int  sizes_buffered[10] = {8, 8, 84, 12, 8, 36, 12, 916, 8, 84}; //includes counter
   unsigned int  sum = 0;
   unsigned int  cap;
 
@@ -163,8 +163,7 @@ void test_ThatWeCanAskForAllSortsOfSizes(void)
 
     sum += sizes_buffered[i];
 	cap = (StartingSize > (sum + CMOCK_MEM_SIZE)) ? StartingSize : (sum + CMOCK_MEM_SIZE);
-    TEST_ASSERT_EQUAL(sum, CMock_Guts_MemBytesUsed());
-	TEST_ASSERT(0   <= CMock_Guts_MemBytesFree());
+  TEST_ASSERT_EQUAL(sum, CMock_Guts_MemBytesUsed());
 	TEST_ASSERT(cap >= CMock_Guts_MemBytesFree());
   }
 

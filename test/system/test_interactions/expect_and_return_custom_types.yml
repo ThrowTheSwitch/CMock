@@ -94,14 +94,15 @@
 
   :unity_helper:
     :header: |
-      void AssertEqualExampleStruct(EXAMPLE_STRUCT_T expected, EXAMPLE_STRUCT_T actual);
-      #define TEST_ASSERT_EQUAL_EXAMPLE_STRUCT_T(expected, actual) {AssertEqualExampleStruct(expected, actual);}
+      void AssertEqualExampleStruct(EXAMPLE_STRUCT_T expected, EXAMPLE_STRUCT_T actual, unsigned short line);
+      #define UNITY_TEST_ASSERT_EQUAL_EXAMPLE_STRUCT_T(expected, actual, line, message) {AssertEqualExampleStruct(expected, actual, line);}
+      #define TEST_ASSERT_EQUAL_EXAMPLE_STRUCT_T(expected, actual) UNITY_TEST_ASSERT_EQUAL_EXAMPLE_STRUCT_T(expected, actual, __LINE__, NULL);
 
     :code: |
-      void AssertEqualExampleStruct(EXAMPLE_STRUCT_T expected, EXAMPLE_STRUCT_T actual)
+      void AssertEqualExampleStruct(EXAMPLE_STRUCT_T expected, EXAMPLE_STRUCT_T actual, unsigned short line)
       {
-        TEST_ASSERT_EQUAL_INT_MESSAGE(expected.x, actual.x, "Example Struct Failed For Field x");
-        TEST_ASSERT_EQUAL_INT_MESSAGE(expected.y, actual.y, "Example Struct Failed For Field y");
+        UNITY_TEST_ASSERT_EQUAL_INT(expected.x, actual.x, line, "Example Struct Failed For Field x");
+        UNITY_TEST_ASSERT_EQUAL_INT(expected.y, actual.y, line, "Example Struct Failed For Field y");
       }
 
 ...

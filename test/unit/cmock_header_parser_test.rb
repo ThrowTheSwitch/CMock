@@ -276,7 +276,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[{:type=>"int", :name=>"a", :ptr? => false, :const? => false}],
-                 :args_string=>"int a" }
+                 :args_string=>"int a",
+                 :args_call=>"a"}
     assert_equal(expected, @parser.parse_declaration(source))
   end
   
@@ -294,7 +295,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[],
-                 :args_string=>"void" }
+                 :args_string=>"void",
+                 :args_call=>"" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
   
@@ -312,7 +314,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :modifier=>"",
                  :contains_ptr? => true,
                  :args=>[{:type=>"MY_FUNKY_VOID*", :name=>"bluh", :ptr? => true, :const? => false}],
-                 :args_string=>"MY_FUNKY_VOID* bluh" }
+                 :args_string=>"MY_FUNKY_VOID* bluh",
+                 :args_call=>"bluh" }
     assert_equal(expected, @parser.parse_declaration(source))        
   end
 
@@ -405,7 +408,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false}, 
                           {:type=>"unsigned int", :name=>"b", :ptr? => false, :const? => false}
                         ],
-                 :args_string=>"int a, unsigned int b" }
+                 :args_string=>"int a, unsigned int b",
+                 :args_call=>"a, b" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
@@ -427,7 +431,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                           {:type=>"int",  :name=>"de", :ptr? => false, :const? => false},
                           {:type=>"bool", :name=>"da", :ptr? => false, :const? => false}
                         ],
-                 :args_string=>"uint la, int     de, bool da" }
+                 :args_string=>"uint la, int     de, bool da",
+                 :args_call=>"la, de, da" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
@@ -446,7 +451,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ ],
-                 :args_string=>"void" }
+                 :args_string=>"void",
+                 :args_call=>"" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
   
@@ -467,7 +473,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}
                         ],
-                 :args_string=>"int Trinity, unsigned int* Neo" }
+                 :args_string=>"int Trinity, unsigned int* Neo",
+                 :args_call=>"Trinity, Neo" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
   
@@ -490,7 +497,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
                            {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}
                          ],
-                  :args_string=>"int Trinity, unsigned int* Neo" },
+                  :args_string=>"int Trinity, unsigned int* Neo",
+                 :args_call=>"Trinity, Neo" },
                 { :var_arg=>nil,
                   :return=> { :type   => "int", 
                               :name   => 'cmock_to_return', 
@@ -505,7 +513,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false, :const? => false}, 
                            {:type=>"unsigned int*", :name=>"cmock_arg2", :ptr? => true,  :const? => false}
                          ],
-                  :args_string=>"int cmock_arg1, unsigned int* cmock_arg2" 
+                  :args_string=>"int cmock_arg1, unsigned int* cmock_arg2",
+                 :args_call=>"cmock_arg1, cmock_arg2" 
                 }]
     assert_equal(expected, @parser.parse(source)[:functions])
   end
@@ -529,7 +538,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
                            {:type=>"unsigned int*", :name=>"Neo", :ptr? => true,      :const? => false}
                          ],
-                  :args_string=>"int Trinity, unsigned int* Neo" 
+                  :args_string=>"int Trinity, unsigned int* Neo",
+                  :args_call=>"Trinity, Neo"
                 }]
     assert_equal(expected, @parser.parse(source)[:functions])
   end
@@ -553,7 +563,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ {:type=>"int", :name=>"SingAlong", :ptr? => false, :const? => false} ],
-                  :args_string=>"int SingAlong" 
+                  :args_string=>"int SingAlong",
+                  :args_call=>"SingAlong"
                 },
                 { :var_arg=>nil,
                   :return=> { :type   => "int", 
@@ -567,7 +578,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ ],
-                  :args_string=>"void" 
+                  :args_string=>"void",
+                  :args_call=>""
                 }]
     assert_equal(expected, @parser.parse(source)[:functions])
   end
@@ -590,7 +602,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ {:type=>"struct SingAlong", :name=>"Blog", :ptr? => false, :const? => false} ],
-                  :args_string=>"struct SingAlong Blog" 
+                  :args_string=>"struct SingAlong Blog",
+                  :args_call=>"Blog" 
                 },
                 { :var_arg=>nil,
                   :return=> { :type   => "void", 
@@ -604,7 +617,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :modifier=>"",
                   :contains_ptr? => true,
                   :args=>[ {:type=>"struct _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :const? => true} ],
-                  :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy" 
+                  :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy",
+                  :args_call=>"BillyBuddy" 
                 },
                 { :var_arg=>nil,
                   :return=> { :type   => "struct TheseArentTheHammer", 
@@ -618,7 +632,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ ],
-                  :args_string=>"void" 
+                  :args_string=>"void",
+                  :args_call=>""
                 }]
     assert_equal(expected, @parser.parse(source)[:functions])
   end
@@ -640,7 +655,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false, :const? => false}, 
                            {:type=>"int", :name=>"Mulder", :ptr? => false, :const? => false}
                          ],
-                  :args_string=>"int Scully, int Mulder" 
+                  :args_string=>"int Scully, int Mulder",
+                  :args_call=>"Scully, Mulder"
                }]
     assert_equal(expected, @parser.parse(source)[:functions])
   end

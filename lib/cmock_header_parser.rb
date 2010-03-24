@@ -217,6 +217,7 @@ class CMockHeaderParser
     args = clean_args(args)
     decl[:args_string] = args
     decl[:args] = parse_args(args)
+    decl[:args_call] = decl[:args].map{|a| a[:name]}.join(', ')
     decl[:contains_ptr?] = decl[:args].inject(false) {|ptr, arg| arg[:ptr?] ? true : ptr }
       
     if (decl[:return][:type].nil?   or decl[:name].nil?   or decl[:args].nil? or

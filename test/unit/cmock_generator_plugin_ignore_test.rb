@@ -30,14 +30,15 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   
   should "handle function declarations for functions without return values" do
     function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
-    expected = "void Mold_Ignore(void);\n"
+    expected = "#define Mold_Ignore() Mold_CMockIgnore(__LINE__)\nvoid Mold_CMockIgnore(UNITY_LINE_TYPE cmock_line);\n"
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
   should "handle function declarations for functions that returns something" do
     function = {:name => "Fungus", :args_string => "void", :return => test_return[:string]}
-    expected = "void Fungus_IgnoreAndReturn(const char* cmock_to_return);\n"
+    expected = "#define Fungus_IgnoreAndReturn(cmock_retval) Fungus_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n"+
+               "void Fungus_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, const char* cmock_to_return);\n"
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -71,7 +72,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   
   should "add a new mock interface for ignoring when function had no return value" do
     function = {:name => "Slime", :args => [], :args_string => "void", :return => test_return[:void]}
-    expected = ["void Slime_Ignore(void)\n",
+    expected = ["void Slime_CMockIgnore(UNITY_LINE_TYPE cmock_line)\n",
                 "{\n",
                 "  Mock.Slime_IgnoreBool = (int)1;\n",
                 "}\n\n"
@@ -83,7 +84,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   should "add a new mock interface for ignoring when function has return value" do
     function = {:name => "Slime", :args => [], :args_string => "void", :return => test_return[:int]}
     @utils.expect.code_add_base_expectation("Slime", false).returns("mock_return_1")
-    expected = ["void Slime_IgnoreAndReturn(int cmock_to_return)\n",
+    expected = ["void Slime_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, int cmock_to_return)\n",
                 "{\n",
                 "mock_return_1",
                 "  cmock_call_instance->ReturnVal = cmock_to_return;\n",

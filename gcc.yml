@@ -1,6 +1,4 @@
 ---
-colour: true
-
 compiler:
   path: gcc
   source_path:     &systest_generated_path 'test/system/generated/'
@@ -46,3 +44,5 @@ linker:
     destination: *systest_build_path
 
 unsupported: []
+
+colour: true

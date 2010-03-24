@@ -21,9 +21,11 @@ class CMockGeneratorPluginCexception
   
   def mock_function_declarations(function)
     if (function[:args_string] == "void")
-      return "void #{function[:name]}_ExpectAndThrow(CEXCEPTION_T cmock_to_throw);\n"
+      return "#define #{function[:name]}_ExpectAndThrow(cmock_to_throw) #{function[:name]}_CMockExpectAndThrow(__LINE__, cmock_to_throw)\n" +
+             "void #{function[:name]}_CMockExpectAndThrow(UNITY_LINE_TYPE cmock_line, CEXCEPTION_T cmock_to_throw);\n"
     else
-      return "void #{function[:name]}_ExpectAndThrow(#{function[:args_string]}, CEXCEPTION_T cmock_to_throw);\n"
+      return "#define #{function[:name]}_ExpectAndThrow(#{function[:args_call]}, cmock_to_throw) #{function[:name]}_CMockExpectAndThrow(__LINE__, #{function[:args_call]}, cmock_to_throw)\n" +
+             "void #{function[:name]}_CMockExpectAndThrow(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, CEXCEPTION_T cmock_to_throw);\n"
     end
   end
 
@@ -35,7 +37,7 @@ class CMockGeneratorPluginCexception
   def mock_interfaces(function)
     arg_insert = (function[:args_string] == "void") ? "" : "#{function[:args_string]}, "
     call_string = function[:args].map{|m| m[:name]}.join(', ')
-    [ "void #{function[:name]}_ExpectAndThrow(#{arg_insert}CEXCEPTION_T cmock_to_throw)\n{\n",
+    [ "void #{function[:name]}_CMockExpectAndThrow(UNITY_LINE_TYPE cmock_line, #{arg_insert}CEXCEPTION_T cmock_to_throw)\n{\n",
       @utils.code_add_base_expectation(function[:name]),
       @utils.code_call_argument_loader(function),
       "  cmock_call_instance->ExceptionToThrow = cmock_to_throw;\n",

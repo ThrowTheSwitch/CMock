@@ -27,8 +27,9 @@
 #endif
 
 //automatically calculated defs for easier reading
-#define CMOCK_MEM_INDEX_SIZE  (sizeof(CMOCK_MEM_INDEX_TYPE))
-#define CMOCK_MEM_ALIGN_MASK  ((1u << CMOCK_MEM_ALIGN) - 1)
+#define CMOCK_MEM_ALIGN_SIZE  (1u << CMOCK_MEM_ALIGN)
+#define CMOCK_MEM_ALIGN_MASK  (CMOCK_MEM_ALIGN_SIZE - 1)
+#define CMOCK_MEM_INDEX_SIZE  ((sizeof(CMOCK_MEM_INDEX_TYPE) > CMOCK_MEM_ALIGN_SIZE) ? sizeof(CMOCK_MEM_INDEX_TYPE) : CMOCK_MEM_ALIGN_SIZE)
 
 //private variables
 #ifdef CMOCK_MEM_DYNAMIC

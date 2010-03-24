@@ -19,19 +19,14 @@ class CMockGeneratorPluginArray
 
   def mock_function_declarations(function)
     return nil unless function[:contains_ptr?]
-    if (function[:args_string] == "void")
-      if (function[:return][:void?])
-        return "void #{function[:name]}_ExpectWithArray(void);\n"
-      else
-        return "void #{function[:name]}_ExpectWithArrayAndReturn(#{function[:return][:str]});\n"
-      end
+    args_call   = function[:args].map{|m| m[:ptr?] ? "#{m[:name]}, #{m[:name]}_Depth" : "#{m[:name]}"}.join(', ')
+    args_string = function[:args].map{|m| m[:ptr?] ? "#{m[:type]} #{m[:name]}, int #{m[:name]}_Depth" : "#{m[:type]} #{m[:name]}"}.join(', ')
+    if (function[:return][:void?])
+      return "#define #{function[:name]}_ExpectWithArray(#{args_call}) #{function[:name]}_CMockExpectWithArray(__LINE__, #{args_call})\n" +
+             "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string});\n"
     else
-      args_string = function[:args].map{|m| m[:ptr?] ? "#{m[:type]} #{m[:name]}, int #{m[:name]}_Depth" : "#{m[:type]} #{m[:name]}"}.join(', ')
-      if (function[:return][:void?])
-        return "void #{function[:name]}_ExpectWithArray(#{args_string});\n"
-      else
-        return "void #{function[:name]}_ExpectWithArrayAndReturn(#{args_string}, #{function[:return][:str]});\n"
-      end
+      return "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call}, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call}, cmock_retval)\n" +
+             "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]});\n"
     end
   end
 
@@ -42,9 +37,9 @@ class CMockGeneratorPluginArray
     args_string = function[:args].map{|m| m[:ptr?] ? "#{m[:type]} #{m[:name]}, int #{m[:name]}_Depth" : "#{m[:type]} #{m[:name]}"}.join(', ')
     call_string = function[:args].map{|m| m[:ptr?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name]}.join(', ')
     if (function[:return][:void?])
-      lines << "void #{func_name}_ExpectWithArray(#{args_string})\n"
+      lines << "void #{func_name}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string})\n"
     else
-      lines << "void #{func_name}_ExpectWithArrayAndReturn(#{args_string}, #{function[:return][:str]})\n"
+      lines << "void #{func_name}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]})\n"
     end
     lines << "{\n"
     lines << @utils.code_add_base_expectation(func_name)

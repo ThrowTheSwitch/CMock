@@ -91,8 +91,8 @@ class CMockGenerator
   def create_instance_structure(file, functions)
     functions.each do |function| 
       file << "typedef struct _CMOCK_#{function[:name]}_CALL_INSTANCE\n{\n"
-      stuff = @plugins.run(:instance_typedefs, function)
-      file << ((stuff.empty?) ? "  char PlaceHolder;\n" : stuff)
+      file << "  UNITY_LINE_TYPE LineNumber;\n"
+      file << @plugins.run(:instance_typedefs, function)
       file << "\n} CMOCK_#{function[:name]}_CALL_INSTANCE;\n\n"
     end
     file << "static struct #{@mock_name}Instance\n{\n"
@@ -118,8 +118,10 @@ class CMockGenerator
   
   def create_mock_verify_function(file, functions)
     file << "void #{@mock_name}_Verify(void)\n{\n"
-    file << functions.collect {|function| @plugins.run(:mock_verify, function)}.join
-    file << "  TEST_ASSERT_NULL_MESSAGE(GlobalOrderError, GlobalOrderError);\n" if (@ordered)
+    verifications = functions.collect {|function| @plugins.run(:mock_verify, function)}.join
+    verifications += "  UNITY_TEST_ASSERT_NULL(GlobalOrderError, cmock_line, NULL);\n" if (@ordered)
+    file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n" unless verifications.empty?
+    file << verifications
     file << "}\n\n"
   end
   
@@ -157,13 +159,14 @@ class CMockGenerator
     args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
     
     # Create mock function
-    file << "#{function[:attributes]} " if (!function[:attributes].nil? && function[:attributes].length > 0)
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
+    file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
     file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance = Mock.#{function[:name]}_CallInstance;\n"
     file << "  Mock.#{function[:name]}_CallInstance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
     file << @plugins.run(:mock_implementation_precheck, function)
-    file << "  TEST_ASSERT_NOT_NULL_MESSAGE(cmock_call_instance, \"Function '#{function[:name]}' called more times than expected\");\n"
+    file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function '#{function[:name]}' called more times than expected\");\n"
+    file << "  cmock_line = cmock_call_instance->LineNumber;\n"
     file << @plugins.run(:mock_implementation, function)
     file << "  return cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?]) 
     file << "}\n\n"

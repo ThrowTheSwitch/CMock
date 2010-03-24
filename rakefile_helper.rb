@@ -3,56 +3,20 @@ require 'fileutils'
 require 'generate_test_runner'
 require 'unity_test_summary'
 require 'systest_generator'
+require 'vendor/unity/auto/colour_reporter.rb'
 
 module RakefileHelpers
 
   SYSTEST_GENERATED_FILES_PATH   = 'test/system/generated/'
   SYSTEST_BUILD_FILES_PATH       = 'test/system/build/'
   SYSTEST_COMPILE_MOCKABLES_PATH = 'test/system/test_compilation/'
-
   C_EXTENSION = '.c'
   RESULT_EXTENSION = '.result'
-  
-  def report(message)
-    unless ($cfg and $cfg['colour'])
-      puts($stdout.puts(message))
-    else
-      require 'vendor/unity/auto/colour_prompt.rb'
-      message.each_line do |line|
-        line.chomp!
-        if line.include?('Tests') &&
-           line.include?('Failures') &&
-           line.include?('Ignored')
-          if line.include?('0 Failures')
-            colour = :green
-          else
-            colour = :red
-          end
-        elsif line.include?('PASS') ||
-					line == 'OK'
-          colour = :green
-        elsif line.include? "Running Unity system tests..."
-          colour = :blue
-        elsif line.include?('FAIL') ||
-          line.include?('Expected') ||
-          line.include?('Memory Mismatch') ||
-          line.include?('not within delta')
-          colour  = :red
-        elsif line.include?(' IGNORED')
-          colour = :yellow
-        else
-          colour = :blue
-        end
-      colour_puts colour, line
-      end
-    end
-    $stdout.flush
-    $stderr.flush
-  end
   
   def load_configuration(config_file)
     $cfg_file = config_file
     $cfg = YAML.load(File.read($cfg_file))
+    $colour_output = false unless $cfg['colour']
   end
   
   def configure_clean

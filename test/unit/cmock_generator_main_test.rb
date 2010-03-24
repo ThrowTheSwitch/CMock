@@ -145,7 +145,6 @@ class CMockGeneratorTest < Test::Unit::TestCase
     expected = [ "static struct MockPoutPoutFishInstance\n",
                  "{\n",
                  "  unsigned char placeHolder;\n",
-                 "",
                  "} Mock;\n\n"
                ].join
     
@@ -160,10 +159,11 @@ class CMockGeneratorTest < Test::Unit::TestCase
                   { :name => "Second", :args => "bool Smarty", :return => test_return[:string] }
                 ]
     expected = [ "typedef struct _CMOCK_First_CALL_INSTANCE\n{\n",
+                 "  UNITY_LINE_TYPE LineNumber;\n",
                  "  b1  b2",
                  "\n} CMOCK_First_CALL_INSTANCE;\n\n",
                  "typedef struct _CMOCK_Second_CALL_INSTANCE\n{\n",
-                 "  char PlaceHolder;\n",
+                 "  UNITY_LINE_TYPE LineNumber;\n",
                  "\n} CMOCK_Second_CALL_INSTANCE;\n\n",
                  "static struct MockPoutPoutFishInstance\n{\n",
                  "  d1",
@@ -222,11 +222,12 @@ class CMockGeneratorTest < Test::Unit::TestCase
                 ]
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
+                 "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
                  "  Uno_First" +
                  "  Dos_First" +
                  "  Uno_Second" +
-                 "  Dos_Second",
-                 "  TEST_ASSERT_NULL_MESSAGE(GlobalOrderError, GlobalOrderError);\n",
+                 "  Dos_Second" +
+                 "  UNITY_TEST_ASSERT_NULL(GlobalOrderError, cmock_line, NULL);\n",
                  "}\n\n"
                ]
     @plugins.expect.run(:mock_verify, functions[0]).returns(["  Uno_First","  Dos_First"])
@@ -300,12 +301,14 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  :attributes => "__inline"
                }
     output = []
-    expected = [ "__inline static int SupaFunction(uint32 sandwiches, const char* named)\n",
+    expected = [ "static int SupaFunction(uint32 sandwiches, const char* named)\n",
                  "{\n",
+                 "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = Mock.SupaFunction_CallInstance;\n",
                  "  Mock.SupaFunction_CallInstance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
-                 "  TEST_ASSERT_NOT_NULL_MESSAGE(cmock_call_instance, \"Function 'SupaFunction' called more times than expected\");\n",
+                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected\");\n",
+                 "  cmock_line = cmock_call_instance->LineNumber;\n",
                  "  dos",
                  "  tres",
                  "  return cmock_call_instance->ReturnVal;\n",
@@ -331,10 +334,12 @@ class CMockGeneratorTest < Test::Unit::TestCase
     output = []
     expected = [ "int SupaFunction(uint32 sandwiches, corn ...)\n",
                  "{\n",
+                 "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = Mock.SupaFunction_CallInstance;\n",
                  "  Mock.SupaFunction_CallInstance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
-                 "  TEST_ASSERT_NOT_NULL_MESSAGE(cmock_call_instance, \"Function 'SupaFunction' called more times than expected\");\n",
+                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected\");\n",
+                 "  cmock_line = cmock_call_instance->LineNumber;\n",
                  "  dos",
                  "  tres",
                  "  return cmock_call_instance->ReturnVal;\n",
