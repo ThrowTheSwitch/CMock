@@ -73,6 +73,7 @@
 
     :code: |
       int A, B, C;
+      unsigned int *pA, *pB, *pC;
       
       U16* exercise_return_pointers(int a)
       {
@@ -118,10 +119,19 @@
       
   :tests:
     :common: |
-      void setUp(void) {}
-      void tearDown(void) {}
-      
       extern int A, B, C;
+      extern unsigned int *pA, *pB, *pC;
+      
+      void setUp(void)
+      {
+        A = 100;
+        B = 200;
+        C = 300;
+        pA = (unsigned int*)(&A);
+        pB = (unsigned int*)(&B);
+        pC = (unsigned int*)(&C);
+      }
+      void tearDown(void) {}
     :units:
     - :pass: TRUE
       :should: 'execute simple pointer return value check'
@@ -169,11 +179,11 @@
       :code: |
         test()
         {
-          ptr_ptr_return1_ExpectAndReturn((unsigned int**)A, (unsigned int**)B);
-          ptr_ptr_return2_ExpectAndReturn((unsigned int**)A, (unsigned int**)B);
-          ptr_ptr_return3_ExpectAndReturn((unsigned int**)A, (unsigned int**)B);
-          ptr_ptr_return4_ExpectAndReturn((unsigned int**)A, (unsigned int**)B);
-          exercise_double_pointers((unsigned int)A);
+          ptr_ptr_return1_ExpectAndReturn(&pA, &pB);
+          ptr_ptr_return2_ExpectAndReturn(&pA, &pB);
+          ptr_ptr_return3_ExpectAndReturn(&pA, &pB);
+          ptr_ptr_return4_ExpectAndReturn(&pA, &pB);
+          exercise_double_pointers((unsigned int)(&pA));
         }
 
     - :pass: TRUE

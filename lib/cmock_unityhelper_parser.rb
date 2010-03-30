@@ -10,9 +10,16 @@ class CMockUnityHelperParser
 
   def get_helper(ctype)
     lookup = ctype.gsub(/(?:^|(\S?)(\s*)|(\W))const(?:$|(\s*)(\S)|(\W))/,'\1\3\5\6').strip.gsub(/\s+/,'_')
-    return @c_types[lookup] if (@c_types[lookup])
+    return [@c_types[lookup], ''] if (@c_types[lookup])
+    if (lookup =~ /\*$/)
+      lookup = lookup.gsub(/\*$/,'')
+      return [@c_types[lookup], '*'] if (@c_types[lookup])
+    else
+      lookup = lookup + '*'
+      return [@c_types[lookup], '&'] if (@c_types[lookup])
+    end
     raise("Don't know how to test #{ctype} and memory tests are disabled!") unless @config.memcmp_if_unknown
-    return @fallback
+    return [@fallback, '']
   end
   
   private ###########################
@@ -21,6 +28,7 @@ class CMockUnityHelperParser
     c_types = {}
     @config.treat_as.each_pair do |ctype, expecttype|
       c_types[ctype.gsub(/\s+/,'_')] = "UNITY_TEST_ASSERT_EQUAL_#{expecttype}"
+      c_types[ctype.gsub(/\s+/,'_')+'*'] = "UNITY_TEST_ASSERT_EQUAL_#{expecttype}_ARRAY"
     end
     c_types
   end

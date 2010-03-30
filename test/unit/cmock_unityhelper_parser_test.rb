@@ -88,6 +88,8 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
     expected = {
       "UINT"          => "UNITY_TEST_ASSERT_EQUAL_HEX32",
       "unsigned_long" => "UNITY_TEST_ASSERT_EQUAL_HEX64",
+      "UINT*"         => "UNITY_TEST_ASSERT_EQUAL_HEX32_ARRAY",
+      "unsigned_long*"=> "UNITY_TEST_ASSERT_EQUAL_HEX64_ARRAY",
     }
     @config.expects.plugins.returns([]) #not :array
     @config.expects.treat_as.returns(pairs)
@@ -105,6 +107,8 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
     expected = {
       "char*"         => "UNITY_TEST_ASSERT_EQUAL_STRING",
       "unsigned_int"  => "UNITY_TEST_ASSERT_EQUAL_HEX32",
+      "char**"        => "UNITY_TEST_ASSERT_EQUAL_STRING_ARRAY",
+      "unsigned_int*" => "UNITY_TEST_ASSERT_EQUAL_HEX32_ARRAY",
     }
     @config.expects.plugins.returns([]) #not :array
     @config.expects.treat_as.returns(pairs)
@@ -130,7 +134,7 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
      ["UINT16*","UINT16_ARRAY"],
      ["const SPINACH","SPINACH"],
      ["LONG LONG","LONG_LONG"] ].each do |ctype, exptype|
-      assert_equal("UNITY_TEST_ASSERT_EQUAL_#{exptype}", @parser.get_helper(ctype))  
+      assert_equal(["UNITY_TEST_ASSERT_EQUAL_#{exptype}",''], @parser.get_helper(ctype))  
     end
   end
 
@@ -145,9 +149,9 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       'SPINACH' => "UNITY_TEST_ASSERT_EQUAL_SPINACH",
     }
   
-    ["UINT16","SPINACH_T","SALAD","PINEAPPLE"].each do |ctype|
+    ["UINT32","SPINACH_T","SALAD","PINEAPPLE"].each do |ctype|
       @config.expect.memcmp_if_unknown.returns(true)
-      assert_equal("UNITY_TEST_ASSERT_EQUAL_MEMORY", @parser.get_helper(ctype))  
+      assert_equal(["UNITY_TEST_ASSERT_EQUAL_MEMORY",''], @parser.get_helper(ctype))  
     end
   end
 
@@ -162,10 +166,38 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
       'SPINACH' => "UNITY_TEST_ASSERT_EQUAL_SPINACH",
     }
   
-    ["UINT8*","SPINACH_T*"].each do |ctype|
+    ["UINT32*","SPINACH_T*"].each do |ctype|
       @config.expect.memcmp_if_unknown.returns(true)
-      assert_equal("UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY", @parser.get_helper(ctype))  
+      assert_equal(["UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY",''], @parser.get_helper(ctype))  
     end
+  end
+  
+  should "return the array handler if we cannot find the normal handler" do
+    @config.expects.plugins.returns([]) #not :array
+    @config.expects.treat_as.returns({})
+    @config.expect.load_unity_helper.returns("")
+    @parser = CMockUnityHelperParser.new(@config)
+    @parser.c_types = {
+      'UINT8'   => "UNITY_TEST_ASSERT_EQUAL_UINT8",
+      'UINT16*' => "UNITY_TEST_ASSERT_EQUAL_UINT16_ARRAY",
+      'SPINACH' => "UNITY_TEST_ASSERT_EQUAL_SPINACH",
+    }
+  
+      assert_equal(["UNITY_TEST_ASSERT_EQUAL_UINT16_ARRAY",'&'], @parser.get_helper("UINT16"))  
+  end
+  
+  should "return the normal handler if we cannot find the array handler" do
+    @config.expects.plugins.returns([]) #not :array
+    @config.expects.treat_as.returns({})
+    @config.expect.load_unity_helper.returns("")
+    @parser = CMockUnityHelperParser.new(@config)
+    @parser.c_types = {
+      'UINT8'   => "UNITY_TEST_ASSERT_EQUAL_UINT8",
+      'UINT16'  => "UNITY_TEST_ASSERT_EQUAL_UINT16",
+      'SPINACH' => "UNITY_TEST_ASSERT_EQUAL_SPINACH",
+    }
+  
+      assert_equal(["UNITY_TEST_ASSERT_EQUAL_UINT8",'*'], @parser.get_helper("UINT8*"))  
   end
   
   should "raise error when asked to fetch helper of type not on my list and not allowed to mem check" do
@@ -176,7 +208,7 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
     @parser = CMockUnityHelperParser.new(@config)
     @parser.c_types = {
       'UINT8'   => "UNITY_TEST_ASSERT_EQUAL_UINT8",
-      'UINT16*' => "UNITY_TEST_ASSERT_EQUAL_UINT16_ARRAY",
+      'UINT32*' => "UNITY_TEST_ASSERT_EQUAL_UINT32_ARRAY",
       'SPINACH' => "UNITY_TEST_ASSERT_EQUAL_SPINACH",
     }
   

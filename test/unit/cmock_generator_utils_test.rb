@@ -171,7 +171,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:int]
     expected = "  UNITY_TEST_ASSERT_EQUAL_INT(cmock_call_instance->Expected_MyInt, MyInt, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyInt'.\");\n"
-    @unity_helper.expect.get_helper('int').returns('UNITY_TEST_ASSERT_EQUAL_INT')
+    @unity_helper.expect.get_helper('int').returns(['UNITY_TEST_ASSERT_EQUAL_INT',''])
     assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
   end
 
@@ -186,7 +186,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:string]
     expected = "  UNITY_TEST_ASSERT_EQUAL_STRING(cmock_call_instance->Expected_MyStr, MyStr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyStr'.\");\n"
-    @unity_helper.expect.get_helper('char*').returns('UNITY_TEST_ASSERT_EQUAL_STRING')
+    @unity_helper.expect.get_helper('char*').returns(['UNITY_TEST_ASSERT_EQUAL_STRING',''])
     assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
   end
   
@@ -194,7 +194,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE), cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\");\n"
-    @unity_helper.expect.get_helper('MY_TYPE').returns('UNITY_TEST_ASSERT_EQUAL_MEMORY')
+    @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MEMORY',''])
     assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
   end
 
@@ -202,24 +202,23 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE(cmock_call_instance->Expected_MyMyType, MyMyType, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\");\n"
-    @unity_helper.expect.get_helper('MY_TYPE').returns('UNITY_TEST_ASSERT_EQUAL_MY_TYPE')
+    @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE',''])
     assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
   end
   
-  #This is not yet supported
-  # should 'handle pointers to custom types with array handlers, even if the array extension is turned off' do
-    # function = { :name => 'Pear' }
-    # arg      = test_arg[:mytype]
-    # expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1);\n"
-    # @unity_helper.expect.get_helper('MY_TYPE').returns('UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY')
-    # assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
-  # end
+  should 'handle pointers to custom types with array handlers, even if the array extension is turned off' do
+    function = { :name => 'Pear' }
+    arg      = test_arg[:mytype]
+    expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1, cmock_line, NULL);\n"
+    @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY','&'])
+    assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
+  end
 
   should 'handle a simple assert when requested with array plugin enabled' do
     function = { :name => 'Pear' }
     arg      = test_arg[:int]
     expected = "  UNITY_TEST_ASSERT_EQUAL_INT(cmock_call_instance->Expected_MyInt, MyInt, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyInt'.\");\n"
-    @unity_helper.expect.get_helper('int').returns('UNITY_TEST_ASSERT_EQUAL_INT')
+    @unity_helper.expect.get_helper('int').returns(['UNITY_TEST_ASSERT_EQUAL_INT',''])
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
   
@@ -232,7 +231,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                "    { UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_line, NULL); }\n" +
                "  else\n" +
                "    { UNITY_TEST_ASSERT_EQUAL_INT_ARRAY(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_call_instance->Expected_MyIntPtr_Depth, cmock_line, NULL); }\n"
-    @unity_helper.expect.get_helper('int*').returns('UNITY_TEST_ASSERT_EQUAL_INT_ARRAY')
+    @unity_helper.expect.get_helper('int*').returns(['UNITY_TEST_ASSERT_EQUAL_INT_ARRAY',''])
    assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
   
@@ -240,7 +239,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:string]
     expected = "  UNITY_TEST_ASSERT_EQUAL_STRING(cmock_call_instance->Expected_MyStr, MyStr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyStr'.\");\n"
-    @unity_helper.expect.get_helper('char*').returns('UNITY_TEST_ASSERT_EQUAL_STRING')
+    @unity_helper.expect.get_helper('char*').returns(['UNITY_TEST_ASSERT_EQUAL_STRING',''])
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
   
@@ -248,7 +247,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE), cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\");\n"
-    @unity_helper.expect.get_helper('MY_TYPE').returns('UNITY_TEST_ASSERT_EQUAL_MEMORY')
+    @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MEMORY',''])
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
   
@@ -256,7 +255,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE(cmock_call_instance->Expected_MyMyType, MyMyType, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\");\n"
-    @unity_helper.expect.get_helper('MY_TYPE').returns('UNITY_TEST_ASSERT_EQUAL_MY_TYPE')
+    @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE',''])
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
 
@@ -269,16 +268,15 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
                "    { UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_line, NULL); }\n" +
                "  else\n" +
                "    { UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_call_instance->Expected_MyMyTypePtr_Depth, cmock_line, NULL); }\n"
-    @unity_helper.expect.get_helper('MY_TYPE*').returns('UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY')
+    @unity_helper.expect.get_helper('MY_TYPE*').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY',''])
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
   
-  #This is not yet supported
-#  should 'handle custom types with array handlers when array plugin is enabled for non-array types' do
-#    function = { :name => 'Pear' }
-#    arg      = test_arg[:mytype]
-#    expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1);\n"
-#    @unity_helper.expect.get_helper('MY_TYPE').returns('UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY')
-#    assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
-#  end
+  should 'handle custom types with array handlers when array plugin is enabled for non-array types' do
+    function = { :name => 'Pear' }
+    arg      = test_arg[:mytype]
+    expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1, cmock_line, NULL);\n"
+    @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY','&'])
+    assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
+  end
 end
