@@ -338,14 +338,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         
     # ensure it's expected type of exception
     assert_raise RuntimeError do
-      @parser.parse("")
+      @parser.parse("module", "")
     end
 
     assert_equal([], @parser.funcs)
     
     # verify exception message
     begin
-      @parser.parse("")
+      @parser.parse("module", "")
     rescue RuntimeError => e
       assert_equal("ERROR: No function prototypes found!", e.message)
     end    
@@ -361,14 +361,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
     # ensure it's expected type of exception
     assert_raise(RuntimeError) do
-      @parser.parse(source)
+      @parser.parse("module", source)
     end
 
     assert_equal([], @parser.funcs)    
 
     # verify exception message
     begin
-      @parser.parse(source)    
+      @parser.parse("module", source)    
     rescue RuntimeError => e
       assert_equal("ERROR: No function prototypes found!", e.message)
     end    
@@ -380,12 +380,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
     # ensure it's expected type of exception
     assert_raise(RuntimeError) do
-      @parser.parse(source)
+      @parser.parse("module", source)
     end
 
     # verify exception message
     begin
-      @parser.parse(source) 
+      @parser.parse("module", source) 
     rescue RuntimeError => e
       assert(e.message.include?("Failed Parsing Declaration Prototype!"))
     end    
@@ -516,7 +516,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_string=>"int cmock_arg1, unsigned int* cmock_arg2",
                  :args_call=>"cmock_arg1, cmock_arg2" 
                 }]
-    assert_equal(expected, @parser.parse(source)[:functions])
+    assert_equal(expected, @parser.parse("module", source)[:functions])
   end
   
   should "not extract for mocking multiply defined prototypes" do
@@ -541,7 +541,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_string=>"int Trinity, unsigned int* Neo",
                   :args_call=>"Trinity, Neo"
                 }]
-    assert_equal(expected, @parser.parse(source)[:functions])
+    assert_equal(expected, @parser.parse("module", source)[:functions])
   end
   
   should "properly detect typedef'd variants of void and use those" do
@@ -581,7 +581,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_string=>"void",
                   :args_call=>""
                 }]
-    assert_equal(expected, @parser.parse(source)[:functions])
+    assert_equal(expected, @parser.parse("module", source)[:functions])
   end
   
   should "be ok with structs inside of function declarations" do
@@ -635,7 +635,79 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_string=>"void",
                   :args_call=>""
                 }]
-    assert_equal(expected, @parser.parse(source)[:functions])
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+  
+  should "extract functions containing a function pointer" do
+  
+    source = "void FunkyChicken(unsigned int (*func_ptr)(int, char))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"FunkyChicken",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false}
+                        ],
+                 :args_string=>"cmock_module_func_ptr1 func_ptr",
+                 :args_call=>"func_ptr" }]
+    typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+  
+  should "extract functions containing an anonymous function pointer" do
+  
+    source = "void FunkyChicken(unsigned int (* const)(int, char))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"FunkyChicken",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => true}
+                        ],
+                 :args_string=>"cmock_module_func_ptr1 const cmock_arg1",
+                 :args_call=>"cmock_arg1" }]
+    typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+  
+  should "extract functions returning a function pointer" do
+  
+    source = "unsigned short (*FunkyChicken( const char op_code ))( int, long int )"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "cmock_module_func_ptr1", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "cmock_module_func_ptr1 cmock_to_return",
+                            :void?  => false
+                          },
+                 :name=>"FunkyChicken",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"char", :name=>"op_code", :ptr? => false, :const? => true}
+                        ],
+                 :args_string=>"const char op_code",
+                 :args_call=>"op_code" }]
+    typedefs = ["typedef unsigned short(*cmock_module_func_ptr1)( int, long int );"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
   end
   
   should "extract functions with varargs" do
@@ -658,7 +730,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_string=>"int Scully, int Mulder",
                   :args_call=>"Scully, Mulder"
                }]
-    assert_equal(expected, @parser.parse(source)[:functions])
+    assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
 end

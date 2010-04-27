@@ -32,7 +32,7 @@ class CMock
   def generate_mock(src)
     name = File.basename(src, '.h')
     puts "Creating mock for #{name}..." unless @silent
-    @cm_generator.create_mock(name, @cm_parser.parse(File.read(src)))
+    @cm_generator.create_mock(name, @cm_parser.parse(name, File.read(src)))
   end
 end
 

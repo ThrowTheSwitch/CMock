@@ -13,7 +13,8 @@ class CMockHeaderParser
     @verbosity = cfg.verbosity
   end
   
-  def parse(source)
+  def parse(name, source)
+    @module_name = name
     @typedefs = []
     @funcs = []
     function_names = []
@@ -68,7 +69,7 @@ class CMockHeaderParser
     
     #scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s]+)\s*\(([\w\s,]+)\)\)\s*\(([\w\s,]+)\)\)*/) do |m|
-      functype = "cmock_func_ptr#{@typedefs.size + 1}"
+      functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
       @typedefs << "typedef #{$1.strip}(*#{functype})(#{$4});"
       "#{functype} #{$2.strip}(#{$3});"
     end
@@ -134,7 +135,7 @@ class CMockHeaderParser
       
       #scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s]+)\)\s*\(([\w\s,]+)\)\)*/) do |m|
-        functype = "cmock_func_ptr#{@typedefs.size + 1}"
+        functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
         funcret  = $1.strip
         funcname = $2.strip
         funcargs = $3.strip
