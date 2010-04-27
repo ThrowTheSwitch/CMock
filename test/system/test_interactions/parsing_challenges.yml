@@ -23,7 +23,9 @@
     #include "NonExistantFile.h
     */
     //#include "AndIgnoreThisToo.h"
-    
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
     #define SHOULD_IGNORE_NEXT_FUNC_DEF_AS_PART_OF_MACRO   \
             void IgnoredFunction(NotAValidType ToMakeItFailIfWeActuallyMockedThis);
     
@@ -60,6 +62,9 @@
     
     void oh_brackets1(int fudge[5]);
     void oh_brackets2(int caramel[]);
+    #ifdef __cplusplus
+    }
+    #endif
     
   :source: 
     :header: |

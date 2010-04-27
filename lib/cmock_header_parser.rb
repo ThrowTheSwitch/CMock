@@ -1,3 +1,9 @@
+# ==========================================
+#   CMock Project - Automatic Mock Generation for C
+#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
+#   [Released under MIT License. Please refer to license.txt for details]
+# ========================================== 
+
 class CMockHeaderParser
 
   attr_accessor :funcs, :c_attributes, :treat_as_void
@@ -56,8 +62,9 @@ class CMockHeaderParser
     # remove assembler pragma sections
     source.gsub!(/^\s*#\s*pragma\s+asm\s+.*?#\s*pragma\s+endasm/m, '')
     
-    # remove preprocessor statements
+    # remove preprocessor statements and extern "C" 
     source.gsub!(/^\s*#.*/, '')
+    source.gsub!(/extern\s+\"C\"\s+\{/, '')
     
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes

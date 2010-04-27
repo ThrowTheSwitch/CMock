@@ -1,3 +1,9 @@
+# ==========================================
+#   CMock Project - Automatic Mock Generation for C
+#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
+#   [Released under MIT License. Please refer to license.txt for details]
+# ========================================== 
+
 class CMockUnityHelperParser
   
   attr_accessor :c_types
