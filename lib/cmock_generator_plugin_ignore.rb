@@ -11,6 +11,11 @@ class CMockGeneratorPluginIgnore
   
   def initialize(config, utils)
     @config = config
+    if (@config.ignore == :args_and_calls)
+      alias :mock_implementation_precheck :mock_implementation_for_ignores
+    else
+      alias :mock_implementation          :mock_implementation_for_ignores
+    end
     @utils = utils
     @priority = 2
   end
@@ -33,7 +38,7 @@ class CMockGeneratorPluginIgnore
     end 
   end
   
-  def mock_implementation_precheck(function)
+  def mock_implementation_for_ignores(function)
     lines = "  if (Mock.#{function[:name]}_IgnoreBool)\n  {\n" 
     if (function[:return][:void?])
       lines << "    return;\n  }\n"

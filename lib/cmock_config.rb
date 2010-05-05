@@ -8,20 +8,22 @@ class CMockConfig
   
   CMockDefaultOptions = 
   {
-    :mock_path => 'mocks',
-    :mock_prefix => 'Mock',
-    :plugins => [],
-    :includes => [],
-    :attributes => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],
+    :mock_path               => 'mocks',
+    :mock_prefix             => 'Mock',
+    :plugins                 => [],
+    :includes                => [],
+    :attributes              => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],
     :enforce_strict_ordering => false,
-    :cexception_include => nil,
-    :unity_helper => false,
-    :treat_as => {},
-    :treat_as_void => [],
-    :memcmp_if_unknown => true,
-    :when_no_prototypes => :warn, #the options being :ignore, :warn, or :error
-    :when_ptr =>:compare_data, #the options being :compare_ptr, :compare_data, or :smart
-    :verbosity => 2, #0 errors only, #1 warnings and errors, #2 normal info, #3 verbose
+    :cexception_include      => nil,
+    :unity_helper            => false,
+    :treat_as                => {},
+    :treat_as_void           => [],
+    :memcmp_if_unknown       => true,
+    :when_no_prototypes      => :warn,           #the options being :ignore, :warn, or :error
+    :when_ptr                => :compare_data,   #the options being :compare_ptr, :compare_data, or :smart
+    :verbosity               => 2,               #the options being 0 errors only, 1 warnings and errors, 2 normal info, 3 verbose
+    :treat_externs           => :exclude,        #the options being :include or :exclude
+    :ignore                  => :args_and_calls, #the options being :args_and_calls or :args_only
   }
   
   def initialize(options=nil)

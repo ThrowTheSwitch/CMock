@@ -19,6 +19,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @config.expect.treat_as.returns({ "BANJOS" => "INT", "TUBAS" => "HEX16"} )
     @config.expect.when_no_prototypes.returns(:error)
     @config.expect.verbosity.returns(1)
+    @config.expect.treat_externs.returns(:exclude)
     
     @parser = CMockHeaderParser.new(@config)
   end
@@ -215,7 +216,6 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  @parser.import_source(source).map!{|s|s.strip})
   end
   
-  
   should "remove externed and inline functions" do
     source = 
       " extern uint32 foobar(unsigned int);\n" +
@@ -232,6 +232,28 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "uint32 funcinline(unsigned int)"
     ]
     
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
+  
+  should "remove just inline functions if externs to be included" do
+    source = 
+      " extern uint32 foobar(unsigned int);\n" +
+      "uint32 extern_name_func(unsigned int);\n" +
+      "uint32 funcinline(unsigned int);\n" +
+      "extern void bar(unsigned int);\n" +
+      "inline void bar(unsigned int);\n" +
+      "extern\n" +
+      "void kinda_ugly_on_the_next_line(unsigned int);\n"
+    
+    expected =
+    [ "extern uint32 foobar(unsigned int)",
+      "uint32 extern_name_func(unsigned int)",
+      "uint32 funcinline(unsigned int)",
+      "extern void bar(unsigned int)",
+      "extern void kinda_ugly_on_the_next_line(unsigned int)"
+    ]
+    
+    @parser.treat_externs = :include
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
     

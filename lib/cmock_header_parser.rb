@@ -6,7 +6,7 @@
 
 class CMockHeaderParser
 
-  attr_accessor :funcs, :c_attributes, :treat_as_void
+  attr_accessor :funcs, :c_attributes, :treat_as_void, :treat_externs
   
   def initialize(cfg)
     @funcs = []
@@ -17,6 +17,7 @@ class CMockHeaderParser
     @when_no_prototypes = cfg.when_no_prototypes
     @local_as_void = @treat_as_void
     @verbosity = cfg.verbosity
+    @treat_externs = cfg.treat_externs
   end
   
   def parse(name, source)
@@ -90,9 +91,13 @@ class CMockHeaderParser
     
     #split lines on semicolons and remove things that are obviously not what we are looking for
     src_lines = source.split(/\s*;\s*/)
-    src_lines.delete_if {|line| !(line =~ /\(\s*\*(?:.*\[\d*\])??\s*\)/).nil?}   #remove function pointer arrays
-    src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern|inline)\s+/).nil?} #remove inline and extern functions
-    src_lines.delete_if {|line| line.strip.length == 0}                          # remove blank lines
+    src_lines.delete_if {|line| line.strip.length == 0}                            # remove blank lines
+    src_lines.delete_if {|line| !(line =~ /\(\s*\*(?:.*\[\d*\])??\s*\)/).nil?}     #remove function pointer arrays
+    if (@treat_externs == :include)
+      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?}        #remove inline functions
+    else
+      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern|inline)\s+/).nil?} #remove inline and extern functions
+    end
   end
 
   def parse_functions(source)

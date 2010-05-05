@@ -173,6 +173,9 @@ class CMockGenerator
     file << @plugins.run(:mock_implementation_precheck, function)
     file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function '#{function[:name]}' called more times than expected\");\n"
     file << "  cmock_line = cmock_call_instance->LineNumber;\n"
+    if (@ordered)
+      file << "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, \"Out of order function calls. Function '#{function[:name]}'\");\n"
+    end
     file << @plugins.run(:mock_implementation, function)
     file << "  return cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?]) 
     file << "}\n\n"

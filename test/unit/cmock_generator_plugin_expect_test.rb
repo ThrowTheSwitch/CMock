@@ -11,17 +11,19 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
     
-    #no strict ordering
+    #no strict ordering and args_and_calls
     @config.expect.when_ptr.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(false)
     @config.stubs!(:respond_to?).returns(true)
+    # @config.expect.ignore.returns(:args_and_calls)
     @utils.expect.helpers.returns({})
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)
     
-    #strict ordering
+    #strict ordering and args_only
     @config.expect.when_ptr.returns(:compare_data)
     @config.expect.enforce_strict_ordering.returns(true)
     @config.stubs!(:respond_to?).returns(true)
+    # @config.expect.ignore.returns(:args_only)
     @utils.expect.helpers.returns({})
     @cmock_generator_plugin_expect_strict = CMockGeneratorPluginExpect.new(@config, @utils)
   end
@@ -118,7 +120,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   
   should "add mock function implementation using ordering if needed" do
     function = {:name => "Apple", :args => [], :return => test_return[:void]}
-    expected = "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, \"Out of order function calls. Function 'Apple'\");\n"
+    expected = ""
     @cmock_generator_plugin_expect.ordered = true
     returned = @cmock_generator_plugin_expect.mock_implementation(function)
     assert_equal(expected, returned)
@@ -127,7 +129,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   should "add mock function implementation for functions of style 'void func(int worm)' and strict ordering" do
     function = {:name => "Apple", :args => [{ :type => "int", :name => "worm" }], :return => test_return[:void]}
     @utils.expect.code_verify_an_arg_expectation(function, function[:args][0]).returns("mocked_retval_0")
-    expected = "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, \"Out of order function calls. Function 'Apple'\");\nmocked_retval_0"
+    expected = "mocked_retval_0"
     @cmock_generator_plugin_expect.ordered = true
     returned = @cmock_generator_plugin_expect_strict.mock_implementation(function)
     assert_equal(expected, returned)

@@ -10,8 +10,12 @@ require 'cmock_generator_plugin_ignore'
 class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
+    @config.expect.ignore.returns(:args_and_calls)
     @config.stubs!(:respond_to?).returns(true)
     @cmock_generator_plugin_ignore = CMockGeneratorPluginIgnore.new(@config, @utils)
+    
+    @config.expect.ignore.returns(:args_only)
+    @cmock_generator_plugin_ignore_just_args = CMockGeneratorPluginIgnore.new(@config, @utils)
   end
 
   def teardown
@@ -49,7 +53,11 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "add required code to implementation with void function" do
+  should "not add code to implementation (when :args_and_calls)" do
+    assert(! @cmock_generator_plugin_ignore.methods.include?(:mock_implementation))
+  end
+  
+  should "add required code to implementation precheck with void function (when :args_and_calls)" do
     function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
     expected = ["  if (Mock.Mold_IgnoreBool)\n",
                 "  {\n",
@@ -60,7 +68,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "add required code to implementation with return functions" do
+  should "add required code to implementation precheck with return functions (when :args_and_calls)" do
     function = {:name => "Fungus", :args_string => "void", :return => test_return[:int]}
     retval = test_return[:int].merge({ :name => "cmock_call_instance->ReturnVal"})
     @utils.expect.code_assign_argument_quickly("Mock.Fungus_FinalReturn", retval).returns('  mock_retval_0')
@@ -73,6 +81,37 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(function)
+    assert_equal(expected, returned)
+  end
+  
+  should "not add code to implementation prefix (when :args_only)" do
+    assert(! @cmock_generator_plugin_ignore_just_args.methods.include?(:mock_implementation_precheck))
+  end
+  
+  should "add required code to implementation with void function (when :args_only)" do
+    function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
+    expected = ["  if (Mock.Mold_IgnoreBool)\n",
+                "  {\n",
+                "    return;\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_plugin_ignore_just_args.mock_implementation(function)
+    assert_equal(expected, returned)
+  end
+  
+  should "add required code to implementation with return functions (when :args_only)" do
+    function = {:name => "Fungus", :args_string => "void", :return => test_return[:int]}
+    retval = test_return[:int].merge({ :name => "cmock_call_instance->ReturnVal"})
+    @utils.expect.code_assign_argument_quickly("Mock.Fungus_FinalReturn", retval).returns('  mock_retval_0')
+    expected = ["  if (Mock.Fungus_IgnoreBool)\n",
+                "  {\n",
+                "    if (cmock_call_instance == NULL)\n",
+                "      return Mock.Fungus_FinalReturn;\n",
+                "    mock_retval_0",
+                "    return cmock_call_instance->ReturnVal;\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_plugin_ignore_just_args.mock_implementation(function)
     assert_equal(expected, returned)
   end
   

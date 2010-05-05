@@ -13,6 +13,7 @@ class CMockPluginManagerTest < Test::Unit::TestCase
     @config.stubs!(:respond_to?).returns(true)
     @config.stubs!(:when_ptr).returns(:compare_data)
     @config.stubs!(:enforce_strict_ordering).returns(false)
+    @config.stubs!(:ignore).returns(:args_and_calls)
   end
 
   def teardown

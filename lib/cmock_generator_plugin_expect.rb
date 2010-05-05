@@ -50,9 +50,6 @@ class CMockGeneratorPluginExpect
   
   def mock_implementation(function)
     lines = ""
-    if (@ordered)
-      lines << "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, \"Out of order function calls. Function '#{function[:name]}'\");\n"
-    end
     function[:args].each do |arg|
       lines << @utils.code_verify_an_arg_expectation(function, arg)
     end
