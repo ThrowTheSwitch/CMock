@@ -8,6 +8,7 @@ class CMockConfig
   
   CMockDefaultOptions = 
   {
+    :framework               => :unity,
     :mock_path               => 'mocks',
     :mock_prefix             => 'Mock',
     :plugins                 => [],

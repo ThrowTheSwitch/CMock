@@ -43,6 +43,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     #no strict handling
     @config.expect.mock_prefix.returns("Mock")
     @config.expect.enforce_strict_ordering.returns(false)
+    @config.expect.framework.returns(:unity)
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator.module_name = @module_name
     @cmock_generator.mock_name = "Mock#{@module_name}"
@@ -50,6 +51,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     #strict handling
     @config.expect.mock_prefix.returns("Mock")
     @config.expect.enforce_strict_ordering.returns(true)
+    @config.expect.framework.returns(:unity)
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator_strict.module_name = @module_name
     @cmock_generator_strict.mock_name = "Mock#{@module_name}"

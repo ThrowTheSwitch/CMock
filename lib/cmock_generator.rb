@@ -17,6 +17,7 @@ class CMockGenerator
     @config      = config
     @prefix      = @config.mock_prefix
     @ordered     = @config.enforce_strict_ordering
+    @framework   = @config.framework.to_s
   end
 
   def create_mock(module_name, parsed_stuff)
@@ -86,7 +87,7 @@ class CMockGenerator
     file << "#include <string.h>\n"
     file << "#include <stdlib.h>\n"
     file << "#include <setjmp.h>\n"
-    file << "#include \"unity.h\"\n"
+    file << "#include \"#{@framework}.h\"\n"
     file << "#include \"cmock.h\"\n"
     file << @plugins.run(:include_files)
     includes = @config.includes
