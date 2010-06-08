@@ -11,6 +11,9 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
     
+    @config.expect.callback_include_count.returns(true)
+    @config.expect.callback_after_arg_check.returns(false)
+  
     @cmock_generator_plugin_callback = CMockGeneratorPluginCallback.new(@config, @utils)
   end
 
@@ -36,15 +39,24 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
   end
   
   should "add mock function declaration for function without arguments" do
-    function = {:name => "Maple", :args_string => "void", :return => test_return[:void]}
+    function = {:name => "Maple", :args_string => "void", :args => [], :return => test_return[:void]}
     expected = [ "typedef void (* CMOCK_Maple_CALLBACK)(int cmock_num_calls);\n",
                  "void Maple_StubWithCallback(CMOCK_Maple_CALLBACK Callback);\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
   
+  should "add mock function declaration for function without arguments when count is also turned off" do
+    function = {:name => "Maple", :args_string => "void", :args => [], :return => test_return[:void]}
+    expected = [ "typedef void (* CMOCK_Maple_CALLBACK)(void);\n",
+                 "void Maple_StubWithCallback(CMOCK_Maple_CALLBACK Callback);\n" ].join
+    @cmock_generator_plugin_callback.include_count = false
+    returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+  
   should "add mock function declaration for function with arguments" do
-    function = {:name => "Maple", :args_string => "int* tofu", :return => test_return[:void]}
+    function = {:name => "Maple", :args_string => "int* tofu", :args => [1], :return => test_return[:void]}
     expected = [ "typedef void (* CMOCK_Maple_CALLBACK)(int* tofu, int cmock_num_calls);\n",
                  "void Maple_StubWithCallback(CMOCK_Maple_CALLBACK Callback);\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
@@ -52,9 +64,18 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
   end
   
   should "add mock function declaration for function with return values" do
-    function = {:name => "Maple", :args_string => "int* tofu", :return => test_return[:string]}
+    function = {:name => "Maple", :args_string => "int* tofu", :args => [1], :return => test_return[:string]}
     expected = [ "typedef const char* (* CMOCK_Maple_CALLBACK)(int* tofu, int cmock_num_calls);\n",
                  "void Maple_StubWithCallback(CMOCK_Maple_CALLBACK Callback);\n" ].join
+    returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+  
+  should "add mock function declaration for function with return values and count is turned off" do
+    function = {:name => "Maple", :args_string => "int* tofu", :args => [1], :return => test_return[:string]}
+    expected = [ "typedef const char* (* CMOCK_Maple_CALLBACK)(int* tofu);\n",
+                 "void Maple_StubWithCallback(CMOCK_Maple_CALLBACK Callback);\n" ].join
+    @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -67,6 +88,19 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
                 "    return;\n",
                 "  }\n"
                ].join
+    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
+    assert_equal(expected, returned)
+  end
+
+  should "add mock function implementation for functions of style 'void func(void)' when count turned off" do
+    function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:void]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                "  {\n",
+                "    Mock.Apple_CallbackFunctionPointer();\n",
+                "    return;\n",
+                "  }\n"
+               ].join
+    @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
     assert_equal(expected, returned)
   end
@@ -94,6 +128,23 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
                 "    return;\n",
                 "  }\n"
                ].join
+    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
+    assert_equal(expected, returned)
+  end
+
+  should "add mock function implementation for functions of style 'void func(int* steak, uint8_t flag)' when count turned off" do
+    function = {:name => "Apple", 
+                :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
+                  { :type => 'uint8_t', :name => 'flag', :ptr? => false} ], 
+                :args_string => "int* steak, uint8_t flag",
+                :return=> test_return[:void]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                "  {\n",
+                "    Mock.Apple_CallbackFunctionPointer(steak, flag);\n",
+                "    return;\n",
+                "  }\n"
+               ].join
+    @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
     assert_equal(expected, returned)
   end
