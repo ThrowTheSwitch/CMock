@@ -19,13 +19,15 @@
     const char * bars(void);
     void no_pointers(int a, char* b);
     int mixed(int a, int* b, int c);
+    void potential_packing_problem(short *a);
 
   :source: 
     :header: |    
       void function_a(void);
       void function_b(void);
       void function_c(void);
-      int function_d(void);
+      int  function_d(void);
+      void function_e(void);
 
     :code: |
       void function_a(void)    
@@ -45,6 +47,11 @@
         int test_list[] = { 1, 2, 3, 4, 5 };
         no_pointers(1, "silly");
         return mixed(6, test_list, 7);
+      }
+      
+      void function_e(void) {
+        short test_list[] = {-1, -2, -3, -4};
+        potential_packing_problem(&test_list[1]);
       }
       
   :tests:
@@ -346,6 +353,28 @@
           mixed_ExpectWithArrayAndReturn(6, expect_list, 5, 7, 13);
           
           TEST_ASSERT_EQUAL(13, function_d());
+        }
+
+    - :pass: TRUE
+      :should: 'handle a passing version of a potential packing problem (particularly try with ARM simulators)'
+      :code: |
+        test()
+        {
+          short expect_list[] = { -2, -3, -4 };
+          potential_packing_problem_ExpectWithArray(expect_list, 3);
+          
+          function_e();
+        }
+
+    - :pass: FALSE
+      :should: 'handle a failing version of a potential packing problem (particularly try with ARM simulators)'
+      :code: |
+        test()
+        {
+          short expect_list[] = { -2, -3, 4 };
+          potential_packing_problem_ExpectWithArray(expect_list, 3);
+          
+          function_e();
         }
 
 
