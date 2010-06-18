@@ -22,6 +22,11 @@
 #define CMOCK_MEM_INDEX_TYPE  unsigned int
 #endif
 
+//this is used internally during pointer arithmetic. make sure this type is the same size as the target's pointer type
+#ifndef CMOCK_MEM_PTR_AS_INT
+#define CMOCK_MEM_PTR_AS_INT unsigned int
+#endif
+
 //0 for no alignment, 1 for 16-bit, 2 for 32-bit, 3 for 64-bit
 #ifndef CMOCK_MEM_ALIGN
 #define CMOCK_MEM_ALIGN (2)
@@ -104,13 +109,13 @@ void* CMock_Guts_MemChain(void* root, void* obj)
     //find the end of the existing chain and add us
     next = root;
     do {
-      index = *(CMOCK_MEM_INDEX_TYPE*)((unsigned int)next - CMOCK_MEM_INDEX_SIZE);
+      index = *(CMOCK_MEM_INDEX_TYPE*)((CMOCK_MEM_PTR_AS_INT)next - CMOCK_MEM_INDEX_SIZE);
       if (index >= CMock_Guts_FreePtr)
         return NULL;
       if (index > 0)
         next = (void*)(&CMock_Guts_Buffer[index]);
     } while (index > 0);
-    *(CMOCK_MEM_INDEX_TYPE*)((unsigned int)next - CMOCK_MEM_INDEX_SIZE) = ((unsigned int)obj - (unsigned int)CMock_Guts_Buffer);
+    *(CMOCK_MEM_INDEX_TYPE*)((CMOCK_MEM_PTR_AS_INT)next - CMOCK_MEM_INDEX_SIZE) = ((CMOCK_MEM_PTR_AS_INT)obj - (CMOCK_MEM_PTR_AS_INT)CMock_Guts_Buffer);
     return root;
   }
 }
@@ -127,7 +132,7 @@ void* CMock_Guts_MemNext(void* previous_item)
     return NULL;
 
   //if the pointer is good, then use it to look up the next index (we know the first element always goes in zero, so NEXT must always be > 1)
-  index = *(CMOCK_MEM_INDEX_TYPE*)((unsigned int)previous_item - CMOCK_MEM_INDEX_SIZE);
+  index = *(CMOCK_MEM_INDEX_TYPE*)((CMOCK_MEM_PTR_AS_INT)previous_item - CMOCK_MEM_INDEX_SIZE);
   if ((index > 1) && (index < CMock_Guts_FreePtr))
     return (void*)(&CMock_Guts_Buffer[index]);
   else
