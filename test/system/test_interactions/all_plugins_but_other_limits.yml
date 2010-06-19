@@ -292,24 +292,24 @@
         }
 
     - :pass: TRUE
-      :should: 'that we can properly ignore last  function but the other will work properly'
+      :should: 'that we can properly ignore first function but the other will work properly'
       :code: |
         test()
         {
           int expect_list[] = { 1, 2, 3, 4, 6 };
-          mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
           no_pointers_Ignore();
+          mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
           
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
     - :pass: TRUE
-      :should: 'that we can properly ignore first function but the other will work properly'
+      :should: 'that we can properly ignore last function but the other will work properly'
       :code: |
         test()
         {
-          mixed_IgnoreAndReturn(13);
           no_pointers_Expect(1, "silly");
+          mixed_IgnoreAndReturn(13);
           
           TEST_ASSERT_EQUAL(13, function_d());
         }
@@ -326,7 +326,7 @@
           function_e();
         }
 
-    - :pass: TRUE
+    - :pass: FALSE
       :should: 'that we fail if we do not ignore a call once because we are counting calls'
       :code: |
         test()

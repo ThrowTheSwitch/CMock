@@ -13,13 +13,15 @@ class CMockGeneratorPluginCallback
   def initialize(config, utils)
     @config = config
     @utils = utils
-    @priority = 3
+    @priority = 6
     
     @include_count = @config.callback_include_count
     if (@config.callback_after_arg_check)
       alias :mock_implementation          :mock_implementation_for_callbacks
+      alias :mock_implementation_precheck :nothing
     else
       alias :mock_implementation_precheck :mock_implementation_for_callbacks
+      alias :mock_implementation          :nothing
     end
   end
 
@@ -51,6 +53,10 @@ class CMockGeneratorPluginCallback
       when 6 then "    return Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')});\n  }\n"
       when 7 then "    return Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')}, Mock.#{func_name}_CallbackCalls++);\n  }\n"
     end
+  end
+  
+  def nothing(function)
+    return ""
   end
 
   def mock_interfaces(function)

@@ -23,7 +23,7 @@ class CMockGeneratorPluginCallbackTest < Test::Unit::TestCase
   should "have set up internal accessors correctly on init" do
     assert_equal(@config, @cmock_generator_plugin_callback.config)
     assert_equal(@utils,  @cmock_generator_plugin_callback.utils)
-    assert_equal(3,       @cmock_generator_plugin_callback.priority)
+    assert_equal(6,       @cmock_generator_plugin_callback.priority)
   end
   
   should "not include any additional include files" do 

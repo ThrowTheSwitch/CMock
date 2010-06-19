@@ -58,8 +58,12 @@ class CMockGeneratorPluginIgnore
     else
       lines << "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
     end
-    unless (function[:return][:void?])
+    if (@config.ignore == :args_only)
+      lines << @utils.code_add_base_expectation(function[:name], true)
+    elsif (!function[:return][:void?]) 
       lines << @utils.code_add_base_expectation(function[:name], false)
+    end
+    unless (function[:return][:void?])
       lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n"
     end
     lines << "  Mock.#{function[:name]}_IgnoreBool = (int)1;\n"

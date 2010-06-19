@@ -157,7 +157,7 @@ class CMockUnityHelperParserTest < Test::Unit::TestCase
   
     ["UINT32","SPINACH_T","SALAD","PINEAPPLE"].each do |ctype|
       @config.expect.memcmp_if_unknown.returns(true)
-      assert_equal(["UNITY_TEST_ASSERT_EQUAL_MEMORY",''], @parser.get_helper(ctype))  
+      assert_equal(["UNITY_TEST_ASSERT_EQUAL_MEMORY",'&'], @parser.get_helper(ctype))  
     end
   end
 

@@ -25,7 +25,7 @@ class CMockUnityHelperParser
       return [@c_types[lookup], '&'] if (@c_types[lookup])
     end
     raise("Don't know how to test #{ctype} and memory tests are disabled!") unless @config.memcmp_if_unknown
-    return [@fallback, '']
+    return (lookup =~ /\*$/) ? [@fallback, '&'] : [@fallback, '']
   end
   
   private ###########################

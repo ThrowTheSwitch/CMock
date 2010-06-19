@@ -2,6 +2,8 @@
 :cmock:
   :plugins:
   - :callback
+  :treat_as:
+    custom_type: INT
 
 :systest:
   :types: |

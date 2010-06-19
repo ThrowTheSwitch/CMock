@@ -102,8 +102,8 @@ class CMockGeneratorUtils
     c_type, arg_name, expected, unity_func, pre, unity_msg = lookup_expect_type(function, arg)
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
-        full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "(&#{expected})"
-        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)#{full_expected}, (void*)(&#{arg_name}), sizeof(#{c_type}), cmock_line#{unity_msg});\n"
+        c_type_local = c_type.gsub(/\*$/,'')
+        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line#{unity_msg});\n"
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         [ "  if (#{pre}#{expected} == NULL)",
           "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, NULL); }",
@@ -124,8 +124,8 @@ class CMockGeneratorUtils
     depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
-        full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "(&#{expected})"
-        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)#{full_expected}, (void*)(&#{arg_name}), sizeof(#{c_type}), cmock_line#{unity_msg});\n"
+        c_type_local = c_type.gsub(/\*$/,'')
+        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line#{unity_msg});\n"
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY"
         [ "  if (#{pre}#{expected} == NULL)",
           "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, NULL); }",
@@ -150,8 +150,8 @@ class CMockGeneratorUtils
     depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
-        full_expected = (expected =~ /^\*/) ? expected.slice(1..-1) : "(&#{expected})"
-        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)#{full_expected}, (void*)(&#{arg_name}), sizeof(#{c_type}), cmock_line#{unity_msg});\n"
+        c_type_local = c_type.gsub(/\*$/,'')
+        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line#{unity_msg});\n"
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY"
         [ "  if (#{pre}#{expected} == NULL)",
           "    { UNITY_TEST_ASSERT_NULL(#{arg_name}, cmock_line, NULL); }",

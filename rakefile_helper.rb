@@ -176,7 +176,7 @@ module RakefileHelpers
   end
   
   def run_system_test_interactions(test_case_files)
-    require 'cmock'
+    load 'cmock.rb'
     
     SystemTestGenerator.new.generate_files(test_case_files)
     test_files = FileList.new(SYSTEST_GENERATED_FILES_PATH + 'test*.c')
@@ -194,7 +194,7 @@ module RakefileHelpers
       test_base    = File.basename(test, C_EXTENSION)
       cmock_config = test_base.gsub(/test_/, '') + '_cmock.yml'
       
-      report "Executing system test cases contained in #{File.basename(test)}..."
+      report "Executing system tests in #{File.basename(test)}..."
       
       # Detect dependencies and build required required modules
       extract_headers(test).each do |header|
@@ -251,18 +251,20 @@ module RakefileHelpers
 
       test_file    = 'test_' + File.basename(test_case).ext(C_EXTENSION)
       result_file  = test_file.ext(RESULT_EXTENSION)
-      test_results = File.read(SYSTEST_BUILD_FILES_PATH + result_file)
+      test_results = File.readlines(SYSTEST_BUILD_FILES_PATH + result_file)
 
       tests.each_with_index do |test, index|
         # compare test's intended pass/fail state with pass/fail state in actual results;
         # if they don't match, the system test has failed
-        if ((test[:pass] and (test_results =~ /:PASS/).nil?) or (!test[:pass] and (test_results =~ /:FAIL/).nil?))
+        if ((test[:pass] and (test_results[index] =~ /:PASS/).nil?) or (!test[:pass] and (test_results[index] =~ /:FAIL/).nil?))
           total_failures += 1
-          test_results =~ /test#{index+1}:(.+)/
+          test_results[index] =~ /test#{index+1}:(.+)/
           failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:#{$1}"
-        elsif (test[:verify_error]) and not (test_results =~ /test#{index+1}:.*#{test[:verify_error]}/)
+          print "FAIL1"
+        elsif (test[:verify_error]) and not (test_results[index] =~ /test#{index+1}:.*#{test[:verify_error]}/)
           total_failures += 1
           failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:should have output matching '#{test[:verify_error]}'"
+          print "FAIL2"
         end
       end
     end
@@ -306,7 +308,7 @@ module RakefileHelpers
   end
   
   def run_system_test_compilations(mockables)
-    require 'cmock'
+    load 'cmock.rb'
     
     load_configuration($cfg_file)
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
@@ -324,7 +326,7 @@ module RakefileHelpers
   end
   
   def run_system_test_profiles(mockables)
-    require 'cmock'
+    load 'cmock.rb'
     
     load_configuration($cfg_file)
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?

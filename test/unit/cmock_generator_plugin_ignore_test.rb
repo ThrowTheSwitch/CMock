@@ -122,12 +122,28 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
                 "  Mock.Slime_IgnoreBool = (int)1;\n",
                 "}\n\n"
                ].join
+    @config.expect.ignore.returns(:args_and_calls)
+    returned = @cmock_generator_plugin_ignore.mock_interfaces(function)
+    assert_equal(expected, returned)
+  end
+  
+  should "add a new mock interface for ignoring when function had no return value and we are checking args only" do
+    function = {:name => "Slime", :args => [], :args_string => "void", :return => test_return[:void]}
+    expected = ["void Slime_CMockIgnore(UNITY_LINE_TYPE cmock_line)\n",
+                "{\n",
+                "mock_return_1",
+                "  Mock.Slime_IgnoreBool = (int)1;\n",
+                "}\n\n"
+               ].join
+    @config.expect.ignore.returns(:args_only)
+    @utils.expect.code_add_base_expectation("Slime", true).returns("mock_return_1")
     returned = @cmock_generator_plugin_ignore.mock_interfaces(function)
     assert_equal(expected, returned)
   end
   
   should "add a new mock interface for ignoring when function has return value" do
     function = {:name => "Slime", :args => [], :args_string => "void", :return => test_return[:int]}
+    @config.expect.ignore.returns(:args_and_calls)
     @utils.expect.code_add_base_expectation("Slime", false).returns("mock_return_1")
     expected = ["void Slime_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, int cmock_to_return)\n",
                 "{\n",

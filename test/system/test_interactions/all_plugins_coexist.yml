@@ -6,6 +6,8 @@
   - :cexception
   - :ignore
   - :callback
+  :callback_after_arg_check: true
+  #:callback_include_count: false
 
 :systest:
   :types: |
@@ -67,6 +69,7 @@
       #include "CException.h"
       void setUp(void) {}
       void tearDown(void) {}
+      void my_foo_callback(POINT_T* a) { TEST_ASSERT_EQUAL_INT(2, a->x); }
       
     :units:
     - :pass: TRUE
@@ -319,6 +322,59 @@
           foos_Ignore();
           
           function_e();
+        }
+
+    - :pass: TRUE
+      :should: 'that we can use a callback and an expect'
+      :code: |
+        test()
+        {
+          POINT_T pt1 = {2, 3};
+          POINT_T pt2 = {2, 3};
+          bar_ExpectAndReturn(&pt1);
+          foo_Expect(&pt2);
+          foo_StubWithCallback((CMOCK_foo_CALLBACK)my_foo_callback);
+          
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'that we can fail even when using a callback if we want to expect call but did not and we are checking that'
+      :code: |
+        test()
+        {
+          POINT_T pt = {2, 3};
+          bar_ExpectAndReturn(&pt);
+          foo_StubWithCallback((CMOCK_foo_CALLBACK)my_foo_callback);
+          
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'that we can fail even when using a callback if args are wrong and we are checking those'
+      :code: |
+        test()
+        {
+          POINT_T pt1 = {2, 3};
+          POINT_T pt2 = {1, 3};
+          bar_ExpectAndReturn(&pt1);
+          foo_Expect(&pt2);
+          foo_StubWithCallback((CMOCK_foo_CALLBACK)my_foo_callback);
+          
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'that we can fail from the callback itself'
+      :code: |
+        test()
+        {
+          POINT_T pt = {3, 3};
+          bar_ExpectAndReturn(&pt);
+          foo_Expect(&pt);
+          foo_StubWithCallback((CMOCK_foo_CALLBACK)my_foo_callback);
+          
+          function_a();
         }
 
 ...
