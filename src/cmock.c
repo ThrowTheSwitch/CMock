@@ -19,7 +19,7 @@
 
 //should be big enough to index full range of CMOCK_MEM_MAX
 #ifndef CMOCK_MEM_INDEX_TYPE
-#define CMOCK_MEM_INDEX_TYPE  unsigned int
+#define CMOCK_MEM_INDEX_TYPE  unsigned long
 #endif
 
 //this is used internally during pointer arithmetic. make sure this type is the same size as the target's pointer type
