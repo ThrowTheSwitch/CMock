@@ -1,4 +1,3 @@
-#include "Types.h"
 #include "AdcModel.h"
 #include "TaskScheduler.h"
 #include "TemperatureCalculator.h"

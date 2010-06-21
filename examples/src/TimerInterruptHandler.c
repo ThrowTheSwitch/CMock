@@ -4,12 +4,12 @@
 
 static uint32 systemTime;
 
-__monitor void Timer_SetSystemTime(uint32 time)
+void Timer_SetSystemTime(uint32 time)
 {
   systemTime = time;
 }
 
-__monitor uint32 Timer_GetSystemTime(void)
+uint32 Timer_GetSystemTime(void)
 {
   return systemTime;
 }
