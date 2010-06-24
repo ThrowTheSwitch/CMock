@@ -126,7 +126,7 @@ class CMockGenerator
   def create_mock_verify_function(file, functions)
     file << "void #{@mock_name}_Verify(void)\n{\n"
     verifications = functions.collect {|function| @plugins.run(:mock_verify, function)}.join
-    verifications += "  UNITY_TEST_ASSERT_NULL(GlobalOrderError, cmock_line, NULL);\n" if (@ordered)
+    verifications += "  UNITY_TEST_ASSERT_NULL(GlobalOrderError, cmock_line, \"Internal CMock error.\");\n" if (@ordered)
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n" unless verifications.empty?
     file << verifications
     file << "}\n\n"

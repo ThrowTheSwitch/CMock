@@ -234,7 +234,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  Dos_First" +
                  "  Uno_Second" +
                  "  Dos_Second" +
-                 "  UNITY_TEST_ASSERT_NULL(GlobalOrderError, cmock_line, NULL);\n",
+                 "  UNITY_TEST_ASSERT_NULL(GlobalOrderError, cmock_line, \"Internal CMock error.\");\n",
                  "}\n\n"
                ]
     @plugins.expect.run(:mock_verify, functions[0]).returns(["  Uno_First","  Dos_First"])

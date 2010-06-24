@@ -215,7 +215,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   should 'handle pointers to custom types with array handlers, even if the array extension is turned off' do
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
-    expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1, cmock_line, NULL);\n"
+    expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\");\n"
     @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY','&'])
     assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
   end
@@ -232,11 +232,11 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:int_ptr]
     expected = "  if (cmock_call_instance->Expected_MyIntPtr == NULL)\n" +
-               "    { UNITY_TEST_ASSERT_NULL(MyIntPtr, cmock_line, NULL); }\n" +
+               "    { UNITY_TEST_ASSERT_NULL(MyIntPtr, cmock_line, \"Expected NULL. Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\"); }\n" +
                "  else if (cmock_call_instance->Expected_MyIntPtr_Depth == 0)\n" +
-               "    { UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_line, NULL); }\n" +
+               "    { UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\"); }\n" +
                "  else\n" +
-               "    { UNITY_TEST_ASSERT_EQUAL_INT_ARRAY(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_call_instance->Expected_MyIntPtr_Depth, cmock_line, NULL); }\n"
+               "    { UNITY_TEST_ASSERT_EQUAL_INT_ARRAY(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_call_instance->Expected_MyIntPtr_Depth, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\"); }\n"
     @unity_helper.expect.get_helper('int*').returns(['UNITY_TEST_ASSERT_EQUAL_INT_ARRAY',''])
    assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
@@ -269,11 +269,11 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype_ptr]
     expected = "  if (cmock_call_instance->Expected_MyMyTypePtr == NULL)\n" +
-               "    { UNITY_TEST_ASSERT_NULL(MyMyTypePtr, cmock_line, NULL); }\n" +
+               "    { UNITY_TEST_ASSERT_NULL(MyMyTypePtr, cmock_line, \"Expected NULL. Function 'Pear' called with unexpected value for argument 'MyMyTypePtr'.\"); }\n" +
                "  else if (cmock_call_instance->Expected_MyMyTypePtr_Depth == 0)\n" +
-               "    { UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_line, NULL); }\n" +
+               "    { UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyTypePtr'.\"); }\n" +
                "  else\n" +
-               "    { UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_call_instance->Expected_MyMyTypePtr_Depth, cmock_line, NULL); }\n"
+               "    { UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_call_instance->Expected_MyMyTypePtr_Depth, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyTypePtr'.\"); }\n"
     @unity_helper.expect.get_helper('MY_TYPE*').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY',''])
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
@@ -281,7 +281,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   should 'handle custom types with array handlers when array plugin is enabled for non-array types' do
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
-    expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1, cmock_line, NULL);\n"
+    expected = "  UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\");\n"
     @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY','&'])
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end

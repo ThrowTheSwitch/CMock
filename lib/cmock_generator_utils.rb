@@ -94,7 +94,7 @@ class CMockGeneratorUtils
                  else
                    (@helpers.nil? or @helpers[:unity_helper].nil?) ? ["UNITY_TEST_ASSERT_EQUAL",''] : @helpers[:unity_helper].get_helper(c_type)
                  end
-    unity_msg  = ", \"Function '#{function[:name]}' called with unexpected value for argument '#{arg_name}'.\""
+    unity_msg  = "Function '#{function[:name]}' called with unexpected value for argument '#{arg_name}'."
     return c_type, arg_name, expected, unity_func[0], unity_func[1], unity_msg
   end
   
@@ -103,19 +103,19 @@ class CMockGeneratorUtils
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
-        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line#{unity_msg});\n"
+        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line, \"#{unity_msg}\");\n"
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         [ "  if (#{pre}#{expected} == NULL)",
-          "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, NULL); }",
+          "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
           "  else",
-          "    { UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), cmock_line#{unity_msg}); }\n"].join("\n")
+          "    { UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), cmock_line, \"#{unity_msg}\"); }\n"].join("\n")
       when /_ARRAY/
         [ "  if (#{pre}#{expected} == NULL)",
-          "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, NULL); }",
+          "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
           "  else",
-          "    { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, 1, cmock_line, NULL); }\n"].join("\n")
+          "    { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, 1, cmock_line, \"#{unity_msg}\"); }\n"].join("\n")
       else
-        return "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line#{unity_msg});\n" 
+        return "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n" 
     end  
   end
   
@@ -125,23 +125,23 @@ class CMockGeneratorUtils
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
-        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line#{unity_msg});\n"
+        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line, \"#{unity_msg}\");\n"
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY"
         [ "  if (#{pre}#{expected} == NULL)",
-          "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, NULL); }",
+          "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
           "  else",
-          "    { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), #{depth_name}, cmock_line#{unity_msg}); }\n"].compact.join("\n")
+          "    { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), #{depth_name}, cmock_line, \"#{unity_msg}\"); }\n"].compact.join("\n")
       when /_ARRAY/
         if (pre == '&')
-          "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, NULL);\n"
+          "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, \"#{unity_msg}\");\n"
         else
           [ "  if (#{pre}#{expected} == NULL)",
-            "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, NULL); }",
+            "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
             "  else",
-            "    { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, NULL); }\n"].compact.join("\n")
+            "    { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, \"#{unity_msg}\"); }\n"].compact.join("\n")
         end
       else
-        return "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line#{unity_msg});\n" 
+        return "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n" 
     end
   end
   
@@ -151,25 +151,25 @@ class CMockGeneratorUtils
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
-        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line#{unity_msg});\n"
+        return "  UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line, \"#{unity_msg}\");\n"
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY"
         [ "  if (#{pre}#{expected} == NULL)",
-          "    { UNITY_TEST_ASSERT_NULL(#{arg_name}, cmock_line, NULL); }",
-          ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { UNITY_TEST_ASSERT_EQUAL_HEX32(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, NULL); }" : nil),
+          "    { UNITY_TEST_ASSERT_NULL(#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
+          ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { UNITY_TEST_ASSERT_EQUAL_HEX32(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\"); }" : nil),
           "  else",
-          "    { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), #{depth_name}, cmock_line#{unity_msg}); }\n"].compact.join("\n")
+          "    { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), #{depth_name}, cmock_line, \"#{unity_msg}\"); }\n"].compact.join("\n")
       when /_ARRAY/
         if (pre == '&')
-          "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, NULL);\n"
+          "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, \"#{unity_msg}\");\n"
         else
           [ "  if (#{pre}#{expected} == NULL)",
-            "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, NULL); }",
-            ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { UNITY_TEST_ASSERT_EQUAL_HEX32(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, NULL); }" : nil),
+            "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
+            ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { UNITY_TEST_ASSERT_EQUAL_HEX32(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\"); }" : nil),
             "  else",
-            "    { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, NULL); }\n"].compact.join("\n")
+            "    { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, \"#{unity_msg}\"); }\n"].compact.join("\n")
         end
       else
-        return "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line#{unity_msg});\n" 
+        return "  #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n" 
     end
   end
   
