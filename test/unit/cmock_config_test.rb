@@ -35,7 +35,7 @@ class CMockConfigTest < Test::Unit::TestCase
   end
   
   should "replace only options specified in a yaml file" do
-    test_plugins = ['soda','pizza']
+    test_plugins = [:soda, :pizza]
     test_include = 'MySillyException.h'
     config = CMockConfig.new("#{File.expand_path(File.dirname(__FILE__))}/cmock_config_test.yml")
     assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],              config.mock_path)

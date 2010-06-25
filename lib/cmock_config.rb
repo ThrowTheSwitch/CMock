@@ -44,10 +44,11 @@ class CMockConfig
         puts "WARNING: :#{opt.to_s} should be an array." unless (options[:verbosity] < 1)
       end
     end
-
+    options[:plugins].compact!
+    options[:plugins].map! {|p| p.to_sym}
     @options = options
     @options[:treat_as].merge!(standard_treat_as_map)
-    @options.each_key { |key| eval("def #{key}() return @options[:#{key}] end") }
+    @options.each_key { |key| eval("def #{key.to_s}() return @options[:#{key.to_s}] end") }
   end
   
   def load_config_file_from_yaml yaml_filename
