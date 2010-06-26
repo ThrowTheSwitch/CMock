@@ -291,7 +291,7 @@
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
-    - :pass: TRUE
+    - :pass: TRUE ############
       :should: 'properly ignore first function but the other will work properly'
       :code: |
         test()
@@ -326,7 +326,7 @@
           function_e();
         }
 
-    - :pass: FALSE
+    - :pass: FALSE ##############
       :should: 'fail if we do not ignore a call once because we are counting calls'
       :code: |
         test()

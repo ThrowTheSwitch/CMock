@@ -64,7 +64,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
                 "    return;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(function)
+    returned = @cmock_generator_plugin_ignore.mock_implementation_for_ignores(function)
     assert_equal(expected, returned)
   end
   
@@ -80,12 +80,16 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
                 "    return cmock_call_instance->ReturnVal;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(function)
+    returned = @cmock_generator_plugin_ignore.mock_implementation_for_ignores(function)
     assert_equal(expected, returned)
   end
   
   should "not add code to implementation prefix (when :args_only)" do
-    assert(! @cmock_generator_plugin_ignore_just_args.methods.include?(:mock_implementation_precheck))
+    function = {:name => "Fungus", :args_string => "void", :return => test_return[:int]}
+    retval = test_return[:int].merge({ :name => "cmock_call_instance->ReturnVal"})
+    expected = ""
+    returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(function)
+    assert_equal(expected, returned)
   end
   
   should "add required code to implementation with void function (when :args_only)" do
