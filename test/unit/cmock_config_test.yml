@@ -2,4 +2,4 @@
   :plugins:
     - 'soda'
     - 'pizza'
-  :cexception_include: 'MySillyException.h'
+  :treat_externs: :include

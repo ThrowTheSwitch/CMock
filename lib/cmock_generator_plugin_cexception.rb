@@ -13,12 +13,10 @@ class CMockGeneratorPluginCexception
     @config = config
     @utils = utils
     @priority = 7
-    
-    raise "'cexception_include' needs to be defined in config" unless @config.respond_to?(:cexception_include)
   end
 
   def include_files
-    return "#include \"#{@config.cexception_include || 'CException.h'}\"\n"
+    return "#include \"CException.h\"\n"
   end
 
   def instance_typedefs(function)

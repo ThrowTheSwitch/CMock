@@ -10,7 +10,6 @@ require 'cmock_generator_plugin_cexception'
 class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
   def setup
     create_mocks :config, :utils
-    @config.stubs!(:respond_to?).returns(true)
     @cmock_generator_plugin_cexception = CMockGeneratorPluginCexception.new(@config, @utils)
   end
 
@@ -25,14 +24,6 @@ class CMockGeneratorPluginCexceptionTest < Test::Unit::TestCase
   
   should "include the cexception library" do 
     expected = "#include \"CException.h\"\n"
-    @config.expect.cexception_include.returns(nil)
-    returned = @cmock_generator_plugin_cexception.include_files
-    assert_equal(expected, returned)
-  end
-  
-  should "include the cexception library with a custom path if specified" do 
-    expected = "#include \"../cexception/lib/CException.h\"\n"
-    @config.expect.cexception_include.returns("../cexception/lib/CException.h")
     returned = @cmock_generator_plugin_cexception.include_files
     assert_equal(expected, returned)
   end

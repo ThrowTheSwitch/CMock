@@ -15,7 +15,6 @@ class CMockConfig
     :includes                 => [],
     :attributes               => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],
     :enforce_strict_ordering  => false,
-    :cexception_include       => nil,
     :unity_helper             => false,
     :treat_as                 => {},
     :treat_as_void            => [],
