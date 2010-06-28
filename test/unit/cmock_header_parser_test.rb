@@ -666,9 +666,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
   
-  should "extract functions containing a function pointer" do
-  
-    source = "void FunkyChicken(unsigned int (*func_ptr)(int, char))"
+  should "extract functions containing unions with union specifier" do
+    source = "void OrangePeel(union STARS_AND_STRIPES * a, union AFL_CIO b)"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void", 
                             :name   => 'cmock_to_return', 
@@ -677,7 +676,173 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                             :str    => "void cmock_to_return",
                             :void?  => true
                           },
-                 :name=>"FunkyChicken",
+                 :name=>"OrangePeel",
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"union STARS_AND_STRIPES*", :name=>"a", :ptr? => true, :const? => false},
+                          {:type=>"union AFL_CIO", :name=>"b", :ptr? => false, :const? => false}
+                        ],
+                 :args_string=>"union STARS_AND_STRIPES* a, union AFL_CIO b",
+                 :args_call=>"a, b" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+  
+  should "not be thwarted by variables named with primitive types as part of the name" do
+    source = "void ApplePeel(const unsigned int const_param, int int_param, int integer, char character, int* const constant)"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"ApplePeel",
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=> "unsigned int", :name=>"const_param", :ptr? => false, :const? => true},
+                          {:type=>"int", :name=>"int_param", :ptr? => false, :const? => false},
+                          {:type=>"int", :name=>"integer", :ptr? => false, :const? => false},
+                          {:type=>"char", :name=>"character", :ptr? => false, :const? => false},
+                          {:type=>"int*", :name=>"constant", :ptr? => true, :const? => true}
+                        ],
+                 :args_string=>"const unsigned int const_param, int int_param, int integer, char character, int* const constant",
+                 :args_call=>"const_param, int_param, integer, character, constant" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+  
+  should "not be thwarted by custom types named similarly to primitive types" do 
+    source = "void LemonPeel(integer param, character thing, longint * junk, constant value, int32_t const number)"
+    expected = [{:var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"LemonPeel",
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"integer", :name=>"param", :ptr? => false, :const? => false},
+                          {:type=>"character", :name=>"thing", :ptr? => false, :const? => false},
+                          {:type=>"longint*", :name=>"junk", :ptr? => true, :const? => false},
+                          {:type=>"constant", :name=>"value", :ptr? => false, :const? => false},
+                          {:type=>"int32_t", :name=>"number", :ptr? => false, :const? => true}
+                        ],
+                 :args_string=>"integer param, character thing, longint* junk, constant value, int32_t const number",
+                 :args_call=>"param, thing, junk, value, number" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+  
+  should "handle some of those chains of C name specifiers naturally" do
+    source = "void CoinOperated(signed char abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law)"
+    expected = [{:var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"CoinOperated",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"signed char", :name=>"abc", :ptr? => false, :const? => false},
+                          {:type=>"unsigned long int", :name=>"xyz_123", :ptr? => false, :const? => true},
+                          {:type=>"unsigned int", :name=>"abc_123", :ptr? => false, :const? => true},
+                          {:type=>"long long", :name=>"arm_of_the_law", :ptr? => false, :const? => false}
+                        ],
+                 :args_string=>"signed char abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law",
+                 :args_call=>"abc, xyz_123, abc_123, arm_of_the_law" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+  
+  should "handle custom types of various formats" do 
+    source = "void CardOperated(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const * const abc123)"
+    expected = [{:var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"CardOperated",
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"CUSTOM_TYPE", :name=>"abc", :ptr? => false, :const? => false},
+                          {:type=>"CUSTOM_TYPE*", :name=>"xyz_123", :ptr? => true, :const? => false},
+                          {:type=>"CUSTOM_TYPE", :name=>"abcxyz", :ptr? => false, :const? => true},
+                          {:type=>"struct CUSTOM_TYPE const*", :name=>"abc123", :ptr? => true, :const? => true}
+                        ],
+                 :args_string=>"CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const* const abc123",
+                 :args_call=>"abc, xyz_123, abcxyz, abc123" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+  
+  should "handle arrays and treat them as pointers" do
+    source = "void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], char thing3 [][2 ][ 3])"
+    expected = [{:var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"KeyOperated",
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"CUSTOM_TYPE*", :name=>"thing1", :ptr? => true, :const? => false},
+                          {:type=>"int*", :name=>"thing2", :ptr? => true, :const? => false},
+                          {:type=>"char*", :name=>"thing3", :ptr? => false, :const? => false}   #THIS one will likely change in the future when we improve multidimensional array support
+                        ],
+                 :args_string=>"CUSTOM_TYPE* thing1, int* thing2, char* thing3",
+                 :args_call=>"thing1, thing2, thing3" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+  
+  should "give a reasonable guess when dealing with weird combinations of custom types and modifiers" do 
+    source = "void Cheese(unsigned CUSTOM_TYPE abc, unsigned xyz, CUSTOM_TYPE1 CUSTOM_TYPE2 pdq)"
+    expected = [{:var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"Cheese",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"unsigned CUSTOM_TYPE", :name=>"abc", :ptr? => false, :const? => false},
+                          {:type=>"unsigned", :name=>"xyz", :ptr? => false, :const? => false},
+                          {:type=>"CUSTOM_TYPE1 CUSTOM_TYPE2", :name=>"pdq", :ptr? => false, :const? => false}
+                        ],
+                 :args_string=>"unsigned CUSTOM_TYPE abc, unsigned xyz, CUSTOM_TYPE1 CUSTOM_TYPE2 pdq",
+                 :args_call=>"abc, xyz, pdq" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+  
+  should "extract functions containing a function pointer" do
+    source = "void FunkyTurkey(unsigned int (*func_ptr)(int, char))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"FunkyTurkey",
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false}
@@ -690,9 +855,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
   
-  should "extract functions containing an anonymous function pointer" do
-  
-    source = "void FunkyChicken(unsigned int (* const)(int, char))"
+  should "extract functions containing a constant function pointer and a pointer in the nested arg list" do
+    source = "void FunkyChicken(unsigned int (* const func_ptr)(unsigned long int * , char))"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void", 
                             :name   => 'cmock_to_return', 
@@ -702,6 +866,76 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                             :void?  => true
                           },
                  :name=>"FunkyChicken",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => true}
+                        ],
+                 :args_string=>"cmock_module_func_ptr1 const func_ptr",
+                 :args_call=>"func_ptr" }]
+    typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(unsigned long int* , char);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+  
+  # should "extract functions containing a function pointer taking a vararg" do
+    # source = "void FunkyParrot(unsigned int (*func_ptr)(int, char, ...))"
+    # expected = [{ :var_arg=>nil,
+                 # :return=>{ :type   => "void", 
+                            # :name   => 'cmock_to_return', 
+                            # :ptr?   => false,
+                            # :const? => false,
+                            # :str    => "void cmock_to_return",
+                            # :void?  => true
+                          # },
+                 # :name=>"FunkyParrot",
+                 # :modifier=>"",
+                 # :contains_ptr? => false,
+                 # :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false}
+                        # ],
+                 # :args_string=>"cmock_module_func_ptr1 func_ptr",
+                 # :args_call=>"func_ptr" }]
+    # typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char, ...);"]
+    # result = @parser.parse("module", source)
+    # assert_equal(expected, result[:functions])
+    # assert_equal(typedefs, result[:typedefs])
+  # end
+  
+  should "extract functions containing a function pointer with extra parenthesis and two sets" do
+    source = "void FunkyBudgie(int (((* func_ptr1)(int, char))), void (*func_ptr2)(void))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"FunkyBudgie",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :const? => false},
+                          {:type=>"cmock_module_func_ptr2", :name=>"func_ptr2", :ptr? => false, :const? => false}
+                        ],
+                 :args_string=>"cmock_module_func_ptr1 func_ptr1, cmock_module_func_ptr2 func_ptr2",
+                 :args_call=>"func_ptr1, func_ptr2" }]
+    typedefs = ["typedef int(*cmock_module_func_ptr1)(int, char);", "typedef void(*cmock_module_func_ptr2)(void);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+  
+  should "extract functions containing an anonymous function pointer" do
+    source = "void FunkyFowl(unsigned int (* const)(int, char))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"FunkyFowl",
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => true}
@@ -715,8 +949,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   should "extract functions returning a function pointer" do
-  
-    source = "unsigned short (*FunkyChicken( const char op_code ))( int, long int )"
+    source = "unsigned short (*FunkyPidgeon( const char op_code ))( int, long int )"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "cmock_module_func_ptr1", 
                             :name   => 'cmock_to_return', 
@@ -725,7 +958,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
                             :void?  => false
                           },
-                 :name=>"FunkyChicken",
+                 :name=>"FunkyPidgeon",
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"char", :name=>"op_code", :ptr? => false, :const? => true}
@@ -738,8 +971,53 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
   
-  should "extract functions with varargs" do
+  should "extract functions returning a function pointer where everything is a void" do
+    source = "void (*   FunkySeaGull(void))(void)"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "cmock_module_func_ptr1", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "cmock_module_func_ptr1 cmock_to_return",
+                            :void?  => false
+                          },
+                 :name=>"FunkySeaGull",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[],
+                 :args_string=>"void",
+                 :args_call=>"" }]
+    typedefs = ["typedef void(*cmock_module_func_ptr1)(void);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
   
+  should "extract functions returning a function pointer with some pointer nonsense" do
+    source = "unsigned int * (* FunkyMacaw(double* foo, THING *bar))(unsigned int)"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "cmock_module_func_ptr1", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "cmock_module_func_ptr1 cmock_to_return",
+                            :void?  => false
+                          },
+                 :name=>"FunkyMacaw",
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"double*", :name=>"foo", :ptr? => true, :const? => false},
+                          {:type=>"THING*", :name=>"bar", :ptr? => true, :const? => false}
+                        ],
+                 :args_string=>"double* foo, THING* bar",
+                 :args_call=>"foo, bar" }]
+    typedefs = ["typedef unsigned int *(*cmock_module_func_ptr1)(unsigned int);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+  
+  should "extract functions with varargs" do
     source = "int XFiles(int Scully, int Mulder, ...);\n"
     expected = [{ :var_arg=>"...",
                   :return=> { :type   => "int", 

@@ -76,7 +76,7 @@ class CMockHeaderParser
     source.gsub!(/^(?:.*\W)?typedef\W.*/, '')                                 # remove typedef statements
     
     #scan for functions which return function pointers, because they are a pain
-    source.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s]+)\s*\(([\w\s,]+)\)\)\s*\(([\w\s,]+)\)\)*/) do |m|
+    source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]+)\)\)\s*\(([\w\s\*,]+)\)\)*/) do |m|
       functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
       @typedefs << "typedef #{$1.strip}(*#{functype})(#{$4});"
       "#{functype} #{$2.strip}(#{$3});"
@@ -146,7 +146,7 @@ class CMockHeaderParser
       arg_list.gsub!(/\*(\w)/,'* \1')                     # pull asterisks away from arg to place asterisks with type (where they belong)
       
       #scan argument list for function pointers and replace them with custom types
-      arg_list.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s]+)\)\s*\(([\w\s,]+)\)\)*/) do |m|
+      arg_list.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s\*]+)\)\s*\(([\w\s\*,]+)\)\)*/) do |m|
         functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
         funcret  = $1.strip
         funcname = $2.strip
@@ -163,7 +163,7 @@ class CMockHeaderParser
       
       #automatically name unnamed arguments (those that only had a type)
       arg_list.split(/\s*,\s*/).map { |arg| 
-        parts = (arg.split - ['signed', 'unsigned', 'struct', 'union', 'enum', 'const', 'const*'])
+        parts = (arg.split - ['struct', 'union', 'enum', 'const', 'const*'])
         if ((parts.size < 2) or (parts[-1][-1] == 42) or (@standards.include?(parts[-1])))
           "#{arg} cmock_arg#{c+=1}" 
         else
