@@ -236,14 +236,33 @@ class CMockHeaderParser
     if (decl[:return][:type].nil?   or decl[:name].nil?   or decl[:args].nil? or
         decl[:return][:type].empty? or decl[:name].empty?)
       raise "Failed Parsing Declaration Prototype!\n" +
-        "  declaration: #{declaration}\n" +
-        "  modifier: #{decl[:modifier]}\n" +
-        "  return: #{decl[:return]}\n" +
-        "  function: #{decl[:name]}\n" +
-        "  args:#{decl[:args]}\n"
+        "  declaration: '#{declaration}'\n" +
+        "  modifier: '#{decl[:modifier]}'\n" +
+        "  return: #{prototype_inspect_hash(decl[:return])}\n" +
+        "  function: '#{decl[:name]}'\n" +
+        "  args: #{prototype_inspect_array_of_hashes(decl[:args])}\n"
     end
-    
+
     return decl
+  end
+
+  def prototype_inspect_hash(hash)
+    pairs = []
+    hash.each_pair { |name, value| pairs << ":#{name} => #{"'" if (value.class == String)}#{value}#{"'" if (value.class == String)}" }
+    return "{#{pairs.join(', ')}}"
+  end
+
+  def prototype_inspect_array_of_hashes(array)
+    hashes = []
+    array.each { |hash| hashes << prototype_inspect_hash(hash) }
+    case (array.size)
+    when 0
+      return "[]"
+    when 1
+      return "[#{hashes[0]}]"
+    else
+      return "[\n    #{hashes.join("\n    ")}\n  ]\n"
+    end
   end
 
 end
