@@ -855,6 +855,29 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
   
+  should "extract functions containing a function pointer with an implied void" do
+    source = "void FunkyTurkey(unsigned int (*func_ptr)())"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"FunkyTurkey",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false}
+                        ],
+                 :args_string=>"cmock_module_func_ptr1 func_ptr",
+                 :args_call=>"func_ptr" }]
+    typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)();"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+  
   should "extract functions containing a constant function pointer and a pointer in the nested arg list" do
     source = "void FunkyChicken(unsigned int (* const func_ptr)(unsigned long int * , char))"
     expected = [{ :var_arg=>nil,
@@ -966,6 +989,28 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :args_string=>"const char op_code",
                  :args_call=>"op_code" }]
     typedefs = ["typedef unsigned short(*cmock_module_func_ptr1)( int, long int );"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+  
+  should "extract functions returning a function pointer with implied void" do
+    source = "unsigned short (*FunkyTweetie())()"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "cmock_module_func_ptr1", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "cmock_module_func_ptr1 cmock_to_return",
+                            :void?  => false
+                          },
+                 :name=>"FunkyTweetie",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[],
+                 :args_string=>"void",
+                 :args_call=>"" }]
+    typedefs = ["typedef unsigned short(*cmock_module_func_ptr1)();"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
