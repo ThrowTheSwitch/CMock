@@ -140,12 +140,25 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   should "remove typedef statements" do
     source = 
       "typedef uint32 (unsigned int);\n" +
-      "whack me! typedef int INT;\n" +
+      "const typedef int INT;\n" +
       "int notatypedef;\n" +
       "int typedef_isnt_me;\n" +
       " typedef who cares what really comes here \\\n" + # exercise multiline typedef
       "   continuation;\n" +
-      "this should remain!\n" 
+      "this should remain!;\n" +
+      "typedef blah bleh;\n" +
+      "typedef struct shell_command_struct {\n" +
+      "  char_ptr COMMAND;\n" +
+      "  int_32 (*SHELL_FUNC)(int_32 argc);\n" +
+      "} SHELL_COMMAND_STRUCT, * SHELL_COMMAND_PTR;\n" +
+      "typedef struct shell_command_struct  {\n" +
+      "  char_ptr  COMMAND;\n" +
+      "  int_32      (*SHELL_FUNC)(int_32 argc, char_ptr argv[]);\n" +
+      "} SHELL_COMMAND_STRUCT, * SHELL_COMMAND_PTR;\n" +
+      "typedef struct shell_command_struct {\n" +
+      " char_ptr COMMAND;\n" +
+      " int_32 (*SHELL_FUNC)(int_32 argc);\n" +
+      "};\n"
     
     expected =
     [
@@ -787,7 +800,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   should "handle arrays and treat them as pointers" do
-    source = "void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], char thing3 [][2 ][ 3])"
+    source = "void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], char thing3 [][2 ][ 3], int* thing4[4])"
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void", 
                             :name   => 'cmock_to_return', 
@@ -801,10 +814,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :contains_ptr? => true,
                  :args=>[ {:type=>"CUSTOM_TYPE*", :name=>"thing1", :ptr? => true, :const? => false},
                           {:type=>"int*", :name=>"thing2", :ptr? => true, :const? => false},
-                          {:type=>"char*", :name=>"thing3", :ptr? => false, :const? => false}   #THIS one will likely change in the future when we improve multidimensional array support
+                          {:type=>"char*", :name=>"thing3", :ptr? => false, :const? => false},  #THIS one will likely change in the future when we improve multidimensional array support
+                          {:type=>"int**", :name=>"thing4", :ptr? => true, :const? => false}    #THIS one will likely change in the future when we improve multidimensional array support
                         ],
-                 :args_string=>"CUSTOM_TYPE* thing1, int* thing2, char* thing3",
-                 :args_call=>"thing1, thing2, thing3" }]
+                 :args_string=>"CUSTOM_TYPE* thing1, int* thing2, char* thing3, int** thing4",
+                 :args_call=>"thing1, thing2, thing3, thing4" }]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end

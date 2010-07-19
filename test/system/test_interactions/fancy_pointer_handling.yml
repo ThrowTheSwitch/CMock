@@ -2,6 +2,8 @@
 :cmock:
   :plugins:
   - # none
+  :treat_as:
+    INT_PTR: INT* 
 
 :systest:
   :types: |
@@ -9,6 +11,7 @@
       int x;
       int y;
     } POINT_T;
+    typedef int* INT_PTR;
 
   :mockable: |
     void foo(POINT_T* a);
@@ -16,12 +19,14 @@
     void fooa(POINT_T a[]);
     void foos(const char *a);
     const char* bars(void);
+    INT_PTR zoink(INT_PTR a);
 
   :source: 
     :header: |    
       void function_a(void);
       void function_b(void);
       void function_c(void);
+      int  function_d(void);
 
     :code: |
       void function_a(void)    
@@ -35,6 +40,12 @@
       
       void function_c(void) {
         foos(bars());
+      }
+      
+      int function_d(void) {
+        int i = 456;
+        INT_PTR ptr = (INT_PTR)(&i);
+        return (int)(*(zoink(ptr)));
       }
       
   :tests:
@@ -161,6 +172,36 @@
           foos_Expect("This is a wacky string");
           
           function_c();
+        }
+        
+    - :pass: TRUE
+      :should: 'handle handle typedefs that ARE pointers by using treat_as'
+      :code: |
+        test()
+        {
+          int e = 456;
+          int r = 789;
+          INT_PTR ptr_e = (INT_PTR)(&e);
+          INT_PTR ptr_r = (INT_PTR)(&r);
+          
+          zoink_ExpectAndReturn(ptr_e, ptr_r);
+          
+          TEST_ASSERT_EQUAL(r, function_d());
+        }
+        
+    - :pass: FALSE
+      :should: 'handle handle typedefs that ARE pointers by using treat_as and catch failures'
+      :code: |
+        test()
+        {
+          int e = 457;
+          int r = 789;
+          INT_PTR ptr_e = (INT_PTR)(&e);
+          INT_PTR ptr_r = (INT_PTR)(&r);
+          
+          zoink_ExpectAndReturn(ptr_e, ptr_r);
+          
+          TEST_ASSERT_EQUAL(r, function_d());
         }
 
 

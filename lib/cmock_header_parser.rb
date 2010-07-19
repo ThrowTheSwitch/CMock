@@ -69,11 +69,11 @@ class CMockHeaderParser
     
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
-    source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                         # remove forward declared structs
-    source.gsub!(/^[\w\s]*(enum|union|struct)[\w\s]*\{[^\}]+\}[\w\s]*;/m, '') # remove struct definitions
-    source.gsub!(/(\W)(register|auto|static|restrict)(\W)/, '\1\3')           # remove problem keywords
-    source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                           # remove default value statements from argument lists
-    source.gsub!(/^(?:.*\W)?typedef\W.*/, '')                                 # remove typedef statements
+    source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                                      # remove forward declared structs
+    source.gsub!(/^[\w\s]*(enum|union|struct|typepdef)[\w\s]*\{[^\}]+\}[\w\s\*\,]*;/m, '') # remove struct, union, and enum definitions and typedefs with braces
+    source.gsub!(/(\W)(register|auto|static|restrict)(\W)/, '\1\3')                        # remove problem keywords
+    source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
+    source.gsub!(/^(?:[\w\s]*\W)?typedef\W.*/, '')                                         # remove typedef statements
     
     #scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
