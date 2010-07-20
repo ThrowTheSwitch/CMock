@@ -213,7 +213,6 @@ class CMockHeaderParser
                     }
         
     #remove default argument statements from mock definitions
-    args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*\,/, ',')
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
     
     #check for var args

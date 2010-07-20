@@ -19,6 +19,7 @@ class CMockConfig
     :treat_as                 => {},
     :treat_as_void            => [],
     :memcmp_if_unknown        => true,
+    :ptr_size                 => 32,
     :when_no_prototypes       => :warn,           #the options being :ignore, :warn, or :error
     :when_ptr                 => :compare_data,   #the options being :compare_ptr, :compare_data, or :smart
     :verbosity                => 2,               #the options being 0 errors only, 1 warnings and errors, 2 normal info, 3 verbose

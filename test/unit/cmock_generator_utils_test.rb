@@ -16,6 +16,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @config.expect.plugins.returns([])
     @config.expect.plugins.returns([])
     @config.expect.treat_as.returns(['int','short','long','char','char*'])
+    @config.expect.ptr_size.returns(32)
     @cmock_generator_utils_simple = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper})
 
     @config.expect.when_ptr.returns(:smart)
@@ -23,6 +24,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @config.expect.plugins.returns([:array, :cexception])
     @config.expect.plugins.returns([:array, :cexception])
     @config.expect.treat_as.returns(['int','short','long','char','uint32_t','char*'])
+    @config.expect.ptr_size.returns(32)
     @cmock_generator_utils_complex = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper, :A=>1, :B=>2})
   end
 
