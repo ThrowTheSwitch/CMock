@@ -16,7 +16,6 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @config.expect.plugins.returns([])
     @config.expect.plugins.returns([])
     @config.expect.treat_as.returns(['int','short','long','char','char*'])
-    @config.expect.ptr_size.returns(32)
     @cmock_generator_utils_simple = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper})
 
     @config.expect.when_ptr.returns(:smart)
@@ -24,7 +23,6 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @config.expect.plugins.returns([:array, :cexception])
     @config.expect.plugins.returns([:array, :cexception])
     @config.expect.treat_as.returns(['int','short','long','char','uint32_t','char*'])
-    @config.expect.ptr_size.returns(32)
     @cmock_generator_utils_complex = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper, :A=>1, :B=>2})
   end
 
@@ -186,7 +184,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   should 'handle a pointer comparison when configured to do so' do
     function = { :name => 'Pear' }
     arg      = test_arg[:int_ptr]
-    expected = "  UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\");\n"
+    expected = "  UNITY_TEST_ASSERT_EQUAL_PTR(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\");\n"
     assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
   end
 
@@ -236,7 +234,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = "  if (cmock_call_instance->Expected_MyIntPtr == NULL)\n" +
                "    { UNITY_TEST_ASSERT_NULL(MyIntPtr, cmock_line, \"Expected NULL. Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\"); }\n" +
                "  else if (cmock_call_instance->Expected_MyIntPtr_Depth == 0)\n" +
-               "    { UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\"); }\n" +
+               "    { UNITY_TEST_ASSERT_EQUAL_PTR(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\"); }\n" +
                "  else\n" +
                "    { UNITY_TEST_ASSERT_EQUAL_INT_ARRAY(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_call_instance->Expected_MyIntPtr_Depth, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyIntPtr'.\"); }\n"
     @unity_helper.expect.get_helper('int*').returns(['UNITY_TEST_ASSERT_EQUAL_INT_ARRAY',''])
@@ -273,7 +271,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     expected = "  if (cmock_call_instance->Expected_MyMyTypePtr == NULL)\n" +
                "    { UNITY_TEST_ASSERT_NULL(MyMyTypePtr, cmock_line, \"Expected NULL. Function 'Pear' called with unexpected value for argument 'MyMyTypePtr'.\"); }\n" +
                "  else if (cmock_call_instance->Expected_MyMyTypePtr_Depth == 0)\n" +
-               "    { UNITY_TEST_ASSERT_EQUAL_HEX32(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyTypePtr'.\"); }\n" +
+               "    { UNITY_TEST_ASSERT_EQUAL_PTR(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyTypePtr'.\"); }\n" +
                "  else\n" +
                "    { UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(cmock_call_instance->Expected_MyMyTypePtr, MyMyTypePtr, cmock_call_instance->Expected_MyMyTypePtr_Depth, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyTypePtr'.\"); }\n"
     @unity_helper.expect.get_helper('MY_TYPE*').returns(['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY',''])

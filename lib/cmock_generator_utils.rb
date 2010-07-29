@@ -15,7 +15,6 @@ class CMockGeneratorUtils
     @arrays       = @config.plugins.include? :array
     @cexception   = @config.plugins.include? :cexception
     @treat_as     = @config.treat_as
-    @ptr_compare_assert = "UNITY_TEST_ASSERT_EQUAL_HEX#{@config.ptr_size.to_s}"
 	  @helpers = helpers
     
     if (@arrays)
@@ -91,7 +90,7 @@ class CMockGeneratorUtils
     arg_name   = arg[:name]
     expected   = "cmock_call_instance->Expected_#{arg_name}" 
     unity_func = if ((arg[:ptr?]) and ((c_type =~ /\*\*/) or (@ptr_handling == :compare_ptr)))
-                   [@ptr_compare_assert, '']
+                   ['UNITY_TEST_ASSERT_EQUAL_PTR', '']
                  else
                    (@helpers.nil? or @helpers[:unity_helper].nil?) ? ["UNITY_TEST_ASSERT_EQUAL",''] : @helpers[:unity_helper].get_helper(c_type)
                  end
@@ -156,7 +155,7 @@ class CMockGeneratorUtils
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY"
         [ "  if (#{pre}#{expected} == NULL)",
           "    { UNITY_TEST_ASSERT_NULL(#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
-          ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { #{@ptr_compare_assert}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\"); }" : nil),
+          ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { UNITY_TEST_ASSERT_EQUAL_PTR(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\"); }" : nil),
           "  else",
           "    { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), #{depth_name}, cmock_line, \"#{unity_msg}\"); }\n"].compact.join("\n")
       when /_ARRAY/
@@ -165,7 +164,7 @@ class CMockGeneratorUtils
         else
           [ "  if (#{pre}#{expected} == NULL)",
             "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
-            ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { #{@ptr_compare_assert}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\"); }" : nil),
+            ((depth_name != 1) ? "  else if (#{depth_name} == 0)\n    { UNITY_TEST_ASSERT_EQUAL_PTR(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\"); }" : nil),
             "  else",
             "    { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, \"#{unity_msg}\"); }\n"].compact.join("\n")
         end
