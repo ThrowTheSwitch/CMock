@@ -110,7 +110,7 @@
           Try
           {
             function_b(3);
-            TEST_FAIL("Should Have Thrown");
+            TEST_FAIL_MESSAGE("Should Have Thrown");
           }
           Catch(e)
           {
