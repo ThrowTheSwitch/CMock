@@ -27,7 +27,7 @@ class CMockGenerator
     create_mock_source_file(parsed_stuff)
   end
   
-  private unless $ThisIsOnlyATest ##############################
+  private if $ThisIsOnlyATest.nil? ##############################
   
   def create_mock_header_file(parsed_stuff)
     @file_writer.create_file(@mock_name + ".h") do |file, filename|

@@ -40,7 +40,7 @@ class CMockHeaderParser
     }
   end
   
-  private unless $ThisIsOnlyATest ################
+  private if $ThisIsOnlyATest.nil? ################
   
   def import_source(source)
 
