@@ -39,4 +39,5 @@ linker:
   :plugins: []
   :includes:
     - Types.h
-  
+
+colour: true

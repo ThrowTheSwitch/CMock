@@ -11,6 +11,7 @@ module RakefileHelpers
   def load_configuration(config_file)
     $cfg_file = config_file
     $cfg = YAML.load(File.read($cfg_file))
+    $colour_output = false unless $cfg['colour']
   end
   
   def configure_clean
