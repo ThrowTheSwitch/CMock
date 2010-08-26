@@ -248,6 +248,30 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
   
+  should "remove a fully defined inline function" do
+    source = 
+      "inline void foo(unsigned int a) { oranges = a; }\n" +
+      "inline void bar(unsigned int a) { apples = a; };\n" +
+      "inline void bar(unsigned int a)\n" +
+      "{" +
+      "  bananas = a;\n" +
+      "}"
+    
+    # ensure it's expected type of exception
+    assert_raise RuntimeError do
+      @parser.parse("module", source)
+    end
+
+    assert_equal([], @parser.funcs)
+    
+    # verify exception message
+    begin
+      @parser.parse("module", source)
+    rescue RuntimeError => e
+      assert_equal("ERROR: No function prototypes found!", e.message)
+    end    
+  end
+  
   should "remove just inline functions if externs to be included" do
     source = 
       " extern uint32 foobar(unsigned int);\n" +
