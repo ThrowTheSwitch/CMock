@@ -185,7 +185,7 @@ module RakefileHelpers
         if (header =~ /Mock/) 
           require "../lib/cmock.rb" 
           @cmock ||= CMock.new($cfg_file) 
-          @cmock.setup_mocks(['src/'+header.gsub('Mock','')])
+          @cmock.setup_mocks([$cfg['compiler']['source_path']+header.gsub('Mock','')])
         end
         
         # Compile corresponding source file if it exists
