@@ -13,6 +13,7 @@ class CMockConfig
     :mock_prefix              => 'Mock',
     :plugins                  => [],
     :includes                 => [],
+    :strippables              => ['(?:__attribute__\s*\(+.*?\)+)'],
     :attributes               => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],
     :enforce_strict_ordering  => false,
     :unity_helper             => false,

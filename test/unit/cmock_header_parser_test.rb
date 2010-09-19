@@ -14,6 +14,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   def setup
     create_mocks :config
     @test_name = 'test_file.h'
+    @config.expect.strippables.returns(['(?:__attribute__\s*\(+.*?\)+)'])
     @config.expect.attributes.returns(['__ramfunc', 'funky_attrib'])
     @config.expect.treat_as_void.returns(['MY_FUNKY_VOID'])
     @config.expect.treat_as.returns({ "BANJOS" => "INT", "TUBAS" => "HEX16"} )
@@ -1118,6 +1119,50 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                          ],
                   :args_string=>"int Scully, int Mulder",
                   :args_call=>"Scully, Mulder"
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+  
+  should "extract functions with strippable confusing junk like gcc attributes" do
+    source = "int LaverneAndShirley(int Lenny, int Squiggy) __attribute__((weak)) __attribute__ ((deprecated));\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "int", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"LaverneAndShirley",
+                  :modifier=>"",
+                  :contains_ptr? => false,
+                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false}, 
+                           {:type=>"int", :name=>"Squiggy", :ptr? => false, :const? => false}
+                         ],
+                  :args_string=>"int Lenny, int Squiggy",
+                  :args_call=>"Lenny, Squiggy"
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+  
+  should "extract functions with strippable confusing junk like gcc attributes with parenthesis" do
+    source = "int TheCosbyShow(int Cliff, int Claire) __attribute__((weak, alias (\"__f\"));\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "int", 
+                              :name   => 'cmock_to_return', 
+                              :ptr?   => false,
+                              :const? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"TheCosbyShow",
+                  :modifier=>"",
+                  :contains_ptr? => false,
+                  :args=>[ {:type=>"int", :name=>"Cliff", :ptr? => false, :const? => false}, 
+                           {:type=>"int", :name=>"Claire", :ptr? => false, :const? => false}
+                         ],
+                  :args_string=>"int Cliff, int Claire",
+                  :args_call=>"Cliff, Claire"
                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end

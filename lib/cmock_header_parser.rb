@@ -10,6 +10,7 @@ class CMockHeaderParser
   
   def initialize(cfg)
     @funcs = []
+    @c_strippables = cfg.strippables
     @c_attributes = (['const'] + cfg.attributes).uniq
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
     @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]]*)\)$/m
@@ -71,9 +72,10 @@ class CMockHeaderParser
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
     source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                                      # remove forward declared structs
     source.gsub!(/^[\w\s]*(enum|union|struct|typepdef)[\w\s]*\{[^\}]+\}[\w\s\*\,]*;/m, '') # remove struct, union, and enum definitions and typedefs with braces
-    source.gsub!(/(\W)(register|auto|static|restrict)(\W)/, '\1\3')                        # remove problem keywords
+    source.gsub!(/(\W)(?:register|auto|static|restrict)(\W)/, '\1\2')                      # remove problem keywords
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
     source.gsub!(/^(?:[\w\s]*\W)?typedef\W.*/, '')                                         # remove typedef statements
+    source.gsub!(/(^|\W+)(?:#{@c_strippables.join('|')})(?=$|\W+)/,'\1') unless @c_strippables.empty? # remove known attributes slated to be stripped
     
     #scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
