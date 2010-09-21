@@ -85,7 +85,6 @@ class CMockHeaderParser
     end
     
     #drop extra white space to make the rest go faster
-    #source.gsub!(/(?:^|\s)(?:#{c_attributes.join('|')})(?:$|\s)/, '') #remove attributes
     source.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
     source.gsub!(/\s+$/, '')          # remove extra white space from end of line
     source.gsub!(/\s*\(\s*/, '(')     # remove extra white space from before left parens
