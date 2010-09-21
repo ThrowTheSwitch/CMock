@@ -1,0 +1,51 @@
+---
+compiler:
+  path: gcc
+  source_path:     &systest_generated_path 'test/system/generated/'
+  unit_tests_path: &unit_tests_path 'examples/test/'
+  mocks_path:      &systest_mocks_path 'test/system/generated/'
+  build_path:      &systest_build_path 'test/system/build/'
+  options:
+    - '-c'
+    - '-Wall'
+    - '-std=c99'
+    - '-pedantic-errors'
+  includes:
+    prefix: '-I'
+    items:
+      - *systest_generated_path
+      - *unit_tests_path
+      - *systest_mocks_path
+      - 'src/'
+      - 'vendor/unity/src/'
+      - 'vendor/c_exception/lib/'
+      - 'test/system/test_compilation/'
+      - 'test/'
+  defines:
+    prefix: '-D'
+    items:
+      - 'UNITY_SUPPORT_64'
+      - 'UNITY_POINTER_WIDTH=64'
+      - 'CMOCK_MEM_PTR_AS_INT=long'
+  object_files:
+    prefix: '-o'
+    extension: '.o'
+    destination: *systest_build_path
+    
+linker:
+  path: gcc
+  options:
+    - -lm
+  includes:
+    prefix: '-I'
+  object_files:
+    path: *systest_build_path
+    extension: '.o'
+  bin_files:
+    prefix: '-o'
+    extension: '.exe'
+    destination: *systest_build_path
+
+unsupported: []
+
+colour: true

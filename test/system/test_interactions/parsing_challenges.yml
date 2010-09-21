@@ -72,7 +72,7 @@
       void exercise_var_args(int a, int b);
       void exercise_arglist_pointers(void);
       char exercise_multiline_declarations(int a, unsigned int b);
-      void exercise_double_pointers(unsigned int a);
+      void exercise_double_pointers(unsigned int** a);
       int  exercise_many_descriptors(int a); 
       TypeDefInt exercise_typedef_like_names(TypeDefInt a);
 
@@ -104,7 +104,7 @@
         return crazy_multiline(a, b);
       }
 
-      void exercise_double_pointers(unsigned int a)
+      void exercise_double_pointers(unsigned int** a)
       {
         ptr_ptr_return1((unsigned int**)a);
         ptr_ptr_return2((unsigned int**)a);
@@ -188,7 +188,7 @@
           ptr_ptr_return2_ExpectAndReturn(&pA, &pB);
           ptr_ptr_return3_ExpectAndReturn(&pA, &pB);
           ptr_ptr_return4_ExpectAndReturn(&pA, &pB);
-          exercise_double_pointers((unsigned int)(&pA));
+          exercise_double_pointers((unsigned int**)(&pA));
         }
 
     - :pass: TRUE
