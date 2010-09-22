@@ -201,7 +201,7 @@ module RakefileHelpers
       runner_name = test_base + '_Runner.c'
       if $cfg['compiler']['runner_path'].nil?
         runner_path = $cfg['compiler']['build_path'] + runner_name
-        test_gen = UnityTestRunnerGenerator.new
+        test_gen = UnityTestRunnerGenerator.new($cfg_file)
         test_gen.run(test, runner_path)
       else
         runner_path = $cfg['compiler']['runner_path'] + runner_name
