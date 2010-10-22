@@ -544,7 +544,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse_declaration(source))
   end
   
-  should "should fully parse multiple prototypes" do
+  should "fully parse multiple prototypes" do
   
     source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" + 
              "int Morpheus(int, unsigned int*);\n"

@@ -59,12 +59,16 @@ module RakefileHelpers
   end
   
   def tackit(strings)
-    if strings.is_a?(Array)
-      result = "\"#{strings.join}\""
-    else
-      result = strings
+    case(strings)
+      when Array
+        "\"#{strings.join}\""
+      when /^-/
+        strings
+      when /\s/
+        "\"#{strings}\""
+      else
+        strings
     end
-    return result
   end
   
   def squash(prefix, items)

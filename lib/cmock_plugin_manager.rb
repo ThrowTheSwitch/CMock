@@ -16,7 +16,7 @@ class CMockPluginManager
       object_name = "CMockGeneratorPlugin" + camelize(plugin_name)
       begin
         unless (Object.const_defined? object_name)
-          require "cmock_generator_plugin_#{plugin_name.downcase}.rb"
+          require "#{File.expand_path(File.dirname(__FILE__))}/cmock_generator_plugin_#{plugin_name.downcase}.rb"
         end
         @plugins << eval("#{object_name}.new(config, utils)")
       rescue

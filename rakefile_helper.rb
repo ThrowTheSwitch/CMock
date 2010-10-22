@@ -6,10 +6,10 @@
 
 require 'yaml'
 require 'fileutils'
-require 'generate_test_runner'
-require 'unity_test_summary'
-require 'systest_generator'
-require 'vendor/unity/auto/colour_reporter.rb'
+require './vendor/unity/auto/generate_test_runner'
+require './vendor/unity/auto/unity_test_summary'
+require './test/system/systest_generator'
+require './vendor/unity/auto/colour_reporter.rb'
 
 module RakefileHelpers
 
@@ -21,7 +21,7 @@ module RakefileHelpers
   
   def load_configuration(config_file)
     $cfg_file = config_file
-    $cfg = YAML.load(File.read('targets/' + $cfg_file))
+    $cfg = YAML.load(File.read('./targets/' + $cfg_file))
     $colour_output = false unless $cfg['colour']
   end
   
@@ -61,15 +61,6 @@ module RakefileHelpers
       end
     end
     return nil
-  end
-  
-  def tackit(strings)
-    if strings.is_a?(Array)
-      result = "\"#{strings.join}\""
-    else
-      result = strings
-    end
-    return result
   end
 
   def squash(prefix, items)
@@ -156,27 +147,31 @@ module RakefileHelpers
   end
   
   def tackit(strings)
-    if strings.is_a?(Array)
-      result = "\"#{strings.join}\""
-    else
-      result = strings
+    case(strings)
+      when Array
+        "\"#{strings.join}\""
+      when /^-/
+        strings
+      when /\s/
+        "\"#{strings}\""
+      else
+        strings
     end
-    return result
   end
   
   def report_summary
     summary = UnityTestSummary.new
-    summary.set_root_path(HERE)
+    summary.set_root_path(File.expand_path(File.dirname(__FILE__)) + '/')
     results_glob = "#{$cfg['compiler']['build_path']}*.test*"
     results_glob.gsub!(/\\/, '/')
     results = Dir[results_glob]
     summary.set_targets(results)
     summary.run
-    raise "There were failures" if (summary.failures > 0)
+    fail_out "FAIL: There were failures" if (summary.failures > 0)
   end
   
   def run_system_test_interactions(test_case_files)
-    load 'cmock.rb'
+    load './lib/cmock.rb'
     
     SystemTestGenerator.new.generate_files(test_case_files)
     test_files = FileList.new(SYSTEST_GENERATED_FILES_PATH + 'test*.c')
@@ -252,7 +247,6 @@ module RakefileHelpers
       test_file    = 'test_' + File.basename(test_case).ext(C_EXTENSION)
       result_file  = test_file.ext(RESULT_EXTENSION)
       test_results = File.readlines(SYSTEST_BUILD_FILES_PATH + result_file)
-
       tests.each_with_index do |test, index|
         # compare test's intended pass/fail state with pass/fail state in actual results;
         # if they don't match, the system test has failed
@@ -316,7 +310,7 @@ module RakefileHelpers
   end
   
   def run_system_test_compilations(mockables)
-    load 'cmock.rb'
+    load './lib/cmock.rb'
     
     load_configuration($cfg_file)
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
@@ -334,7 +328,7 @@ module RakefileHelpers
   end
   
   def run_system_test_profiles(mockables)
-    load 'cmock.rb'
+    load './lib/cmock.rb'
     
     load_configuration($cfg_file)
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
@@ -379,6 +373,11 @@ module RakefileHelpers
             $cfg['simulator']['post_support'].map{|o| tackit(o)}.join(' ') )
       end
     end
+  end
+  
+  def fail_out(msg)
+    puts msg
+    exit(-1)
   end
 end
 

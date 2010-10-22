@@ -4,15 +4,14 @@
 #   [Released under MIT License. Please refer to license.txt for details]
 # ========================================== 
 
-require File.expand_path(File.dirname(__FILE__)) + "/../config/production_environment"
-
-require "cmock_header_parser"
-require "cmock_generator"
-require "cmock_file_writer"
-require "cmock_config"
-require "cmock_plugin_manager"
-require "cmock_generator_utils"
-require "cmock_unityhelper_parser"
+[ "../config/production_environment",
+  "cmock_header_parser",
+  "cmock_generator",
+  "cmock_file_writer",
+  "cmock_config",
+  "cmock_plugin_manager",
+  "cmock_generator_utils",
+  "cmock_unityhelper_parser"].each {|req| require "#{File.expand_path(File.dirname(__FILE__))}/#{req}"}
 
 class CMock
   

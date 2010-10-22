@@ -4,13 +4,12 @@
 #   [Released under MIT License. Please refer to license.txt for details]
 # ========================================== 
 
-SYS_TEST_GEN_ROOT = File.expand_path( File.dirname( __FILE__ ) ) + '/'
-
 require 'yaml'
 
-GENERATED_PATH = SYS_TEST_GEN_ROOT + 'generated/'
-BUILD_PATH     = SYS_TEST_GEN_ROOT + 'build/'
-CASES_PATH     = SYS_TEST_GEN_ROOT + 'cases/'
+SYS_TEST_GEN_ROOT = File.expand_path( File.dirname( __FILE__ ) ) + '/'
+GENERATED_PATH    = SYS_TEST_GEN_ROOT + 'generated/'
+BUILD_PATH        = SYS_TEST_GEN_ROOT + 'build/'
+CASES_PATH        = SYS_TEST_GEN_ROOT + 'cases/'
 
 TYPES_H          = 'types.h'
 UNITY_H          = 'unity.h'

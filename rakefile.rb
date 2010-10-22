@@ -4,13 +4,11 @@
 #   [Released under MIT License. Please refer to license.txt for details]
 # ========================================== 
 
-HERE = File.expand_path(File.dirname(__FILE__)) + '/'
-
-require HERE + 'config/test_environment'
+require './config/test_environment'
 require 'rake'
 require 'rake/clean'
 require 'rake/testtask'
-require 'rakefile_helper'
+require './rakefile_helper'
 
 include RakefileHelpers
 

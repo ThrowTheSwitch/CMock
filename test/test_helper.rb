@@ -3,18 +3,19 @@
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
 # ========================================== 
-
-require File.expand_path(File.dirname(__FILE__)) + "/../config/test_environment"
+[ "/../config/test_environment",
+  "/../vendor/behaviors/lib/behaviors"
+].each do |req|
+  require File.expand_path(File.dirname(__FILE__)) + req
+end
 
 #gem install test-unit -v 1.2.3
 ruby_version = RUBY_VERSION.split('.')
 if (ruby_version[1].to_i == 9) and (ruby_version[2].to_i > 1)
-  require 'gems'
+  require 'rubygems'
   gem 'test-unit'
 end
 require 'test/unit'
-
-require 'behaviors'
 require 'hardmock'
 
 class Test::Unit::TestCase

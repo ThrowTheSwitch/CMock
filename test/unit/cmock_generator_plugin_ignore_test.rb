@@ -53,10 +53,6 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "not add code to implementation (when :args_and_calls)" do
-    assert(! @cmock_generator_plugin_ignore.methods.include?(:mock_implementation))
-  end
-  
   should "add required code to implementation precheck with void function (when :args_and_calls)" do
     function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
     expected = ["  if (Mock.Mold_IgnoreBool)\n",

@@ -166,7 +166,7 @@ class CMockHeaderParser
       #automatically name unnamed arguments (those that only had a type)
       arg_list.split(/\s*,\s*/).map { |arg| 
         parts = (arg.split - ['struct', 'union', 'enum', 'const', 'const*'])
-        if ((parts.size < 2) or (parts[-1][-1] == 42) or (@standards.include?(parts[-1])))
+        if ((parts.size < 2) or (parts[-1][-1].chr == '*') or (@standards.include?(parts[-1])))
           "#{arg} cmock_arg#{c+=1}" 
         else
           arg
