@@ -8,8 +8,6 @@
 #include <setjmp.h>
 #include <stdio.h>
 
-char MessageBuffer[50];
-
 extern void setUp(void);
 extern void tearDown(void);
 
@@ -20,26 +18,11 @@ extern void test_MemNextWillReturnNullIfGivenABadRoot(void);
 extern void test_ThatWeCanClaimAndChainAFewElementsTogether(void);
 extern void test_ThatWeCanAskForAllSortsOfSizes(void);
 
-static void runTest(UnityTestFunction test)
-{
-  if (TEST_PROTECT())
-  {
-    setUp();
-    test();
-  }
-  if (TEST_PROTECT())
-  {
-    tearDown();
-  }
-}
-
-
 int main(void)
 {
   Unity.TestFile = "TestCMockDynamic.c";
   UnityBegin();
-
-  // RUN_TEST calls runTest
+  
   RUN_TEST(test_MemNewWillReturnNullIfGivenIllegalSizes, 20);
   RUN_TEST(test_MemNewWillNowSupportSizesGreaterThanTheDefinesCMockSize, 29);
   RUN_TEST(test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation, 39);
