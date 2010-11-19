@@ -112,7 +112,7 @@
 
     - :pass: FALSE
       :should: 'fail because bar and foo called in reverse order'
-      :verify_error: 'Out of order function calls'
+      :verify_error: 'called earlier than expected'
       :code: |
         test()
         {
@@ -228,7 +228,7 @@
       
     - :pass: FALSE
       :should: 'successfully catch errors during back to back ExpectAndReturn setup and mock calls'
-      :verify_error: 'Out of order function calls'
+      :verify_error: 'called earlier than expected'
       :code: |
         test()
         {

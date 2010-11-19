@@ -42,7 +42,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     
     #no strict handling
     @config.expect.mock_prefix.returns("Mock")
-    @config.expect.enforce_strict_ordering.returns(false)
+    @config.expect.enforce_strict_ordering.returns(nil)
     @config.expect.framework.returns(:unity)
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator.module_name = @module_name
@@ -361,7 +361,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = Mock.SupaFunction_CallInstance;\n",
                  "  Mock.SupaFunction_CallInstance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
-                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected\");\n",
+                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected.\");\n",
                  "  cmock_line = cmock_call_instance->LineNumber;\n",
                  "  dos",
                  "  tres",
@@ -392,7 +392,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = Mock.SupaFunction_CallInstance;\n",
                  "  Mock.SupaFunction_CallInstance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
-                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected\");\n",
+                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected.\");\n",
                  "  cmock_line = cmock_call_instance->LineNumber;\n",
                  "  dos",
                  "  tres",
