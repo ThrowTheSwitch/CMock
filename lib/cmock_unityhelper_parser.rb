@@ -24,6 +24,7 @@ class CMockUnityHelperParser
       lookup = lookup + '*'
       return [@c_types[lookup], '&'] if (@c_types[lookup])
     end
+    return ['UNITY_TEST_ASSERT_EQUAL_PTR', ''] if (ctype =~ /cmock_\w+_ptr\d+/)
     raise("Don't know how to test #{ctype} and memory tests are disabled!") unless @config.memcmp_if_unknown
     return (lookup =~ /\*$/) ? [@fallback, '&'] : [@fallback, '']
   end
