@@ -9,6 +9,7 @@ compiler:
     - '-c'
     - '-Wall'
     - '-std=c99'
+    - '-Wno-address'
     - '-pedantic-errors'
   includes:
     prefix: '-I'

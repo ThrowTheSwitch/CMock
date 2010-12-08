@@ -10,11 +10,12 @@
       int x;
       int y;
     } POINT_T;
+    #define ARRAY_A_SIZE  (5) 
 
   :mockable: |
     void foo(POINT_T* a);
     POINT_T* bar(void);
-    void fooa(POINT_T a[]);
+    void fooa(POINT_T a[ARRAY_A_SIZE]);
     void foos(const char * a);
     const char * bars(void);
     void no_pointers(int a, char* b);

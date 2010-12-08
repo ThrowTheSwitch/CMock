@@ -143,7 +143,7 @@ class CMockHeaderParser
       return 'void'
     else
       c=0
-      arg_list.gsub!(/(\w+)(?:\s*\[[\s\d]*\])+/,'*\1')    # magically turn brackets into asterisks
+      arg_list.gsub!(/(\w+)(?:\s*\[[\s\d\w]*\])+/,'*\1')  # magically turn brackets into asterisks
       arg_list.gsub!(/\s+\*/,'*')                         # remove space to place asterisks with type (where they belong)
       arg_list.gsub!(/\*(\w)/,'* \1')                     # pull asterisks away from arg to place asterisks with type (where they belong)
       
