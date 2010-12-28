@@ -13,7 +13,7 @@ class CMockHeaderParser
     @c_strippables = cfg.strippables
     @c_attributes = (['const'] + cfg.attributes).uniq
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
-    @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]]*)\)$/m
+    @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]+-]*)\)$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
     @when_no_prototypes = cfg.when_no_prototypes
     @local_as_void = @treat_as_void
@@ -143,9 +143,9 @@ class CMockHeaderParser
       return 'void'
     else
       c=0
-      arg_list.gsub!(/(\w+)(?:\s*\[[\s\d\w]*\])+/,'*\1')  # magically turn brackets into asterisks
-      arg_list.gsub!(/\s+\*/,'*')                         # remove space to place asterisks with type (where they belong)
-      arg_list.gsub!(/\*(\w)/,'* \1')                     # pull asterisks away from arg to place asterisks with type (where they belong)
+      arg_list.gsub!(/(\w+)(?:\s*\[[\s\d\w+-]*\])+/,'*\1')  # magically turn brackets into asterisks
+      arg_list.gsub!(/\s+\*/,'*')                           # remove space to place asterisks with type (where they belong)
+      arg_list.gsub!(/\*(\w)/,'* \1')                       # pull asterisks away from arg to place asterisks with type (where they belong)
       
       #scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s]+)\(*\(\s*\*([\w\s\*]+)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
