@@ -8,9 +8,9 @@ compiler:
   options:
     - '-c'
     - '-Wall'
-    - '-std=c99'
     - '-Wno-address'
-    - '-pedantic-errors'
+    - '-std=c99'
+    - '-pedantic'
   includes:
     prefix: '-I'
     items:
@@ -25,8 +25,8 @@ compiler:
   defines:
     prefix: '-D'
     items:
-      - 'UNITY_SUPPORT_64'
-      - 'UNITY_POINTER_WIDTH=64'
+      - UNITY_SUPPORT_64
+      - UNITY_LONG_WIDTH=32
       - 'CMOCK_MEM_PTR_AS_INT=long'
   object_files:
     prefix: '-o'

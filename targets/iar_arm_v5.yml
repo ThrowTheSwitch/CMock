@@ -87,5 +87,6 @@ simulator:
 unsupported:
   - nonstandard_parsed_stuff_1
   - const
+  - unity_64bit_support
 
 colour: true

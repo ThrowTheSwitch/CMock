@@ -8,7 +8,7 @@
 #include "cmock.h"
 
 #define TEST_MEM_INDEX_SIZE  (sizeof(CMOCK_MEM_INDEX_TYPE)) 
-#define TEST_MEM_INDEX_PAD   ((sizeof(CMOCK_MEM_INDEX_TYPE) + 3) & ~3) //round up to nearest 4 byte boundary
+#define TEST_MEM_INDEX_PAD   ((sizeof(CMOCK_MEM_INDEX_TYPE) + 7) & ~7) //round up to nearest 4 byte boundary
 
 unsigned int StartingSize;
 
@@ -44,16 +44,16 @@ void test_MemNewWillNowSupportSizesGreaterThanTheDefinesCMockSize(void)
 
 void test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation(void)
 {
-  unsigned int* next = CMock_Guts_MemNew(4);
-  TEST_ASSERT_EQUAL(4 + TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesUsed());
-  TEST_ASSERT_EQUAL(StartingSize - 4 - TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesFree());
+  unsigned int* next = CMock_Guts_MemNew(8);
+  TEST_ASSERT_EQUAL(8 + TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(StartingSize - 8 - TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesFree());
 
   TEST_ASSERT_NULL( CMock_Guts_MemChain((void*)((unsigned int)next + CMOCK_MEM_SIZE), next) );
   TEST_ASSERT_NULL( CMock_Guts_MemChain(next, (void*)((unsigned int)next + CMOCK_MEM_SIZE)) );
 
   //verify we're still the same
-  TEST_ASSERT_EQUAL(4 + TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesUsed());
-  TEST_ASSERT_EQUAL(StartingSize - 4 - TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesFree());
+  TEST_ASSERT_EQUAL(8 + TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(StartingSize - 8 - TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesFree());
 }
 
 void test_MemNextWillReturnNullIfGivenABadRoot(void)
@@ -82,35 +82,35 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
   element[0] = CMock_Guts_MemNew(sizeof(unsigned int));
   TEST_ASSERT_NOT_NULL(element[0]);
   first = CMock_Guts_MemChain(first, element[0]);
-  TEST_ASSERT_EQUAL(element[0], first);
+  TEST_ASSERT_EQUAL_PTR(element[0], first);
   *element[0] = 0;
 
   //verify we're using the right amount of memory
-  TEST_ASSERT_EQUAL(1 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesUsed());
-  TEST_ASSERT_EQUAL(StartingSize - 1 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesFree());
+  TEST_ASSERT_EQUAL(1 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(StartingSize - 1 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesFree());
 
   //second element
   element[1] = CMock_Guts_MemNew(sizeof(unsigned int));
   TEST_ASSERT_NOT_NULL(element[1]);
   TEST_ASSERT_NOT_EQUAL(element[0], element[1]);
-  TEST_ASSERT_EQUAL(first, CMock_Guts_MemChain(first, element[1]));
+  TEST_ASSERT_EQUAL_PTR(first, CMock_Guts_MemChain(first, element[1]));
   *element[1] = 1;
 
   //verify we're using the right amount of memory
-  TEST_ASSERT_EQUAL(2 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesUsed());
-  TEST_ASSERT_EQUAL(StartingSize - 2 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesFree());
+  TEST_ASSERT_EQUAL(2 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(StartingSize - 2 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesFree());
 
   //third element
   element[2] = CMock_Guts_MemNew(sizeof(unsigned int));
   TEST_ASSERT_NOT_NULL(element[2]);
   TEST_ASSERT_NOT_EQUAL(element[0], element[2]);
   TEST_ASSERT_NOT_EQUAL(element[1], element[2]);
-  TEST_ASSERT_EQUAL(first, CMock_Guts_MemChain(first, element[2]));
+  TEST_ASSERT_EQUAL_PTR(first, CMock_Guts_MemChain(first, element[2]));
   *element[2] = 2;
 
   //verify we're using the right amount of memory
-  TEST_ASSERT_EQUAL(3 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesUsed());
-  TEST_ASSERT_EQUAL(StartingSize - 3 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesFree());
+  TEST_ASSERT_EQUAL(3 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(StartingSize - 3 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesFree());
 
   //fourth element
   element[3] = CMock_Guts_MemNew(sizeof(unsigned int));
@@ -118,18 +118,18 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
   TEST_ASSERT_NOT_EQUAL(element[0], element[3]);
   TEST_ASSERT_NOT_EQUAL(element[1], element[3]);
   TEST_ASSERT_NOT_EQUAL(element[2], element[3]);
-  TEST_ASSERT_EQUAL(first, CMock_Guts_MemChain(first, element[3]));
+  TEST_ASSERT_EQUAL_PTR(first, CMock_Guts_MemChain(first, element[3]));
   *element[3] = 3;
 
   //verify we're using the right amount of memory
-  TEST_ASSERT_EQUAL(4 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesUsed());
-  TEST_ASSERT_EQUAL(StartingSize - 4 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesFree());
+  TEST_ASSERT_EQUAL(4 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(StartingSize - 4 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesFree());
 
   //traverse list
   next = first;
   for (i = 0; i < 4; i++)
   {
-    TEST_ASSERT_EQUAL(element[i], next);
+    TEST_ASSERT_EQUAL_PTR(element[i], next);
     TEST_ASSERT_EQUAL(i, *next);
     next = CMock_Guts_MemNext(next);
   }
@@ -138,8 +138,8 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
   TEST_ASSERT_NULL(next);
 
   //verify we're using the right amount of memory
-  TEST_ASSERT_EQUAL(4 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesUsed());
-  TEST_ASSERT_EQUAL(StartingSize - 4 * (TEST_MEM_INDEX_PAD + 4), CMock_Guts_MemBytesFree());
+  TEST_ASSERT_EQUAL(4 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(StartingSize - 4 * (TEST_MEM_INDEX_PAD + 8), CMock_Guts_MemBytesFree());
 
   //Free it all
   CMock_Guts_MemFreeAll();
@@ -154,8 +154,8 @@ void test_ThatWeCanAskForAllSortsOfSizes(void)
   unsigned int  i;
   unsigned int* first = NULL;
   unsigned int* next;
-  unsigned int  sizes[10]          = {3, 1, 80, 5,  4, 31, 7,  911, 2, 80};
-  unsigned int  sizes_buffered[10] = {8, 8, 84, 12, 8, 36, 12, 916, 8, 84}; //includes counter
+  unsigned int  sizes[10]          = {3,  1,  80,  5,  8,  31, 7,  911, 2,  80};
+  unsigned int  sizes_buffered[10] = {16, 16, 88,  16, 16, 40, 16, 920, 16, 88}; //includes counter
   unsigned int  sum = 0;
   unsigned int  cap;
 
@@ -168,9 +168,9 @@ void test_ThatWeCanAskForAllSortsOfSizes(void)
     TEST_ASSERT_NOT_NULL(first);
 
     sum += sizes_buffered[i];
-	cap = (StartingSize > (sum + CMOCK_MEM_SIZE)) ? StartingSize : (sum + CMOCK_MEM_SIZE);
-  TEST_ASSERT_EQUAL(sum, CMock_Guts_MemBytesUsed());
-	TEST_ASSERT(cap >= CMock_Guts_MemBytesFree());
+    cap = (StartingSize > (sum + CMOCK_MEM_SIZE)) ? StartingSize : (sum + CMOCK_MEM_SIZE);
+    TEST_ASSERT_EQUAL(sum, CMock_Guts_MemBytesUsed());
+    TEST_ASSERT(cap >= CMock_Guts_MemBytesFree());
   }
 
   //verify we can still walk through the elements allocated

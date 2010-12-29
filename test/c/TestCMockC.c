@@ -68,7 +68,7 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
   element[0] = CMock_Guts_MemNew(sizeof(unsigned int));
   TEST_ASSERT_NOT_NULL(element[0]);
   first = CMock_Guts_MemChain(first, element[0]);
-  TEST_ASSERT_EQUAL(element[0], first);
+  TEST_ASSERT_EQUAL_PTR(element[0], first);
   *element[0] = 0;
 
   //verify we're using the right amount of memory
@@ -79,7 +79,7 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
   element[1] = CMock_Guts_MemNew(sizeof(unsigned int));
   TEST_ASSERT_NOT_NULL(element[1]);
   TEST_ASSERT_NOT_EQUAL(element[0], element[1]);
-  TEST_ASSERT_EQUAL(first, CMock_Guts_MemChain(first, element[1]));
+  TEST_ASSERT_EQUAL_PTR(first, CMock_Guts_MemChain(first, element[1]));
   *element[1] = 1;
 
   //verify we're using the right amount of memory
@@ -91,7 +91,7 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
   TEST_ASSERT_NOT_NULL(element[2]);
   TEST_ASSERT_NOT_EQUAL(element[0], element[2]);
   TEST_ASSERT_NOT_EQUAL(element[1], element[2]);
-  TEST_ASSERT_EQUAL(first, CMock_Guts_MemChain(first, element[2]));
+  TEST_ASSERT_EQUAL_PTR(first, CMock_Guts_MemChain(first, element[2]));
   *element[2] = 2;
 
   //verify we're using the right amount of memory
@@ -104,7 +104,7 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
   TEST_ASSERT_NOT_EQUAL(element[0], element[3]);
   TEST_ASSERT_NOT_EQUAL(element[1], element[3]);
   TEST_ASSERT_NOT_EQUAL(element[2], element[3]);
-  TEST_ASSERT_EQUAL(first, CMock_Guts_MemChain(first, element[3]));
+  TEST_ASSERT_EQUAL_PTR(first, CMock_Guts_MemChain(first, element[3]));
   *element[3] = 3;
 
   //verify we're using the right amount of memory
@@ -115,7 +115,7 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
   next = first;
   for (i = 0; i < 4; i++)
   {
-    TEST_ASSERT_EQUAL(element[i], next);
+    TEST_ASSERT_EQUAL_PTR(element[i], next);
     TEST_ASSERT_EQUAL(i, *next);
     next = CMock_Guts_MemNext(next);
   }

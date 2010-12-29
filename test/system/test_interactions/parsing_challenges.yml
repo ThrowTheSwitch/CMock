@@ -147,7 +147,7 @@
           ptr_return1_ExpectAndReturn(2, NULL);
           ptr_return2_ExpectAndReturn(2, NULL);
           ptr_return3_ExpectAndReturn(2, &retval);
-          TEST_ASSERT_EQUAL(&retval, exercise_return_pointers(2));
+          TEST_ASSERT_EQUAL_PTR(&retval, exercise_return_pointers(2));
         }
         
     - :pass: TRUE

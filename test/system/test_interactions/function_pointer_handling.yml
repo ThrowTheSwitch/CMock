@@ -75,7 +75,7 @@
         test()
         {
           returns_function_ptr_ExpectAndReturn('z', dummy_function2);
-          TEST_ASSERT_EQUAL(dummy_function2, exercise_function_pointer_return('z'));
+          TEST_ASSERT_EQUAL_PTR(dummy_function2, exercise_function_pointer_return('z'));
         }
 
 
