@@ -198,7 +198,7 @@ class CMockGeneratorPluginExpectTest < Test::Unit::TestCase
   
   should "add mock verify lines" do
     function = {:name => "Banana" }
-    expected = "  UNITY_TEST_ASSERT_NULL(Mock.Banana_CallInstance, cmock_line, \"Function 'Banana' called less times than expected.\");\n"
+    expected = "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == Mock.Banana_CallInstance, cmock_line, \"Function 'Banana' called less times than expected.\");\n"
     returned = @cmock_generator_plugin_expect.mock_verify(function)
     assert_equal(expected, returned)
   end

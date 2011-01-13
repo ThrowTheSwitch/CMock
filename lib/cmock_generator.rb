@@ -118,7 +118,7 @@ class CMockGenerator
     end
     functions.each do |function|
       file << @plugins.run(:instance_structure, function)
-      file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* #{function[:name]}_CallInstance;\n"
+      file << "  CMOCK_MEM_INDEX_TYPE #{function[:name]}_CallInstance;\n"
     end
     file << "} Mock;\n\n"
   end
@@ -179,8 +179,8 @@ class CMockGenerator
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
-    file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance = Mock.#{function[:name]}_CallInstance;\n"
-    file << "  Mock.#{function[:name]}_CallInstance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
+    file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:name]}_CallInstance);\n"
+    file << "  Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
     file << @plugins.run(:mock_implementation_precheck, function)
     file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function '#{function[:name]}' called more times than expected.\");\n"
     file << "  cmock_line = cmock_call_instance->LineNumber;\n"

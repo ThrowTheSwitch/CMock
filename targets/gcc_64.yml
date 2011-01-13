@@ -26,6 +26,7 @@ compiler:
     prefix: '-D'
     items:
       - 'UNITY_SUPPORT_64'
+      - 'UNITY_LONG_WIDTH=64'
       - 'UNITY_POINTER_WIDTH=64'
       - 'CMOCK_MEM_PTR_AS_INT=long'
   object_files:

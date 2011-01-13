@@ -24,13 +24,13 @@ int main(void)
   Unity.TestFile = "TestCMock.c";
   UnityBegin();
 
-  RUN_TEST(test_MemNewWillReturnNullIfGivenIllegalSizes, 15);
-  RUN_TEST(test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation, 25);
-  RUN_TEST(test_MemNextWillReturnNullIfGivenABadRoot, 39);
-  RUN_TEST(test_ThatWeCanClaimAndChainAFewElementsTogether, 50);
-  RUN_TEST(test_ThatCMockStopsReturningMoreDataWhenItRunsOutOfMemory, 132);
-  RUN_TEST(test_ThatCMockStopsReturningMoreDataWhenAskForMoreThanItHasLeftEvenIfNotAtExactEnd, 178);
-  RUN_TEST(test_ThatWeCanAskForAllSortsOfSizes, 225);
+  RUN_TEST(test_MemNewWillReturnNullIfGivenIllegalSizes, 21);
+  RUN_TEST(test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation, 32);
+  RUN_TEST(test_MemNextWillReturnNullIfGivenABadRoot, 46);
+  RUN_TEST(test_ThatWeCanClaimAndChainAFewElementsTogether, 57);
+  RUN_TEST(test_ThatCMockStopsReturningMoreDataWhenItRunsOutOfMemory, 139);
+  RUN_TEST(test_ThatCMockStopsReturningMoreDataWhenAskForMoreThanItHasLeftEvenIfNotAtExactEnd, 185);
+  RUN_TEST(test_ThatWeCanAskForAllSortsOfSizes, 233);
 
   UnityEnd();
   return 0;

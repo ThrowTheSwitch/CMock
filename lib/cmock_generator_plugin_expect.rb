@@ -80,7 +80,7 @@ class CMockGeneratorPluginExpect
   
   def mock_verify(function)
     func_name = function[:name]
-    "  UNITY_TEST_ASSERT_NULL(Mock.#{func_name}_CallInstance, cmock_line, \"Function '#{func_name}' called less times than expected.\");\n"
+    "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == Mock.#{func_name}_CallInstance, cmock_line, \"Function '#{func_name}' called less times than expected.\");\n"
   end
 
 end

@@ -231,9 +231,9 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "\n} CMOCK_Second_CALL_INSTANCE;\n\n",
                  "static struct MockPoutPoutFishInstance\n{\n",
                  "  d1",
-                 "  CMOCK_First_CALL_INSTANCE* First_CallInstance;\n",
+                 "  CMOCK_MEM_INDEX_TYPE First_CallInstance;\n",
                  "  e1  e2  e3",
-                 "  CMOCK_Second_CALL_INSTANCE* Second_CallInstance;\n",
+                 "  CMOCK_MEM_INDEX_TYPE Second_CallInstance;\n",
                  "} Mock;\n\n"
                ].join
     @plugins.expect.run(:instance_typedefs, functions[0]).returns(["  b1","  b2"])
@@ -368,8 +368,8 @@ class CMockGeneratorTest < Test::Unit::TestCase
     expected = [ "static int SupaFunction(uint32 sandwiches, const char* named)\n",
                  "{\n",
                  "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
-                 "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = Mock.SupaFunction_CallInstance;\n",
-                 "  Mock.SupaFunction_CallInstance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
+                 "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.SupaFunction_CallInstance);\n",
+                 "  Mock.SupaFunction_CallInstance = CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
                  "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected.\");\n",
                  "  cmock_line = cmock_call_instance->LineNumber;\n",
@@ -399,8 +399,8 @@ class CMockGeneratorTest < Test::Unit::TestCase
     expected = [ "int SupaFunction(uint32 sandwiches, corn ...)\n",
                  "{\n",
                  "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
-                 "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = Mock.SupaFunction_CallInstance;\n",
-                 "  Mock.SupaFunction_CallInstance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
+                 "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.SupaFunction_CallInstance);\n",
+                 "  Mock.SupaFunction_CallInstance = CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
                  "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected.\");\n",
                  "  cmock_line = cmock_call_instance->LineNumber;\n",

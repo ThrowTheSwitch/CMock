@@ -45,9 +45,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   
   should "add code for a base expectation with no plugins" do
     expected =
-      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"CMock has run out of memory. Please allocate more.\");\n" +
-      "  Mock.Apple_CallInstance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_MemChain((void*)Mock.Apple_CallInstance, (void*)cmock_call_instance);\n" +
+      "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n"
     output = @cmock_generator_utils_simple.code_add_base_expectation("Apple")
     assert_equal(expected, output)
@@ -55,9 +56,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
         
   should "add code for a base expectation with all plugins" do
     expected =
-      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"CMock has run out of memory. Please allocate more.\");\n" +
-      "  Mock.Apple_CallInstance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_MemChain((void*)Mock.Apple_CallInstance, (void*)cmock_call_instance);\n" +
+      "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n" + 
       "  cmock_call_instance->CallOrder = ++GlobalExpectCount;\n" +
       "  cmock_call_instance->ExceptionToThrow = CEXCEPTION_NONE;\n"
@@ -67,9 +69,10 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
         
   should "add code for a base expectation with all plugins and ordering not supported" do
     expected =
-      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"CMock has run out of memory. Please allocate more.\");\n" +
-      "  Mock.Apple_CallInstance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_MemChain((void*)Mock.Apple_CallInstance, (void*)cmock_call_instance);\n" +
+      "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n" +
       "  cmock_call_instance->ExceptionToThrow = CEXCEPTION_NONE;\n"
     output = @cmock_generator_utils_complex.code_add_base_expectation("Apple", false)

@@ -74,7 +74,7 @@ class CMockGeneratorPluginIgnore
 
   def mock_verify(function)
     func_name = function[:name]
-    "  if (Mock.#{func_name}_IgnoreBool)\n    Mock.#{func_name}_CallInstance = NULL;\n"
+    "  if (Mock.#{func_name}_IgnoreBool)\n    Mock.#{func_name}_CallInstance = CMOCK_GUTS_NONE;\n"
   end
   
   def nothing(function)
