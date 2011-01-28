@@ -19,6 +19,7 @@ class CMockHeaderParser
     @local_as_void = @treat_as_void
     @verbosity = cfg.verbosity
     @treat_externs = cfg.treat_externs
+    @c_strippables += ['extern'] if (@treat_externs == :include) #we'll need to remove the attribute if we're allowing externs
   end
   
   def parse(name, source)
