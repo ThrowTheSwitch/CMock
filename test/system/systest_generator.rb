@@ -47,7 +47,7 @@ class SystemTestGenerator
     cmock = cmock_yaml[:cmock]
     
     cmock[:mock_path]   = GENERATED_PATH
-    cmock[:includes]    = [namix + TYPES_H]
+    cmock[:includes]    = (cmock[:includes] || []) + [namix + TYPES_H]
     cmock[:mock_prefix] = MOCK_PREFIX
     if not yaml_hash[:systest][:unity_helper].nil?
       cmock[:includes]     << namix + UNITY_HELPER_H 
