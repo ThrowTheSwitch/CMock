@@ -128,7 +128,6 @@ class CMockGenerator
     if (@ordered)
       file << "extern int GlobalExpectCount;\n"
       file << "extern int GlobalVerifyOrder;\n"
-      file << "extern char* GlobalOrderError;\n"
     end
     file << "\n"
   end
@@ -136,7 +135,6 @@ class CMockGenerator
   def create_mock_verify_function(file, functions)
     file << "void #{@mock_name}_Verify(void)\n{\n"
     verifications = functions.collect {|function| @plugins.run(:mock_verify, function)}.join
-    verifications += "  UNITY_TEST_ASSERT_NULL(GlobalOrderError, cmock_line, \"Internal CMock error.\");\n" if (@ordered)
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n" unless verifications.empty?
     file << verifications
     file << "}\n\n"
@@ -156,11 +154,6 @@ class CMockGenerator
     if (@ordered)
       file << "  GlobalExpectCount = 0;\n"
       file << "  GlobalVerifyOrder = 0;\n"
-      file << "  if (GlobalOrderError)\n"
-      file << "  {\n"
-      file << "    free(GlobalOrderError);\n"
-      file << "    GlobalOrderError = NULL;\n"
-      file << "  }\n"
     end
     file << "}\n\n"
   end

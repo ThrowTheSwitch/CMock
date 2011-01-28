@@ -262,7 +262,6 @@ class CMockGeneratorTest < Test::Unit::TestCase
     expected = [ "extern jmp_buf AbortFrame;\n",
                  "extern int GlobalExpectCount;\n",
                  "extern int GlobalVerifyOrder;\n",
-                 "extern char* GlobalOrderError;\n",
                  "\n" ]
     
     @cmock_generator_strict.create_extern_declarations(output)
@@ -290,8 +289,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  Uno_First" +
                  "  Dos_First" +
                  "  Uno_Second" +
-                 "  Dos_Second" +
-                 "  UNITY_TEST_ASSERT_NULL(GlobalOrderError, cmock_line, \"Internal CMock error.\");\n",
+                 "  Dos_Second",
                  "}\n\n"
                ]
     @plugins.expect.run(:mock_verify, functions[0]).returns(["  Uno_First","  Dos_First"])
@@ -340,11 +338,6 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  uno",
                  "  GlobalExpectCount = 0;\n",
                  "  GlobalVerifyOrder = 0;\n",
-                 "  if (GlobalOrderError)\n",
-                 "  {\n",
-                 "    free(GlobalOrderError);\n",
-                 "    GlobalOrderError = NULL;\n",
-                 "  }\n",
                  "}\n\n"
                ]
     @plugins.expect.run(:mock_destroy, functions[0]).returns([])
