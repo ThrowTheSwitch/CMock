@@ -10,7 +10,7 @@ class CMockPluginManager
   
   def initialize(config, utils)
     @plugins = []
-    plugins_to_load = ["expect", config.plugins].flatten.uniq.compact
+    plugins_to_load = [:expect, config.plugins].flatten.uniq.compact
     plugins_to_load.each do |plugin|
       plugin_name = plugin.to_s
       object_name = "CMockGeneratorPlugin" + camelize(plugin_name)
