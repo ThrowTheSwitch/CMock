@@ -14,9 +14,11 @@ class CMockGeneratorPluginIgnore
     if (@config.ignore == :args_and_calls)
       alias :mock_implementation_precheck :mock_implementation_for_ignores
       alias :mock_implementation          :nothing
+      alias :mock_verify                  :mock_conditionally_verify_counts
     else
       alias :mock_implementation          :mock_implementation_for_ignores
       alias :mock_implementation_precheck :nothing
+      alias :mock_verify                  :nothing
     end
     @utils = utils
     @priority = 2
@@ -72,7 +74,7 @@ class CMockGeneratorPluginIgnore
     lines << "}\n\n"
   end
 
-  def mock_verify(function)
+  def mock_conditionally_verify_counts(function)
     func_name = function[:name]
     "  if (Mock.#{func_name}_IgnoreBool)\n    Mock.#{func_name}_CallInstance = CMOCK_GUTS_NONE;\n"
   end
