@@ -192,7 +192,11 @@ module RakefileHelpers
           @cmock.setup_mocks([$cfg['compiler']['source_path']+header.gsub('Mock','')])
         end
         
-        # Compile corresponding source file if it exists
+      end
+
+      #compile all mocks
+      header_list.each do |header|
+        #compile source file header if it exists
         src_file = find_source_file(header, include_dirs)
         if !src_file.nil?
           compile(src_file, test_defines)
