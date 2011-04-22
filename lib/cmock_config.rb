@@ -57,7 +57,11 @@ class CMockConfig
     options[:plugins].compact!
     options[:plugins].map! {|p| p.to_sym}
     @options = options
-    @options[:treat_as].merge!(standard_treat_as_map)
+    
+    treat_as_map = standard_treat_as_map().clone
+    treat_as_map.merge!(@options[:treat_as])
+    @options[:treat_as] = treat_as_map
+    
     @options.each_key { |key| eval("def #{key.to_s}() return @options[:#{key.to_s}] end") }
   end
   

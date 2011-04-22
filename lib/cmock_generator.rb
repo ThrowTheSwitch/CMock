@@ -179,9 +179,9 @@ class CMockGenerator
     file << "  cmock_line = cmock_call_instance->LineNumber;\n"
     if (@ordered)
       file << "  if (cmock_call_instance->CallOrder > ++GlobalVerifyOrder)\n"
-      file << "    UNITY_TEST_FAIL(cmock_line, \"Function '#{function[:name]}' called earlier than expected.\");"
+      file << "    UNITY_TEST_FAIL(cmock_line, \"Function '#{function[:name]}' called earlier than expected.\");\n"
       file << "  if (cmock_call_instance->CallOrder < GlobalVerifyOrder)\n"
-      file << "    UNITY_TEST_FAIL(cmock_line, \"Function '#{function[:name]}' called later than expected.\");"
+      file << "    UNITY_TEST_FAIL(cmock_line, \"Function '#{function[:name]}' called later than expected.\");\n"
       # file << "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, \"Out of order function calls. Function '#{function[:name]}'\");\n"
     end
     file << @plugins.run(:mock_implementation, function)

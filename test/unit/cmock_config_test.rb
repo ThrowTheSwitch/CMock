@@ -42,4 +42,39 @@ class CMockConfigTest < Test::Unit::TestCase
     assert_equal(test_plugins,                                              config.plugins)
     assert_equal(:include,                                                  config.treat_externs)
   end
+
+  should "populate treat_as map with internal standard_treat_as_map defaults, redefine defaults, and add custom values" do
+    user_treat_as = {
+      'BOOL'          => 'UINT8', # redefine standard default
+      'unsigned long' => 'INT',   # redefine standard default
+      'U8'            => 'UINT8', # custom value
+      'U16'           => 'UINT16' # custom value
+    }
+    
+    config = CMockConfig.new({:treat_as => user_treat_as})
+    
+    # standard defaults
+    assert_equal('INT',      config.treat_as['BOOL_T'])
+    assert_equal('HEX32',    config.treat_as['unsigned int'])
+    assert_equal('PTR',      config.treat_as['void*'])
+    assert_equal('STRING',   config.treat_as['CSTRING'])
+    assert_equal('STRING',   config.treat_as['char*'])
+    assert_equal('HEX8',     config.treat_as['unsigned char'])
+    assert_equal('INT',      config.treat_as['long'])
+    assert_equal('INT16',    config.treat_as['short'])
+
+    # overrides
+    assert_equal('UINT8',    config.treat_as['BOOL'])
+    assert_equal('INT',      config.treat_as['unsigned long'])
+    
+    # added custom values
+    assert_equal('UINT8',    config.treat_as['U8'])
+    assert_equal('UINT16',   config.treat_as['U16'])
+    
+    # standard_treat_as_map: unchanged
+    assert_equal('INT',      config.standard_treat_as_map['BOOL'])
+    assert_equal('HEX32',    config.standard_treat_as_map['unsigned long'])    
+    assert_equal('STRING',   config.standard_treat_as_map['char*'])
+  end
+  
 end
