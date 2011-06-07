@@ -160,11 +160,9 @@ class CMockGenerator
   
   def create_mock_implementation(file, function)        
     # prepare return value and arguments       
-    if (function[:modifier].empty?)
-      function_mod_and_rettype = function[:return][:type] 
-    else
-      function_mod_and_rettype = function[:modifier] + ' ' + function[:return][:type] 
-    end
+    function_mod_and_rettype = (function[:modifier].empty? ? '' : "#{function[:modifier]} ") +
+                               (function[:return][:type]) +
+                               (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
     args_string = function[:args_string]
     args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
     

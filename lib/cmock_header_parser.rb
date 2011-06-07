@@ -12,6 +12,7 @@ class CMockHeaderParser
     @funcs = []
     @c_strippables = cfg.strippables
     @c_attributes = (['const'] + cfg.attributes).uniq
+    @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
     @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]+-]*)\)$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
@@ -200,6 +201,8 @@ class CMockHeaderParser
     descriptors[0..-2].each do |word|
       if @c_attributes.include?(word)
         decl[:modifier] << word
+      elsif @c_calling_conventions.include?(word)
+        decl[:c_calling_convention] = word
       else
         rettype << word
       end

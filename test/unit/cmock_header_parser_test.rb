@@ -16,6 +16,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @test_name = 'test_file.h'
     @config.expect.strippables.returns(['(?:__attribute__\s*\(+.*?\)+)'])
     @config.expect.attributes.returns(['__ramfunc', 'funky_attrib'])
+    @config.expect.c_calling_conventions.returns(['__stdcall'])
     @config.expect.treat_as_void.returns(['MY_FUNKY_VOID'])
     @config.expect.treat_as.returns({ "BANJOS" => "INT", "TUBAS" => "HEX16"} )
     @config.expect.when_no_prototypes.returns(:error)
@@ -535,6 +536,29 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                           },
                  :name=>"TheMatrix",
                  :modifier=>"const",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
+                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}
+                        ],
+                 :args_string=>"int Trinity, unsigned int* Neo",
+                 :args_call=>"Trinity, Neo" }
+    assert_equal(expected, @parser.parse_declaration(source))
+  end
+  
+  should "extract c calling conventions properly" do
+  
+    source = "const int __stdcall TheMatrix(int Trinity, unsigned int * Neo)"
+    expected = { :var_arg=>nil,
+                 :return=>{ :type   => "int", 
+                            :name   => 'cmock_to_return', 
+                            :ptr?   => false,
+                            :const? => false,
+                            :str    => "int cmock_to_return",
+                            :void?  => false
+                          },
+                 :name=>"TheMatrix",
+                 :modifier=>"const",
+                 :c_calling_convention=>"__stdcall",
                  :contains_ptr? => true,
                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}

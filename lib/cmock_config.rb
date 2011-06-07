@@ -14,6 +14,7 @@ class CMockConfig
     :plugins                  => [],
     :strippables              => ['(?:__attribute__\s*\(+.*?\)+)'],
     :attributes               => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],
+    :c_calling_conventions    => ['__stdcall', '__cdecl', '__fastcall'],
     :enforce_strict_ordering  => false,
     :unity_helper_path        => false,
     :treat_as                 => {},

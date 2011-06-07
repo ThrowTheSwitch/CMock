@@ -381,6 +381,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
   
   should "create mock implementation functions in source file with different options" do
     function = { :modifier => "", 
+                 :c_calling_convention => "__stdcall",
                  :return => test_return[:int], 
                  :args_string => "uint32 sandwiches", 
                  :args => ["uint32 sandwiches"],
@@ -389,7 +390,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  :attributes => nil
                }
     output = []
-    expected = [ "int SupaFunction(uint32 sandwiches, corn ...)\n",
+    expected = [ "int __stdcall SupaFunction(uint32 sandwiches, corn ...)\n",
                  "{\n",
                  "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.SupaFunction_CallInstance);\n",
