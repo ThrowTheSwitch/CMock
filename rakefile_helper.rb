@@ -106,7 +106,7 @@ module RakefileHelpers
     return {:command => command, :options => options, :includes => includes}
   end
   
-  def link(exe_name, obj_list)
+  def link_it(exe_name, obj_list)
     linker = build_linker_fields
     cmd_str = "#{linker[:command]}#{linker[:options]}#{linker[:includes]} " +
       (obj_list.map{|obj|"#{$cfg['linker']['object_files']['path']}#{obj} "}).uniq.join +
@@ -220,7 +220,7 @@ module RakefileHelpers
       obj_list << test_base.ext($cfg['compiler']['object_files']['extension'])
       
       # Link the test executable
-      link(test_base, obj_list)
+      link_it(test_base, obj_list)
       
       # Execute unit test and generate results file
       simulator = build_simulator_fields
@@ -361,7 +361,7 @@ module RakefileHelpers
       report "(#{test[:options].join(', ')})"
       test[:files].each { |f| compile(f, test[:options]) }
       obj_files = test[:files].map { |f| f.gsub!(/.*\//,'').gsub!(C_EXTENSION, $cfg['compiler']['object_files']['extension']) }
-      link('TestCMockC', obj_files)
+      link_it('TestCMockC', obj_files)
       if $cfg['simulator'].nil?
         execute($cfg['linker']['bin_files']['destination'] + 'TestCMockC' + $cfg['linker']['bin_files']['extension'])
       else
