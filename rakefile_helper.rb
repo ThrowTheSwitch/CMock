@@ -85,9 +85,10 @@ module RakefileHelpers
   def compile(file, defines=[])
     compiler = build_compiler_fields
     cmd_str = "#{compiler[:command]}#{compiler[:defines]}#{defines.inject(''){|all, a| ' -D'+a+all }}#{compiler[:options]}#{compiler[:includes]} #{file} " +
-      "#{$cfg['compiler']['object_files']['prefix']}#{$cfg['compiler']['object_files']['destination']}" +
-      "#{File.basename(file, C_EXTENSION)}#{$cfg['compiler']['object_files']['extension']}"
-    execute(cmd_str)
+      "#{$cfg['compiler']['object_files']['prefix']}#{$cfg['compiler']['object_files']['destination']}"
+    obj_file = "#{File.basename(file, C_EXTENSION)}#{$cfg['compiler']['object_files']['extension']}"
+    execute(cmd_str + obj_file)
+    return obj_file
   end
   
   def build_linker_fields
@@ -203,8 +204,7 @@ module RakefileHelpers
         # Compile corresponding source file if it exists
         src_file = find_source_file(header, include_dirs)
         if !src_file.nil?
-          compile(src_file)
-          obj_list << header.ext($cfg['compiler']['object_files']['extension'])
+          obj_list << compile(src_file)
         end
       end
 
@@ -212,12 +212,10 @@ module RakefileHelpers
       runner_name = test_base + '_runner.c'
       runner_path = $cfg['compiler']['source_path'] + runner_name
       UnityTestRunnerGenerator.new(SYSTEST_GENERATED_FILES_PATH + cmock_config).run(test, runner_path)
-      compile(runner_path)
-      obj_list << runner_name.ext($cfg['compiler']['object_files']['extension'])
+      obj_list << compile(runner_path)
       
       # Build the test module
-      compile(test)
-      obj_list << test_base.ext($cfg['compiler']['object_files']['extension'])
+      obj_list << compile(test)
       
       # Link the test executable
       link_it(test_base, obj_list)
