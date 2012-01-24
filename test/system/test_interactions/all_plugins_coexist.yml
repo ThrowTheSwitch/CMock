@@ -7,7 +7,7 @@
   - :ignore
   - :callback
   :callback_after_arg_check: true
-  #:callback_include_count: false
+  :callback_include_count: false
   :treat_externs: :include
 
 :systest:
@@ -26,6 +26,7 @@
     const char * bars(void);
     void no_pointers(int a, char* b);
     int mixed(int a, int* b, int c);
+    void no_args(void);
 
   :source: 
     :header: |   

@@ -26,6 +26,7 @@
     extern const char * bars(void);
     void no_pointers(int a, char* b);
     int mixed(int a, int* b, int c);
+    void no_args(void);
 
   :source: 
     :header: |   
