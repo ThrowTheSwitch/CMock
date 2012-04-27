@@ -10,6 +10,8 @@ require 'rake/clean'
 require 'rake/testtask'
 require './rakefile_helper'
 
+require 'rspec/core/rake_task'
+
 include RakefileHelpers
 
 DEFAULT_CONFIG_FILE = 'gcc.yml'
@@ -100,5 +102,10 @@ end
 
 task :no_color do
   $colour_output = false
+end
+
+RSpec::Core::RakeTask.new(:spec) do |t|
+  spec_path = File.join(CMOCK_ROOT, 'spec')
+  t.pattern = spec_path + '/spec/*_spec.rb'
 end
   
