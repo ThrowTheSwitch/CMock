@@ -105,7 +105,7 @@ task :no_color do
 end
 
 RSpec::Core::RakeTask.new(:spec) do |t|
-  spec_path = File.join(CMOCK_ROOT, 'spec')
+  spec_path = File.join(CMOCK_ROOT, 'test')
   t.pattern = spec_path + '/spec/*_spec.rb'
 end
   
