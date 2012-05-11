@@ -1,4 +1,5 @@
-# require 'spec_helper' #add this to execute tests from the spec directory
+here = File.expand_path(File.dirname(__FILE__))
+require "#{here}/spec_helper" #add this to execute tests from the spec directory
 require 'cmock_file_writer'
 
 describe CMockFileWriter do 
