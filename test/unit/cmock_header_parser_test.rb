@@ -15,7 +15,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     create_mocks :config
     @test_name = 'test_file.h'
     @config.expect.strippables.returns(['(?:__attribute__\s*\(+.*?\)+)'])
-    @config.expect.attributes.returns(['__ramfunc', 'funky_attrib'])
+    @config.expect.attributes.returns(['__ramfunc', 'funky_attrib', 'SQLITE_API'])
     @config.expect.c_calling_conventions.returns(['__stdcall'])
     @config.expect.treat_as_void.returns(['MY_FUNKY_VOID'])
     @config.expect.treat_as.returns({ "BANJOS" => "INT", "TUBAS" => "HEX16"} )
@@ -31,7 +31,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   
   should "create and initialize variables to defaults appropriately" do
     assert_equal([], @parser.funcs)
-    assert_equal(['const', '__ramfunc', 'funky_attrib'], @parser.c_attributes)
+    assert_equal(['const', '__ramfunc', 'funky_attrib', 'SQLITE_API'], @parser.c_attributes)
     assert_equal(['void','MY_FUNKY_VOID'], @parser.treat_as_void)
   end
   
@@ -1125,6 +1125,33 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
   
+  should "extract this SQLite3 function with an anonymous function pointer arg (regression test)" do
+    source = "SQLITE_API int sqlite3_bind_text(sqlite3_stmt*, int, const char*, int n, void(*)(void*))"
+    expected = [{ :var_arg=>nil,
+                  :return=>{ :type   => "int",
+                             :name   => "cmock_to_return",
+                             :ptr?   => false,
+                             :const? => false,
+                             :str    => "int cmock_to_return",
+                             :void?  => false
+                           },
+                   :name=>"sqlite3_bind_text",
+                   :modifier=>"SQLITE_API",
+                   :contains_ptr? => true,
+                   :args=>[ {:type=>"sqlite3_stmt*", :name=>"cmock_arg2", :ptr? => true, :const? => false},
+                            {:type=>"int", :name=>"cmock_arg3", :ptr? => false, :const? => false},
+                            {:type=>"char*", :name=>"cmock_arg4", :ptr? => false, :const? => true},
+                            {:type=>"int", :name=>"n", :ptr? => false, :const? => false},
+                            {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => false}
+                          ],
+                   :args_string=>"sqlite3_stmt* cmock_arg2, int cmock_arg3, const char* cmock_arg4, int n, cmock_module_func_ptr1 cmock_arg1",
+                   :args_call=>"cmock_arg2, cmock_arg3, cmock_arg4, n, cmock_arg1" }]
+    typedefs = ["typedef void(*cmock_module_func_ptr1)(void*);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+ 
   should "extract functions with varargs" do
     source = "int XFiles(int Scully, int Mulder, ...);\n"
     expected = [{ :var_arg=>"...",
