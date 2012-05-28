@@ -4,7 +4,7 @@
     [Released under MIT License. Please refer to license.txt for details]
 ========================================== */
 
-#ifndef WIN32
+#ifndef __stdcall
 #define __stdcall
 #endif
 

@@ -188,7 +188,7 @@
         }
 
     - :pass: TRUE
-      :should: 'handle standard c string as null terminated on not do crappy memory compares of a byte, passing'
+      :should: 'handle standard c string as null terminated and not do crappy memory compares of a byte, passing'
       :code: |
         test()
         {
@@ -199,7 +199,7 @@
         }
         
     - :pass: FALSE
-      :should: 'handle standard c string as null terminated on not do crappy memory compares of a byte, finding failures'
+      :should: 'handle standard c string as null terminated and not do crappy memory compares of a byte, finding failures'
       :code: |
         test()
         {
