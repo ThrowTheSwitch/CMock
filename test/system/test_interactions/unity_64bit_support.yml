@@ -7,13 +7,8 @@
 
 :systest:
   :types: |
-    #if (UNITY_LONG_WIDTH == 32)
-        typedef unsigned long long TEST64;
-    #elif (UNITY_LONG_WIDTH == 64)
-        typedef unsigned long TEST64;
-    #else
-        #error This Test Should Not Be Run Unless You Have 64 Bit Support Enabled
-    #endif
+    #include "unity_internals.h"
+    typedef _UU64 TEST64;
     
   :mockable: |
     TEST64 foo(TEST64 a);

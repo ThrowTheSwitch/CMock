@@ -26,6 +26,7 @@ compiler:
   defines:
     prefix: '-D'
     items:
+      - 'UNITY_SUPPORT_64'
   object_files:
     prefix: '-o'
     extension: '.o'
@@ -45,7 +46,6 @@ linker:
     extension: '.exe'
     destination: *systest_build_path
 
-unsupported: 
-  - unity_64bit_support
+unsupported: []
 
 colour: true
