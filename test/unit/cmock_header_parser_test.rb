@@ -425,19 +425,25 @@ class CMockHeaderParserTest < Test::Unit::TestCase
         
     # ensure it's expected type of exception
     assert_raise RuntimeError do
-      @parser.parse("module", "")
+      @parser.parse("module", source)
     end
 
     assert_equal([], @parser.funcs)
     
     # verify exception message
     begin
-      @parser.parse("module", "")
+      @parser.parse("module", source)
     rescue RuntimeError => e
       assert_equal("ERROR: No function prototypes found!", e.message)
     end    
   end
-
+  
+  should "clean up module names that contain spaces, dashes, and such" do  
+    source = 'void meh(int (*func)(int));'
+        
+    retval = @parser.parse("C:\Ugly Module-Name", source)
+    assert (retval[:typedefs][0] =~ /CUglyModuleName/)
+  end
 
   should "raise upon no function prototypes found in file" do  
     source = 

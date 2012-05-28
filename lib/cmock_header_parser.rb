@@ -24,7 +24,7 @@ class CMockHeaderParser
   end
   
   def parse(name, source)
-    @module_name = name
+    @module_name = name.gsub(/\W/,'')
     @typedefs = []
     @funcs = []
     function_names = []
