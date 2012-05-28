@@ -85,6 +85,26 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
   
   
+  should "remove gcc's function __attribute__'s" do
+    source =           
+      "void* my_calloc(size_t, size_t) __attribute__((alloc_size(1,2)));\n" +
+      "void\n" +
+      "  my_realloc(void*, size_t) __attribute__((alloc_size(2)));\n" +
+      "extern int\n" +
+      "  my_printf (void *my_object, const char *my_format, ...)\n" +
+      "  __attribute__ ((format (printf, 2, 3)));\n" +
+      "  void __attribute__ ((interrupt)) universal_handler ();\n"
+    
+    expected = 
+    [
+      "void* my_calloc(size_t, size_t)",
+      "void my_realloc(void*, size_t)",
+      "void universal_handler()"
+    ]
+    
+    assert_equal(expected, @parser.import_source(source))
+  end
+  
   should "remove preprocessor directives" do
     source = 
       "#when stuff_happens\n" +
