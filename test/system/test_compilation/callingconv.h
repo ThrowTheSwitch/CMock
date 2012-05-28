@@ -4,4 +4,8 @@
     [Released under MIT License. Please refer to license.txt for details]
 ========================================== */
 
+#ifndef WIN32
+#define __stdcall
+#endif
+
 int __stdcall this_uses_calling_conventions(int b);

@@ -60,7 +60,7 @@ class CMockConfig
     options[:plugins].map! {|p| p.to_sym}
     @options = options
     
-    treat_as_map = standard_treat_as_map().clone
+    treat_as_map = standard_treat_as_map()#.clone
     treat_as_map.merge!(@options[:treat_as])
     @options[:treat_as] = treat_as_map
     
