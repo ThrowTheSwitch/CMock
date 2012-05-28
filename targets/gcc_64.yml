@@ -8,6 +8,7 @@ compiler:
   options:
     - '-c'
     - '-Wall'
+    - '-Wunused-parameter'
     - '-std=c99'
     - '-Wno-address'
     - '-pedantic-errors'

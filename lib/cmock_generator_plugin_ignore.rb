@@ -34,8 +34,13 @@ class CMockGeneratorPluginIgnore
   
   def mock_function_declarations(function)
     if (function[:return][:void?])
-      return "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore(__LINE__)\n" +
-             "void #{function[:name]}_CMockIgnore(UNITY_LINE_TYPE cmock_line);\n"
+      if (@config.ignore == :args_only)
+        return "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore(__LINE__)\n" +
+               "void #{function[:name]}_CMockIgnore(UNITY_LINE_TYPE cmock_line);\n"
+      else
+        return "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" +
+               "void #{function[:name]}_CMockIgnore(void);\n"
+      end
     else        
       return "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n" +
              "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
@@ -57,12 +62,17 @@ class CMockGeneratorPluginIgnore
   
   def mock_interfaces(function)
     lines = ""
+    args_only = (@config.ignore == :args_only)
     if (function[:return][:void?])
-      lines << "void #{function[:name]}_CMockIgnore(UNITY_LINE_TYPE cmock_line)\n{\n"
+      if (args_only)
+        lines << "void #{function[:name]}_CMockIgnore(UNITY_LINE_TYPE cmock_line)\n{\n"
+      else
+        lines << "void #{function[:name]}_CMockIgnore(void)\n{\n"
+      end
     else
       lines << "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
     end
-    if (@config.ignore == :args_only)
+    if (args_only)
       lines << @utils.code_add_base_expectation(function[:name], true)
     elsif (!function[:return][:void?]) 
       lines << @utils.code_add_base_expectation(function[:name], false)

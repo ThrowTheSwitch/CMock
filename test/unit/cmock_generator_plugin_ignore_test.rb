@@ -38,9 +38,18 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
   
-  should "handle function declarations for functions without return values" do
+  should "handle function declarations for functions without return values when args_only" do
     function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
     expected = "#define Mold_Ignore() Mold_CMockIgnore(__LINE__)\nvoid Mold_CMockIgnore(UNITY_LINE_TYPE cmock_line);\n"
+    @config.expect.ignore.returns(:args_only)
+    returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+  
+  should "handle function declarations for functions without return values when args_and_calls" do
+    function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
+    expected = "#define Mold_Ignore() Mold_CMockIgnore()\nvoid Mold_CMockIgnore(void);\n"
+    @config.expect.ignore.returns(:args_and_calls)
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -117,7 +126,7 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
   
   should "add a new mock interface for ignoring when function had no return value" do
     function = {:name => "Slime", :args => [], :args_string => "void", :return => test_return[:void]}
-    expected = ["void Slime_CMockIgnore(UNITY_LINE_TYPE cmock_line)\n",
+    expected = ["void Slime_CMockIgnore(void)\n",
                 "{\n",
                 "  Mock.Slime_IgnoreBool = (int)1;\n",
                 "}\n\n"
