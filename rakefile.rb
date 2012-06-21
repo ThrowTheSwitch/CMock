@@ -1,4 +1,4 @@
-# ==========================================
+  # ==========================================
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
@@ -10,9 +10,26 @@ require 'rake/clean'
 require 'rake/testtask'
 require './rakefile_helper'
 
+require 'rspec/core/rake_task'
+
 include RakefileHelpers
 
 DEFAULT_CONFIG_FILE = 'gcc.yml'
+CMOCK_ROOT = File.expand_path(File.dirname(__FILE__))
+
+SYSTEM_TEST_SUPPORT_DIRS = [
+  File.join(CMOCK_ROOT, 'test/system/generated'),
+  File.join(CMOCK_ROOT, 'test/system/build')
+]
+
+SYSTEM_TEST_SUPPORT_DIRS.each do |dir|
+  p dir
+  directory(dir)
+  CLOBBER.include(dir)
+end
+
+
+task :prep_system_tests => SYSTEM_TEST_SUPPORT_DIRS
 
 configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
@@ -29,7 +46,7 @@ end
 
 namespace :test do
   desc "Run all unit and system tests"
-  task :all => [:clobber, 'test:units', 'test:c', 'test:system']
+  task :all => [:clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
 
   desc "Run Unit Tests"
   Rake::TestTask.new('units') do |t|
@@ -46,12 +63,12 @@ namespace :test do
   end
   
   desc "Run C Unit Tests"
-  task :c do
+  task :c => [:prep_system_tests] do
     build_and_test_c_files
   end
   
   desc "Run System Tests"
-  task :system => [:clobber] do
+  task :system => [:clobber, :prep_system_tests] do
     #get a list of all system tests, removing unsupported tests for this compiler
     sys_unsupported  = $cfg['unsupported'].map {|a| 'test/system/test_interactions/'+a+'.yml'}
     sys_tests_to_run = FileList['test/system/test_interactions/*.yml'] - sys_unsupported
@@ -78,12 +95,17 @@ namespace :test do
   end
   
   desc "Profile Mock Generation"
-  task :profile => [:clobber] do
+  task :profile => [:clobber, :prep_system_tests] do
     run_system_test_profiles(FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'])
   end
 end
 
 task :no_color do
   $colour_output = false
+end
+
+RSpec::Core::RakeTask.new(:spec) do |t|
+  spec_path = File.join(CMOCK_ROOT, 'test/spec')
+  t.pattern = spec_path + '/*_spec.rb'
 end
   

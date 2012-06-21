@@ -46,6 +46,8 @@ linker:
     extension: '.exe'
     destination: *systest_build_path
 
-unsupported: []
+unsupported: 
+  - unity_64bit_support
+  - callingconv
 
 colour: true
