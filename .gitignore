@@ -1,2 +1,4 @@
 test/system/build
 test/system/generated
+*.sublime-project
+Gemfile.lock

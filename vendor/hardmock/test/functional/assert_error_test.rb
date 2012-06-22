@@ -2,6 +2,12 @@ require File.expand_path(File.dirname(__FILE__) + "/../test_helper")
 require 'assert_error'
 
 class AssertErrorTest < Test::Unit::TestCase
+  TEST_FAILURE = nil
+  if RUBY_VERSION =~ /^1\.8/
+    TEST_FAILURE = Test::Unit::AssertionFailedError
+  elsif RUBY_VERSION =~ /^1\.9/
+    TEST_FAILURE = MiniTest::Assertion
+  end
 
   it "specfies an error type and message that should be raised" do
     assert_error RuntimeError, "Too funky" do
@@ -10,7 +16,7 @@ class AssertErrorTest < Test::Unit::TestCase
   end
 
   it "flunks if the error message is wrong" do
-    err = assert_raise Test::Unit::AssertionFailedError do
+    err = assert_raise TEST_FAILURE do
       assert_error RuntimeError, "not good" do
         raise RuntimeError.new("Too funky")
       end
@@ -20,7 +26,7 @@ class AssertErrorTest < Test::Unit::TestCase
   end
 
   it "flunks if the error type is wrong" do
-    err = assert_raise Test::Unit::AssertionFailedError do
+    err = assert_raise TEST_FAILURE do
       assert_error StandardError, "Too funky" do
         raise RuntimeError.new("Too funky")
       end
@@ -36,7 +42,8 @@ class AssertErrorTest < Test::Unit::TestCase
   end
 
   it "flunks if the error message doesn't match all the Regexps" do
-    err = assert_raise Test::Unit::AssertionFailedError do
+    #err = assert_raise Test::Unit::AssertionFailedError do
+    err = assert_raise TEST_FAILURE do
       assert_error StandardError, /way/i, /too/i, /funky/i do
         raise StandardError.new("Too funky")
       end

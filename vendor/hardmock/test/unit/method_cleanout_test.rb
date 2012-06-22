@@ -11,12 +11,14 @@ class MethodCleanoutTest < Test::Unit::TestCase
     @victim = Victim.new
   end
 
-  def test_should_remove_most_methods_from_a_class
-    expect_removed = Victim::OriginalMethods.reject { |m| 
-      Hardmock::MethodCleanout::SACRED_METHODS.include?(m)
-    }
-    expect_removed.each do |m|
-      assert !@victim.respond_to?(m), "should not have method #{m}"
+  if RUBY_VERSION =~ /^1\.8/
+    def test_should_remove_most_methods_from_a_class
+      expect_removed = Victim::OriginalMethods.reject { |m| 
+        Hardmock::MethodCleanout::SACRED_METHODS.include?(m)
+      }
+      expect_removed.each do |m|
+        assert !@victim.respond_to?(m), "should not have method #{m}"
+      end
     end
   end
 

@@ -86,9 +86,8 @@ module Hardmock
 
       stubbed_method = Hardmock::StubbedMethod.new(self, method_name)
 
-
       unless _is_mock? or already_stubbed
-        if methods.include?(method_name.to_s)
+        if methods.map do |m| m.to_s end.include?(method_name)
           hm_meta_eval do 
             alias_method "_hardmock_original_#{method_name}".to_sym, method_name.to_sym
           end
@@ -116,7 +115,7 @@ module Hardmock
         Hardmock::ReplacedMethod.new(self, method_name)
 
         # Preserver original implementation of the method by aliasing it away
-        if methods.include?(method_name)
+        if methods.map do |m| m.to_s end.include?(method_name.to_s)
           hm_meta_eval do 
             alias_method "_hardmock_original_#{method_name}".to_sym, method_name.to_sym
           end
@@ -194,7 +193,7 @@ module Hardmock
       all_replaced_methods.each do |replaced|
         unless replaced.target._is_mock?
           backed_up = "_hardmock_original_#{replaced.method_name}"
-          if replaced.target.methods.include?(backed_up)
+          if replaced.target.methods.map do |m| m.to_s end.include?(backed_up)
             replaced.target.hm_meta_eval do
               alias_method replaced.method_name.to_sym, backed_up.to_sym 
             end

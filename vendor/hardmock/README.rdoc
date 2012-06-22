@@ -2,7 +2,16 @@
 
 Strict, ordered mock objects using very lightweight syntax in your tests.
 
-== How
+== DISCONTINUED
+
+After release 1.3.8, Hardmock will not be actively maintained.
+(1.3.8 is a Ruby 1.9/MiniTest compatibility update, see below).
+
+Atomic Object still believes in (and heavily utilizes) mock objects and interaction-based unit testing, however, we ourselves have begun leveraging other popular mocking tools such as RSpec, RR, Mocha, etc.
+
+For those of you with time invested in older projects using Hardmock, but who need to migrate their older projects to Ruby 1.9, try updating to Hardmock 1.3.8.
+
+== How to use Hardmock
 
 The basic procedure for using Hardmock in your tests is:
 
@@ -40,11 +49,10 @@ Expects <tt>@garage.open_door</tt>, <tt>@car.start(:choke)</tt> and <tt>@car.dri
 
 == Download and Install
 
-* Homepage: http://hardmock.rubyforge.org
-* GEM or TGZ or ZIP: http://rubyforge.org/frs/?group_id=2742
-* Rails plugin: script/plugin install 
-* SVN access: svn co svn://rubyforge.org/var/svn/hardmock/trunk
-* Developer SVN access: svn co svn://developername@rubyforge.org/var/svn/hardmock/trunk
+* Install: gem install hardmock
+* Homepage: http://atomicobject.github.com/hardmock
+* Rubygems.org: http://rubygems.org/gems/hardmock
+* API documentation: http://rubydoc.info/gems/hardmock/frames
 
 == Setup for Test::Unit
 
@@ -65,6 +73,12 @@ Get this into your spec helper or environment or Rakefile or wherever you prefer
 This puts the implicit conveniences into your spec context, like "create_mocks" etc, and also provides for automatic
 "verify_mocks" after each Example is run.
 
+== Ruby 1.9 Compatibility
+
+As of build 1.3.8, Hardmock works in Ruby 1.9.2.  Older versions of Hardmock had non-1.9 compatible code; furthermore, 1.9 ships with MiniTest, which is similar to TestUnit but has different implementation internals, which we monkey-patch.
+
 == Author
+
 * David Crosby crosby at http://atomicobject.com
-* (c) 2006,2007 Atomic Object LLC 
+* (c) 2006-2011 Atomic Object LLC 
+

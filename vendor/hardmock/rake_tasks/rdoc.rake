@@ -8,7 +8,7 @@ namespace :doc do
     rdoc.rdoc_dir = 'doc'
     rdoc.title    = "Hardmock: Strict expectation-based mock object library " 
     add_rdoc_options(rdoc.options)
-    rdoc.rdoc_files.include('lib/**/*.rb', 'README','CHANGES','LICENSE')
+    rdoc.rdoc_files.include('lib/**/*.rb', 'README.rdoc','CHANGES','LICENSE')
   }
 
   task :show => [ 'doc:rerdoc' ] do

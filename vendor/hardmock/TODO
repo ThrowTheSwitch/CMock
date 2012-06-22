@@ -1,0 +1,24 @@
+Wed Jan  5 01:50:24 EST 2011
+crosby
+
+Hardmock is being "finalized"... Atomic probably won't be maintaining or building on this library beyond v1.3.8
+
+Thu Dec  6 13:09:48 EST 2007
+crosby
+
+Sample from Crowley regarding "should" in rspec:
+
+i like:
+    @physical_layout_resource_type_panel_decorator.add_resource(@view_mock, @resource_type_panel_mock, @resource_mock, @resource_type_mock).should eql(the_hard_mock)
+
+    i had to:
+    component = @physical_layout_resource_type_panel_decorator.add_resource @view_mock, @resource_type_panel_mock, @resource_mock, @resource_type_mock
+    (component == @component_mock).should be_true
+
+Sun Dec 10 09:15:26 EST 2006
+crosby
+
+TODO: MAYBE
+* Remove method_cleanout on mocks?; prefer instead to use explicit method overriding like this: @my_mock.expects('to_s').returns('bogus output')
+* Mock actual methods on actual objects or classes or modules?
+* Achieve clarity on "yields"

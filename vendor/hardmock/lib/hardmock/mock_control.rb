@@ -38,7 +38,6 @@ module Hardmock
     end
 
     def verify
-#      puts "MockControl #{self.object_id.to_s(16)} verify: happy? #{happy?}"
       @disappointed = !happy?
       raise VerifyError.new("Unmet expectations", @expectations) unless happy?
     end

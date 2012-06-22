@@ -251,8 +251,12 @@ class ExpectationTest < Test::Unit::TestCase
     err = assert_raise ExpectationError do
       se.apply_method_call(@mock,'each_bean',[:side_slot],a_block)
     end
+    
+    expected_arity = "-1"
+    expected_arity = "0" if RUBY_VERSION =~ /^1\.9/
+
     assert_match(/wont_fit/i, err.message) 
-    assert_match(/arity -1/i, err.message) 
+    assert_match(/arity #{expected_arity}/i, err.message) 
     assert_equal [], things, "Wrong things"
   end
 

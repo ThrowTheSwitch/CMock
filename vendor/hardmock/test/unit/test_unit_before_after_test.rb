@@ -6,6 +6,8 @@ class TestUnitBeforeAfter < Test::Unit::TestCase
   # after_teardown
   #
 
+  USING_RUBY_1_9 = RUBY_VERSION =~ /^1\.9/
+
   it "adds TestCase.after_teardown hook for appending post-teardown actions" do
     write_and_run_test :use_after_teardown => true
 
@@ -21,16 +23,28 @@ class TestUnitBeforeAfter < Test::Unit::TestCase
 
   should "execute all after_teardowns, even if the main teardown flunks" do
     write_and_run_test :use_after_teardown => true, :flunk_in_teardown => true
-    see_in_order "Loaded suite",
-      "THE SETUP",
-      "A TEST",
-      "F",
-      "1st after_teardown",
-      "2nd after_teardown",
-      "Finished in",
-      "1) Failure:",
-      "test_something(MyExampleTest) [_test_file_temp.rb:20]:",
-      "FLUNK IN TEARDOWN"
+    if USING_RUBY_1_9
+      see_in_order "Loaded suite",
+        "THE SETUP",
+        "A TEST",
+        "1st after_teardown",
+        "2nd after_teardown",
+        "Finished in",
+        "1) Failure:",
+        "test_something(MyExampleTest) [_test_file_temp.rb:20]:",
+        "FLUNK IN TEARDOWN"
+    else
+      see_in_order "Loaded suite",
+        "THE SETUP",
+        "A TEST",
+        "F",
+        "1st after_teardown",
+        "2nd after_teardown",
+        "Finished in",
+        "1) Failure:",
+        "test_something(MyExampleTest) [_test_file_temp.rb:20]:",
+        "FLUNK IN TEARDOWN"
+    end
     see_results :tests => 1, :assertions => 1, :failures => 1, :errors => 0
   end
 
@@ -54,7 +68,6 @@ class TestUnitBeforeAfter < Test::Unit::TestCase
       "A TEST",
       "THE TEARDOWN",
       "1st after_teardown",
-      "F",
       "2nd after_teardown",
       "Finished in",
       "1) Failure:",
@@ -68,16 +81,28 @@ class TestUnitBeforeAfter < Test::Unit::TestCase
 
   should "execute all after_teardowns, even if some of them explode" do
     write_and_run_test :use_after_teardown => true, :raise_in_after_teardown => true
-    see_in_order "Loaded suite",
-      "THE SETUP",
-      "A TEST",
-      "THE TEARDOWN",
-      "1st after_teardown",
-      "E",
-      "2nd after_teardown",
-      "Finished in",
-      "RuntimeError: Error in first after_teardown",
-      "RuntimeError: Error in second after_teardown"
+    if USING_RUBY_1_9
+      see_in_order "Loaded suite",
+        "THE SETUP",
+        "A TEST",
+        "THE TEARDOWN",
+        "1st after_teardown",
+        "2nd after_teardown",
+        "Finished in",
+        "RuntimeError: Error in first after_teardown",
+        "RuntimeError: Error in second after_teardown"
+    else
+      see_in_order "Loaded suite",
+        "THE SETUP",
+        "A TEST",
+        "THE TEARDOWN",
+        "1st after_teardown",
+        "E",
+        "2nd after_teardown",
+        "Finished in",
+        "RuntimeError: Error in first after_teardown",
+        "RuntimeError: Error in second after_teardown"
+    end
     see_results :tests => 1, :assertions => 0, :failures => 0, :errors => 2
   end
 
@@ -104,32 +129,56 @@ class TestUnitBeforeAfter < Test::Unit::TestCase
 
   it "provides a cleaned-up backtrace" do
     write_and_run_test :with_failure => true
-    see_in_order "Loaded suite",
-      "THE SETUP",
-      "A FAILING TEST",
-      "F", "THE TEARDOWN",
-      "Finished in",
-      "1) Failure:",
-      "test_something(MyExampleTest) [_test_file_temp.rb:17]:",
-      "Instrumented failure.",
-      "<false> is not true."
+    if USING_RUBY_1_9
+      see_in_order "Loaded suite",
+        "THE SETUP",
+        "A FAILING TEST",
+        "THE TEARDOWN",
+        "F\n", 
+        "Finished in",
+        "1) Failure:",
+        "test_something(MyExampleTest) [_test_file_temp.rb:17]:",
+        "Instrumented failure"
+    else
+      see_in_order "Loaded suite",
+        "THE SETUP",
+        "A FAILING TEST",
+        "F", 
+        "THE TEARDOWN",
+        "Finished in",
+        "1) Failure:",
+        "test_something(MyExampleTest) [_test_file_temp.rb:17]:",
+        "Instrumented failure.",
+        "<false> is not true."
+    end
     see_results :tests => 1, :assertions => 1, :failures => 1, :errors => 0
   end
 
   it "provides a cleaned-up backtrace, but not TOO cleaned up" do
     write_and_run_test :with_failure => true, :use_helpers => true
-    see_in_order "Loaded suite",
-      "THE SETUP",
-      "A FAILING TEST",
-      "F", "THE TEARDOWN",
-      "Finished in",
-      "1) Failure:",
-      "test_something(MyExampleTest)\n",
-      "[_test_file_temp.rb:25:in `tripwire'",
-      "_test_file_temp.rb:21:in `my_helper'",
-      "_test_file_temp.rb:17:in `test_something']:",
-      "Instrumented failure.",
-      "<false> is not true."
+    if USING_RUBY_1_9
+      see_in_order "Loaded suite",
+        "THE SETUP",
+        "A FAILING TEST",
+        "F", "THE TEARDOWN",
+        "Finished in",
+        "1) Failure:",
+        "test_something(MyExampleTest)",
+        "Instrumented failure"
+    else
+      see_in_order "Loaded suite",
+        "THE SETUP",
+        "A FAILING TEST",
+        "F", "THE TEARDOWN",
+        "Finished in",
+        "1) Failure:",
+        "test_something(MyExampleTest)\n",
+        "[_test_file_temp.rb:25:in `tripwire'",
+        "_test_file_temp.rb:21:in `my_helper'",
+        "_test_file_temp.rb:17:in `test_something']:",
+        "Instrumented failure.",
+        "<false> is not true."
+    end
     see_results :tests => 1, :assertions => 1, :failures => 1, :errors => 0
   end
 
@@ -165,10 +214,10 @@ class TestUnitBeforeAfter < Test::Unit::TestCase
     see_in_order "Loaded suite",
       "3rd before_setup",
       "2nd before_setup",
-      "FTHE TEARDOWN",
+      "THE TEARDOWN",
       "1) Failure:",
       "test_something(MyExampleTest) [_test_file_temp.rb:10]:",
-      "Flunk in 2nd before_setup."
+      "Flunk in 2nd before_setup"
     see_results :tests => 1, :assertions => 1, :failures => 1, :errors => 0
   end
 
@@ -177,12 +226,12 @@ class TestUnitBeforeAfter < Test::Unit::TestCase
     see_in_order "Loaded suite",
       "3rd before_setup",
       "2nd before_setup",
-      "ETHE TEARDOWN",
+      "THE TEARDOWN",
       "Finished in",
       "test_something(MyExampleTest):",
       "RuntimeError: Error in 2nd before_setup",
       "_test_file_temp.rb:10",
-      "/hardmock/lib/test_unit_before_after.rb:", ":in `call'"
+      "/hardmock/lib/test_unit_before_after.rb:"
     see_results :tests => 1, :assertions => 0, :failures => 0, :errors => 1
   end
 

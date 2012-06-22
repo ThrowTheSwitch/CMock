@@ -79,34 +79,80 @@ module Test #:nodoc:#
         end
       end
 
-      # OVERRIDE: This is a reimplementation of the default "run", updated to
-      # execute actions after teardown.
-      def run(result)
-        yield(STARTED, name)
-        @_result = result
-        begin
-          execute_pre_setup_actions(self)
-          setup
-          __send__(@method_name)
-        rescue Test::Unit::AssertionFailedError => e
-          add_failure(e.message, auxiliary_backtrace_filter(e.backtrace))
-        rescue Exception
-          raise if should_passthru_exception($!) # See implementation; this is for pre-1.8.6 compat
-          add_error($!)
-        ensure
+      if RUBY_VERSION =~ /^1\.8/
+        # OVERRIDE FOR RUBY 1.8.x: This is a reimplementation of the default "run", updated to
+        # execute actions after teardown. 
+        # Only the lines marked with ** are different from the 1.8 
+        # implementation of TestCase#run.
+        def run(result)
+          yield(STARTED, name)
+          @_result = result
           begin
-            teardown
+            execute_pre_setup_actions(self) # ** Added to support TestCaseBeforeAfter
+            setup
+            __send__(@method_name)
           rescue Test::Unit::AssertionFailedError => e
             add_failure(e.message, auxiliary_backtrace_filter(e.backtrace))
           rescue Exception
             raise if should_passthru_exception($!) # See implementation; this is for pre-1.8.6 compat
             add_error($!)
           ensure
-            execute_post_teardown_actions(self)
+            begin
+              teardown
+            rescue Test::Unit::AssertionFailedError => e
+              add_failure(e.message, auxiliary_backtrace_filter(e.backtrace))
+            rescue Exception
+              raise if should_passthru_exception($!) # See implementation; this is for pre-1.8.6 compat
+              add_error($!)
+            ensure
+              execute_post_teardown_actions(self) # ** Added to support TestCaseBeforeAfter
+            end
           end
+          result.add_run
+          yield(FINISHED, name)
         end
-        result.add_run
-        yield(FINISHED, name)
+
+      elsif RUBY_VERSION =~ /^1\.9/
+
+        # OVERRIDE FOR RUBY 1.9.x: This is a reimplementation of the default "run", updated to
+        # support execution of actions before setup after teardown. 
+        # Only the lines marked with ** are different from the MiniTest implementation of TestCase#run.
+        # (Ruby 1.9 ships with MiniTest which is similar to TestUnit in structure but
+        # with a different implementation of TestCase#run)
+        def run runner
+          trap 'INFO' do
+            warn '%s#%s %.2fs' % [self.class, self.__name__,
+              (Time.now - runner.start_time)]
+            runner.status $stderr
+          end if SUPPORTS_INFO_SIGNAL
+
+          result = '.'
+          begin
+            @passed = nil
+            execute_pre_setup_actions(self, runner) # ** Added to support TestCaseBeforeAfter
+            self.setup
+            self.__send__ self.__name__
+            @passed = true
+          rescue *PASSTHROUGH_EXCEPTIONS
+            raise
+          rescue Exception => e
+            @passed = false
+            result = runner.puke(self.class, self.__name__, e)
+          ensure
+            begin
+              self.teardown
+            rescue *PASSTHROUGH_EXCEPTIONS
+              raise
+            rescue Exception => e
+              result = runner.puke(self.class, self.__name__, e)
+            ensure
+              result2 = execute_post_teardown_actions(self, runner) # ** Added to support TestCaseBeforeAfter
+              #result ||= result2
+            end
+            trap 'INFO', 'DEFAULT' if SUPPORTS_INFO_SIGNAL
+          end
+          result
+        end
       end
 
       private
@@ -114,31 +160,42 @@ module Test #:nodoc:#
       # Run through the after_teardown actions, treating failures and errors
       # in the same way that "run" does: they are reported, and the remaining
       # actions are executed.
-      def execute_post_teardown_actions(test_instance)
-        self.class.post_teardown_actions.each do |action|
-          begin
-            action.call test_instance
-          rescue Test::Unit::AssertionFailedError => e
-            add_failure(e.message, auxiliary_backtrace_filter(e.backtrace))
-          rescue Exception
-            raise if should_passthru_exception($!)
-            add_error($!)
+      if RUBY_VERSION =~ /^1\.8/
+        def execute_post_teardown_actions(test_instance)
+          self.class.post_teardown_actions.each do |action|
+            begin
+              action.call test_instance
+            rescue Test::Unit::AssertionFailedError => e
+              add_failure(e.message, auxiliary_backtrace_filter(e.backtrace))
+            rescue Exception
+              raise if should_passthru_exception($!)
+              add_error($!)
+            end
           end
+        end
+      end
+
+      if RUBY_VERSION =~ /^1\.9/
+        def execute_post_teardown_actions(test_instance, runner)
+          result = nil
+          self.class.post_teardown_actions.each do |action|
+            begin
+              action.call test_instance
+            rescue *PASSTHROUGH_EXCEPTIONS
+              raise
+            rescue Exception => e
+              result = runner.puke(self.class, self.__name__, e)
+            end
+          end
+          result
         end
       end
       
       # Run through the before_setup actions.
       # Failures or errors cause execution to stop.
-      def execute_pre_setup_actions(test_instance)
+      def execute_pre_setup_actions(test_instance,runner=nil)
         self.class.pre_setup_actions.each do |action|
-#          begin
-            action.call test_instance
-#          rescue Test::Unit::AssertionFailedError => e
-#            add_failure(e.message, auxiliary_backtrace_filter(e.backtrace))
-#          rescue Exception
-#            raise if should_passthru_exception($!)
-#            add_error($!)
-#          end
+          action.call test_instance
         end
       end
 
