@@ -9,12 +9,17 @@
   require File.expand_path(File.dirname(__FILE__)) + req
 end
 
+# Note from Matt July 16 2012: not sure why this is here, as 1.9 comes with
+# minitest, an implementation for Test::Unit in 1.9.
+# Using test-unit makes hardmock quite unhappy.
+# Long-term solution: replace hardmock with a mocking library like rr or rspec
+# that is well maintained into the future. hardmock is off of life support.
 #gem install test-unit -v 1.2.3
-ruby_version = RUBY_VERSION.split('.')
-if (ruby_version[1].to_i == 9) and (ruby_version[2].to_i > 1)
-  require 'rubygems'
-  gem 'test-unit'
-end
+# ruby_version = RUBY_VERSION.split('.')
+# if (ruby_version[1].to_i == 9) and (ruby_version[2].to_i > 1)
+#   require 'rubygems'
+#   gem 'test-unit'
+# end
 require 'test/unit'
 require 'hardmock'
 
