@@ -22,6 +22,7 @@ class CMockGeneratorPluginIgnore
     end
     @utils = utils
     @priority = 2
+	@api		  = "MOCKGOTHIC_API"
   end
   
   def instance_structure(function)
@@ -33,17 +34,20 @@ class CMockGeneratorPluginIgnore
   end
   
   def mock_function_declarations(function)
+	
+	definition = preprocessor_formatting(function)
+  
     if (function[:return][:void?])
       if (@config.ignore == :args_only)
-        return "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore(__LINE__)\n" +
-               "void #{function[:name]}_CMockIgnore(UNITY_LINE_TYPE cmock_line);\n"
+        return "#{definition}\n#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore(__LINE__)\n" +
+               "#{@api} void #{function[:name]}_CMockIgnore(UNITY_LINE_TYPE cmock_line);\n"
       else
-        return "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" +
-               "void #{function[:name]}_CMockIgnore(void);\n"
+        return "#{definition}\n#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" +
+               "#{@api} void #{function[:name]}_CMockIgnore(void);\n"
       end
     else        
-      return "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n" +
-             "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
+      return "#{definition}\n#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n" +
+             "#{@api} void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
     end 
   end
   
@@ -55,7 +59,13 @@ class CMockGeneratorPluginIgnore
       retval = function[:return].merge( { :name => "cmock_call_instance->ReturnVal"} )
       lines << "    if (cmock_call_instance == NULL)\n      return Mock.#{function[:name]}_FinalReturn;\n"
       lines << "  " + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless (retval[:void?])
-      lines << "    return cmock_call_instance->ReturnVal;\n  }\n"
+      
+	  func_return_type = function[:return][:type]
+	  if !(func_return_type.match("GOTH_OBJECT_ID"))
+	    lines << "    return (#{function[:return][:type]})cmock_call_instance->ReturnVal;\n  }\n"
+	  else
+	    lines << "    return cmock_call_instance->ReturnVal;\n  }\n"
+	  end  
     end
     lines
   end
@@ -65,12 +75,12 @@ class CMockGeneratorPluginIgnore
     args_only = (@config.ignore == :args_only)
     if (function[:return][:void?])
       if (args_only)
-        lines << "void #{function[:name]}_CMockIgnore(UNITY_LINE_TYPE cmock_line)\n{\n"
+        lines << "#{@api} void #{function[:name]}_CMockIgnore(UNITY_LINE_TYPE cmock_line)\n{\n"
       else
-        lines << "void #{function[:name]}_CMockIgnore(void)\n{\n"
+        lines << "#{@api} void #{function[:name]}_CMockIgnore(void)\n{\n"
       end
     else
-      lines << "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
+      lines << "#{@api} void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
     end
     if (args_only)
       lines << @utils.code_add_base_expectation(function[:name], true)
@@ -87,6 +97,21 @@ class CMockGeneratorPluginIgnore
   def mock_conditionally_verify_counts(function)
     func_name = function[:name]
     "  if (Mock.#{func_name}_IgnoreBool)\n    Mock.#{func_name}_CallInstance = CMOCK_GUTS_NONE;\n"
+  end
+  
+  def preprocessor_formatting(function)
+    definition = function[:defs].to_s
+	definition.gsub!(/\[/,'')
+	definition.gsub!(/\]/,'')
+	definition.gsub!(/"/,'')
+	definition.gsub!(/,/,'')
+	definition.gsub!(/#/,"\n#")
+	definition.gsub!(/<\D*\d*>/, '')
+	definition.gsub!(/\\\D*\d*\\/, '')
+	definition.gsub!(/^#include\s/,'')
+	definition.gsub!(/^endif/,"#endif")
+  
+    return definition
   end
   
   def nothing(function)

@@ -14,6 +14,7 @@ class CMockGeneratorPluginCallback
     @config = config
     @utils = utils
     @priority = 6
+	@api = "MOCKGOTHIC_API"
     
     @include_count = @config.callback_include_count
     if (@config.callback_after_arg_check)
@@ -36,7 +37,7 @@ class CMockGeneratorPluginCallback
     return_type = function[:return][:const?] ? "const #{function[:return][:type]}" : function[:return][:type]
     style  = (@include_count ? 1 : 0) | (function[:args].empty? ? 0 : 2)
     styles = [ "void", "int cmock_num_calls", function[:args_string], "#{function[:args_string]}, int cmock_num_calls" ]
-    "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\nvoid #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback);\n"
+    "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\n#{@api} void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback);\n"
   end
 
   def mock_implementation_for_callbacks(function)
@@ -61,11 +62,18 @@ class CMockGeneratorPluginCallback
 
   def mock_interfaces(function)
     func_name = function[:name]
-    "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n" + 
+    "#{@api} void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n" + 
     "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
   end
 
   def mock_destroy(function)
+  
+	definition = preprocessor_formatting(function)
+	file_name = filename_format(function)
+	if (definition.include?(file_name))
+	  definition = ''
+    end
+	"  #{definition}\n" +
     "  Mock.#{function[:name]}_CallbackFunctionPointer = NULL;\n" +
     "  Mock.#{function[:name]}_CallbackCalls = 0;\n"
   end
@@ -73,6 +81,35 @@ class CMockGeneratorPluginCallback
   def mock_verify(function)
     func_name = function[:name]
     "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n    Mock.#{func_name}_CallInstance = CMOCK_GUTS_NONE;\n"
+  end
+  
+  def preprocessor_formatting(function)
+    definition = function[:defs].to_s
+	definition.gsub!(/\[/,'')
+	definition.gsub!(/\]/,'')
+	definition.gsub!(/"/,'')
+	definition.gsub!(/,/,'')
+	definition.gsub!(/#/,"\n#")
+	definition.gsub!(/<\D*\d*>/, '')
+	definition.gsub!(/\\\D*\d*\\/, '')
+	definition.gsub!(/^#include\s/,'')
+	definition.gsub!(/^endif/,"#endif")
+  
+    return definition
+  end
+  
+  def filename_format(function)
+  
+    file_name = function[:filename]
+	file_name = file_name.gsub(".C",'')
+	
+	if(file_name.match("EPSGSPACECONV_INTRINSICS"))
+	  file_name = "_EPSGSPACECONV"
+	elsif(file_name.match("D3EDITOP_INTRINSICS"))
+	  file_name = "D3EDITOP_INTRINISCS"
+	end
+	
+    return file_name
   end
 
 end

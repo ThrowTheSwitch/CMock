@@ -9,11 +9,14 @@ class CMockConfig
   CMockDefaultOptions = 
   {
     :framework                => :unity,
-    :mock_path                => 'mocks',
-    :mock_prefix              => 'Mock',
-    :plugins                  => [],
+    #:mock_header_path         => 'C:\development\amalgam\mockgothic\src\main\include',  	# production
+	#:mock_source_path         => 'C:\development\amalgam\mockgothic\src\main\C++',			# production
+	:mock_header_path         => 'C:\development\CMock\mocks\header',				# testing
+	:mock_source_path         => 'C:\development\CMock\mocks\source',				# testing
+    :mock_prefix              => '',
+    :plugins                  => [:callback, :ignore, :original],
     :strippables              => ['(?:__attribute__\s*\(+.*?\)+)'],
-    :attributes               => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],
+    :attributes               => ['__ramfunc', '__irq', '__fiq', 'register', 'extern', 'GOTHIC_PUBLIC'],
     :c_calling_conventions    => ['__stdcall', '__cdecl', '__fastcall'],
     :enforce_strict_ordering  => false,
     :unity_helper_path        => false,
@@ -23,8 +26,8 @@ class CMockConfig
     :when_no_prototypes       => :warn,           #the options being :ignore, :warn, or :error
     :when_ptr                 => :compare_data,   #the options being :compare_ptr, :compare_data, or :smart
     :verbosity                => 2,               #the options being 0 errors only, 1 warnings and errors, 2 normal info, 3 verbose
-    :treat_externs            => :exclude,        #the options being :include or :exclude
-    :ignore                   => :args_and_calls, #the options being :args_and_calls or :args_only
+    :treat_externs            => :include,        #the options being :include or :exclude
+    :ignore                   => :args_only, #the options being :args_and_calls or :args_only
     :callback_include_count   => true,
     :callback_after_arg_check => false,
     :includes                    => nil, 

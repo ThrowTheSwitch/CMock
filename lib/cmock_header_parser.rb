@@ -6,7 +6,7 @@
 
 class CMockHeaderParser
 
-  attr_accessor :funcs, :c_attributes, :treat_as_void, :treat_externs
+  attr_accessor :funcs, :c_attributes, :treat_as_void, :treat_externs, :when_no_prototypes
   
   def initialize(cfg)
     @funcs = []
@@ -14,7 +14,7 @@ class CMockHeaderParser
     @c_attributes = (['const'] + cfg.attributes).uniq
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
-    @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]+-]*)\)$/m
+	@declaration_parse_matcher = /([\D\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]+-]*)\)$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
     @when_no_prototypes = cfg.when_no_prototypes
     @local_as_void = @treat_as_void
@@ -27,19 +27,19 @@ class CMockHeaderParser
     @module_name = name.gsub(/\W/,'')
     @typedefs = []
     @funcs = []
+	@includes = []
     function_names = []
     
     parse_functions( import_source(source) ).map do |decl| 
-      func = parse_declaration(decl)
-      unless (function_names.include? func[:name])
-        @funcs << func
-        function_names << func[:name]
-      end
+      func = parse_declaration(decl, name)
+      @funcs << func
+      function_names << func[:name]
     end
     
     { :includes  => nil,
       :functions => @funcs,
-      :typedefs  => @typedefs
+      :typedefs  => @typedefs,
+	  :includes => @includes
     }
   end
   
@@ -52,8 +52,12 @@ class CMockHeaderParser
     @local_as_void = @treat_as_void
     void_types = source.scan(/typedef\s+(?:\(\s*)?void(?:\s*\))?\s+([\w\d]+)\s*;/)
     if void_types
-      @local_as_void += void_types.flatten.uniq.compact
+      @local_as_void += void_types.uniq.compact
     end
+	
+	# scan for any includes and write them to a separate array
+	include_files = source.scan(/#include\s".*/)
+    include_files.each { |item| @includes << item }
   
     # smush multiline macros into single line (checking for continuation character at end of line '\')
     source.gsub!(/\s*\\\s*/m, ' ')
@@ -69,8 +73,9 @@ class CMockHeaderParser
     # remove gcc's __attribute__ tags
     source.gsub(/__attrbute__\s*\(\(\.*\)\)/, '')
     
-    # remove preprocessor statements and extern "C" 
-    source.gsub!(/^\s*#.*/, '')
+    # remove preprocessor statements and extern "C"
+	#source.gsub!(/^\s*#.*/, '')
+	source.gsub!(/extern\s/, 'GOTHIC_PUBLIC ')
     source.gsub!(/extern\s+\"C\"\s+\{/, '')
     
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
@@ -78,10 +83,11 @@ class CMockHeaderParser
     source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                                      # remove forward declared structs
     source.gsub!(/^[\w\s]*(enum|union|struct|typepdef)[\w\s]*\{[^\}]+\}[\w\s\*\,]*;/m, '') # remove struct, union, and enum definitions and typedefs with braces
     source.gsub!(/(\W)(?:register|auto|static|restrict)(\W)/, '\1\2')                      # remove problem keywords
-    source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
+    source.gsub!(/\(\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
     source.gsub!(/^(?:[\w\s]*\W)?typedef\W.*/, '')                                         # remove typedef statements
     source.gsub!(/(^|\W+)(?:#{@c_strippables.join('|')})(?=$|\W+)/,'\1') unless @c_strippables.empty? # remove known attributes slated to be stripped
-    
+    source.gsub!(/DECLARE_HANDLE(\W)/, '') # remove handle declarations
+	
     #scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
       functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
@@ -93,14 +99,15 @@ class CMockHeaderParser
     source.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
     source.gsub!(/\s+$/, '')          # remove extra white space from end of line
     source.gsub!(/\s*\(\s*/, '(')     # remove extra white space from before left parens
-    source.gsub!(/\s*\)\s*/, ')')     # remove extra white space from before right parens
-    source.gsub!(/\s+/, ' ')          # remove remaining extra white space
+    #source.gsub!(/\s*\)\s*/, ')')     # remove extra white space from before right parens
+	source.gsub!(/\s*\)/, ')')
+    #source.gsub!(/\s+/, ' ')          # remove remaining extra white space
     
     #split lines on semicolons and remove things that are obviously not what we are looking for
     src_lines = source.split(/\s*;\s*/)
     src_lines.delete_if {|line| line.strip.length == 0}                            # remove blank lines
     src_lines.delete_if {|line| !(line =~ /[\w\s\*]+\(+\s*\*[\*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s\*]*,?)*\s*\)/).nil?}     #remove function pointer arrays
-    if (@treat_externs == :include)
+	if (@treat_externs == :include)
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?}        # remove inline functions
     else
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern|inline)\s+/).nil?} # remove inline and extern functions
@@ -109,7 +116,7 @@ class CMockHeaderParser
 
   def parse_functions(source)
     funcs = []
-    source.each {|line| funcs << line.strip.gsub(/\s+/, ' ') if (line =~ @declaration_parse_matcher)}
+	source.each {|line| funcs << line.strip.gsub(/\s+/, ' ') if (line =~ @declaration_parse_matcher)}
     if funcs.empty?
       case @when_no_prototypes
         when :error
@@ -181,9 +188,8 @@ class CMockHeaderParser
     end
   end
   
-  def parse_declaration(declaration)
+  def parse_declaration(declaration, name)
     decl = {}
-    
     regex_match = @declaration_parse_matcher.match(declaration)
     raise "Failed parsing function declaration: '#{declaration}'" if regex_match.nil? 
     
@@ -197,20 +203,32 @@ class CMockHeaderParser
     descriptors = descriptors.split    #array of all descriptor strings
 
     #grab name
-    decl[:name] = descriptors[-1]      #snag name as last array item
+    decl[:name] = descriptors[-1] #if !(descriptors[-1].start_with?("#"))       #snag name as last array item
+	decl[:filename] = name.upcase
 
     #build attribute and return type strings
     decl[:modifier] = []
+	decl[:defs] = []
     rettype = []
-    descriptors[0..-2].each do |word|
-      if @c_attributes.include?(word)
-        decl[:modifier] << word
-      elsif @c_calling_conventions.include?(word)
-        decl[:c_calling_convention] = word
-      else
-        rettype << word
-      end
-    end
+	
+	if (descriptors[0].start_with?("#"))
+	  descriptors[0..(descriptors.length - 4)].each do |word|
+		#puts "Array out: #{word}"
+		  decl[:defs] << word
+	  end
+		
+      rettype << descriptors[-2]
+	else
+	  descriptors[0..-2].each do |word|
+		if @c_attributes.include?(word)
+		  decl[:modifier] << word
+		elsif @c_calling_conventions.include?(word)
+		  decl[:c_calling_convention] = word
+		else
+		  rettype << word
+		end
+	  end
+	end
     decl[:modifier] = decl[:modifier].join(' ')
     rettype = rettype.join(' ')
     rettype = 'void' if (@local_as_void.include?(rettype.strip))
@@ -221,9 +239,10 @@ class CMockHeaderParser
                       :str    => "#{rettype} cmock_to_return",
                       :void?  => (rettype == 'void')
                     }
-        
+
     #remove default argument statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
+	args.gsub!(/^\s*#.*/, '')
     
     #check for var args
     if (args =~ /\.\.\./)
