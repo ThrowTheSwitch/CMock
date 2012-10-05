@@ -16,11 +16,11 @@ class CMockFileWriter
     raise "Where's the block of data to create?" unless block_given?
 	create_folders(target_folder)
 	if (filename =~ /\.h/)
-		full_file_name_temp = "#{target_folder}/include/#{filename}.new"
-		full_file_name_done = "#{target_folder}/include/#{filename}"
+	  full_file_name_temp = "#{target_folder}/include/#{filename}.new"
+	  full_file_name_done = "#{target_folder}/include/#{filename}"
 	else
-		full_file_name_temp = "#{target_folder}/C++/#{filename}.new"
-		full_file_name_done = "#{target_folder}/C++/#{filename}"
+	  full_file_name_temp = "#{target_folder}/C++/#{filename}.new"
+	  full_file_name_done = "#{target_folder}/C++/#{filename}"
 	end
     File.open(full_file_name_temp, 'w') do |file|
       yield(file, filename)

@@ -28,10 +28,30 @@ class CMock
     @silent        = (cm_config.verbosity < 2)
   end
   
-  def setup_mocks(fileintrinsics, filedefns, fileothers, source_folder, target_folder)
+  def setup_mocks(fileintrinsics, filedefns, fileothers, source_folder, target_folder, exclusion_file)
+
+    #non_mocked_files = []
+    
+	# read the exclusion list and exclude the files there from src below  
+	if (exclusion_file != '')	
+	  exclusion_list = parse_exclusion_list(exclusion_file)
+	end
+
     [fileintrinsics].flatten.uniq.each do |src|
-      generate_mock(src, filedefns, target_folder)
-    end
+	
+	  if (exclusion_file != '')
+	    name = File.basename(src)
+	    if (!exclusion_list.include?(name))
+          generate_mock(src, filedefns, target_folder)
+		else
+          # Code here to copy file instead of mocking
+          # non_mocked_files << "#{name}"		  
+	    end
+      else
+	    generate_mock(src, filedefns, target_folder)
+      end
+	end
+	#@cm_writer.copy_files(source_folder, target_folder, non_mocked_files)
 	@cm_writer.copy_files(source_folder, target_folder, filedefns)
     @cm_writer.copy_files(source_folder, target_folder, fileothers)
   end
@@ -43,22 +63,34 @@ class CMock
     name = File.basename(src, '.h')
 	modulename = name.slice(/[a-zA-Z0-9]+/)
 	[filedefns].flatten.each do |defns|
-		if (defns.match(/\A#{modulename}_defns.h/))
-			defninclude = "#include \"#{defns}\"\n"
-		end
-		
+	  if (defns.match(/\A#{modulename}_defns.h/))
+		defninclude = "#include \"#{defns}\"\n"
+	  end	
 	end
     puts "Creating mock for #{name}..." unless @silent
     @cm_generator.create_mock(name, defninclude, @cm_parser.parse(name, File.read(src)), target_folder)
   end
+  
+  def parse_exclusion_list(exclusion_file)  
+    exclusion_list = []
+	source = File.read(exclusion_file)
+	source.gsub!(/\r/,'')
+	source.gsub!(/\n/,'')
+	exclusion_list = source.split(/\s*;\s*/)
+	exclusion_list.delete_if {|line| line.strip.length == 0}
+	exclusion_list = exclusion_list.flatten
+
+	return exclusion_list
+  end
+  
 end
 
   # Command Line Support ###############################
   
 if ($0 == __FILE__)
-  usage = "usage: ruby #{__FILE__} (-oOptionsFile) SourceFolder"
+  usage = "usage: ruby #{__FILE__} SourceFolder TargetFolder ExclusionList.txt(optional)"
   
-  if (!ARGV[0])
+  if (ARGV.length < 2)
     puts usage
     exit 1
   end
@@ -67,62 +99,28 @@ if ($0 == __FILE__)
   fileintrinsics = []
   filedefns = []
   fileothers = []
-
-#  ARGV.each do |arg|
-#	Dir.foreach(arg) do |file|
-#	  if (file.length > 2)
-#	    # do if matcher
-#	  end
-#	end
-#  end
+  exclusion_file = ''
   
   source_folder = ARGV.fetch(0)
   target_folder = ARGV.fetch(1)
-	
-	# Doing a directory search for header files. 
-	# This should be removed once a custom gothic library has been created.
-	Dir.foreach(source_folder) do |file|
-		if (file.length > 2)
-			if (file.match(/.*_intrinsics/))
-				if (file.match("goth_intrinsics.h")) # do simple if to exclude some files
-				elsif (file.match("dict_intrinsics.h"))
-				elsif (file.match("bulk_intrinsics.h"))
-				elsif (file.match("console_intrinsics.h"))
-				elsif (file.match("gen_intrinsics.h"))
-				elsif (file.match("util_intrinsics.h"))
-				elsif (file.match("lull_intrinsics.h"))
-				elsif (file.match("ps_intrinsics.h"))
-				elsif (file.match("d3proc_intrinsics.h"))
-				elsif (file.match("pcre_intrinsics.h"))
-				elsif (file.match("inter_intrinsics.h"))
-				elsif (file.match("mmi_intrinsics.h"))
-				elsif (file.match("mmix_intrinsics.h"))
-				elsif (file.match("rastcolbase_intrinsics.h"))
-				elsif (file.match("rplot_intrinsics.h"))
-				elsif (file.match("math_intrinsics.h"))
-				elsif (file.match("lut_intrinsics.h"))
-				elsif (file.match("lsr_intrinsics.h"))
-				elsif (file.match("metaclass_intrinsics.h"))
-				elsif (file.match("metax_intrinsics.h"))
-				elsif (file.match("main_doc_intrinsics.h"))
-				elsif (file.match("tad_intrinsics.h"))
-				elsif (file.match("mmi_motif_intrinsics.h"))
-				elsif (file.match("win32disp_intrinsics.h")) # really need to refactor this now
-				elsif (file.match("xdisp_intrinsics.h"))
-				elsif (file.match("f2c_intrinsics.h"))
-				else
-					fileintrinsics << "#{source_folder}\\#{file}"
-				end
-
-			elsif (file.match(/.*_defns/))
-		      filedefns << "#{file}"
-			else
-			  fileothers << "#{file}"
-			end
-		end
-	end
   
-  CMock.new(options).setup_mocks(fileintrinsics, filedefns, fileothers, source_folder, target_folder)
-  #cm_writer.create_folders(target_folder)
+  if (ARGV.length == 3)
+    exclusion_file = ARGV.fetch(2)
+  end
+
+	# Doing a directory search for header files. 
+  Dir.foreach(source_folder) do |file|
+	if (file.length > 2)
+	  if (file.match(/.*_intrinsics/))
+	    fileintrinsics << "#{source_folder}\\#{file}"
+	  elsif (file.match(/.*_defns/))
+	    filedefns << "#{file}"
+	  else
+	    fileothers << "#{file}"
+	  end
+	end
+  end
+  
+  CMock.new(options).setup_mocks(fileintrinsics, filedefns, fileothers, source_folder, target_folder, exclusion_file)
 
 end
