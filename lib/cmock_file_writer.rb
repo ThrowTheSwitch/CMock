@@ -14,14 +14,14 @@ class CMockFileWriter
 
   def create_file(filename, target_folder)
     raise "Where's the block of data to create?" unless block_given?
-	create_folders(target_folder)
-	if (filename =~ /\.h/)
-	  full_file_name_temp = "#{target_folder}/include/#{filename}.new"
-	  full_file_name_done = "#{target_folder}/include/#{filename}"
-	else
-	  full_file_name_temp = "#{target_folder}/C++/#{filename}.new"
-	  full_file_name_done = "#{target_folder}/C++/#{filename}"
-	end
+    create_folders(target_folder)
+    if (filename =~ /\.h/)
+      full_file_name_temp = "#{target_folder}/include/#{filename}.new"
+      full_file_name_done = "#{target_folder}/include/#{filename}"
+    else
+      full_file_name_temp = "#{target_folder}/C++/#{filename}.new"
+      full_file_name_done = "#{target_folder}/C++/#{filename}"
+    end
     File.open(full_file_name_temp, 'w') do |file|
       yield(file, filename)
     end
@@ -30,18 +30,18 @@ class CMockFileWriter
   
   def create_folders(target_folder)
     Dir::mkdir(target_folder + "/include") unless File.exists?(target_folder + "/include")
-	Dir::mkdir(target_folder + "/C++") unless File.exists?(target_folder + "/C++")
+    Dir::mkdir(target_folder + "/C++") unless File.exists?(target_folder + "/C++")
   end
   
   def copy_files(source_folder, target_folder, filelist)
-  	create_folders(target_folder)
+      create_folders(target_folder)
     [filelist].flatten.uniq.each do |file|
-	  puts "Copying file #{file}"
-	  if (file.match(/\w*.c/))
-	    FileUtils.cp(source_folder + "/" + file, target_folder + "/C++")
-	  else
-	    FileUtils.cp(source_folder + "/" + file, target_folder + "/include")
-	  end
+      puts "Copying file #{file}"
+      if (file.match(/\w*.c/))
+        FileUtils.cp(source_folder + "/" + file, target_folder + "/C++")
+      else
+        FileUtils.cp(source_folder + "/" + file, target_folder + "/include")
+      end
     end
   end
   

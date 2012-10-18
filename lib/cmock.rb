@@ -117,12 +117,14 @@ if ($0 == __FILE__)
     # Doing a directory search for header files.
   Dir.foreach(source_folder) do |file|
     if (file.length > 2)
-      if (file.match(/.*_intrinsics/))
-        fileintrinsics << "#{source_folder}\\#{file}"
-      elsif (file.match(/.*_defns/))
-        filedefns << "#{file}"
-      else
-        fileothers << "#{file}"
+      if (!file.start_with?("."))
+        if (file.match(/.*_intrinsics/))
+          fileintrinsics << "#{source_folder}\\#{file}"
+        elsif (file.match(/.*_defns/))
+          filedefns << "#{file}"
+        else
+          fileothers << "#{file}"
+        end
       end
     end
   end
