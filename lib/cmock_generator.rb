@@ -26,14 +26,18 @@ class CMockGenerator
   end
 
   def create_mock(module_name, parsed_stuff)
-    @module_name = module_name
-    @mock_name   = @prefix + @module_name
-    @mock_ident  = to_c_ident(@mock_name)
+    set_module_vars(module_name)
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
   
   private if $ThisIsOnlyATest.nil? ##############################
+
+  def set_module_vars(module_name)
+    @module_name = module_name
+    @mock_name   = @prefix + @module_name
+    @mock_ident  = to_c_ident(@mock_name)
+  end
 
   def to_c_ident(str)
     return str.gsub(/[^_a-zA-Z0-9]/, "_")
