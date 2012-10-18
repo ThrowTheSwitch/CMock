@@ -50,8 +50,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     @config.expect.includes_c_pre_header.returns(nil)
     @config.expect.includes_c_post_header.returns(nil)
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
-    @cmock_generator.module_name = @module_name
-    @cmock_generator.mock_name = "Mock#{@module_name}"
+    @cmock_generator.set_module_vars(@module_name)
     
     #strict handling
     @config.expect.mock_prefix.returns("Mock")
@@ -63,8 +62,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     @config.expect.includes_c_pre_header.returns(nil)
     @config.expect.includes_c_post_header.returns(nil)
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
-    @cmock_generator_strict.module_name = @module_name
-    @cmock_generator_strict.mock_name = "Mock#{@module_name}"
+    @cmock_generator_strict.set_module_vars(@module_name)
   end
 
   def teardown
@@ -78,7 +76,6 @@ class CMockGeneratorTest < Test::Unit::TestCase
   end
   
   should "create the top of a header file with optional include files from config and include file from plugin" do
-    @config.expect.mock_prefix.returns("Mock")
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
@@ -101,7 +98,6 @@ class CMockGeneratorTest < Test::Unit::TestCase
   end
 
   should "create the top of a header file with optional include files from config" do
-    @config.expect.mock_prefix.returns("Mock")
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
@@ -123,7 +119,6 @@ class CMockGeneratorTest < Test::Unit::TestCase
   end
 
   should "create the top of a header file with include file from plugin" do
-    @config.expect.mock_prefix.returns("Mock")
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
