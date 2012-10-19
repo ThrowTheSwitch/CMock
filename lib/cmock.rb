@@ -45,7 +45,7 @@ class CMock
           generate_mock(src, filedefns, target_folder)
         else
           # Code here to copy file instead of mocking
-          # non_mocked_files << "#{name}"
+          fileothers << "#{name}"
         end
       else
         generate_mock(src, filedefns, target_folder)
