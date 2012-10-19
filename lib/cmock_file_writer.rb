@@ -37,7 +37,7 @@ class CMockFileWriter
       create_folders(target_folder)
     [filelist].flatten.uniq.each do |file|
       puts "Copying file #{file}"
-      if (file.match(/\w*.c/))
+      if (file.match(/\w*\.c/))
         FileUtils.cp(source_folder + "/" + file, target_folder + "/C++")
       else
         FileUtils.cp(source_folder + "/" + file, target_folder + "/include")
