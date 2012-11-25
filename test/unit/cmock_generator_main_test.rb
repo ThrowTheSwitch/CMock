@@ -102,7 +102,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output)
   end
 
-  should "handle dashes in the module name" do
+  should "handle dashes and spaces in the module name" do
     #no strict handling
     @config.expect.mock_prefix.returns("Mock")
     @config.expect.enforce_strict_ordering.returns(nil)
@@ -112,12 +112,12 @@ class CMockGeneratorTest < Test::Unit::TestCase
     @config.expect.includes_c_pre_header.returns(nil)
     @config.expect.includes_c_post_header.returns(nil)
     @cmock_generator2 = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
-    @cmock_generator2.module_name = "Pout-Pout-Fish"
-    @cmock_generator2.mock_name = "MockPout-Pout-Fish"
+    @cmock_generator2.module_name = "Pout-Pout Fish"
+    @cmock_generator2.mock_name = "MockPout-Pout Fish"
     @cmock_generator2.clean_mock_name = "MockPout_Pout_Fish"
     
     @config.expect.mock_prefix.returns("Mock")
-    orig_filename = "Pout-Pout-Fish.h"
+    orig_filename = "Pout-Pout Fish.h"
     define_name = "MOCKPOUT_POUT_FISH_H"
     mock_name = "MockPout_Pout_Fish"
     output = []
@@ -133,7 +133,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
 
     @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
     
-    @cmock_generator.create_mock_header_header(output, "MockPout-Pout-Fish.h")
+    @cmock_generator2.create_mock_header_header(output, "MockPout-Pout Fish.h")
     
     assert_equal(expected, output)
   end
