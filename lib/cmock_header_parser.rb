@@ -46,8 +46,7 @@ class CMockHeaderParser
   private if $ThisIsOnlyATest.nil? ################
   
   def import_source(source)
-    source = source.force_encoding("ISO-8859-1").encode("utf-8", replace: nil)
-    
+
     # void must be void for cmock _ExpectAndReturn calls to process properly, not some weird typedef which equates to void
     # to a certain extent, this action assumes we're chewing on pre-processed header files, otherwise we'll most likely just get stuff from @treat_as_void
     @local_as_void = @treat_as_void
