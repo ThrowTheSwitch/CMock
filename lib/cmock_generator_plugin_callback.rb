@@ -34,6 +34,11 @@ class CMockGeneratorPluginCallback
 
   def mock_function_declarations(function)
     func_name = function[:name]
+	
+	# Create argument string, including variable arguments if there are any
+	#args_string = function[:args_string]
+	#args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)	
+	
     return_type = function[:return][:const?] ? "const #{function[:return][:type]}" : function[:return][:type]
     style  = (@include_count ? 1 : 0) | (function[:args].empty? ? 0 : 2)
     styles = [ "void", "int cmock_num_calls", function[:args_string], "#{function[:args_string]}, int cmock_num_calls" ]

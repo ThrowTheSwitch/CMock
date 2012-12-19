@@ -29,8 +29,11 @@ class CMockHeaderParser
     @funcs = []
 	@includes = []
     function_names = []
+	@cpluspluskeywords = []
+	
+	@cpluspluskeywords << define_c_plus_plus_keywords()
     
-    parse_functions( import_source(source) ).map do |decl| 
+    parse_functions( import_source(source, name) ).map do |decl| 
       func = parse_declaration(decl, name)
       @funcs << func
       function_names << func[:name]
@@ -43,9 +46,34 @@ class CMockHeaderParser
     }
   end
   
+    
+  def parse_defns_files(source)
+    
+	# modify arguments that use c++ keywords
+	source.gsub!(/\s{1}delete\,/, ' _delete,')
+	source.gsub!(/\s{1}delete\)/, ' _delete)')
+	source.gsub!(/\s{1}class\,/, ' _class,')
+	source.gsub!(/\s{1}class\)/, ' _class)')
+	source.gsub!(/\s{1}operator\,/, ' _operator,')
+	source.gsub!(/\s{1}operator\)/, ' _operator)')
+	source.gsub!(/\s{1}new\,/, ' _new,')
+	source.gsub!(/\s{1}new\)/, ' _new)')
+	
+	return source
+  end
+  
   private if $ThisIsOnlyATest.nil? ################
   
-  def import_source(source)
+  def define_c_plus_plus_keywords()
+    cpluspluskeywords = []
+	
+	cpluspluskeywords << "delete"
+	cpluspluskeywords << "new"
+	cpluspluskeywords << "operator"
+	cpluspluskeywords << "class"
+  end
+  
+  def import_source(source, name)
 
     # void must be void for cmock _ExpectAndReturn calls to process properly, not some weird typedef which equates to void
     # to a certain extent, this action assumes we're chewing on pre-processed header files, otherwise we'll most likely just get stuff from @treat_as_void
@@ -77,6 +105,8 @@ class CMockHeaderParser
 	#source.gsub!(/^\s*#.*/, '')
 	source.gsub!(/extern\s/, 'GOTHIC_PUBLIC ')
     source.gsub!(/extern\s+\"C\"\s+\{/, '')
+	#source.gsub!(/\#ifndef\s\w*#{name.gsub(".h","").upcase}/, '')
+	#source.gsub!(/\#define\s\w*#{name.gsub(".h","").upcase}/, '')
     
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
@@ -130,11 +160,12 @@ class CMockHeaderParser
   
   def parse_args(arg_list)
     args = []
+	arg_name = ""
     arg_list.split(',').each do |arg|
       arg.strip! 
       return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)   # we're done if we reach void by itself or ...
       arg_array = arg.split
-      arg_elements = arg_array - @c_attributes              # split up words and remove known attributes
+      arg_elements = arg_array - @c_attributes	  # split up words and remove known attributes
       args << { :type   => (arg_type =arg_elements[0..-2].join(' ')), 
                 :name   => arg_elements[-1], 
                 :ptr?   => divine_ptr(arg_type),
@@ -157,8 +188,22 @@ class CMockHeaderParser
       c=0
       arg_list.gsub!(/(\w+)(?:\s*\[[\s\d\w+-]*\])+/,'*\1')  # magically turn brackets into asterisks
       arg_list.gsub!(/\s+\*/,'*')                           # remove space to place asterisks with type (where they belong)
-      arg_list.gsub!(/\*(\w)/,'* \1')                       # pull asterisks away from arg to place asterisks with type (where they belong)
-      
+      arg_list.gsub!(/\*(\w)/,'* \1')   			  	    # pull asterisks away from arg to place asterisks with type (where they belong)
+
+	  # modify arguments that use c++ keywords
+	  arg_list.gsub!(/\s{1}delete\,/, ' _delete,')
+	  arg_list.gsub!(/\s{1}delete\)/, ' _delete)')
+	  arg_list.gsub!(/\s{1}delete/, ' _delete')
+	  arg_list.gsub!(/\s{1}class\,/, ' _class,')
+	  arg_list.gsub!(/\s{1}class\)/, ' _class)')
+	  arg_list.gsub!(/\s{1}class/, ' _class')
+	  arg_list.gsub!(/\s{1}operator\,/, ' _operator,')
+	  arg_list.gsub!(/\s{1}operator\)/, ' _operator)')
+	  arg_list.gsub!(/\s{1}operator/, ' _operator')
+	  arg_list.gsub!(/\s{1}new\,/, ' _new,')
+	  arg_list.gsub!(/\s{1}new\)/, ' _new)')
+	  arg_list.gsub!(/\s{1}new/, ' _new')
+	  
       #scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s\*]+)\(+\s*\*[\*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |m|
 
