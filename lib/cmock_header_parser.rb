@@ -193,16 +193,16 @@ class CMockHeaderParser
 	  # modify arguments that use c++ keywords
 	  arg_list.gsub!(/\s{1}delete\,/, ' _delete,')
 	  arg_list.gsub!(/\s{1}delete\)/, ' _delete)')
-	  arg_list.gsub!(/\s{1}delete/, ' _delete')
+	  arg_list.gsub!(/\s{1}delete/, ' _delete') # ensure keyword replaced
 	  arg_list.gsub!(/\s{1}class\,/, ' _class,')
 	  arg_list.gsub!(/\s{1}class\)/, ' _class)')
-	  arg_list.gsub!(/\s{1}class/, ' _class')
+	  arg_list.gsub!(/\s{1}class/, ' _class') # ensure keyword replaced
 	  arg_list.gsub!(/\s{1}operator\,/, ' _operator,')
 	  arg_list.gsub!(/\s{1}operator\)/, ' _operator)')
-	  arg_list.gsub!(/\s{1}operator/, ' _operator')
+	  arg_list.gsub!(/\s{1}operator/, ' _operator') # ensure keyword replaced
 	  arg_list.gsub!(/\s{1}new\,/, ' _new,')
 	  arg_list.gsub!(/\s{1}new\)/, ' _new)')
-	  arg_list.gsub!(/\s{1}new/, ' _new')
+	  arg_list.gsub!(/\s{1}new/, ' _new') # ensure keyword replaced
 	  
       #scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s\*]+)\(+\s*\*[\*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |m|

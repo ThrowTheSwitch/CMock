@@ -33,6 +33,7 @@ class CMockGenerator
     create_mock_source_file(parsed_stuff, target_folder)
   end
   
+  # Function to copy the file and do light parsing
   def copy_header(module_name, parsed_stuff, target_folder)
     @module_name = module_name
     @mock_name   = @prefix + @module_name

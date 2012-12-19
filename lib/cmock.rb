@@ -67,7 +67,7 @@ class CMock
 	create_mock_main_header(intrinsicFiles, target_folder)
     create_mock_main_source(initialiseFunctions, target_folder)
 
-    #@cm_writer.copy_files(source_folder, target_folder, filedefns)
+    #@cm_writer.copy_files(source_folder, target_folder, filedefns) # Now parsing defns files instead
     @cm_writer.copy_files(source_folder, target_folder, fileothers)
     @cm_writer.copy_files(unity_folder, target_folder, unity_files)
     @cm_writer.copy_files(cmock_folder, target_folder, cmock_files)
