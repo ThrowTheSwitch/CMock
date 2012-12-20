@@ -46,6 +46,12 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     assert_equal(true, @cmock_generator_utils_complex.arrays)
     assert_equal(true, @cmock_generator_utils_complex.cexception)
   end
+
+  should "detect pointers and strings" do
+    assert_equal(false, @cmock_generator_utils_simple.ptr_or_str?('int'))
+    assert_equal(true, @cmock_generator_utils_simple.ptr_or_str?('int*'))
+    assert_equal(true, @cmock_generator_utils_simple.ptr_or_str?('char*'))
+  end
   
   should "add code for a base expectation with no plugins" do
     expected =
