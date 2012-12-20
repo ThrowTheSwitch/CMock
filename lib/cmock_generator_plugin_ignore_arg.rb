@@ -1,12 +1,9 @@
 class CMockGeneratorPluginIgnoreArg
   attr_reader :priority
-  attr_accessor :config, :utils, :unity_helper, :ordered
+  attr_accessor :utils
 
   def initialize(config, utils)
-    @config       = config
-    @ordered      = @config.enforce_strict_ordering
     @utils        = utils
-    @unity_helper = @utils.helpers[:unity_helper]
     @priority     = 10
   end
 
