@@ -147,6 +147,24 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemNext(CMOCK_MEM_INDEX_TYPE previous_item_index
 }
 
 //-------------------------------------------------------
+// CMock_Guts_MemEndOfChain
+//-------------------------------------------------------
+CMOCK_MEM_INDEX_TYPE CMock_Guts_MemEndOfChain(CMOCK_MEM_INDEX_TYPE root_index)
+{
+  CMOCK_MEM_INDEX_TYPE index = root_index;
+  CMOCK_MEM_INDEX_TYPE next_index;
+        
+  for (next_index = root_index;
+       next_index != CMOCK_GUTS_NONE;
+       next_index = CMock_Guts_MemNext(index))
+  {
+    index = next_index;
+  }
+
+  return index;
+}
+
+//-------------------------------------------------------
 // CMock_GetAddressFor
 //-------------------------------------------------------
 void* CMock_Guts_GetAddressFor(CMOCK_MEM_INDEX_TYPE index)

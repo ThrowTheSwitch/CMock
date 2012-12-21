@@ -278,3 +278,40 @@ void test_ThatWeCanAskForAllSortsOfSizes(void)
   //there aren't any after that
   TEST_ASSERT_EQUAL_HEX(CMOCK_GUTS_NONE, next);
 }
+
+void test_MemEndOfChain(void)
+{
+  CMOCK_MEM_INDEX_TYPE first = CMOCK_GUTS_NONE;
+  CMOCK_MEM_INDEX_TYPE element[4];
+
+  //verify we're cleared first
+  TEST_ASSERT_EQUAL(0, CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(CMOCK_MEM_SIZE, CMock_Guts_MemBytesFree());
+
+  //first element
+  element[0] = CMock_Guts_MemNew(sizeof(unsigned int));
+  first = CMock_Guts_MemChain(first, element[0]);
+  TEST_ASSERT_MESSAGE(element[0] == CMock_Guts_MemEndOfChain(first), "Should have returned element[0]");
+
+  //second element
+  element[1] = CMock_Guts_MemNew(sizeof(unsigned int));
+  CMock_Guts_MemChain(first, element[1]);
+  TEST_ASSERT_MESSAGE(element[1] == CMock_Guts_MemEndOfChain(first), "Should have returned element[1]");
+
+  //third element
+  element[2] = CMock_Guts_MemNew(sizeof(unsigned int));
+  CMock_Guts_MemChain(first, element[2]);
+  TEST_ASSERT_MESSAGE(element[2] == CMock_Guts_MemEndOfChain(first), "Should have returned element[2]");
+
+  //fourth element
+  element[3] = CMock_Guts_MemNew(sizeof(unsigned int));
+  CMock_Guts_MemChain(first, element[3]);
+  TEST_ASSERT_MESSAGE(element[3] == CMock_Guts_MemEndOfChain(first), "Should have returned element[3]");
+
+  //Free it all
+  CMock_Guts_MemFreeAll();
+
+  //verify we're cleared
+  TEST_ASSERT_EQUAL(0, CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_EQUAL(CMOCK_MEM_SIZE, CMock_Guts_MemBytesFree());
+}
