@@ -6,6 +6,8 @@
   - :cexception
   - :ignore
   - :callback
+  - :return_thru_ptr
+  - :ignore_arg
   :callback_after_arg_check: true
   :callback_include_count: false
   :treat_externs: :include
