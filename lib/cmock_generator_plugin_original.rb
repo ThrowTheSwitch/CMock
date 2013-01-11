@@ -16,7 +16,7 @@ class CMockGeneratorPluginOriginal
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
     @priority     = 5
-	@api		  = "MOCKGOTHIC_API"
+    @api          = "MOCKGOTHIC_API"
   end
 
   def mock_function_declarations(function)
@@ -29,10 +29,10 @@ class CMockGeneratorPluginOriginal
       end
     else       
 
-	# Create argument string, including variable arguments if there are any
-	args_string = function[:args_string]
-	args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)	
-	
+    # Create argument string, including variable arguments if there are any
+    args_string = function[:args_string]
+    args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?) 
+    
       if (function[:return][:void?])
         return "#{@api} #{function[:return][:type]} #{function[:name]}(#{args_string});\n"
       else

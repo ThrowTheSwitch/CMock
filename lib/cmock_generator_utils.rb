@@ -15,7 +15,7 @@ class CMockGeneratorUtils
     @arrays       = @config.plugins.include? :array
     @cexception   = @config.plugins.include? :cexception
     @treat_as     = @config.treat_as
-	  @helpers = helpers
+      @helpers = helpers
     
     if (@arrays)
       case(@ptr_handling)
@@ -93,8 +93,10 @@ class CMockGeneratorUtils
     unity_func = if ((arg[:ptr?]) and ((c_type =~ /\*\*/) or (@ptr_handling == :compare_ptr)))
                    ['UNITY_TEST_ASSERT_EQUAL_PTR', '']
                  else
+                   #puts "CTYPE:     #{c_type}..."
                    (@helpers.nil? or @helpers[:unity_helper].nil?) ? ["UNITY_TEST_ASSERT_EQUAL",''] : @helpers[:unity_helper].get_helper(c_type)
                  end
+    #puts "UNITYFUNC: #{unity_func}..."
     unity_msg  = "Function '#{function[:name]}' called with unexpected value for argument '#{arg_name}'."
     return c_type, arg_name, expected, unity_func[0], unity_func[1], unity_msg
   end
@@ -104,12 +106,15 @@ class CMockGeneratorUtils
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
-        return "  CMOCK_#{function[:name]}_EXPECT_RESULT.ExpectResult_#{arg_name} = UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line, \"#{unity_msg}\");\n"
-      when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
-        [ "  if (#{pre}#{expected} == NULL)",
-          "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
-          "  else",
-          "    { UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), cmock_line, \"#{unity_msg}\"); }\n"].join("\n")
+        return "  CMOCK_#{function[:name]}_EXPECT_RESULT.ExpectResult_#{arg_name} = #{unity_func}((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line, \"#{unity_msg}\");\n"
+      #when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
+      #  [ "  if (#{pre}#{expected} == NULL)",
+      #    "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",
+      #    "  else",
+      #    "    { UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), cmock_line, \"#{unity_msg}\"); }\n"].join("\n")
+      when "UNITY_TEST_ASSERT_EQUAL_STRING"
+        c_type_local = c_type.gsub(/\*$/,'')
+        return "  CMOCK_#{function[:name]}_EXPECT_RESULT.ExpectResult_#{arg_name} = #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n" 
       when /_ARRAY/
         [ "  if (#{pre}#{expected} == NULL)",
           "    { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }",

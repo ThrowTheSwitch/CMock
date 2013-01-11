@@ -126,7 +126,8 @@ class CMockConfig
       'cstring'         => 'STRING',
       'CSTRING'         => 'STRING',
       'float'           => 'FLOAT',
-      'double'          => 'FLOAT'
+      'double'          => 'FLOAT',
+      'GOTH_STRING'     => 'STRING'
     }
   end
 end
