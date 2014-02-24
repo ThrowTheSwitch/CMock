@@ -165,7 +165,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "const typedef int INT;\n" +
       "int notatypedef;\n" +
       "int typedef_isnt_me;\n" +
-      " typedef who cares what really comes here \\\n" + # exercise multiline typedef
+      " typedef who cares what really comes here \n" + # exercise multiline typedef
       "   continuation;\n" +
       "this should remain!;\n" +
       "typedef blah bleh;\n" +
