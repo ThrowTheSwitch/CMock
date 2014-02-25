@@ -266,7 +266,7 @@ class CMockGenerator
     elsif (filename.match("objx_intrinsics.c"))
       source << "#endif\n"
     elsif (filename.match("gen_intrinsics.c", 0))
-      header << "#endif\n"
+      source << "#endif\n"
     end
 
     return source
