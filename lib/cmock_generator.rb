@@ -208,7 +208,7 @@ class CMockGenerator
       header << "#endif\n"
     elsif (filename.match("stat_intrinsics.h"))
       header << "#endif\n"
-    elsif (filename.match("\Agen_intrinsics.h", 0))
+    elsif (filename.match(/\Agen_intrinsics.h/, 0))
       header << "#endif\n"
     end
   end
@@ -265,7 +265,7 @@ class CMockGenerator
       source << "#endif\n"
     elsif (filename.match("objx_intrinsics.c"))
       source << "#endif\n"
-    elsif (filename.match("\Agen_intrinsics.c"))
+    elsif (filename.match(/\Agen_intrinsics.c/))
       source << "#endif\n"
     end
 
