@@ -87,6 +87,55 @@
         }
 
     - :pass: TRUE
+      :should: 'be able to handle an expect after ignore calls since we are ignoring args only'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_IgnoreAndReturn(50);
+          foo_IgnoreAndReturn(50);
+          foo_ExpectAndReturn(3, 50);
+          TEST_ASSERT_EQUAL(150, function(1, 2, 3));
+        }
+
+    - :pass: TRUE
+      :should: 'be able to handle an ignore after an expect call since we are ignoring args only'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_ExpectAndReturn(1, 50);
+          foo_IgnoreAndReturn(50);
+          foo_IgnoreAndReturn(50);
+          TEST_ASSERT_EQUAL(150, function(1, 2, 3));
+        }
+
+    - :pass: TRUE
+      :should: 'be able to handle an ignore within expect calls since we are ignoring args only'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_ExpectAndReturn(1, 50);
+          foo_IgnoreAndReturn(50);
+          foo_ExpectAndReturn(3, 50);
+          TEST_ASSERT_EQUAL(150, function(1, 2, 3));
+        }
+
+    # TODO: THIS IS WHAT PEOPLE EXPECT, BUT IS NOT BEING MET YET.
+    - :pass: FALSE
+      :should: 'be able to detect problems with an expect even when using ignores'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_ExpectAndReturn(1, 50);
+          foo_IgnoreAndReturn(50);
+          foo_ExpectAndReturn(4, 50);
+          TEST_ASSERT_EQUAL(150, function(1, 2, 3));
+        }
+
+    - :pass: TRUE
       :should: 'ignore foo() calls over multiple mock calls'
       :code: |
         test()
