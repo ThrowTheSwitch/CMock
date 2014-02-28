@@ -5,6 +5,7 @@
 # ==========================================
 
 $ThisIsOnlyATest = true
+$QUICK_RUBY_VERSION = RUBY_VERSION.split('.').inject(0){|vv,v| vv * 100 + v.to_i }
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require 'cmock_header_parser'
