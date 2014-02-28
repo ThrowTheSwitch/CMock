@@ -1,4 +1,4 @@
-[All code is copyright © 2007-2010 Cmock Project
+[All code is copyright © 2007-2014 Cmock Project
 by Mike Karlesky, Mark VanderVoord, and Greg Williams.
 
 This Documentation Is Released Under a Creative Commons 3.0
@@ -144,6 +144,30 @@ returns or a single value to always return, whichever you prefer.
 * `retval func(params)` => `void func_IgnoreAndReturn(retval_to_return)`
 
 
+Ignore Args:
+------------
+
+This plugin adds the ability to specify specifc arguments to ignore
+for a function, instead of ignoring all the arguments or the entire
+function call, as the Ignore plugin supports. This will create a function
+for each argument and each function.
+
+* `void func(params)` => `void func_IgnoreArg_paramName(void)`
+
+
+ReturnThruPtr:
+--------------
+
+This plugin adds a number of options for returning data through arguments
+that are pointers. This is fled separately from the Expect/Ignore call, so
+you will want to issue one of those calls each time as well. This will only
+create an extra call for arguments that are pointers. It will create one per
+pointer argument.
+
+* `void func(param1)` => `void func_ReturnThruPtr_paramName(val_to_return)`
+* => `void func_ReturnArrayThruPtr_paramName(cal_to_return, len)`
+* => `void func_ReturnMemThruPtr_paramName(val_to_return, size)`
+
 Running CMock
 =============
 
@@ -262,8 +286,8 @@ Defined in the yaml file, they look more like this:
 
 * `:plugins`:
   An array of which plugins to enable. 'expect' is always active. Also
-  available currently are `:ignore,` `:array,` `:cexception,` and
-  `:callback:
+  available currently are `:ignore,` `:ignore_args,` `:array,`
+  `:cexception,` `:callback,` and `:return_thru_ptr`
 
 * `:treat_as`:
   The `:treat_as` list is a shortcut for when you have created typedefs
