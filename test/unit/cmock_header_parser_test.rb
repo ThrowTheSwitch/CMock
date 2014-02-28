@@ -2,7 +2,7 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
 
 $ThisIsOnlyATest = true
 
@@ -22,37 +22,37 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     @config.expect.when_no_prototypes.returns(:error)
     @config.expect.verbosity.returns(1)
     @config.expect.treat_externs.returns(:exclude)
-    
+
     @parser = CMockHeaderParser.new(@config)
   end
 
   def teardown
   end
-  
+
   should "create and initialize variables to defaults appropriately" do
     assert_equal([], @parser.funcs)
     assert_equal(['const', '__ramfunc', 'funky_attrib', 'SQLITE_API'], @parser.c_attributes)
     assert_equal(['void','MY_FUNKY_VOID'], @parser.treat_as_void)
   end
-  
+
   should "strip out line comments" do
-    source = 
+    source =
       " abcd;\n" +
       "// hello;\n" +
       "who // is you\n"
-    
+
     expected =
     [
       "abcd",
       "who"
     ]
-    
+
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
-  
-  
+
+
   should "remove block comments" do
-    source = 
+    source =
       " no_comments;\n" +
       "// basic_line_comment;\n" +
       "/* basic_block_comment;*/\n" +
@@ -71,7 +71,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "/*/\n" +
       "shown_because_line_above_ended_comment_this_time;\n" +
       "//*/\n"
-    
+
     expected =
     [
       "no_comments",
@@ -80,13 +80,13 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "shown_because_block_comment_invalid_from_shorter_line_comment",
       "shown_because_line_above_ended_comment_this_time"
     ]
-    
+
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
-  
-  
+
+
   should "remove gcc's function __attribute__'s" do
-    source =           
+    source =
       "void* my_calloc(size_t, size_t) __attribute__((alloc_size(1,2)));\n" +
       "void\n" +
       "  my_realloc(void*, size_t) __attribute__((alloc_size(2)));\n" +
@@ -94,25 +94,25 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "  my_printf (void *my_object, const char *my_format, ...)\n" +
       "  __attribute__ ((format (printf, 2, 3)));\n" +
       "  void __attribute__ ((interrupt)) universal_handler ();\n"
-    
-    expected = 
+
+    expected =
     [
       "void* my_calloc(size_t, size_t)",
       "void my_realloc(void*, size_t)",
       "void universal_handler()"
     ]
-    
+
     assert_equal(expected, @parser.import_source(source))
   end
-  
+
   should "remove preprocessor directives" do
-    source = 
+    source =
       "#when stuff_happens\n" +
       "#ifdef _TEST\n" +
       "#pragma stack_switch"
-    
+
     expected = []
-    
+
     assert_equal(expected, @parser.import_source(source))
   end
 
@@ -125,42 +125,42 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "  nop\n" +
       "# pragma  endasm \n" +
       "foo"
-      
+
     expected = ["foo"]
-        
+
     assert_equal(expected, @parser.import_source(source))
   end
-  
-  
+
+
   should "smush lines together that contain continuation characters" do
-    source = 
+    source =
       "hoo hah \\\n" +
       "when \\ \n"
-    
+
     expected =
     [
       "hoo hah when"
     ]
-    
+
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
-  
-  
+
+
   should "remove C macro definitions" do
-    source = 
+    source =
       "#define this is the first line\\\n" +
       "and the second\\\n" +
       "and the third that should be removed\n" +
       "but I'm here\n"
-    
+
     expected = ["but I'm here"]
-    
+
     assert_equal(expected, @parser.import_source(source))
   end
-  
-  
+
+
   should "remove typedef statements" do
-    source = 
+    source =
       "typedef uint32 (unsigned int);\n" +
       "const typedef int INT;\n" +
       "int notatypedef;\n" +
@@ -181,20 +181,20 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " char_ptr COMMAND;\n" +
       " int_32 (*SHELL_FUNC)(int_32 argc);\n" +
       "};\n"
-    
+
     expected =
     [
       "int notatypedef",
       "int typedef_isnt_me",
       "this should remain!"
     ]
-    
+
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
 
   should "remove enum statements" do
-    source = 
+    source =
       "enum _NamedEnum {\n" +
       " THING1 = (0x0001),\n" +
       " THING2 = (0x0001 << 5),\n" +
@@ -206,13 +206,13 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " THING2,\n" +
       "} Thinger;\n" +
       "or me!!\n"
-    
+
     assert_equal(["don't delete me!! or me!!"], @parser.import_source(source).map!{|s|s.strip})
   end
 
 
   should "remove union statements" do
-    source = 
+    source =
       "union _NamedDoohicky {\n" +
       " unsigned int a;\n" +
       " char b;\n" +
@@ -224,13 +224,13 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       " char b;\n" +
       "} Whatever;\n" +
       "me too!!\n"
-    
+
     assert_equal(["I want to live!! me too!!"], @parser.import_source(source).map!{|s|s.strip})
   end
 
 
   should "remove struct statements" do
-    source = 
+    source =
       "struct _NamedStruct1 {\n" +
       " unsigned int a;\n" +
       " signed long int b;\n" +
@@ -247,12 +247,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "}Thinger;\n" +
       "I want to live!!\n"
 
-    assert_equal(["void foo(void)", "struct THINGER foo(void)", "I want to live!!"], 
+    assert_equal(["void foo(void)", "struct THINGER foo(void)", "I want to live!!"],
                  @parser.import_source(source).map!{|s|s.strip})
   end
-  
+
   should "remove externed and inline functions" do
-    source = 
+    source =
       " extern uint32 foobar(unsigned int);\n" +
       "uint32 extern_name_func(unsigned int);\n" +
       "uint32 funcinline(unsigned int);\n" +
@@ -260,42 +260,42 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "inline void bar(unsigned int);\n" +
       "extern\n" +
       "void kinda_ugly_on_the_next_line(unsigned int);\n"
-    
+
     expected =
     [
       "uint32 extern_name_func(unsigned int)",
       "uint32 funcinline(unsigned int)"
     ]
-    
+
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
-  
+
   should "remove a fully defined inline function" do
-    source = 
+    source =
       "inline void foo(unsigned int a) { oranges = a; }\n" +
       "inline void bar(unsigned int a) { apples = a; };\n" +
       "inline void bar(unsigned int a)\n" +
       "{" +
       "  bananas = a;\n" +
       "}"
-    
+
     # ensure it's expected type of exception
     assert_raise RuntimeError do
       @parser.parse("module", source)
     end
 
     assert_equal([], @parser.funcs)
-    
+
     # verify exception message
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
       assert_equal("ERROR: No function prototypes found!", e.message)
-    end    
+    end
   end
-  
+
   should "remove just inline functions if externs to be included" do
-    source = 
+    source =
       " extern uint32 foobar(unsigned int);\n" +
       "uint32 extern_name_func(unsigned int);\n" +
       "uint32 funcinline(unsigned int);\n" +
@@ -303,7 +303,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "inline void bar(unsigned int);\n" +
       "extern\n" +
       "void kinda_ugly_on_the_next_line(unsigned int);\n"
-    
+
     expected =
     [ "extern uint32 foobar(unsigned int)",
       "uint32 extern_name_func(unsigned int)",
@@ -311,12 +311,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "extern void bar(unsigned int)",
       "extern void kinda_ugly_on_the_next_line(unsigned int)"
     ]
-    
+
     @parser.treat_externs = :include
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
-    
-  
+
+
   should "remove defines" do
     source =
       "#define whatever you feel like defining\n" +
@@ -324,37 +324,37 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#DEFINE I JUST DON'T CARE\n" +
       "#deFINE\n" +
       "#define get_foo() \\\n   ((Thing)foo.bar)" # exercise multiline define
-    
+
     expected =
     [
       "void hello(void)",
     ]
-    
+
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
-    
-  
+
+
   should "remove keywords that would keep things from going smoothly in the future" do
     source =
       "const int TheMatrix(register int Trinity, unsigned int *restrict Neo)"
-    
+
     expected =
     [
       "const int TheMatrix(int Trinity, unsigned int * Neo)",
     ]
-    
+
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
 
   # some code actually typedef's void even though it's not ANSI C and is, frankly, weird
   # since cmock treats void specially, we can't let void be obfuscated
-  should "handle odd case of typedef'd void returned" do  
+  should "handle odd case of typedef'd void returned" do
     source = "MY_FUNKY_VOID FunkyVoidReturned(int a)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidReturned",
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -367,13 +367,13 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :args_call=>"a"}
     assert_equal(expected, @parser.parse_declaration(source))
   end
-  
-  should "handle odd case of typedef'd void as arg" do 
+
+  should "handle odd case of typedef'd void as arg" do
     source = "int FunkyVoidAsArg(MY_FUNKY_VOID)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidAsArg",
-                 :return=>{ :type   => "int", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "int",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "int cmock_to_return",
@@ -386,13 +386,13 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :args_call=>"" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
-  
-  should "handle odd case of typedef'd void as arg pointer" do 
+
+  should "handle odd case of typedef'd void as arg pointer" do
     source = "char FunkyVoidPointer(MY_FUNKY_VOID* bluh)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidPointer",
-                 :return=>{ :type   => "char", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "char",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "char cmock_to_return",
@@ -403,11 +403,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :args=>[{:type=>"MY_FUNKY_VOID*", :name=>"bluh", :ptr? => true, :const? => false}],
                  :args_string=>"MY_FUNKY_VOID* bluh",
                  :args_call=>"bluh" }
-    assert_equal(expected, @parser.parse_declaration(source))        
+    assert_equal(expected, @parser.parse_declaration(source))
   end
 
 
-  should "strip default values from function parameter lists" do  
+  should "strip default values from function parameter lists" do
     source =
       "void Foo(int a = 57, float b=37.52, char c= 'd', char* e=\"junk\");\n"
 
@@ -415,41 +415,41 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     [
       "void Foo(int a, float b, char c, char* e)"
     ]
-    
+
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
 
-  should "raise upon empty file" do  
+  should "raise upon empty file" do
     source = ''
-        
+
     # ensure it's expected type of exception
     assert_raise RuntimeError do
       @parser.parse("module", source)
     end
 
     assert_equal([], @parser.funcs)
-    
+
     # verify exception message
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
       assert_equal("ERROR: No function prototypes found!", e.message)
-    end    
+    end
   end
-  
-  should "clean up module names that contain spaces, dashes, and such" do  
+
+  should "clean up module names that contain spaces, dashes, and such" do
     source = 'void meh(int (*func)(int));'
-        
+
     retval = @parser.parse("C:\Ugly Module-Name", source)
     assert (retval[:typedefs][0] =~ /CUglyModuleName/)
   end
 
-  should "raise upon no function prototypes found in file" do  
-    source = 
+  should "raise upon no function prototypes found in file" do
+    source =
       "typedef void SILLY_VOID_TYPE1;\n" +
       "typedef (void) SILLY_VOID_TYPE2 ;\n" +
-      "typedef ( void ) (*FUNCPTR)(void);\n\n" + 
+      "typedef ( void ) (*FUNCPTR)(void);\n\n" +
       "#define get_foo() \\\n   ((Thing)foo.bar)"
 
     # ensure it's expected type of exception
@@ -457,19 +457,19 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       @parser.parse("module", source)
     end
 
-    assert_equal([], @parser.funcs)    
+    assert_equal([], @parser.funcs)
 
     # verify exception message
     begin
-      @parser.parse("module", source)    
+      @parser.parse("module", source)
     rescue RuntimeError => e
       assert_equal("ERROR: No function prototypes found!", e.message)
-    end    
+    end
   end
 
 
   should "raise upon prototype parsing failure" do
-    source = "void (int, )" 
+    source = "void (int, )"
 
     # ensure it's expected type of exception
     assert_raise(RuntimeError) do
@@ -478,19 +478,19 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
     # verify exception message
     begin
-      @parser.parse("module", source) 
+      @parser.parse("module", source)
     rescue RuntimeError => e
       assert(e.message.include?("Failed Parsing Declaration Prototype!"))
-    end    
+    end
   end
 
   should "extract and return function declarations with retval and args" do
-  
+
     source = "int Foo(int a, unsigned int b)"
     expected = { :var_arg=>nil,
                  :name=>"Foo",
-                 :return=>{ :type   => "int", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "int",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "int cmock_to_return",
@@ -498,7 +498,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                           },
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false}, 
+                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false},
                           {:type=>"unsigned int", :name=>"b", :ptr? => false, :const? => false}
                         ],
                  :args_string=>"int a, unsigned int b",
@@ -507,11 +507,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
   should "extract and return function declarations with no retval" do
-  
+
     source = "void    FunkyChicken(    uint la,  int     de, bool da)"
     expected = { :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -520,7 +520,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :name=>"FunkyChicken",
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"uint", :name=>"la", :ptr? => false, :const? => false}, 
+                 :args=>[ {:type=>"uint", :name=>"la", :ptr? => false, :const? => false},
                           {:type=>"int",  :name=>"de", :ptr? => false, :const? => false},
                           {:type=>"bool", :name=>"da", :ptr? => false, :const? => false}
                         ],
@@ -530,11 +530,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
   should "extract and return function declarations with implied voids" do
-  
+
     source = "void tat()"
     expected = { :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -548,13 +548,13 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :args_call=>"" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
-  
+
   should "extract modifiers properly" do
-  
+
     source = "const int TheMatrix(int Trinity, unsigned int * Neo)"
     expected = { :var_arg=>nil,
-                 :return=>{ :type   => "int", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "int",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "int cmock_to_return",
@@ -563,20 +563,20 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :name=>"TheMatrix",
                  :modifier=>"const",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
+                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false},
                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}
                         ],
                  :args_string=>"int Trinity, unsigned int* Neo",
                  :args_call=>"Trinity, Neo" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
-  
+
   should "extract c calling conventions properly" do
-  
+
     source = "const int __stdcall TheMatrix(int Trinity, unsigned int * Neo)"
     expected = { :var_arg=>nil,
-                 :return=>{ :type   => "int", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "int",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "int cmock_to_return",
@@ -586,22 +586,22 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :modifier=>"const",
                  :c_calling_convention=>"__stdcall",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
+                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false},
                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}
                         ],
                  :args_string=>"int Trinity, unsigned int* Neo",
                  :args_call=>"Trinity, Neo" }
     assert_equal(expected, @parser.parse_declaration(source))
   end
-  
+
   should "fully parse multiple prototypes" do
-  
-    source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" + 
+
+    source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" +
              "int Morpheus(int, unsigned int*);\n"
-             
+
     expected = [{ :var_arg=>nil,
-                  :return=> { :type   => "int", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "int",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
@@ -610,14 +610,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :name=>"TheMatrix",
                   :modifier=>"const",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
+                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false},
                            {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false}
                          ],
                   :args_string=>"int Trinity, unsigned int* Neo",
                  :args_call=>"Trinity, Neo" },
                 { :var_arg=>nil,
-                  :return=> { :type   => "int", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "int",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
@@ -626,24 +626,24 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :name=>"Morpheus",
                   :modifier=>"",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false, :const? => false}, 
+                  :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false, :const? => false},
                            {:type=>"unsigned int*", :name=>"cmock_arg2", :ptr? => true,  :const? => false}
                          ],
                   :args_string=>"int cmock_arg1, unsigned int* cmock_arg2",
-                 :args_call=>"cmock_arg1, cmock_arg2" 
+                 :args_call=>"cmock_arg1, cmock_arg2"
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
-  
+
   should "not extract for mocking multiply defined prototypes" do
-  
-    source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" + 
+
+    source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" +
              "const int TheMatrix(int, unsigned int*);\n"
-             
+
     expected = [{ :var_arg=>nil,
                   :name=>"TheMatrix",
-                  :return=> { :type   => "int", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "int",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
@@ -651,7 +651,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                             },
                   :modifier=>"const",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false}, 
+                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false},
                            {:type=>"unsigned int*", :name=>"Neo", :ptr? => true,      :const? => false}
                          ],
                   :args_string=>"int Trinity, unsigned int* Neo",
@@ -659,18 +659,18 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
-  
+
   should "properly detect typedef'd variants of void and use those" do
-  
-    source = "typedef (void) FUNKY_VOID_T;\n" + 
+
+    source = "typedef (void) FUNKY_VOID_T;\n" +
              "typedef void CHUNKY_VOID_T;\n" +
              "FUNKY_VOID_T DrHorrible(int SingAlong);\n" +
              "int CaptainHammer(CHUNKY_VOID_T);\n"
-             
+
     expected = [{ :var_arg=>nil,
                   :name=>"DrHorrible",
-                  :return  => { :type   => "void", 
-                                :name   => 'cmock_to_return', 
+                  :return  => { :type   => "void",
+                                :name   => 'cmock_to_return',
                                 :ptr?   => false,
                                 :const? => false,
                                 :str    => "void cmock_to_return",
@@ -683,8 +683,8 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :args_call=>"SingAlong"
                 },
                 { :var_arg=>nil,
-                  :return=> { :type   => "int", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "int",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
@@ -699,16 +699,16 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
-  
+
   should "be ok with structs inside of function declarations" do
-  
+
     source = "int DrHorrible(struct SingAlong Blog);\n" +
              "void Penny(struct const _KeepYourHeadUp_ * const BillyBuddy);\n" +
              "struct TheseArentTheHammer CaptainHammer(void);\n"
-             
+
     expected = [{ :var_arg=>nil,
-                  :return =>{ :type   => "int", 
-                              :name   => 'cmock_to_return', 
+                  :return =>{ :type   => "int",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
@@ -719,11 +719,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :contains_ptr? => false,
                   :args=>[ {:type=>"struct SingAlong", :name=>"Blog", :ptr? => false, :const? => false} ],
                   :args_string=>"struct SingAlong Blog",
-                  :args_call=>"Blog" 
+                  :args_call=>"Blog"
                 },
                 { :var_arg=>nil,
-                  :return=> { :type   => "void", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "void",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "void cmock_to_return",
@@ -734,11 +734,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :contains_ptr? => true,
                   :args=>[ {:type=>"struct _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :const? => true} ],
                   :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy",
-                  :args_call=>"BillyBuddy" 
+                  :args_call=>"BillyBuddy"
                 },
                 { :var_arg=>nil,
-                  :return=> { :type   => "struct TheseArentTheHammer", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "struct TheseArentTheHammer",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "struct TheseArentTheHammer cmock_to_return",
@@ -753,12 +753,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
-  
+
   should "extract functions containing unions with union specifier" do
     source = "void OrangePeel(union STARS_AND_STRIPES * a, union AFL_CIO b)"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -775,12 +775,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
-  
+
   should "not be thwarted by variables named with primitive types as part of the name" do
     source = "void ApplePeel(const unsigned int const_param, int int_param, int integer, char character, int* const constant)"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -800,12 +800,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
-  
-  should "not be thwarted by custom types named similarly to primitive types" do 
+
+  should "not be thwarted by custom types named similarly to primitive types" do
     source = "void LemonPeel(integer param, character thing, longint * junk, constant value, int32_t const number)"
     expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -825,12 +825,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
-  
+
   should "handle some of those chains of C name specifiers naturally" do
     source = "void CoinOperated(signed char abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law)"
     expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -849,12 +849,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
-  
-  should "handle custom types of various formats" do 
+
+  should "handle custom types of various formats" do
     source = "void CardOperated(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const * const abc123)"
     expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -873,12 +873,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
-  
+
   should "handle arrays and treat them as pointers" do
     source = "void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], char thing3 [][2 ][ 3], int* thing4[4])"
     expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -897,12 +897,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
-  
-  should "give a reasonable guess when dealing with weird combinations of custom types and modifiers" do 
+
+  should "give a reasonable guess when dealing with weird combinations of custom types and modifiers" do
     source = "void Cheese(unsigned CUSTOM_TYPE abc, unsigned xyz, CUSTOM_TYPE1 CUSTOM_TYPE2 pdq)"
     expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -920,12 +920,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
-  
+
   should "extract functions containing a function pointer" do
     source = "void FunkyTurkey(unsigned int (*func_ptr)(int, char))"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -943,12 +943,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
   should "extract functions containing a function pointer with an implied void" do
     source = "void FunkyTurkey(unsigned int (*func_ptr)())"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -966,12 +966,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
   should "extract functions containing a constant function pointer and a pointer in the nested arg list" do
     source = "void FunkyChicken(unsigned int (* const func_ptr)(unsigned long int * , char))"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -989,12 +989,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
   # should "extract functions containing a function pointer taking a vararg" do
     # source = "void FunkyParrot(unsigned int (*func_ptr)(int, char, ...))"
     # expected = [{ :var_arg=>nil,
-                 # :return=>{ :type   => "void", 
-                            # :name   => 'cmock_to_return', 
+                 # :return=>{ :type   => "void",
+                            # :name   => 'cmock_to_return',
                             # :ptr?   => false,
                             # :const? => false,
                             # :str    => "void cmock_to_return",
@@ -1012,12 +1012,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     # assert_equal(expected, result[:functions])
     # assert_equal(typedefs, result[:typedefs])
   # end
-  
+
   should "extract functions containing a function pointer with extra parenthesis and two sets" do
     source = "void FunkyBudgie(int (((* func_ptr1)(int, char))), void (*func_ptr2)(void))"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -1036,12 +1036,37 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
+  should "extract functions containing a function pointers, structs and other things" do
+    source = "struct mytype *FunkyRobin(uint16_t num1, uint16_t num2, void (*func_ptr1)(uint16_t num3, struct mytype2 *s));"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "struct mytype*",
+                            :name   => 'cmock_to_return',
+                            :ptr?   => true,
+                            :const? => false,
+                            :str    => "struct mytype* cmock_to_return",
+                            :void?  => false
+                          },
+                 :name=>"FunkyRobin",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"uint16_t", :name=>"num1", :ptr? => false, :const? => false},
+                          {:type=>"uint16_t", :name=>"num2", :ptr? => false, :const? => false},
+                          {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :const? => false}
+                        ],
+                 :args_string=>"uint16_t num1, uint16_t num2, cmock_module_func_ptr1 func_ptr1",
+                 :args_call=>"num1, num2, func_ptr1" }]
+    typedefs = ["typedef void(*cmock_module_func_ptr1)(uint16_t num3, struct mytype2* s);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+
   should "extract functions containing an anonymous function pointer" do
     source = "void FunkyFowl(unsigned int (* const)(int, char))"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
@@ -1059,12 +1084,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
   should "extract functions returning a function pointer" do
     source = "unsigned short (*FunkyPidgeon( const char op_code ))( int, long int )"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "cmock_module_func_ptr1", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "cmock_module_func_ptr1",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
@@ -1082,12 +1107,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
   should "extract functions returning a function pointer with implied void" do
     source = "unsigned short (*FunkyTweetie())()"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "cmock_module_func_ptr1", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "cmock_module_func_ptr1",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
@@ -1104,12 +1129,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
   should "extract functions returning a function pointer where everything is a void" do
     source = "void (*   FunkySeaGull(void))(void)"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "cmock_module_func_ptr1", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "cmock_module_func_ptr1",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
@@ -1126,12 +1151,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
   should "extract functions returning a function pointer with some pointer nonsense" do
     source = "unsigned int * (* FunkyMacaw(double* foo, THING *bar))(unsigned int)"
     expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "cmock_module_func_ptr1", 
-                            :name   => 'cmock_to_return', 
+                 :return=>{ :type   => "cmock_module_func_ptr1",
+                            :name   => 'cmock_to_return',
                             :ptr?   => false,
                             :const? => false,
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
@@ -1150,7 +1175,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
-  
+
   should "extract this SQLite3 function with an anonymous function pointer arg (regression test)" do
     source = "SQLITE_API int sqlite3_bind_text(sqlite3_stmt*, int, const char*, int n, void(*)(void*))"
     expected = [{ :var_arg=>nil,
@@ -1177,12 +1202,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
- 
+
   should "extract functions with varargs" do
     source = "int XFiles(int Scully, int Mulder, ...);\n"
     expected = [{ :var_arg=>"...",
-                  :return=> { :type   => "int", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "int",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
@@ -1191,7 +1216,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :name=>"XFiles",
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false, :const? => false}, 
+                  :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false, :const? => false},
                            {:type=>"int", :name=>"Mulder", :ptr? => false, :const? => false}
                          ],
                   :args_string=>"int Scully, int Mulder",
@@ -1199,12 +1224,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
-  
+
   should "extract functions with strippable confusing junk like gcc attributes" do
     source = "int LaverneAndShirley(int Lenny, int Squiggy) __attribute__((weak)) __attribute__ ((deprecated));\n"
     expected = [{ :var_arg=>nil,
-                  :return=> { :type   => "int", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "int",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
@@ -1213,7 +1238,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :name=>"LaverneAndShirley",
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false}, 
+                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false},
                            {:type=>"int", :name=>"Squiggy", :ptr? => false, :const? => false}
                          ],
                   :args_string=>"int Lenny, int Squiggy",
@@ -1221,12 +1246,12 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
-  
+
   should "extract functions with strippable confusing junk like gcc attributes with parenthesis" do
     source = "int TheCosbyShow(int Cliff, int Claire) __attribute__((weak, alias (\"__f\"));\n"
     expected = [{ :var_arg=>nil,
-                  :return=> { :type   => "int", 
-                              :name   => 'cmock_to_return', 
+                  :return=> { :type   => "int",
+                              :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
@@ -1235,7 +1260,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :name=>"TheCosbyShow",
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Cliff", :ptr? => false, :const? => false}, 
+                  :args=>[ {:type=>"int", :name=>"Cliff", :ptr? => false, :const? => false},
                            {:type=>"int", :name=>"Claire", :ptr? => false, :const? => false}
                          ],
                   :args_string=>"int Cliff, int Claire",
