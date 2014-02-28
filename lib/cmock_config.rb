@@ -30,7 +30,7 @@ class CMockConfig
     :includes_h_pre_orig_header  => nil,
     :includes_h_post_orig_header => nil,
     :includes_c_pre_header       => nil,
-    :includes_c_post_header      => nil
+    :includes_c_post_header      => nil,
   }
 
   def initialize(options=nil)
