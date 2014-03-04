@@ -8,6 +8,8 @@
   - :cexception
   - :ignore
   - :callback
+  - :return_thru_ptr
+  - :ignore_arg
   - :expect_any_args
 
 :systest:
@@ -323,6 +325,30 @@
           foos_ExpectAnyArgs();
           foos_ExpectAnyArgs();
           foos_ExpectAnyArgs();
+
+          function_e();
+        }
+
+    - :pass: TRUE
+      :should: 'be ok if we ExpectAnyArgs and Expect intermixed because we are counting calls'
+      :code: |
+        test()
+        {
+          foos_Expect("Hello");
+          foos_ExpectAnyArgs();
+          foos_ExpectAnyArgs();
+
+          function_e();
+        }
+
+    - :pass: FALSE
+      :should: 'be able to detect Expect problem if we ExpectAnyArgs and Expect intermixed'
+      :code: |
+        test()
+        {
+          foos_Expect("Hello");
+          foos_ExpectAnyArgs();
+          foos_Expect("Wrong");
 
           function_e();
         }
