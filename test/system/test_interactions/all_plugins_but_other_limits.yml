@@ -3,12 +3,12 @@
 :cmock:
   :enforce_strict_ordering: 1
   :treat_externs: :include
-  :ignore: :args_only
   :plugins:
   - :array
   - :cexception
   - :ignore
   - :callback
+  - :expect_any_args
 
 :systest:
   :types: |
@@ -28,9 +28,9 @@
     int mixed(int a, int* b, int c);
     void no_args(void);
 
-  :source: 
-    :header: |   
-      #include "CException.h" 
+  :source:
+    :header: |
+      #include "CException.h"
       void function_a(void);
       void function_b(void);
       void function_c(void);
@@ -38,40 +38,40 @@
       void function_e(void);
 
     :code: |
-      void function_a(void)    
+      void function_a(void)
       {
         foo(bar());
-      }    
+      }
 
       void function_b(void) {
         fooa(bar());
       }
-      
+
       void function_c(void) {
         CEXCEPTION_T e;
         Try {
           foos(bars());
         } Catch(e) { foos("err"); }
       }
-      
+
       int function_d(void) {
         int test_list[] = { 1, 2, 3, 4, 5 };
         no_pointers(1, "silly");
         return mixed(6, test_list, 7);
       }
-      
+
       void function_e(void) {
         foos("Hello");
         foos("Tuna");
         foos("Oranges");
       }
-      
+
   :tests:
     :common: |
       #include "CException.h"
       void setUp(void) {}
       void tearDown(void) {}
-      
+
     :units:
     - :pass: TRUE
       :should: 'handle the situation where we pass nulls to pointers'
@@ -80,10 +80,10 @@
         {
           bar_ExpectAndReturn(NULL);
           foo_Expect(NULL);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we expected nulls to pointers but did not get that'
       :code: |
@@ -92,10 +92,10 @@
           POINT_T pt = {1, 2};
           bar_ExpectAndReturn(&pt);
           foo_Expect(NULL);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we did not expect nulls to pointers but got null'
       :code: |
@@ -104,10 +104,10 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(NULL);
           foo_Expect(&ex);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass single object with expect and it is wrong'
       :code: |
@@ -117,10 +117,10 @@
           POINT_T ex = {1, 3};
           bar_ExpectAndReturn(&pt);
           foo_Expect(&ex);
-          
+
           function_a();
         }
-        
+
     - :pass: TRUE
       :should: 'handle the situation where we pass single object with expect and use array handler'
       :code: |
@@ -130,10 +130,10 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(&pt);
           foo_ExpectWithArray(&ex, 1);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass single object with expect and use array handler and it is wrong'
       :code: |
@@ -143,10 +143,10 @@
           POINT_T ex = {1, 3};
           bar_ExpectAndReturn(&pt);
           foo_ExpectWithArray(&ex, 1);
-          
+
           function_a();
         }
-        
+
     - :pass: TRUE
       :should: 'handle the situation where we pass multiple objects with expect and use array handler'
       :code: |
@@ -156,10 +156,10 @@
           POINT_T ex[] = {{1, 2}, {3, 4}, {5, 6}};
           bar_ExpectAndReturn(pt);
           foo_ExpectWithArray(ex, 3);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass multiple objects with expect and use array handler and it is wrong at end'
       :code: |
@@ -169,7 +169,7 @@
           POINT_T ex[] = {{1, 2}, {3, 4}, {5, 9}};
           bar_ExpectAndReturn(pt);
           foo_ExpectWithArray(ex, 3);
-          
+
           function_a();
         }
 
@@ -182,7 +182,7 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(&pt);
           fooa_Expect(&ex);
-          
+
           function_b();
         }
 
@@ -193,10 +193,10 @@
         {
           bars_ExpectAndReturn("This is a\0 silly string");
           foos_Expect("This is a\0 wacky string");
-          
+
           function_c();
         }
-        
+
     - :pass: FALSE
       :should: 'handle standard c string as null terminated and not do crappy memory compares of a byte, finding failures'
       :code: |
@@ -204,7 +204,7 @@
         {
           bars_ExpectAndReturn("This is a silly string");
           foos_Expect("This is a wacky string");
-          
+
           function_c();
         }
 
@@ -216,7 +216,7 @@
           int expect_list[] = { 1, 9 };
           no_pointers_Expect(1, "silly");
           mixed_ExpectAndReturn(6, expect_list, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
@@ -228,7 +228,7 @@
           int expect_list[] = { 9, 1 };
           no_pointers_Expect(1, "silly");
           mixed_ExpectAndReturn(6, expect_list, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
@@ -240,7 +240,7 @@
           int expect_list[] = { 1, 2, 3, 4, 6 };
           no_pointers_Expect(1, "silly");
           mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
@@ -252,7 +252,7 @@
           int expect_list[] = { 1, 2, 3, 4, 6 };
           no_pointers_Expect(1, "silly");
           mixed_ExpectWithArrayAndReturn(6, expect_list, 5, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
@@ -264,7 +264,7 @@
           bars_ExpectAndReturn("This is a\0 silly string");
           foos_ExpectAndThrow("This is a\0 wacky string", 55);
           foos_Expect("err");
-          
+
           function_c();
         }
 
@@ -276,7 +276,7 @@
           bars_ExpectAndReturn("This is a\0 silly string");
           foos_ExpectAndThrow("This is a\0 wacky string", 55);
           foos_Expect("wrong error");
-          
+
           function_c();
         }
 
@@ -288,53 +288,53 @@
           int expect_list[] = { 1, 2, 3, 4, 6 };
           mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
           no_pointers_Expect(1, "silly");
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
     - :pass: TRUE
-      :should: 'properly ignore first function but the other will work properly'
+      :should: 'properly ExpectAnyArgs first function but the other will work properly'
       :code: |
         test()
         {
           int expect_list[] = { 1, 2, 3, 4, 6 };
-          no_pointers_Ignore();
+          no_pointers_ExpectAnyArgs();
           mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
     - :pass: TRUE
-      :should: 'properly ignore last function but the other will work properly'
+      :should: 'properly ExpectAnyArgs last function but the other will work properly'
       :code: |
         test()
         {
           no_pointers_Expect(1, "silly");
-          mixed_IgnoreAndReturn(13);
-          
+          mixed_ExpectAnyArgsAndReturn(13);
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
     - :pass: TRUE
-      :should: 'be ok if we ignore a call each because we are counting calls'
+      :should: 'be ok if we ExpectAnyArgs a call each because we are counting calls'
       :code: |
         test()
         {
-          foos_Ignore();
-          foos_Ignore();
-          foos_Ignore();
-          
+          foos_ExpectAnyArgs();
+          foos_ExpectAnyArgs();
+          foos_ExpectAnyArgs();
+
           function_e();
         }
 
     - :pass: FALSE
-      :should: 'fail if we do not ignore a call once because we are counting calls'
+      :should: 'fail if we do not ExpectAnyArgs a call once because we are counting calls'
       :code: |
         test()
         {
-          foos_Ignore();
-          foos_Ignore();
-          
+          foos_ExpectAnyArgs();
+          foos_ExpectAnyArgs();
+
           function_e();
         }
 

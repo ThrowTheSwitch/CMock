@@ -2,11 +2,11 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
 
 class CMockConfig
-  
-  CMockDefaultOptions = 
+
+  CMockDefaultOptions =
   {
     :framework                => :unity,
     :mock_path                => 'mocks',
@@ -24,24 +24,23 @@ class CMockConfig
     :when_ptr                 => :compare_data,   #the options being :compare_ptr, :compare_data, or :smart
     :verbosity                => 2,               #the options being 0 errors only, 1 warnings and errors, 2 normal info, 3 verbose
     :treat_externs            => :exclude,        #the options being :include or :exclude
-    :ignore                   => :args_and_calls, #the options being :args_and_calls or :args_only
     :callback_include_count   => true,
     :callback_after_arg_check => false,
-    :includes                    => nil, 
-    :includes_h_pre_orig_header  => nil, 
-    :includes_h_post_orig_header => nil, 
-    :includes_c_pre_header       => nil, 
+    :includes                    => nil,
+    :includes_h_pre_orig_header  => nil,
+    :includes_h_post_orig_header => nil,
+    :includes_c_pre_header       => nil,
     :includes_c_post_header      => nil
   }
-  
+
   def initialize(options=nil)
     case(options)
-      when NilClass then options = CMockDefaultOptions.clone 
+      when NilClass then options = CMockDefaultOptions.clone
       when String   then options = CMockDefaultOptions.clone.merge(load_config_file_from_yaml(options))
       when Hash     then options = CMockDefaultOptions.clone.merge(options)
       else          raise "If you specify arguments, it should be a filename or a hash of options"
     end
-    
+
     #do some quick type verification
     [:plugins, :attributes, :treat_as_void].each do |opt|
       unless (options[opt].class == Array)
@@ -59,30 +58,30 @@ class CMockConfig
     options[:plugins].compact!
     options[:plugins].map! {|p| p.to_sym}
     @options = options
-    
+
     treat_as_map = standard_treat_as_map()#.clone
     treat_as_map.merge!(@options[:treat_as])
     @options[:treat_as] = treat_as_map
-    
+
     @options.each_key { |key| eval("def #{key.to_s}() return @options[:#{key.to_s}] end") }
   end
-  
+
   def load_config_file_from_yaml yaml_filename
     require 'yaml'
     require 'fileutils'
     YAML.load_file(yaml_filename)[:cmock]
   end
-  
+
   def set_path(path)
     @src_path = path
   end
-  
+
   def load_unity_helper
     return File.new(@options[:unity_helper_path]).read if (@options[:unity_helper_path])
     return nil
   end
 
-  def standard_treat_as_map 
+  def standard_treat_as_map
     {
       'int'             => 'INT',
       'char'            => 'INT8',
