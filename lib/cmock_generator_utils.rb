@@ -19,15 +19,17 @@ class CMockGeneratorUtils
     @ignore_arg   = @config.plugins.include? :ignore_arg
     @treat_as     = @config.treat_as
 	  @helpers = helpers
+  end
 
+  def code_verify_an_arg_expectation(function, arg)
     if (@arrays)
       case(@ptr_handling)
-        when :smart        then alias :code_verify_an_arg_expectation :code_verify_an_arg_expectation_with_smart_arrays
-        when :compare_data then alias :code_verify_an_arg_expectation :code_verify_an_arg_expectation_with_normal_arrays
+        when :smart        then code_verify_an_arg_expectation_with_smart_arrays(function, arg)
+        when :compare_data then code_verify_an_arg_expectation_with_normal_arrays(function, arg)
         when :compare_ptr  then raise "ERROR: the array plugin doesn't enjoy working with :compare_ptr only.  Disable one option."
       end
     else
-      alias :code_verify_an_arg_expectation :code_verify_an_arg_expectation_with_no_arrays
+      code_verify_an_arg_expectation_with_no_arrays(function, arg)
     end
   end
 
@@ -126,10 +128,14 @@ class CMockGeneratorUtils
         lines << "    else\n"
         lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*','')}), cmock_line, \"#{unity_msg}\"); }\n"
       when /_ARRAY/
-        lines << "    if (#{pre}#{expected} == NULL)\n"
-        lines << "      { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }\n"
-        lines << "    else\n"
-        lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, 1, cmock_line, \"#{unity_msg}\"); }\n"
+        if (pre == '&')
+          lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, 1, cmock_line, \"#{unity_msg}\");\n"
+        else
+          lines << "    if (#{pre}#{expected} == NULL)\n"
+          lines << "      { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, \"Expected NULL. #{unity_msg}\"); }\n"
+          lines << "    else\n"
+          lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, 1, cmock_line, \"#{unity_msg}\"); }\n"
+        end
       else
         lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n"
     end
