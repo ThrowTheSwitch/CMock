@@ -279,8 +279,8 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
   should 'handle custom types as memory compares when we have no better way to do it with array plugin enabled' do
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
-    expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n  {\n    UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE), cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\");\n  }\n"
-    @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MEMORY','&'])
+    expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n  {\n    UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE), 1, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\");\n  }\n"
+    @unity_helper.expect.get_helper('MY_TYPE').returns(['UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY','&'])
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
 
