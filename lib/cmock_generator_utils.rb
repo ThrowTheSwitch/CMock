@@ -2,7 +2,7 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# ========================================== 
 
 class CMockGeneratorUtils
 
@@ -14,13 +14,12 @@ class CMockGeneratorUtils
     @ordered      = @config.enforce_strict_ordering
     @arrays       = @config.plugins.include? :array
     @cexception   = @config.plugins.include? :cexception
-    @expect_any   = @config.plugins.include? :expect_any_args
     @return_thru_ptr = @config.plugins.include? :return_thru_ptr
     @ignore_arg   = @config.plugins.include? :ignore_arg
     @treat_as     = @config.treat_as
 	  @helpers = helpers
   end
-
+  
   def code_verify_an_arg_expectation(function, arg)
     if (@arrays)
       case(@ptr_handling)
@@ -41,38 +40,37 @@ class CMockGeneratorUtils
     lines << "  cmock_call_instance->LineNumber = cmock_line;\n"
     lines << "  cmock_call_instance->CallOrder = ++GlobalExpectCount;\n" if (@ordered and global_ordering_supported)
     lines << "  cmock_call_instance->ExceptionToThrow = CEXCEPTION_NONE;\n" if (@cexception)
-    lines << "  cmock_call_instance->IgnoreMode = CMOCK_ARG_ALL;\n" if (@expect_any)
     lines
   end
-
-  def code_add_an_arg_expectation(arg, depth=1)
+  
+  def code_add_an_arg_expectation(arg, depth=1) 
     lines =  code_assign_argument_quickly("cmock_call_instance->Expected_#{arg[:name]}", arg)
     lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{arg[:name]}_Depth;\n" if (@arrays and (depth.class == String))
     lines << "  cmock_call_instance->IgnoreArg_#{arg[:name]} = 0;\n" if (@ignore_arg)
     lines << "  cmock_call_instance->ReturnThruPtr_#{arg[:name]}_Used = 0;\n" if (@return_thru_ptr and ptr_or_str?(arg[:type]) and not arg[:const?])
     lines
   end
-
-  def code_assign_argument_quickly(dest, arg)
+  
+  def code_assign_argument_quickly(dest, arg) 
     if (arg[:ptr?] or @treat_as.include?(arg[:type]))
       "  #{dest} = #{arg[:const?] ? "(#{arg[:type]})" : ''}#{arg[:name]};\n"
     else
       "  memcpy(&#{dest}, &#{arg[:name]}, sizeof(#{arg[:type]}));\n"
     end
   end
-
+  
   def code_add_argument_loader(function)
     if (function[:args_string] != "void")
       if (@arrays)
-        args_string = function[:args].map do |m|
+        args_string = function[:args].map do |m| 
           const_str = m[ :const? ] ? 'const ' : ''
           m[:ptr?] ? "#{const_str}#{m[:type]} #{m[:name]}, int #{m[:name]}_Depth" : "#{const_str}#{m[:type]} #{m[:name]}"
         end.join(', ')
-        "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" +
+        "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" + 
         function[:args].inject("") { |all, arg| all + code_add_an_arg_expectation(arg, (arg[:ptr?] ? "#{arg[:name]}_Depth" : 1) ) } +
         "}\n\n"
       else
-        "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]})\n{\n" +
+        "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]})\n{\n" + 
         function[:args].inject("") { |all, arg| all + code_add_an_arg_expectation(arg) } +
         "}\n\n"
       end
@@ -80,25 +78,25 @@ class CMockGeneratorUtils
       ""
     end
   end
-
+  
   def code_call_argument_loader(function)
     if (function[:args_string] != "void")
       args = function[:args].map do |m|
         (@arrays and m[:ptr?]) ? "#{m[:name]}, 1" : m[:name]
       end
-      "  CMockExpectParameters_#{function[:name]}(cmock_call_instance, #{args.join(', ')});\n"
+      "  CMockExpectParameters_#{function[:name]}(cmock_call_instance, #{args.join(', ')});\n" 
     else
       ""
     end
   end
-
+  
   def ptr_or_str?(arg_type)
     return (arg_type.include? '*' or
             @treat_as.fetch(arg_type, "").include? '*')
   end
 
   #private ######################
-
+  
   def lookup_expect_type(function, arg)
     c_type     = arg[:type]
     arg_name   = arg[:name]
@@ -112,7 +110,7 @@ class CMockGeneratorUtils
     unity_msg  = "Function '#{function[:name]}' called with unexpected value for argument '#{arg_name}'."
     return c_type, arg_name, expected, ignore, unity_func[0], unity_func[1], unity_msg
   end
-
+  
   def code_verify_an_arg_expectation_with_no_arrays(function, arg)
     c_type, arg_name, expected, ignore, unity_func, pre, unity_msg = lookup_expect_type(function, arg)
     lines = ""
@@ -137,12 +135,12 @@ class CMockGeneratorUtils
           lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, 1, cmock_line, \"#{unity_msg}\"); }\n"
         end
       else
-        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n"
+        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n" 
     end
     lines << "  }\n"
     lines
   end
-
+  
   def code_verify_an_arg_expectation_with_normal_arrays(function, arg)
     c_type, arg_name, expected, ignore, unity_func, pre, unity_msg = lookup_expect_type(function, arg)
     depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
@@ -168,12 +166,12 @@ class CMockGeneratorUtils
           lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, \"#{unity_msg}\"); }\n"
         end
       else
-        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n"
+        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n" 
     end
     lines << "  }\n"
     lines
   end
-
+  
   def code_verify_an_arg_expectation_with_smart_arrays(function, arg)
     c_type, arg_name, expected, ignore, unity_func, pre, unity_msg = lookup_expect_type(function, arg)
     depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
@@ -205,10 +203,10 @@ class CMockGeneratorUtils
           lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, \"#{unity_msg}\"); }\n"
         end
       else
-        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n"
+        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, \"#{unity_msg}\");\n" 
     end
     lines << "  }\n"
     lines
   end
-
+  
 end
