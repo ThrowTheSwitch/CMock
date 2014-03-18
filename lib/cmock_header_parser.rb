@@ -121,7 +121,7 @@ class CMockHeaderParser
     source.gsub!(/^(?:[\w\s]*\W)?typedef\W.*/, '')                                         # remove typedef statements
     source.gsub!(/(^|\W+)(?:#{@c_strippables.join('|')})(?=$|\W+)/,'\1') unless @c_strippables.empty? # remove known attributes slated to be stripped
     source.gsub!(/DECLARE_HANDLE(\W)/, '') # remove handle declarations
-	source.gsub!(/#\s*define\s+[\w\s]+?\(.+?\).+?$/, '') # remove macros taking arguments
+	source.gsub!(/#\s*define\s+[\w\S]+?\(.+?\).*?$/, '') # remove macros taking arguments
 
     #scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
