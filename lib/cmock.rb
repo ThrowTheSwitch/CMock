@@ -48,7 +48,7 @@ def option_maker(options, key, val)
   options = options || {}
   options[key.to_sym] =
     if val.chr == ":"
-      val.to_sym
+      val[1..-1].to_sym
     elsif val.include? ";"
       val.split(';')
     elsif val == 'true'
