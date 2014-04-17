@@ -204,7 +204,7 @@ if ($0 == __FILE__)
     if (file.length > 2)
       if (!file.start_with?("."))
         if (file.match(/.*_intrinsics/))
-          fileintrinsics << "#{source_folder}\\#{file}"
+          fileintrinsics << "#{source_folder}/#{file}"
         elsif (file.match(/.*_defns/))
           filedefns << "#{file}"
         else
