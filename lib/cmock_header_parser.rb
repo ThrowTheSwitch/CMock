@@ -70,7 +70,7 @@ class CMockHeaderParser
     source.gsub!(/^\s*#\s*pragma\s+asm\s+.*?#\s*pragma\s+endasm/m, '')
 
     # remove gcc's __attribute__ tags
-    source.gsub(/__attrbute__\s*\(\(\.*\)\)/, '')
+    source.gsub!(/__attribute(?:__)?\s*\(\(+.*\)\)+/, '')
 
     # remove preprocessor statements and extern "C"
     source.gsub!(/^\s*#.*/, '')
@@ -108,6 +108,9 @@ class CMockHeaderParser
     else
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern|inline)\s+/).nil?} # remove inline and extern functions
     end
+    src_lines.delete_if {|line| !(line =~ /\{/).nil? }  # remove lines with opening braces { because this isn't a declaration, it's a definition!
+    src_lines.map!{|line| line.gsub(/.*\}/,'')} #remove braces left at the beginning of lines
+    src_lines.delete_if {|line| line.empty? } #drop empty lines
   end
 
   def parse_functions(source)

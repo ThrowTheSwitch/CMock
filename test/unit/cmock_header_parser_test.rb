@@ -15,7 +15,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   def setup
     create_mocks :config
     @test_name = 'test_file.h'
-    @config.expect.strippables.returns(['(?:__attribute__\s*\(+.*?\)+)'])
+    @config.expect.strippables.returns([])
     @config.expect.attributes.returns(['__ramfunc', 'funky_attrib', 'SQLITE_API'])
     @config.expect.c_calling_conventions.returns(['__stdcall'])
     @config.expect.treat_as_void.returns(['MY_FUNKY_VOID'])
@@ -50,7 +50,6 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
-
 
   should "remove block comments" do
     source =
@@ -266,6 +265,25 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     [
       "uint32 extern_name_func(unsigned int)",
       "uint32 funcinline(unsigned int)"
+    ]
+
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
+
+  should "remove function definitions but keep function declarations" do
+    source =
+      "uint32 func_with_decl_a(unsigned int);\n" +
+      "uint32 func_with_decl_a(unsigned int a) { return a; }\n" +
+      "uint32 func_with_decl_b(unsigned int);\n" +
+      "uint32 func_with_decl_b(unsigned int)\n" +
+      "{\n" +
+      "    bar(unsigned int);\n" +
+      "}\n"
+
+    expected =
+    [
+      "uint32 func_with_decl_a(unsigned int)",
+      "uint32 func_with_decl_b(unsigned int)"
     ]
 
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
