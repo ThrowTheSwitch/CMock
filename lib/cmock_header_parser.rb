@@ -223,7 +223,7 @@ class CMockHeaderParser
     decl[:return] = { :type   => rettype,
                       :name   => 'cmock_to_return',
                       :ptr?   => divine_ptr(rettype),
-                      :const? => rettype.split(/\s/).include?('const'),
+                      :const? => decl[:modifier].split(/\s/).include?('const'),
                       :str    => "#{rettype} cmock_to_return",
                       :void?  => (rettype == 'void')
                     }
