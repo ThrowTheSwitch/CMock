@@ -136,7 +136,7 @@ class CMockGenerator
   def create_mock_verify_function(file, functions)
     file << "void #{@clean_mock_name}_Verify(void)\n{\n"
     verifications = functions.collect {|function| @plugins.run(:mock_verify, function)}.join
-    file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n" unless verifications.empty?
+    file << "  UNITY_LINE_TYPE cmock_line;\n  cmock_line = TEST_LINE_NUM;\n" unless verifications.empty?
     file << verifications
     file << "}\n\n"
   end
@@ -170,7 +170,7 @@ class CMockGenerator
     # Create mock function
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
-    file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
+    file << "  UNITY_LINE_TYPE cmock_line;\n  cmock_line = TEST_LINE_NUM;\n"
     file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:name]}_CallInstance);\n"
     file << "  Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
     file << @plugins.run(:mock_implementation_precheck, function)
