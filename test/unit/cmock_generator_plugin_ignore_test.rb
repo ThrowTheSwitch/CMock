@@ -67,9 +67,9 @@ class CMockGeneratorPluginIgnoreTest < Test::Unit::TestCase
     expected = ["  if (Mock.Fungus_IgnoreBool)\n",
                 "  {\n",
                 "    if (cmock_call_instance == NULL)\n",
-                "      return Mock.Fungus_FinalReturn;\n",
+                "      return (int)Mock.Fungus_FinalReturn;\n",
                 "    mock_retval_0",
-                "    return cmock_call_instance->ReturnVal;\n",
+                "    return (int)cmock_call_instance->ReturnVal;\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(function)

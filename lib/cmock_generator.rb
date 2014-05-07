@@ -183,9 +183,8 @@ class CMockGenerator
       file << "    UNITY_TEST_FAIL(cmock_line, \"Function '#{function[:name]}' called later than expected.\");\n"
       # file << "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, \"Out of order function calls. Function '#{function[:name]}'\");\n"
     end
-    return_type = function[:return][:const?] ? "const #{function[:return][:type]}" : function[:return][:type]
     file << @plugins.run(:mock_implementation, function)
-    file << "  return (#{return_type})cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?])
+    file << "  return cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?])
     file << "}\n\n"
   end
 
