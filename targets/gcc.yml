@@ -9,6 +9,7 @@ compiler:
     - '-c'
     - '-Wall'
     - '-Wunused-parameter'
+    - '-Wno-duplicate-decl-specifier'
     - '-Wno-address'
     - '-std=c99'
     - '-pedantic'
@@ -31,7 +32,7 @@ compiler:
     prefix: '-o'
     extension: '.o'
     destination: *systest_build_path
-    
+
 linker:
   path: gcc
   options:
@@ -46,7 +47,7 @@ linker:
     extension: '.exe'
     destination: *systest_build_path
 
-unsupported: 
+unsupported:
   - unity_64bit_support
   - callingconv
 
