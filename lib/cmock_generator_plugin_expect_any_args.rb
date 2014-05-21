@@ -41,11 +41,11 @@ class CMockGeneratorPluginExpectAnyArgs
   def mock_implementation(function)
     lines = "  if (cmock_call_instance->IgnoreMode == CMOCK_ARG_NONE)\n  {\n"
     if (function[:return][:void?])
-      lines << "    return;\n  }\n"
+      lines << "    goto End_Of_Arg_Expectations;\n  }\n"
     else
       retval = function[:return].merge( { :name => "cmock_call_instance->ReturnVal"} )
       lines << "  " + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless (retval[:void?])
-      lines << "    return cmock_call_instance->ReturnVal;\n  }\n"
+      lines << "    goto End_Of_Arg_Expectations;\n  }\n"
     end
     lines
   end
