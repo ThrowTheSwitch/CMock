@@ -78,7 +78,7 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemChain(CMOCK_MEM_INDEX_TYPE root_index, CMOCK_
     {
       return CMOCK_GUTS_NONE;
     }
-    
+
     root = (void*)(&CMock_Guts_Buffer[root_index]);
     obj  = (void*)(&CMock_Guts_Buffer[obj_index]);
 
@@ -125,7 +125,7 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemEndOfChain(CMOCK_MEM_INDEX_TYPE root_index)
 {
   CMOCK_MEM_INDEX_TYPE index = root_index;
   CMOCK_MEM_INDEX_TYPE next_index;
-        
+
   for (next_index = root_index;
        next_index != CMOCK_GUTS_NONE;
        next_index = CMock_Guts_MemNext(index))
@@ -174,3 +174,19 @@ void CMock_Guts_MemFreeAll(void)
 {
   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE; //skip the very beginning
 }
+
+//-------------------------------------------------------
+// CMock_Guts_MemFreeFinal
+//-------------------------------------------------------
+void CMock_Guts_MemFreeFinal(void)
+{
+  CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
+#ifdef CMOCK_MEM_DYNAMIC
+  if (CMock_Guts_Buffer)
+  {
+    free(CMock_Guts_Buffer);
+    CMock_Guts_Buffer = NULL;
+  }
+#endif
+}
+

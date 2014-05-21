@@ -5,6 +5,7 @@
 ========================================== */
 
 #include "unity.h"
+#include "cmock.h"
 #include <setjmp.h>
 #include <stdio.h>
 
@@ -31,5 +32,6 @@ int main(void)
   RUN_TEST(test_ThatWeCanAskForAllSortsOfSizes, 152);
 
   UnityEnd();
+  CMock_Guts_MemFreeFinal();
   return 0;
 }
