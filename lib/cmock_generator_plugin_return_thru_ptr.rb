@@ -4,7 +4,7 @@ class CMockGeneratorPluginReturnThruPtr
 
   def initialize(config, utils)
     @utils        = utils
-    @priority     = 9
+    @priority     = 1
   end
 
   def instance_typedefs(function)

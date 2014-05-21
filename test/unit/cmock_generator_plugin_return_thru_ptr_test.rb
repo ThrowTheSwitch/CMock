@@ -2,7 +2,7 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require 'cmock_generator_plugin_return_thru_ptr'
@@ -21,7 +21,7 @@ class CMockGeneratorPluginReturnThruPtrTest < Test::Unit::TestCase
                     :contains_ptr? => false}
 
     # void Pine(int chicken, const int beef, int *tofu)
-    @complex_func = {:name => "Pine", 
+    @complex_func = {:name => "Pine",
                      :args => [{ :type => "int",
                                  :name => "chicken",
                                  :ptr? => false,
@@ -35,7 +35,7 @@ class CMockGeneratorPluginReturnThruPtrTest < Test::Unit::TestCase
                                  :name => "tofu",
                                  :ptr? => true,
                                }],
-                     :return => test_return[:void], 
+                     :return => test_return[:void],
                      :contains_ptr? => true }
 
     #no strict ordering
@@ -54,13 +54,13 @@ class CMockGeneratorPluginReturnThruPtrTest < Test::Unit::TestCase
     @utils.expect.ptr_or_str?('int*').returns(true)
     @utils.expect.ptr_or_str?('int*').returns(true)
   end
-  
+
   should "have set up internal accessors correctly on init" do
     assert_equal(@utils,  @cmock_generator_plugin_return_thru_ptr.utils)
-    assert_equal(9,       @cmock_generator_plugin_return_thru_ptr.priority)
+    assert_equal(1,       @cmock_generator_plugin_return_thru_ptr.priority)
   end
-  
-  should "not include any additional include files" do 
+
+  should "not include any additional include files" do
     assert(!@cmock_generator_plugin_return_thru_ptr.respond_to?(:include_files))
   end
 
@@ -68,7 +68,7 @@ class CMockGeneratorPluginReturnThruPtrTest < Test::Unit::TestCase
     returned = @cmock_generator_plugin_return_thru_ptr.instance_typedefs(@void_func)
     assert_equal("", returned)
   end
-  
+
   should "add to tyepdef structure mock needs of functions of style 'void func(int chicken, int* pork)'" do
     complex_func_expect()
     expected = "  int ReturnThruPtr_tofu_Used;\n" +
@@ -86,7 +86,7 @@ class CMockGeneratorPluginReturnThruPtrTest < Test::Unit::TestCase
 
   should "add a mock function declaration only for non-const pointer arguments" do
     complex_func_expect();
-    
+
     expected =
       "#define Pine_ReturnThruPtr_tofu(tofu)" +
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, sizeof(*tofu))\n" +
