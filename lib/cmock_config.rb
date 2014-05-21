@@ -67,6 +67,10 @@ class CMockConfig
   end
 
   def load_config_file_from_yaml yaml_filename
+    self.class.load_config_file_from_yaml yaml_filename
+  end
+
+  def self.load_config_file_from_yaml yaml_filename
     require 'yaml'
     require 'fileutils'
     YAML.load_file(yaml_filename)[:cmock]
