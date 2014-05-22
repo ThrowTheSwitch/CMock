@@ -18,16 +18,18 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
     @config.expect.plugins.returns([])
     @config.expect.plugins.returns([])
     @config.expect.plugins.returns([])
+    @config.expect.plugins.returns([])
     @config.expect.treat_as.returns({'int' => 'INT','short' => 'INT16','long' => 'INT','char' => 'INT8','char*' => 'STRING'})
     @cmock_generator_utils_simple = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper})
 
     @config.expect.when_ptr.returns(:smart)
     @config.expect.enforce_strict_ordering.returns(true)
-    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg])
-    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg])
-    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg])
-    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg])
-    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg])
+    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore])
+    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore])
+    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore])
+    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore])
+    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore])
+    @config.expect.plugins.returns([:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore])
     @config.expect.treat_as.returns({'int' => 'INT','short' => 'INT16','long' => 'INT','char' => 'INT8','uint32_t' => 'HEX32','char*' => 'STRING'})
     @cmock_generator_utils_complex = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper, :A=>1, :B=>2})
   end
@@ -72,6 +74,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
       "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"CMock has run out of memory. Please allocate more.\");\n" +
       "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
+      "  Mock.Apple_IgnoreBool = (int)0;\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n" +
       "  cmock_call_instance->CallOrder = ++GlobalExpectCount;\n" +
       "  cmock_call_instance->ExceptionToThrow = CEXCEPTION_NONE;\n"
@@ -85,6 +88,7 @@ class CMockGeneratorUtilsTest < Test::Unit::TestCase
       "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"CMock has run out of memory. Please allocate more.\");\n" +
       "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
+      "  Mock.Apple_IgnoreBool = (int)0;\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n" +
       "  cmock_call_instance->ExceptionToThrow = CEXCEPTION_NONE;\n"
     output = @cmock_generator_utils_complex.code_add_base_expectation("Apple", false)
