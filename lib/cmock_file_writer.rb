@@ -29,8 +29,8 @@ class CMockFileWriter
   end
   
   def create_folders(target_folder)
-    Dir.mkdir(target_folder + "\\include") unless Dir.exists?(target_folder + "\\include")
-    Dir.mkdir(target_folder + "\\C++") unless Dir.exists?(target_folder + "\\C++")
+    Dir.mkdir(target_folder + "/include") unless Dir.exists?(target_folder + "/include")
+    Dir.mkdir(target_folder + "/C++") unless Dir.exists?(target_folder + "/C++")
   end
   
   def copy_files(source_folder, target_folder, filelist)
