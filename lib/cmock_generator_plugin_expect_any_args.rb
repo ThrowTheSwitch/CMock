@@ -45,7 +45,8 @@ class CMockGeneratorPluginExpectAnyArgs
     else
       retval = function[:return].merge( { :name => "cmock_call_instance->ReturnVal"} )
       lines << "  " + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless (retval[:void?])
-      lines << "    return cmock_call_instance->ReturnVal;\n  }\n"
+      return_type_cast = function[:return][:const?] ? "(const #{function[:return][:type]})" : ''
+      lines << "    return #{return_type_cast}cmock_call_instance->ReturnVal;\n  }\n"
     end
     lines
   end
