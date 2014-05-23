@@ -7,10 +7,10 @@
 #include "unity.h"
 #include "cmock.h"
 
-#define TEST_MEM_INDEX_SIZE  (sizeof(CMOCK_MEM_INDEX_TYPE)) 
-#define TEST_MEM_INDEX_PAD   ((sizeof(CMOCK_MEM_INDEX_TYPE) + 7) & ~7) //round up to nearest 4 byte boundary
+#define TEST_MEM_INDEX_SIZE  (CMOCK_MEM_INDEX_TYPE)(sizeof(CMOCK_MEM_INDEX_TYPE))
+#define TEST_MEM_INDEX_PAD   (CMOCK_MEM_INDEX_TYPE)(((CMOCK_MEM_INDEX_TYPE)sizeof(CMOCK_MEM_INDEX_TYPE) + 7) & ~7) //round up to nearest 4 byte boundary
 
-unsigned int StartingSize;
+CMOCK_MEM_INDEX_TYPE StartingSize;
 
 void setUp(void)
 {
@@ -35,11 +35,11 @@ void test_MemNewWillReturnNullIfGivenIllegalSizes(void)
 void test_MemNewWillNowSupportSizesGreaterThanTheDefinesCMockSize(void)
 {
     TEST_ASSERT_EQUAL(0, CMock_Guts_MemBytesFree());
-	
+
     TEST_ASSERT_MESSAGE(CMock_Guts_MemNew(CMOCK_MEM_SIZE - TEST_MEM_INDEX_SIZE + 1) != CMOCK_GUTS_NONE, "Should Not Have Returned CMOCK_GUTS_NONE");
 
-    TEST_ASSERT_EQUAL(CMOCK_MEM_SIZE + TEST_MEM_INDEX_PAD, CMock_Guts_MemBytesUsed());
-    TEST_ASSERT_EQUAL(CMOCK_MEM_SIZE, CMock_Guts_MemBytesFree());
+    TEST_ASSERT_EQUAL(((CMOCK_MEM_INDEX_TYPE)CMOCK_MEM_SIZE + TEST_MEM_INDEX_PAD), CMock_Guts_MemBytesUsed());
+    TEST_ASSERT_EQUAL((CMOCK_MEM_INDEX_TYPE)CMOCK_MEM_SIZE, CMock_Guts_MemBytesFree());
 }
 
 void test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation(void)
@@ -151,13 +151,13 @@ void test_ThatWeCanClaimAndChainAFewElementsTogether(void)
 
 void test_ThatWeCanAskForAllSortsOfSizes(void)
 {
-  unsigned int  i;
+  CMOCK_MEM_INDEX_TYPE i;
   CMOCK_MEM_INDEX_TYPE first = CMOCK_GUTS_NONE;
   CMOCK_MEM_INDEX_TYPE next;
-  unsigned int  sizes[10]          = {3,  1,  80,  5,  8,  31, 7,  911, 2,  80};
-  unsigned int  sizes_buffered[10] = {16, 16, 88,  16, 16, 40, 16, 920, 16, 88}; //includes counter
-  unsigned int  sum = 0;
-  unsigned int  cap;
+  CMOCK_MEM_INDEX_TYPE sizes[10]          = {3,  1,  80,  5,  8,  31, 7,  911, 2,  80};
+  CMOCK_MEM_INDEX_TYPE sizes_buffered[10] = {16, 16, 88,  16, 16, 40, 16, 920, 16, 88}; //includes counter
+  CMOCK_MEM_INDEX_TYPE sum = 0;
+  CMOCK_MEM_INDEX_TYPE cap;
 
   for (i = 0; i < 10; i++)
   {

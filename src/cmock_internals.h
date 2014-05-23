@@ -21,6 +21,29 @@
 
 //this is used internally during pointer arithmetic. make sure this type is the same size as the target's pointer type
 #ifndef CMOCK_MEM_PTR_AS_INT
+#ifdef UNITY_POINTER_WIDTH
+#ifdef UNITY_INT_WIDTH
+#if UNITY_POINTER_WIDTH == UNITY_INT_WIDTH
+#define CMOCK_MEM_PTR_AS_INT unsigned int
+#endif
+#endif
+#endif
+#endif
+
+#ifndef CMOCK_MEM_PTR_AS_INT
+#ifdef UNITY_POINTER_WIDTH
+#ifdef UNITY_LONG_WIDTH
+#if UNITY_POINTER_WIDTH == UNITY_LONG_WIDTH
+#define CMOCK_MEM_PTR_AS_INT unsigned long
+#endif
+#if UNITY_POINTER_WIDTH > UNITY_LONG_WIDTH
+#define CMOCK_MEM_PTR_AS_INT unsigned long long
+#endif
+#endif
+#endif
+#endif
+
+#ifndef CMOCK_MEM_PTR_AS_INT
 #define CMOCK_MEM_PTR_AS_INT unsigned long
 #endif
 
@@ -35,9 +58,9 @@
 #endif
 
 //automatically calculated defs for easier reading
-#define CMOCK_MEM_ALIGN_SIZE  (1u << CMOCK_MEM_ALIGN)
-#define CMOCK_MEM_ALIGN_MASK  (CMOCK_MEM_ALIGN_SIZE - 1)
-#define CMOCK_MEM_INDEX_SIZE  (CMOCK_MEM_PTR_AS_INT)((sizeof(CMOCK_MEM_INDEX_TYPE) > CMOCK_MEM_ALIGN_SIZE) ? sizeof(CMOCK_MEM_INDEX_TYPE) : CMOCK_MEM_ALIGN_SIZE)
+#define CMOCK_MEM_ALIGN_SIZE  (CMOCK_MEM_INDEX_TYPE)(1u << CMOCK_MEM_ALIGN)
+#define CMOCK_MEM_ALIGN_MASK  (CMOCK_MEM_INDEX_TYPE)(CMOCK_MEM_ALIGN_SIZE - 1)
+#define CMOCK_MEM_INDEX_SIZE  (CMOCK_MEM_INDEX_TYPE)(CMOCK_MEM_PTR_AS_INT)((sizeof(CMOCK_MEM_INDEX_TYPE) > CMOCK_MEM_ALIGN_SIZE) ? sizeof(CMOCK_MEM_INDEX_TYPE) : CMOCK_MEM_ALIGN_SIZE)
 
 
 #endif //CMOCK_FRAMEWORK_INTERNALS

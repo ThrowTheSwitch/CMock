@@ -12,7 +12,7 @@
 #define CMOCK_MEM_INDEX_TYPE  unsigned int
 #endif
 
-#define CMOCK_GUTS_NONE (0)
+#define CMOCK_GUTS_NONE   (0)
 
 #define CMOCK_ARG_MODE    CMOCK_MEM_INDEX_TYPE
 #define CMOCK_ARG_ALL     0

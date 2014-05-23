@@ -240,9 +240,9 @@ void test_ThatWeCanAskForAllSortsOfSizes(void)
   unsigned int  i;
   CMOCK_MEM_INDEX_TYPE first = CMOCK_GUTS_NONE;
   CMOCK_MEM_INDEX_TYPE next;
-  unsigned int  sizes[5] = {3, 1, 80, 5, 4};
-  unsigned int  sizes_buffered[5] = {4, 4, 80, 8, 4};
-  unsigned int  sum = 0;
+  CMOCK_MEM_INDEX_TYPE sizes[5] = {3, 1, 80, 5, 4};
+  CMOCK_MEM_INDEX_TYPE sizes_buffered[5] = {4, 4, 80, 8, 4};
+  CMOCK_MEM_INDEX_TYPE sum = 0;
 
   for (i = 0; i < 5; i++)
   {

@@ -164,7 +164,7 @@
           char r_a_ret[] = "FEEFI";
 
           ptr_ret_array_Expect(r_a, lengthof(r_a));
-          ptr_ret_array_ReturnArrayThruPtr_r(r_a_ret, strlen(r_a_ret));
+          ptr_ret_array_ReturnArrayThruPtr_r(r_a_ret, (int)strlen(r_a_ret));
           ptr_ret_array(r_a, lengthof(r_a));
           TEST_ASSERT_EQUAL_STRING("FEEFIorooboo", r_a);
         }

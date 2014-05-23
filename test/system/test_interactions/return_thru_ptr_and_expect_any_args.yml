@@ -21,13 +21,13 @@
         int i2;
         int i3;
     };
-    
-    struct _abs_struct 
+
+    struct _abs_struct
     {
         int abs_i1;
         int abs_i2;
     };
-    
+
     typedef struct _abs_struct abs_struct;
 
   :mockable: |
@@ -61,7 +61,7 @@
         {
           int r = 1;
           int res = 4;
-          
+
           ptr_ret_int_Expect(&r);
           ptr_ret_int_ReturnThruPtr_r(&res);
           ptr_ret_int(&r);
@@ -77,21 +77,21 @@
           int res1 = 4;
           int res2 = 8;
           int res3 = 16;
-          
+
           ptr_ret_int_Expect(&r);
           ptr_ret_int_ReturnThruPtr_r(&res1);
           ptr_ret_int_Expect(&r);
           ptr_ret_int_ReturnThruPtr_r(&res2);
           ptr_ret_int_Expect(&r);
           ptr_ret_int_ReturnThruPtr_r(&res3);
-      
+
           ptr_ret_int(&r);
           TEST_ASSERT_EQUAL(4, r);
           ptr_ret_int(&r);
           TEST_ASSERT_EQUAL(8, r);
           ptr_ret_int(&r);
           TEST_ASSERT_EQUAL(16, r);
-      
+
         }
 
     - :pass: TRUE
@@ -101,7 +101,7 @@
         {
           int r = 1, s = 2;
           int res = 4;
-          
+
           ptr_ret_int_Expect(&r);
           ptr_ret_int_IgnoreArg_r();
           ptr_ret_int_ReturnThruPtr_r(&res);
@@ -116,7 +116,7 @@
         {
           int r = 1;
           int res = 4;
-          
+
           ptr_ret_int_Expect(NULL);
           ptr_ret_int_IgnoreArg_r();
           ptr_ret_int_ReturnThruPtr_r(&res);
@@ -132,7 +132,7 @@
           int r, s = 0x0880AA55;
           int r_res = 4;
           int s_res = 6;
-      
+
           ptr_ret_ints_Expect(&r, &s);
           ptr_ret_ints_ReturnThruPtr_r(&r_res);
           ptr_ret_ints_ReturnThruPtr_s(&s_res);
@@ -149,7 +149,7 @@
           int r = 0x0880AA55;
           int s = 0xAA55;
           int r_res = 4;
-      
+
           ptr_ret_ints_Expect(&r, &s);
           ptr_ret_ints_ReturnThruPtr_r(&r_res);
           ptr_ret_ints(&r, &s);
@@ -164,9 +164,9 @@
         {
           char r_a[] = "booboorooboo";
           char r_a_ret[] = "FEEFI";
-      
+
           ptr_ret_array_Expect(r_a, lengthof(r_a));
-          ptr_ret_array_ReturnArrayThruPtr_r(r_a_ret, strlen(r_a_ret));
+          ptr_ret_array_ReturnArrayThruPtr_r(r_a_ret, (int)strlen(r_a_ret));
           ptr_ret_array(r_a, lengthof(r_a));
           TEST_ASSERT_EQUAL_STRING("FEEFIorooboo", r_a);
         }
@@ -178,7 +178,7 @@
         {
           struct a_struct r_s = { .i1 = 2, .i2 = 3, .i3 = 4, };
           struct a_struct r_s_ret = { .i1 = 8, .i2 = 16, .i3 = 32, };
-      
+
           ptr_ret_struct_Expect(&r_s);
           ptr_ret_struct_ReturnThruPtr_r(&r_s_ret);
           ptr_ret_struct(&r_s);
@@ -206,7 +206,7 @@
         #if !defined(ptr_ret_const_int_ReturnThruPtr_r)
             TEST_FAIL_MESSAGE("ReturnThruPtr not defined for a pointer argument.");
         #endif
-        
+
         #if defined(ptr_ret_const_int_ReturnThruPtr_s)
             TEST_FAIL_MESSAGE("ReturnThruPtr defined for a const pointer argument.");
         #endif

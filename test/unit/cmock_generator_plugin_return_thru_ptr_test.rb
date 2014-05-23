@@ -91,7 +91,7 @@ class CMockGeneratorPluginReturnThruPtrTest < Test::Unit::TestCase
       "#define Pine_ReturnThruPtr_tofu(tofu)" +
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, sizeof(*tofu))\n" +
       "#define Pine_ReturnArrayThruPtr_tofu(tofu, cmock_len)" +
-      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, cmock_len * sizeof(*tofu))\n" +
+      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, (int)(cmock_len * (int)sizeof(*tofu)))\n" +
       "#define Pine_ReturnMemThruPtr_tofu(tofu, cmock_size)" +
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, cmock_size)\n" +
       "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int* tofu, int cmock_size);\n"

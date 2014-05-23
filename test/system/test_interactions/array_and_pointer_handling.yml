@@ -10,7 +10,7 @@
       int x;
       int y;
     } POINT_T;
-    #define ARRAY_A_SIZE  (5) 
+    #define ARRAY_A_SIZE  (5)
 
   :mockable: |
     void foo(POINT_T* a);
@@ -18,12 +18,12 @@
     void fooa(POINT_T a[ARRAY_A_SIZE+1-1]);
     void foos(const char * a);
     const char * bars(void);
-    void no_pointers(int a, char* b);
+    void no_pointers(int a, const char* b);
     int mixed(int a, int* b, int c);
     void potential_packing_problem(short *a);
 
-  :source: 
-    :header: |    
+  :source:
+    :header: |
       void function_a(void);
       void function_b(void);
       void function_c(void);
@@ -31,35 +31,35 @@
       void function_e(void);
 
     :code: |
-      void function_a(void)    
+      void function_a(void)
       {
         foo(bar());
-      }    
+      }
 
       void function_b(void) {
         fooa(bar());
       }
-      
+
       void function_c(void) {
         foos(bars());
       }
-      
+
       int function_d(void) {
         int test_list[] = { 1, 2, 3, 4, 5 };
         no_pointers(1, "silly");
         return mixed(6, test_list, 7);
       }
-      
+
       void function_e(void) {
         short test_list[] = {-1, -2, -3, -4};
         potential_packing_problem(&test_list[1]);
       }
-      
+
   :tests:
     :common: |
       void setUp(void) {}
       void tearDown(void) {}
-      
+
     :units:
     - :pass: TRUE
       :should: 'handle the situation where we pass nulls to pointers'
@@ -68,10 +68,10 @@
         {
           bar_ExpectAndReturn(NULL);
           foo_Expect(NULL);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we expected nulls to pointers but did not get that'
       :code: |
@@ -80,10 +80,10 @@
           POINT_T pt = {1, 2};
           bar_ExpectAndReturn(&pt);
           foo_Expect(NULL);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we did not expect nulls to pointers but got null'
       :code: |
@@ -92,10 +92,10 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(NULL);
           foo_Expect(&ex);
-          
+
           function_a();
         }
-        
+
     - :pass: TRUE
       :should: 'handle the situation where it falls back to pointers because you asked it to compare 0 elements'
       :code: |
@@ -104,10 +104,10 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(&ex);
           foo_ExpectWithArray(&ex, 0);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where it fails because you asked it to compare zero elements and the pointers do not match'
       :code: |
@@ -117,10 +117,10 @@
           POINT_T pt = {1, 2};
           bar_ExpectAndReturn(&pt);
           foo_ExpectWithArray(&ex, 0);
-          
+
           function_a();
         }
-        
+
     - :pass: TRUE
       :should: 'handle the situation where we pass single object with expect'
       :code: |
@@ -130,10 +130,10 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(&pt);
           foo_Expect(&ex);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass single object with expect and it is wrong'
       :code: |
@@ -143,10 +143,10 @@
           POINT_T ex = {1, 3};
           bar_ExpectAndReturn(&pt);
           foo_Expect(&ex);
-          
+
           function_a();
         }
-        
+
     - :pass: TRUE
       :should: 'handle the situation where we pass single object with expect and use array handler'
       :code: |
@@ -156,10 +156,10 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(&pt);
           foo_ExpectWithArray(&ex, 1);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass single object with expect and use array handler and it is wrong'
       :code: |
@@ -169,10 +169,10 @@
           POINT_T ex = {1, 3};
           bar_ExpectAndReturn(&pt);
           foo_ExpectWithArray(&ex, 1);
-          
+
           function_a();
         }
-        
+
     - :pass: TRUE
       :should: 'handle the situation where we pass multiple objects with expect and use array handler'
       :code: |
@@ -182,10 +182,10 @@
           POINT_T ex[] = {{1, 2}, {3, 4}, {5, 6}};
           bar_ExpectAndReturn(pt);
           foo_ExpectWithArray(ex, 3);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass multiple objects with expect and use array handler and it is wrong at start'
       :code: |
@@ -195,10 +195,10 @@
           POINT_T ex[] = {{9, 2}, {3, 4}, {5, 6}};
           bar_ExpectAndReturn(pt);
           foo_ExpectWithArray(ex, 3);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass multiple objects with expect and use array handler and it is wrong at end'
       :code: |
@@ -208,10 +208,10 @@
           POINT_T ex[] = {{1, 2}, {3, 4}, {5, 9}};
           bar_ExpectAndReturn(pt);
           foo_ExpectWithArray(ex, 3);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass multiple objects with expect and use array handler and it is wrong in middle'
       :code: |
@@ -221,10 +221,10 @@
           POINT_T ex[] = {{1, 2}, {3, 9}, {5, 6}};
           bar_ExpectAndReturn(pt);
           foo_ExpectWithArray(ex, 3);
-          
+
           function_a();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass nulls to pointers and fail'
       :code: |
@@ -233,10 +233,10 @@
           POINT_T pt = {1, 2};
           bar_ExpectAndReturn(&pt);
           foo_Expect(NULL);
-          
+
           function_a();
         }
-      
+
     - :pass: TRUE
       :should: 'handle the situation where we pass nulls to arrays'
       :code: |
@@ -244,7 +244,7 @@
         {
           bar_ExpectAndReturn(NULL);
           fooa_Expect(NULL);
-          
+
           function_b();
         }
 
@@ -257,10 +257,10 @@
           POINT_T ex = {1, 2};
           bar_ExpectAndReturn(&pt);
           fooa_Expect(&ex);
-          
+
           function_b();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass single array element with expect and it is wrong'
       :code: |
@@ -270,10 +270,10 @@
           POINT_T ex = {1, 3};
           bar_ExpectAndReturn(&pt);
           fooa_Expect(&ex);
-          
+
           function_b();
         }
-        
+
     - :pass: FALSE
       :should: 'handle the situation where we pass nulls to arrays and fail'
       :code: |
@@ -282,7 +282,7 @@
           POINT_T pt = {1, 2};
           bar_ExpectAndReturn(&pt);
           fooa_Expect(NULL);
-          
+
           function_b();
         }
 
@@ -291,20 +291,22 @@
       :code: |
         test()
         {
-          bars_ExpectAndReturn("This is a\0 silly string");
+          const char* retval = "This is a\0 silly string";
+          bars_ExpectAndReturn((char*)retval);
           foos_Expect("This is a\0 wacky string");
-          
+
           function_c();
         }
-        
+
     - :pass: FALSE
       :should: 'handle standard c string as null terminated on not do crappy memory compares of a byte, finding failures'
       :code: |
         test()
         {
-          bars_ExpectAndReturn("This is a silly string");
+          const char* retval = "This is a silly string";
+          bars_ExpectAndReturn((char*)retval);
           foos_Expect("This is a wacky string");
-          
+
           function_c();
         }
 
@@ -316,7 +318,7 @@
           int expect_list[] = { 1, 9 };
           no_pointers_Expect(1, "silly");
           mixed_ExpectAndReturn(6, expect_list, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
@@ -328,7 +330,7 @@
           int expect_list[] = { 9, 1 };
           no_pointers_Expect(1, "silly");
           mixed_ExpectAndReturn(6, expect_list, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
@@ -340,7 +342,7 @@
           int expect_list[] = { 1, 2, 3, 4, 6 };
           no_pointers_Expect(1, "silly");
           mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
@@ -352,7 +354,7 @@
           int expect_list[] = { 1, 2, 3, 4, 6 };
           no_pointers_Expect(1, "silly");
           mixed_ExpectWithArrayAndReturn(6, expect_list, 5, 7, 13);
-          
+
           TEST_ASSERT_EQUAL(13, function_d());
         }
 
@@ -363,7 +365,7 @@
         {
           short expect_list[] = { -2, -3, -4 };
           potential_packing_problem_ExpectWithArray(expect_list, 3);
-          
+
           function_e();
         }
 
@@ -374,7 +376,7 @@
         {
           short expect_list[] = { -2, -3, 4 };
           potential_packing_problem_ExpectWithArray(expect_list, 3);
-          
+
           function_e();
         }
 

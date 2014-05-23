@@ -38,7 +38,7 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemNew(CMOCK_MEM_INDEX_TYPE size)
   {
 #ifdef CMOCK_MEM_DYNAMIC
     CMock_Guts_BufferSize += CMOCK_MEM_SIZE + size;
-    CMock_Guts_Buffer = realloc(CMock_Guts_Buffer, CMock_Guts_BufferSize);
+    CMock_Guts_Buffer = realloc(CMock_Guts_Buffer, (size_t)CMock_Guts_BufferSize);
     if (CMock_Guts_Buffer == NULL)
 #endif //yes that if will continue to the return below if TRUE
       return CMOCK_GUTS_NONE;
@@ -91,7 +91,7 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemChain(CMOCK_MEM_INDEX_TYPE root_index, CMOCK_
       if (index > 0)
         next = (void*)(&CMock_Guts_Buffer[index]);
     } while (index > 0);
-    *(CMOCK_MEM_INDEX_TYPE*)((CMOCK_MEM_PTR_AS_INT)next - CMOCK_MEM_INDEX_SIZE) = ((CMOCK_MEM_PTR_AS_INT)obj - (CMOCK_MEM_PTR_AS_INT)CMock_Guts_Buffer);
+    *(CMOCK_MEM_INDEX_TYPE*)((CMOCK_MEM_PTR_AS_INT)next - CMOCK_MEM_INDEX_SIZE) = (CMOCK_MEM_INDEX_TYPE)((CMOCK_MEM_PTR_AS_INT)obj - (CMOCK_MEM_PTR_AS_INT)CMock_Guts_Buffer);
     return root_index;
   }
 }

@@ -6,45 +6,45 @@
 :systest:
   :types: |
     #define UINT32 unsigned int
-    
+
     typedef signed int custom_type;
 
   :mockable: |
     UINT32 foo(custom_type a);
     UINT32 bar(custom_type b);
     UINT32 foo_varargs(custom_type a, ...);
-    char* foo_char_strings(char a[], char* b);
+    const char* foo_char_strings(const char a[], const char* b);
 
-  :source: 
-    :header: |    
+  :source:
+    :header: |
       UINT32 function_a(int a, int b);
       void function_b(void);
       UINT32 function_c(int a);
-      char* function_d(char a[], char* b);
+      const char* function_d(const char a[], const char* b);
 
     :code: |
-      UINT32 function_a(int a, int b)    
+      UINT32 function_a(int a, int b)
       {
         return foo((custom_type)a) + bar((custom_type)b);
-      }    
+      }
 
       void function_b(void) { }
 
-      UINT32 function_c(int a)    
+      UINT32 function_c(int a)
       {
         return foo_varargs((custom_type)a, "ignored", 5);
       }
-      
-      char* function_d(char a[], char* b)
+
+      const char* function_d(const char a[], const char* b)
       {
         return foo_char_strings(a, b);
       }
-      
+
   :tests:
     :common: |
       void setUp(void) {}
       void tearDown(void) {}
-      
+
     :units:
     - :pass: TRUE
       :should: 'successfully exercise two simple ExpectAndReturn mock calls'
@@ -55,7 +55,7 @@
           bar_ExpectAndReturn((custom_type)2, 20);
           TEST_ASSERT_EQUAL(30, function_a(1, 2));
         }
-      
+
     - :pass: FALSE
       :should: 'fail because bar() is not called but is expected'
       :code: |
@@ -88,10 +88,11 @@
       :code: |
         test()
         {
-          foo_char_strings_ExpectAndReturn("larry", "curly", "moe");
+          const char* retval = "moe";
+          foo_char_strings_ExpectAndReturn("larry", "curly", (char*)retval);
           TEST_ASSERT_EQUAL_STRING("moe", function_d("larry", "curly"));
         }
-        
+
     - :pass: TRUE
       :should: 'successfully exercise multiple cycles of expecting and mocking and pass'
       :code: |
@@ -100,12 +101,12 @@
           foo_ExpectAndReturn((custom_type)1, 10);
           bar_ExpectAndReturn((custom_type)2, 20);
           TEST_ASSERT_EQUAL(30, function_a(1, 2));
-          
+
           foo_ExpectAndReturn((custom_type)3, 30);
           bar_ExpectAndReturn((custom_type)4, 40);
           TEST_ASSERT_EQUAL(70, function_a(3, 4));
         }
-        
+
     - :pass: FALSE
       :should: 'successfully exercise multiple cycles of expecting and mocking and fail'
       :code: |
@@ -114,7 +115,7 @@
           foo_ExpectAndReturn((custom_type)1, 10);
           bar_ExpectAndReturn((custom_type)2, 20);
           TEST_ASSERT_EQUAL(30, function_a(1, 2));
-          
+
           foo_ExpectAndReturn((custom_type)3, 30);
           bar_ExpectAndReturn((custom_type)4, 40);
           TEST_ASSERT_EQUAL(70, function_a(3, 5));
