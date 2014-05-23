@@ -375,6 +375,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -394,6 +395,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "int",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "int cmock_to_return",
                             :void?  => false
@@ -413,6 +415,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "char",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "char cmock_to_return",
                             :void?  => false
@@ -511,6 +514,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "int",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "int cmock_to_return",
                             :void?  => false
@@ -532,6 +536,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -555,6 +560,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -575,6 +581,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "int",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => true,
                             :str    => "int cmock_to_return",
                             :void?  => false
@@ -597,6 +604,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "int",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => true,
                             :str    => "int cmock_to_return",
                             :void?  => false
@@ -622,6 +630,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => true,
                               :str    => "int cmock_to_return",
                               :void?  => false
@@ -638,6 +647,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
                               :void?  => false
@@ -664,6 +674,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => true,
                               :str    => "int cmock_to_return",
                               :void?  => false
@@ -691,6 +702,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return  => { :type   => "void",
                                 :name   => 'cmock_to_return',
                                 :ptr?   => false,
+                                :const_ptr? => false,
                                 :const? => false,
                                 :str    => "void cmock_to_return",
                                 :void?  => true
@@ -705,6 +717,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
                               :void?  => false
@@ -729,6 +742,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return =>{ :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
                               :void?  => false
@@ -744,6 +758,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "void",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => false,
                               :str    => "void cmock_to_return",
                               :void?  => true
@@ -759,6 +774,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "struct TheseArentTheHammer",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => false,
                               :str    => "struct TheseArentTheHammer cmock_to_return",
                               :void?  => false
@@ -779,6 +795,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -801,6 +818,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -826,6 +844,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -851,6 +870,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -875,6 +895,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -899,6 +920,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -923,6 +945,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -946,6 +969,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -969,6 +993,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -992,6 +1017,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -1015,6 +1041,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  # :return=>{ :type   => "void",
                             # :name   => 'cmock_to_return',
                             # :ptr?   => false,
+                            # :const_ptr? => false,
                             # :const? => false,
                             # :str    => "void cmock_to_return",
                             # :void?  => true
@@ -1038,6 +1065,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -1062,6 +1090,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "struct mytype*",
                             :name   => 'cmock_to_return',
                             :ptr?   => true,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "struct mytype* cmock_to_return",
                             :void?  => false
@@ -1087,6 +1116,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "void cmock_to_return",
                             :void?  => true
@@ -1110,6 +1140,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "cmock_module_func_ptr1",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
                             :void?  => false
@@ -1133,6 +1164,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "cmock_module_func_ptr1",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
                             :void?  => false
@@ -1155,6 +1187,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "cmock_module_func_ptr1",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
                             :void?  => false
@@ -1177,6 +1210,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  :return=>{ :type   => "cmock_module_func_ptr1",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
+                            :const_ptr? => false,
                             :const? => false,
                             :str    => "cmock_module_func_ptr1 cmock_to_return",
                             :void?  => false
@@ -1201,6 +1235,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=>{ :type   => "int",
                              :name   => "cmock_to_return",
                              :ptr?   => false,
+                             :const_ptr? => false,
                              :const? => false,
                              :str    => "int cmock_to_return",
                              :void?  => false
@@ -1228,6 +1263,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
                               :void?  => false
@@ -1250,6 +1286,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
                               :void?  => false
@@ -1272,6 +1309,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                   :return=> { :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
+                              :const_ptr? => false,
                               :const? => false,
                               :str    => "int cmock_to_return",
                               :void?  => false
@@ -1284,6 +1322,111 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                          ],
                   :args_string=>"int Cliff, int Claire",
                   :args_call=>"Cliff, Claire"
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  should "handle functions with a return value being a constant pointer to a constant type" do
+    source = "const int * const FunctionName();\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "int*",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => true,
+                              :const_ptr? => true,
+                              :const? => true,
+                              :str    => "int* cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"FunctionName",
+                  :modifier=>"const",
+                  :contains_ptr? => false,
+                  :args=>[],
+                  :args_string=>"void",
+                  :args_call=>""
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  should "handle functions with a return value being multiple constant pointers to a constant type" do
+    source = "const int * const * const FunctionName();\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "int* const*",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => true,
+                              :const_ptr? => true,
+                              :const? => true,
+                              :str    => "int* const* cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"FunctionName",
+                  :modifier=>"const",
+                  :contains_ptr? => false,
+                  :args=>[],
+                  :args_string=>"void",
+                  :args_call=>""
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  should "handle functions with a return value being a constant pointer" do
+    source = "int * const FunctionName();\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "int*",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => true,
+                              :const_ptr? => true,
+                              :const? => false,
+                              :str    => "int* cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"FunctionName",
+                  :modifier=>"",
+                  :contains_ptr? => false,
+                  :args=>[],
+                  :args_string=>"void",
+                  :args_call=>""
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  should "handle functions with a return value being multiple constant pointers" do
+    source = "int * const * const FunctionName();\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "int* const*",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => true,
+                              :const_ptr? => true,
+                              :const? => false,
+                              :str    => "int* const* cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"FunctionName",
+                  :modifier=>"",
+                  :contains_ptr? => false,
+                  :args=>[],
+                  :args_string=>"void",
+                  :args_call=>""
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  should "handle functions with a return value being a constant custom type pointer" do
+    source = "CUSTOM_TYPE const FunctionName();\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "CUSTOM_TYPE",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const_ptr? => true,
+                              :const? => false,
+                              :str    => "CUSTOM_TYPE cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"FunctionName",
+                  :modifier=>"",
+                  :contains_ptr? => false,
+                  :args=>[],
+                  :args_string=>"void",
+                  :args_call=>""
                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
