@@ -95,6 +95,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "\n"
                ]
 
+    @config.expect.orig_header_include_fmt.returns('"%s"')
     @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
 
     @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
@@ -131,6 +132,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "\n"
                ]
 
+    @config.expect.orig_header_include_fmt.returns('"%s"')
     @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
 
     @cmock_generator2.create_mock_header_header(output, "MockPout-Pout Fish.h")
@@ -153,6 +155,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "\n"
                ]
 
+    @config.expect.orig_header_include_fmt.returns('"%s"')
     @plugins.expect.run(:include_files).returns('')
 
     @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
@@ -176,6 +179,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "\n"
                ]
 
+    @config.expect.orig_header_include_fmt.returns('"%s"')
     @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
 
     @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
