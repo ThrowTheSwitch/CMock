@@ -71,7 +71,7 @@ class CMock
 	[filedefns].flatten.uniq.each do |src|
 	  name = File.basename(src, '.h')
 	  puts "Parsing defns file: #{name}..."
-	  @cm_generator.copy_header(name, @cm_parser.parse_defns_files(File.read("#{source_folder}\\#{src}")), target_folder)
+	  @cm_generator.copy_header(name, @cm_parser.parse_defns_files(File.read("#{source_folder}/#{src}")), target_folder)
 	end
 	
 	#create mockgothic initialise header, src and initialiseFunctions needed
