@@ -15,7 +15,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   def setup
     create_mocks :config
     @test_name = 'test_file.h'
-    @config.expect.strippables.returns([])
+    @config.expect.strippables.returns(["STRIPPABLE"])
     @config.expect.attributes.returns(['__ramfunc', 'funky_attrib', 'SQLITE_API'])
     @config.expect.c_calling_conventions.returns(['__stdcall'])
     @config.expect.treat_as_void.returns(['MY_FUNKY_VOID'])
@@ -84,6 +84,25 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
+  should "remove strippables from the beginning or end of function declarations" do
+    source =
+      "void* my_calloc(size_t, size_t) STRIPPABLE;\n" +
+      "void\n" +
+      "  my_realloc(void*, size_t) STRIPPABLE;\n" +
+      "extern int\n" +
+      "  my_printf (void *my_object, const char *my_format, ...)\n" +
+      "  STRIPPABLE;\n" +
+      "  void STRIPPABLE universal_handler ();\n"
+
+    expected =
+    [
+      "void* my_calloc(size_t, size_t)",
+      "void my_realloc(void*, size_t)",
+      "void universal_handler()"
+    ]
+
+    assert_equal(expected, @parser.import_source(source))
+  end
 
   should "remove gcc's function __attribute__'s" do
     source =
