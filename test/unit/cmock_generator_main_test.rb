@@ -323,7 +323,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
                 ]
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
-                 "  UNITY_LINE_TYPE cmock_line;\n  cmock_line = TEST_LINE_NUM;\n",
+                 "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
                  "  Uno_First" +
                  "  Dos_First" +
                  "  Uno_Second" +
@@ -398,7 +398,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     output = []
     expected = [ "static int SupaFunction(uint32 sandwiches, const char* named)\n",
                  "{\n",
-                 "  UNITY_LINE_TYPE cmock_line;\n  cmock_line = TEST_LINE_NUM;\n",
+                 "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.SupaFunction_CallInstance);\n",
                  "  Mock.SupaFunction_CallInstance = CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
@@ -430,7 +430,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     output = []
     expected = [ "int __stdcall SupaFunction(uint32 sandwiches, corn ...)\n",
                  "{\n",
-                 "  UNITY_LINE_TYPE cmock_line;\n  cmock_line = TEST_LINE_NUM;\n",
+                 "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.SupaFunction_CallInstance);\n",
                  "  Mock.SupaFunction_CallInstance = CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
