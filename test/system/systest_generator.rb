@@ -151,6 +151,9 @@ class SystemTestGenerator
         out.puts("#include \"#{include}\"")
       end
       out.puts('')
+      out.puts("#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)")
+      out.puts("#pragma GCC diagnostic ignored \"-Wpragmas\"")
+      out.puts("#endif")
       out.puts('#pragma GCC diagnostic ignored "-Wunknown-pragmas"')
       out.puts('#pragma GCC diagnostic ignored "-Wduplicate-decl-specifier"')
       out.puts('')
@@ -167,6 +170,9 @@ class SystemTestGenerator
         out.puts("#include \"#{include}\"")
       end
       out.puts('')
+      out.puts("#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)")
+      out.puts("#pragma GCC diagnostic ignored \"-Wpragmas\"")
+      out.puts("#endif")
       out.puts('#pragma GCC diagnostic ignored "-Wunknown-pragmas"')
       out.puts('#pragma GCC diagnostic ignored "-Wduplicate-decl-specifier"')
       out.puts('')
