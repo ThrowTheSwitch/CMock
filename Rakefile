@@ -23,7 +23,6 @@ SYSTEM_TEST_SUPPORT_DIRS = [
 ]
 
 SYSTEM_TEST_SUPPORT_DIRS.each do |dir|
-  p dir
   directory(dir)
   CLOBBER.include(dir)
 end
