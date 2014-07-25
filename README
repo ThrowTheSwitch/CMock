@@ -1,10 +1,25 @@
-Welcome to CMock.
+Welcome to CMock!
+
+![](http://travis-ci.org/atomicobject/kinetic-c.png?branch=master)
+
+[CMock build status](http://travis-ci.org/throwtheswitch/kinetic-c) is provided via [Travis CI](http://travis-ci.org)
+
+Getting Started
+================
+
+    > git clone --recursive https://github.com/throwtheswitch/cmock.git
+    > cd cmock
+    > bundle install # Ensures you have all RubyGems needed
+    > bundle execute rake # Run all CMock library tests
+
+API Documentation
+=================
 
 * Not sure what you're doing?
-** The docs are in /docs
+** [View docs/CMock_Summary.md](docs/CMock_Summary.md)
 * Interested in our MIT-style license?
-** That's in /docs too
+** [View docs/license.txt](docs/license.txt)
 * Are there examples?
-** Try /examples
+** They are all in [/examples](examples/)
 * Any other resources to check out?
-** Sure. How about ThrowTheSwitch.org
+** Definitely! Check out our developer portal on [ThrowTheSwitch.org](http://throwtheswitch.org)

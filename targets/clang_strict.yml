@@ -36,7 +36,6 @@ compiler:
     - '-Wwrite-strings'
     - '-Wbad-function-cast'
     - '-Wno-missing-prototypes' #we've been lazy about things like setUp and tearDown
-    - '-Wno-duplicate-decl-specifier' #allows us to test things like "const char const *""
     - '-fms-extensions'
     - '-fno-omit-frame-pointer'
     - '-ffloat-store'

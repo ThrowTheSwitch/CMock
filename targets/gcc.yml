@@ -10,7 +10,6 @@ compiler:
     - '-Wall'
     - '-Wextra'
     - '-Wunused-parameter'
-    - '-Wno-duplicate-decl-specifier'
     - '-Wno-address'
     - '-std=c99'
     - '-pedantic'

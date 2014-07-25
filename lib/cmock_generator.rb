@@ -74,6 +74,10 @@ class CMockGenerator
     plugin_includes = @plugins.run(:include_files)
     file << plugin_includes if (!plugin_includes.empty?)
     file << "\n"
+    file << "/* Ignore the following warnings, since we are copying code */\n"
+    file << "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n"
+    file << "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n"
+    file << "\n"
   end
 
   def create_typedefs(file, typedefs)

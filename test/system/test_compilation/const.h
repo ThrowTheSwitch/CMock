@@ -4,12 +4,14 @@
     [Released under MIT License. Please refer to license.txt for details]
 ========================================== */
 
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wduplicate-decl-specifier"
+
 struct _DUMMY_T { unsigned int a; float b; };
 
 void const_variants1( const char* a, int const, unsigned short const * c );
 
-void const_variants2( 
+void const_variants2(
 	struct _DUMMY_T const * const param1,
 	const unsigned long int const * const param2,
-	const struct _DUMMY_T const * param3 ); 
-
+	const struct _DUMMY_T const * param3 );

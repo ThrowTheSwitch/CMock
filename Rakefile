@@ -23,6 +23,7 @@ SYSTEM_TEST_SUPPORT_DIRS = [
 ]
 
 SYSTEM_TEST_SUPPORT_DIRS.each do |dir|
+  p dir
   directory(dir)
   CLOBBER.include(dir)
 end
@@ -34,7 +35,8 @@ configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
 task :default => ['test:all']
-task :cruise => [:no_color, :default]
+task :ci => [:no_color, :default]
+task :cruise => :ci
 
 desc "Load configuration"
 task :config, :config_file do |t, args|
