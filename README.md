@@ -1,8 +1,7 @@
-Welcome to CMock!
+CMock - Mock/stub generator for C
+=================================
 
-![](http://travis-ci.org/atomicobject/kinetic-c.png?branch=master)
-
-[CMock build status](http://travis-ci.org/throwtheswitch/kinetic-c) is provided via [Travis CI](http://travis-ci.org)
+[![CMock Build Status](https://travis-ci.org/throwtheswitch/cmock.png?branch=master)](https://travis-ci.org/throwtheswitch/cmock)
 
 Getting Started
 ================
@@ -16,10 +15,10 @@ API Documentation
 =================
 
 * Not sure what you're doing?
-** [View docs/CMock_Summary.md](docs/CMock_Summary.md)
+	* [View docs/CMock_Summary.md](docs/CMock_Summary.md)
 * Interested in our MIT-style license?
-** [View docs/license.txt](docs/license.txt)
+	* [View docs/license.txt](docs/license.txt)
 * Are there examples?
-** They are all in [/examples](examples/)
+	* They are all in [/examples](examples/)
 * Any other resources to check out?
-** Definitely! Check out our developer portal on [ThrowTheSwitch.org](http://throwtheswitch.org)
+	* Definitely! Check out our developer portal on [ThrowTheSwitch.org](http://throwtheswitch.org)
