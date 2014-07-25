@@ -5,4 +5,4 @@ rvm:
 install:
   - bundle install
 script:
-  - bundle exec ci
+  - bundle exec rake ci
