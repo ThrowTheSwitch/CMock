@@ -1,7 +1,7 @@
 CMock - Mock/stub generator for C
 =================================
 
-[![CMock Build Status](https://travis-ci.org/ThrowTheSwitch/CMock.png?branch=master)](https://travis-ci.org/ThrowTheSwitch/CMock)
+[![CMock Build Status](https://api.travis-ci.org/ThrowTheSwitch/CMock.png?branch=master)](https://travis-ci.org/ThrowTheSwitch/CMock)
 
 Getting Started
 ================
