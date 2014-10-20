@@ -75,11 +75,13 @@ class CMockGenerator
     file << plugin_includes if (!plugin_includes.empty?)
     file << "\n"
     file << "/* Ignore the following warnings, since we are copying code */\n"
-    file << "#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)\n"
+    file << "#if defined(__GNUC__) && !defined(__ICC)\n"
+    file << "#if !defined(__clang__)\n"
     file << "#pragma GCC diagnostic ignored \"-Wpragmas\"\n"
     file << "#endif\n"
     file << "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n"
     file << "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n"
+    file << "#endif\n"
     file << "\n"
   end
 
