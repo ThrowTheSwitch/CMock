@@ -170,6 +170,7 @@ class CMockGenerator
     # prepare return value and arguments
     function_mod_and_rettype = (function[:modifier].empty? ? '' : "#{function[:modifier]} ") +
                                (function[:return][:type]) +
+                               (function[:return][:const_ptr?] ? " const" : '') +
                                (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
     args_string = function[:args_string]
     args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)

@@ -207,9 +207,19 @@ class CMockHeaderParser
     decl[:name] = descriptors[-1]      #snag name as last array item
 
     #build attribute and return type strings
+    const_ptr = false
     decl[:modifier] = []
     rettype = []
     descriptors[0..-2].each do |word|
+      #special case for the 'const' keyword
+      if word.eql? "const"
+        #when a function's return type contains multiple 'const' keywords, the parser will break them either in 'const' or 'const*'.  The latter
+        #will be part of the 'rettype'.  The former has a special meaning: there is one at the beginning for constant type and there is one at the
+        #end for constant pointer.
+        decl[:modifier] << word if rettype.empty? #return type begins with a 'const'; add it to modifiers (function returns a constant type)
+        const_ptr = true if not rettype.empty?    #it's a ending 'const'; functions returns a constant pointer
+        next
+      end
       if @c_attributes.include?(word)
         decl[:modifier] << word
       elsif @c_calling_conventions.include?(word)
@@ -224,6 +234,7 @@ class CMockHeaderParser
     decl[:return] = { :type   => rettype,
                       :name   => 'cmock_to_return',
                       :ptr?   => divine_ptr(rettype),
+                      :const_ptr? => const_ptr,
                       :const? => decl[:modifier].split(/\s/).include?('const'),
                       :str    => "#{rettype} cmock_to_return",
                       :void?  => (rettype == 'void')
