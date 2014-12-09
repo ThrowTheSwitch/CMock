@@ -69,7 +69,7 @@ class CMockGenerator
     file << "#ifndef _#{define_name}_H\n"
     file << "#define _#{define_name}_H\n\n"
     @includes_h_pre_orig_header.each {|inc| file << "#include #{inc}\n"}
-    file << "#include " + @config.orig_header_include_fmt % "#{orig_filename}" + "\n"
+    file << @config.orig_header_include_fmt.gsub(/%s/, "#{orig_filename}") + "\n"
     @includes_h_post_orig_header.each {|inc| file << "#include #{inc}\n"}
     plugin_includes = @plugins.run(:include_files)
     file << plugin_includes if (!plugin_includes.empty?)
