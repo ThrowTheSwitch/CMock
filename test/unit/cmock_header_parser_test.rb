@@ -294,15 +294,18 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "uint32 func_with_decl_a(unsigned int);\n" +
       "uint32 func_with_decl_a(unsigned int a) { return a; }\n" +
       "uint32 func_with_decl_b(unsigned int);\n" +
-      "uint32 func_with_decl_b(unsigned int)\n" +
+      "uint32 func_with_decl_b(unsigned int a)\n" +
       "{\n" +
-      "    bar(unsigned int);\n" +
+      "    bar((unsigned int) a);\n" +
+      "    stripme(a);\n" +
       "}\n"
 
     expected =
     [
       "uint32 func_with_decl_a(unsigned int)",
-      "uint32 func_with_decl_b(unsigned int)"
+      "uint32 func_with_decl_a",                 #okay. it's not going to be interpretted as another function
+      "uint32 func_with_decl_b(unsigned int)",
+      "uint32 func_with_decl_b",                 #okay. it's not going to be interpretted as another function
     ]
 
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
@@ -315,6 +318,30 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "inline void bar(unsigned int a)\n" +
       "{" +
       "  bananas = a;\n" +
+      "}"
+
+    # ensure it's expected type of exception
+    assert_raises RuntimeError do
+      @parser.parse("module", source)
+    end
+
+    assert_equal([], @parser.funcs)
+
+    # verify exception message
+    begin
+      @parser.parse("module", source)
+    rescue RuntimeError => e
+      assert_equal("ERROR: No function prototypes found!", e.message)
+    end
+  end
+
+  it "remove a fully defined inline function that is multiple lines" do
+    source =
+      "inline void bar(unsigned int a)\n" +
+      "{" +
+      "  bananas = a;\n" +
+      "  grapes = a;\n" +
+      "  apples(bananas, grapes);\n" +
       "}"
 
     # ensure it's expected type of exception

@@ -93,6 +93,12 @@ class CMockHeaderParser
       "#{functype} #{$2.strip}(#{$3});"
     end
 
+    # remove function definitions by stripping off the arguments right now
+    source.gsub!(/\([^\)]*\)\s*\{[^\}]*\}/m, ";")
+
+    # remove pairs of braces because no function declarations will be inside of them
+    #source.gsub!(/\{[^\}]*\}/m, '')
+
     #drop extra white space to make the rest go faster
     source.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
     source.gsub!(/\s+$/, '')          # remove extra white space from end of line
@@ -101,7 +107,7 @@ class CMockHeaderParser
     source.gsub!(/\s+/, ' ')          # remove remaining extra white space
 
     #split lines on semicolons and remove things that are obviously not what we are looking for
-    src_lines = source.split(/\s*;\s*/)
+    src_lines = source.split(/\s*;\s*/).uniq
     src_lines.delete_if {|line| line.strip.length == 0}                            # remove blank lines
     src_lines.delete_if {|line| !(line =~ /[\w\s\*]+\(+\s*\*[\*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s\*]*,?)*\s*\)/).nil?}     #remove function pointer arrays
     if (@treat_externs == :include)
@@ -109,8 +115,6 @@ class CMockHeaderParser
     else
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern|inline)\s+/).nil?} # remove inline and extern functions
     end
-    src_lines.delete_if {|line| !(line =~ /\{/).nil? }  # remove lines with opening braces { because this isn't a declaration, it's a definition!
-    src_lines.map!{|line| line.gsub(/.*\}/,'')} #remove braces left at the beginning of lines
     src_lines.delete_if {|line| line.empty? } #drop empty lines
   end
 
