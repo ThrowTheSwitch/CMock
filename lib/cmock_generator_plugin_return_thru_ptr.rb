@@ -45,7 +45,7 @@ class CMockGeneratorPluginReturnThruPtr
         lines << "void #{func_name}_CMockReturnMemThruPtr_#{arg_name}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg_name}, int cmock_size)\n"
         lines << "{\n"
         lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " +
-          "cmock_call_instance = (CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
+          "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
         lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"#{arg_name} ReturnThruPtr called before Expect on '#{func_name}'.\");\n"
         lines << "  cmock_call_instance->ReturnThruPtr_#{arg_name}_Used = 1;\n"
         lines << "  cmock_call_instance->ReturnThruPtr_#{arg_name}_Val = #{arg_name};\n"
