@@ -89,11 +89,13 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "#include \"PluginRequiredHeader.h\"\n",
       "\n",
       "/* Ignore the following warnings, since we are copying code */\n",
-      "#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)\n",
+      "#if defined(__GNUC__) && !defined(__ICC)\n",
+      "#if !defined(__clang__)\n",
       "#pragma GCC diagnostic ignored \"-Wpragmas\"\n",
       "#endif\n",
       "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n",
       "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n",
+      "#endif\n",
       "\n",
     ]
 
@@ -134,11 +136,13 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "#include \"PluginRequiredHeader.h\"\n",
       "\n",
       "/* Ignore the following warnings, since we are copying code */\n",
-      "#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)\n",
+      "#if defined(__GNUC__) && !defined(__ICC)\n",
+      "#if !defined(__clang__)\n",
       "#pragma GCC diagnostic ignored \"-Wpragmas\"\n",
       "#endif\n",
       "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n",
       "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n",
+      "#endif\n",
       "\n",
     ]
 
@@ -165,11 +169,13 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "#include \"#{orig_filename}\"\n",
       "\n",
       "/* Ignore the following warnings, since we are copying code */\n",
-      "#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)\n",
+      "#if defined(__GNUC__) && !defined(__ICC)\n",
+      "#if !defined(__clang__)\n",
       "#pragma GCC diagnostic ignored \"-Wpragmas\"\n",
       "#endif\n",
       "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n",
       "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n",
+      "#endif\n",
       "\n",
     ]
 
@@ -197,11 +203,13 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "#include \"PluginRequiredHeader.h\"\n",
       "\n",
       "/* Ignore the following warnings, since we are copying code */\n",
-      "#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)\n",
+      "#if defined(__GNUC__) && !defined(__ICC)\n",
+      "#if !defined(__clang__)\n",
       "#pragma GCC diagnostic ignored \"-Wpragmas\"\n",
       "#endif\n",
       "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n",
       "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n",
+      "#endif\n",
       "\n",
     ]
 
