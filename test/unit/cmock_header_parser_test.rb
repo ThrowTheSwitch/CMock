@@ -10,33 +10,33 @@ $QUICK_RUBY_VERSION = RUBY_VERSION.split('.').inject(0){|vv,v| vv * 100 + v.to_i
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require 'cmock_header_parser'
 
-class CMockHeaderParserTest < Test::Unit::TestCase
+describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
-  def setup
+  before do
     create_mocks :config
     @test_name = 'test_file.h'
-    @config.expect.strippables.returns(["STRIPPABLE"])
-    @config.expect.attributes.returns(['__ramfunc', 'funky_attrib', 'SQLITE_API'])
-    @config.expect.c_calling_conventions.returns(['__stdcall'])
-    @config.expect.treat_as_void.returns(['MY_FUNKY_VOID'])
-    @config.expect.treat_as.returns({ "BANJOS" => "INT", "TUBAS" => "HEX16"} )
-    @config.expect.when_no_prototypes.returns(:error)
-    @config.expect.verbosity.returns(1)
-    @config.expect.treat_externs.returns(:exclude)
+    @config.expect :strippables, ["STRIPPABLE"]
+    @config.expect :attributes, ['__ramfunc', 'funky_attrib', 'SQLITE_API']
+    @config.expect :c_calling_conventions, ['__stdcall']
+    @config.expect :treat_as_void, ['MY_FUNKY_VOID']
+    @config.expect :treat_as, { "BANJOS" => "INT", "TUBAS" => "HEX16"}
+    @config.expect :when_no_prototypes, :error
+    @config.expect :verbosity, 1
+    @config.expect :treat_externs, :exclude
 
     @parser = CMockHeaderParser.new(@config)
   end
 
-  def teardown
+  after do
   end
 
-  should "create and initialize variables to defaults appropriately" do
+  it "create and initialize variables to defaults appropriately" do
     assert_equal([], @parser.funcs)
     assert_equal(['const', '__ramfunc', 'funky_attrib', 'SQLITE_API'], @parser.c_attributes)
     assert_equal(['void','MY_FUNKY_VOID'], @parser.treat_as_void)
   end
 
-  should "strip out line comments" do
+  it "strip out line comments" do
     source =
       " abcd;\n" +
       "// hello;\n" +
@@ -51,7 +51,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
-  should "remove block comments" do
+  it "remove block comments" do
     source =
       " no_comments;\n" +
       "// basic_line_comment;\n" +
@@ -84,7 +84,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
-  should "remove strippables from the beginning or end of function declarations" do
+  it "remove strippables from the beginning or end of function declarations" do
     source =
       "void* my_calloc(size_t, size_t) STRIPPABLE;\n" +
       "void\n" +
@@ -104,7 +104,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.import_source(source))
   end
 
-  should "remove gcc's function __attribute__'s" do
+  it "remove gcc's function __attribute__'s" do
     source =
       "void* my_calloc(size_t, size_t) __attribute__((alloc_size(1,2)));\n" +
       "void\n" +
@@ -124,7 +124,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.import_source(source))
   end
 
-  should "remove preprocessor directives" do
+  it "remove preprocessor directives" do
     source =
       "#when stuff_happens\n" +
       "#ifdef _TEST\n" +
@@ -136,7 +136,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "remove assembler pragma sections" do
+  it "remove assembler pragma sections" do
     source =
       " #pragma\tasm\n" +
       "  .foo\n" +
@@ -151,7 +151,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "smush lines together that contain continuation characters" do
+  it "smush lines together that contain continuation characters" do
     source =
       "hoo hah \\\n" +
       "when \\ \n"
@@ -165,7 +165,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "remove C macro definitions" do
+  it "remove C macro definitions" do
     source =
       "#define this is the first line\\\n" +
       "and the second\\\n" +
@@ -178,7 +178,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "remove typedef statements" do
+  it "remove typedef statements" do
     source =
       "typedef uint32 (unsigned int);\n" +
       "const typedef int INT;\n" +
@@ -212,7 +212,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "remove enum statements" do
+  it "remove enum statements" do
     source =
       "enum _NamedEnum {\n" +
       " THING1 = (0x0001),\n" +
@@ -230,7 +230,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "remove union statements" do
+  it "remove union statements" do
     source =
       "union _NamedDoohicky {\n" +
       " unsigned int a;\n" +
@@ -248,7 +248,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "remove struct statements" do
+  it "remove struct statements" do
     source =
       "struct _NamedStruct1 {\n" +
       " unsigned int a;\n" +
@@ -270,7 +270,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
                  @parser.import_source(source).map!{|s|s.strip})
   end
 
-  should "remove externed and inline functions" do
+  it "remove externed and inline functions" do
     source =
       " extern uint32 foobar(unsigned int);\n" +
       "uint32 extern_name_func(unsigned int);\n" +
@@ -289,7 +289,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
-  should "remove function definitions but keep function declarations" do
+  it "remove function definitions but keep function declarations" do
     source =
       "uint32 func_with_decl_a(unsigned int);\n" +
       "uint32 func_with_decl_a(unsigned int a) { return a; }\n" +
@@ -308,7 +308,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
-  should "remove a fully defined inline function" do
+  it "remove a fully defined inline function" do
     source =
       "inline void foo(unsigned int a) { oranges = a; }\n" +
       "inline void bar(unsigned int a) { apples = a; };\n" +
@@ -318,7 +318,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "}"
 
     # ensure it's expected type of exception
-    assert_raise RuntimeError do
+    assert_raises RuntimeError do
       @parser.parse("module", source)
     end
 
@@ -332,7 +332,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     end
   end
 
-  should "remove just inline functions if externs to be included" do
+  it "remove just inline functions if externs to be included" do
     source =
       " extern uint32 foobar(unsigned int);\n" +
       "uint32 extern_name_func(unsigned int);\n" +
@@ -355,7 +355,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "remove defines" do
+  it "remove defines" do
     source =
       "#define whatever you feel like defining\n" +
       "void hello(void);\n" +
@@ -372,7 +372,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "remove keywords that would keep things from going smoothly in the future" do
+  it "remove keywords that would keep things from going smoothly in the future" do
     source =
       "const int TheMatrix(register int Trinity, unsigned int *restrict Neo)"
 
@@ -387,7 +387,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
 
   # some code actually typedef's void even though it's not ANSI C and is, frankly, weird
   # since cmock treats void specially, we can't let void be obfuscated
-  should "handle odd case of typedef'd void returned" do
+  it "handle odd case of typedef'd void returned" do
     source = "MY_FUNKY_VOID FunkyVoidReturned(int a)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidReturned",
@@ -406,7 +406,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
-  should "handle odd case of typedef'd void as arg" do
+  it "handle odd case of typedef'd void as arg" do
     source = "int FunkyVoidAsArg(MY_FUNKY_VOID)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidAsArg",
@@ -425,7 +425,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
-  should "handle odd case of typedef'd void as arg pointer" do
+  it "handle odd case of typedef'd void as arg pointer" do
     source = "char FunkyVoidPointer(MY_FUNKY_VOID* bluh)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidPointer",
@@ -445,7 +445,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "strip default values from function parameter lists" do
+  it "strip default values from function parameter lists" do
     source =
       "void Foo(int a = 57, float b=37.52, char c= 'd', char* e=\"junk\");\n"
 
@@ -458,11 +458,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "raise upon empty file" do
+  it "raise upon empty file" do
     source = ''
 
     # ensure it's expected type of exception
-    assert_raise RuntimeError do
+    assert_raises RuntimeError do
       @parser.parse("module", source)
     end
 
@@ -476,14 +476,14 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     end
   end
 
-  should "clean up module names that contain spaces, dashes, and such" do
+  it "clean up module names that contain spaces, dashes, and such" do
     source = 'void meh(int (*func)(int));'
 
     retval = @parser.parse("C:\Ugly Module-Name", source)
     assert (retval[:typedefs][0] =~ /CUglyModuleName/)
   end
 
-  should "raise upon no function prototypes found in file" do
+  it "raise upon no function prototypes found in file" do
     source =
       "typedef void SILLY_VOID_TYPE1;\n" +
       "typedef (void) SILLY_VOID_TYPE2 ;\n" +
@@ -491,7 +491,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
       "#define get_foo() \\\n   ((Thing)foo.bar)"
 
     # ensure it's expected type of exception
-    assert_raise(RuntimeError) do
+    assert_raises(RuntimeError) do
       @parser.parse("module", source)
     end
 
@@ -506,11 +506,11 @@ class CMockHeaderParserTest < Test::Unit::TestCase
   end
 
 
-  should "raise upon prototype parsing failure" do
+  it "raise upon prototype parsing failure" do
     source = "void (int, )"
 
     # ensure it's expected type of exception
-    assert_raise(RuntimeError) do
+    assert_raises(RuntimeError) do
       @parser.parse("module", source)
     end
 
@@ -522,7 +522,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     end
   end
 
-  should "extract and return function declarations with retval and args" do
+  it "extract and return function declarations with retval and args" do
 
     source = "int Foo(int a, unsigned int b)"
     expected = { :var_arg=>nil,
@@ -544,7 +544,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
-  should "extract and return function declarations with no retval" do
+  it "extract and return function declarations with no retval" do
 
     source = "void    FunkyChicken(    uint la,  int     de, bool da)"
     expected = { :var_arg=>nil,
@@ -567,7 +567,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
-  should "extract and return function declarations with implied voids" do
+  it "extract and return function declarations with implied voids" do
 
     source = "void tat()"
     expected = { :var_arg=>nil,
@@ -587,7 +587,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
-  should "extract modifiers properly" do
+  it "extract modifiers properly" do
 
     source = "const int TheMatrix(int Trinity, unsigned int * Neo)"
     expected = { :var_arg=>nil,
@@ -609,7 +609,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
-  should "extract c calling conventions properly" do
+  it "extract c calling conventions properly" do
 
     source = "const int __stdcall TheMatrix(int Trinity, unsigned int * Neo)"
     expected = { :var_arg=>nil,
@@ -632,7 +632,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
-  should "fully parse multiple prototypes" do
+  it "fully parse multiple prototypes" do
 
     source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" +
              "int Morpheus(int, unsigned int*);\n"
@@ -673,7 +673,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  should "not extract for mocking multiply defined prototypes" do
+  it "not extract for mocking multiply defined prototypes" do
 
     source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" +
              "const int TheMatrix(int, unsigned int*);\n"
@@ -698,7 +698,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  should "properly detect typedef'd variants of void and use those" do
+  it "properly detect typedef'd variants of void and use those" do
 
     source = "typedef (void) FUNKY_VOID_T;\n" +
              "typedef void CHUNKY_VOID_T;\n" +
@@ -738,7 +738,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  should "be ok with structs inside of function declarations" do
+  it "be ok with structs inside of function declarations" do
 
     source = "int DrHorrible(struct SingAlong Blog);\n" +
              "void Penny(struct const _KeepYourHeadUp_ * const BillyBuddy);\n" +
@@ -792,7 +792,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  should "extract functions containing unions with union specifier" do
+  it "extract functions containing unions with union specifier" do
     source = "void OrangePeel(union STARS_AND_STRIPES * a, union AFL_CIO b)"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -814,7 +814,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
   end
 
-  should "not be thwarted by variables named with primitive types as part of the name" do
+  it "not be thwarted by variables named with primitive types as part of the name" do
     source = "void ApplePeel(const unsigned int const_param, int int_param, int integer, char character, int* const constant)"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -839,7 +839,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
   end
 
-  should "not be thwarted by custom types named similarly to primitive types" do
+  it "not be thwarted by custom types named similarly to primitive types" do
     source = "void LemonPeel(integer param, character thing, longint * junk, constant value, int32_t const number)"
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -864,7 +864,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
   end
 
-  should "handle some of those chains of C name specifiers naturally" do
+  it "handle some of those chains of C name specifiers naturally" do
     source = "void CoinOperated(signed char abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law)"
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -888,7 +888,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
   end
 
-  should "handle custom types of various formats" do
+  it "handle custom types of various formats" do
     source = "void CardOperated(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const * const abc123)"
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -912,7 +912,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
   end
 
-  should "handle arrays and treat them as pointers" do
+  it "handle arrays and treat them as pointers" do
     source = "void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], char thing3 [][2 ][ 3], int* thing4[4])"
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -936,7 +936,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
   end
 
-  should "give a reasonable guess when dealing with weird combinations of custom types and modifiers" do
+  it "give a reasonable guess when dealing with weird combinations of custom types and modifiers" do
     source = "void Cheese(unsigned CUSTOM_TYPE abc, unsigned xyz, CUSTOM_TYPE1 CUSTOM_TYPE2 pdq)"
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -959,7 +959,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, result[:functions])
   end
 
-  should "extract functions containing a function pointer" do
+  it "extract functions containing a function pointer" do
     source = "void FunkyTurkey(unsigned int (*func_ptr)(int, char))"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -982,7 +982,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions containing a function pointer with an implied void" do
+  it "extract functions containing a function pointer with an implied void" do
     source = "void FunkyTurkey(unsigned int (*func_ptr)())"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -1005,7 +1005,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions containing a constant function pointer and a pointer in the nested arg list" do
+  it "extract functions containing a constant function pointer and a pointer in the nested arg list" do
     source = "void FunkyChicken(unsigned int (* const func_ptr)(unsigned long int * , char))"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -1028,7 +1028,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  # should "extract functions containing a function pointer taking a vararg" do
+  # it "extract functions containing a function pointer taking a vararg" do
     # source = "void FunkyParrot(unsigned int (*func_ptr)(int, char, ...))"
     # expected = [{ :var_arg=>nil,
                  # :return=>{ :type   => "void",
@@ -1051,7 +1051,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     # assert_equal(typedefs, result[:typedefs])
   # end
 
-  should "extract functions containing a function pointer with extra parenthesis and two sets" do
+  it "extract functions containing a function pointer with extra parenthesis and two sets" do
     source = "void FunkyBudgie(int (((* func_ptr1)(int, char))), void (*func_ptr2)(void))"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -1075,7 +1075,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions containing a function pointers, structs and other things" do
+  it "extract functions containing a function pointers, structs and other things" do
     source = "struct mytype *FunkyRobin(uint16_t num1, uint16_t num2, void (*func_ptr1)(uint16_t num3, struct mytype2 *s));"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "struct mytype*",
@@ -1100,7 +1100,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions containing an anonymous function pointer" do
+  it "extract functions containing an anonymous function pointer" do
     source = "void FunkyFowl(unsigned int (* const)(int, char))"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -1123,7 +1123,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions returning a function pointer" do
+  it "extract functions returning a function pointer" do
     source = "unsigned short (*FunkyPidgeon( const char op_code ))( int, long int )"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "cmock_module_func_ptr1",
@@ -1146,7 +1146,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions returning a function pointer with implied void" do
+  it "extract functions returning a function pointer with implied void" do
     source = "unsigned short (*FunkyTweetie())()"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "cmock_module_func_ptr1",
@@ -1168,7 +1168,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions returning a function pointer where everything is a void" do
+  it "extract functions returning a function pointer where everything is a void" do
     source = "void (*   FunkySeaGull(void))(void)"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "cmock_module_func_ptr1",
@@ -1190,7 +1190,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions returning a function pointer with some pointer nonsense" do
+  it "extract functions returning a function pointer with some pointer nonsense" do
     source = "unsigned int * (* FunkyMacaw(double* foo, THING *bar))(unsigned int)"
     expected = [{ :var_arg=>nil,
                  :return=>{ :type   => "cmock_module_func_ptr1",
@@ -1214,7 +1214,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract this SQLite3 function with an anonymous function pointer arg (regression test)" do
+  it "extract this SQLite3 function with an anonymous function pointer arg (regression test)" do
     source = "SQLITE_API int sqlite3_bind_text(sqlite3_stmt*, int, const char*, int n, void(*)(void*))"
     expected = [{ :var_arg=>nil,
                   :return=>{ :type   => "int",
@@ -1241,7 +1241,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(typedefs, result[:typedefs])
   end
 
-  should "extract functions with varargs" do
+  it "extract functions with varargs" do
     source = "int XFiles(int Scully, int Mulder, ...);\n"
     expected = [{ :var_arg=>"...",
                   :return=> { :type   => "int",
@@ -1263,7 +1263,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  should "extract functions with strippable confusing junk like gcc attributes" do
+  it "extract functions with strippable confusing junk like gcc attributes" do
     source = "int LaverneAndShirley(int Lenny, int Squiggy) __attribute__((weak)) __attribute__ ((deprecated));\n"
     expected = [{ :var_arg=>nil,
                   :return=> { :type   => "int",
@@ -1285,7 +1285,7 @@ class CMockHeaderParserTest < Test::Unit::TestCase
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  should "extract functions with strippable confusing junk like gcc attributes with parenthesis" do
+  it "extract functions with strippable confusing junk like gcc attributes with parenthesis" do
     source = "int TheCosbyShow(int Cliff, int Claire) __attribute__((weak, alias (\"__f\"));\n"
     expected = [{ :var_arg=>nil,
                   :return=> { :type   => "int",

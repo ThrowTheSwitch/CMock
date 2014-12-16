@@ -35,52 +35,46 @@ class MockedPluginHelper
   end
 end
 
-class CMockGeneratorTest < Test::Unit::TestCase
-  def setup
+describe CMockGenerator, "Verify CMockGenerator Module" do
+
+  before do
     create_mocks :config, :file_writer, :utils, :plugins
     @module_name = "PoutPoutFish"
 
     #no strict handling
-    @config.expect.mock_prefix.returns("Mock")
-    @config.expect.enforce_strict_ordering.returns(nil)
-    @config.expect.framework.returns(:unity)
-    @config.expect.includes.returns(["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"])
-    #@config.expect.includes_h_pre_orig_header.returns(nil) #not called because includes called
-    @config.expect.includes_h_post_orig_header.returns(nil)
-    @config.expect.includes_c_pre_header.returns(nil)
-    @config.expect.includes_c_post_header.returns(nil)
+    @config.expect :mock_prefix, "Mock"
+    @config.expect :enforce_strict_ordering, nil
+    @config.expect :framework, :unity
+    @config.expect :includes, ["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"]
+    #@config.expect :includes_h_pre_orig_header, nil #not called because includes called
+    @config.expect :includes_h_post_orig_header, nil
+    @config.expect :includes_c_pre_header, nil
+    @config.expect :includes_c_post_header, nil
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator.module_name = @module_name
     @cmock_generator.mock_name = "Mock#{@module_name}"
     @cmock_generator.clean_mock_name = "Mock#{@module_name}"
 
     #strict handling
-    @config.expect.mock_prefix.returns("Mock")
-    @config.expect.enforce_strict_ordering.returns(true)
-    @config.expect.framework.returns(:unity)
-    @config.expect.includes.returns(nil)
-    @config.expect.includes_h_pre_orig_header.returns(nil)
-    @config.expect.includes_h_post_orig_header.returns(nil)
-    @config.expect.includes_c_pre_header.returns(nil)
-    @config.expect.includes_c_post_header.returns(nil)
+    @config.expect :mock_prefix, "Mock"
+    @config.expect :enforce_strict_ordering, true
+    @config.expect :framework, :unity
+    @config.expect :includes, nil
+    @config.expect :includes_h_pre_orig_header, nil
+    @config.expect :includes_h_post_orig_header, nil
+    @config.expect :includes_c_pre_header, nil
+    @config.expect :includes_c_post_header, nil
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator_strict.module_name = @module_name
     @cmock_generator_strict.mock_name = "Mock#{@module_name}"
     @cmock_generator_strict.clean_mock_name = "Mock#{@module_name}"
   end
 
-  def teardown
+  after do
   end
 
-  should "have set up internal accessors correctly on init" do
-    assert_equal(@config,       @cmock_generator.config)
-    assert_equal(@file_writer,  @cmock_generator.file_writer)
-    assert_equal(@utils,        @cmock_generator.utils)
-    assert_equal(@plugins,      @cmock_generator.plugins)
-  end
-
-  should "create the top of a header file with optional include files from config and include file from plugin" do
-    @config.expect.mock_prefix.returns("Mock")
+  it "create the top of a header file with optional include files from config and include file from plugin" do
+    @config.expect :mock_prefix, "Mock"
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
@@ -103,29 +97,29 @@ class CMockGeneratorTest < Test::Unit::TestCase
       "\n",
     ]
 
-    @config.expect.orig_header_include_fmt.returns("#include \"%s\"")
-    @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
+    @config.expect :orig_header_include_fmt, "#include \"%s\""
+    @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
     @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
 
     assert_equal(expected, output)
   end
 
-  should "handle dashes and spaces in the module name" do
+  it "handle dashes and spaces in the module name" do
     #no strict handling
-    @config.expect.mock_prefix.returns("Mock")
-    @config.expect.enforce_strict_ordering.returns(nil)
-    @config.expect.framework.returns(:unity)
-    @config.expect.includes.returns(["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"])
-    @config.expect.includes_h_post_orig_header.returns(nil)
-    @config.expect.includes_c_pre_header.returns(nil)
-    @config.expect.includes_c_post_header.returns(nil)
+    @config.expect :mock_prefix, "Mock"
+    @config.expect :enforce_strict_ordering, nil
+    @config.expect :framework, :unity
+    @config.expect :includes, ["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"]
+    @config.expect :includes_h_post_orig_header, nil
+    @config.expect :includes_c_pre_header, nil
+    @config.expect :includes_c_post_header, nil
     @cmock_generator2 = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator2.module_name = "Pout-Pout Fish"
     @cmock_generator2.mock_name = "MockPout-Pout Fish"
     @cmock_generator2.clean_mock_name = "MockPout_Pout_Fish"
 
-    @config.expect.mock_prefix.returns("Mock")
+    @config.expect :mock_prefix, "Mock"
     orig_filename = "Pout-Pout Fish.h"
     define_name = "MOCKPOUT_POUT_FISH_H"
     mock_name = "MockPout_Pout_Fish"
@@ -148,16 +142,16 @@ class CMockGeneratorTest < Test::Unit::TestCase
       "\n",
     ]
 
-    @config.expect.orig_header_include_fmt.returns("#include \"%s\"")
-    @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
+    @config.expect :orig_header_include_fmt, "#include \"%s\""
+    @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
     @cmock_generator2.create_mock_header_header(output, "MockPout-Pout Fish.h")
 
     assert_equal(expected, output)
   end
 
-  should "create the top of a header file with optional include files from config" do
-    @config.expect.mock_prefix.returns("Mock")
+  it "create the top of a header file with optional include files from config" do
+    @config.expect :mock_prefix, "Mock"
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
@@ -179,16 +173,16 @@ class CMockGeneratorTest < Test::Unit::TestCase
       "\n",
     ]
 
-    @config.expect.orig_header_include_fmt.returns("#include \"%s\"")
-    @plugins.expect.run(:include_files).returns('')
+    @config.expect :orig_header_include_fmt, "#include \"%s\""
+    @plugins.expect :run,  '', [:include_files]
 
     @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
 
     assert_equal(expected, output)
   end
 
-  should "create the top of a header file with include file from plugin" do
-    @config.expect.mock_prefix.returns("Mock")
+  it "create the top of a header file with include file from plugin" do
+    @config.expect :mock_prefix, "Mock"
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
@@ -211,15 +205,15 @@ class CMockGeneratorTest < Test::Unit::TestCase
       "\n",
     ]
 
-    @config.expect.orig_header_include_fmt.returns("#include \"%s\"")
-    @plugins.expect.run(:include_files).returns("#include \"PluginRequiredHeader.h\"\n")
+    @config.expect :orig_header_include_fmt, "#include \"%s\""
+    @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
     @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
 
     assert_equal(expected, output)
   end
 
-  should "write typedefs" do
+  it "write typedefs" do
     typedefs = [ 'typedef unsigned char U8;',
                  'typedef char S8;',
                  'typedef unsigned long U32;'
@@ -237,7 +231,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output.flatten)
   end
 
-  should "create the header file service call declarations" do
+  it "create the header file service call declarations" do
     mock_name = "MockPoutPoutFish"
 
     output = []
@@ -251,7 +245,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output)
   end
 
-  should "append the proper footer to the header file" do
+  it "append the proper footer to the header file" do
     output = []
     expected = ["\n#endif\n"]
 
@@ -260,7 +254,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output)
   end
 
-  should "create a proper heading for a source file" do
+  it "create a proper heading for a source file" do
     output = []
     expected = [ "/* AUTOGENERATED FILE. DO NOT EDIT. */\n",
                  "#include <string.h>\n",
@@ -277,7 +271,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output)
   end
 
-  should "create the instance structure where it is needed when no functions" do
+  it "create the instance structure where it is needed when no functions" do
     output = []
     functions = []
     expected = [ "static struct MockPoutPoutFishInstance\n",
@@ -291,7 +285,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output.join)
   end
 
-  should "create the instance structure where it is needed when functions required" do
+  it "create the instance structure where it is needed when functions required" do
     output = []
     functions = [ { :name => "First", :args => "int Candy", :return => test_return[:int] },
                   { :name => "Second", :args => "bool Smarty", :return => test_return[:string] }
@@ -310,18 +304,18 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  CMOCK_MEM_INDEX_TYPE Second_CallInstance;\n",
                  "} Mock;\n\n"
                ].join
-    @plugins.expect.run(:instance_typedefs, functions[0]).returns(["  b1","  b2"])
-    @plugins.expect.run(:instance_typedefs, functions[1]).returns([])
+    @plugins.expect :run, ["  b1","  b2"],        [:instance_typedefs, functions[0]]
+    @plugins.expect :run, [],                     [:instance_typedefs, functions[1]]
 
-    @plugins.expect.run(:instance_structure, functions[0]).returns(["  d1"])
-    @plugins.expect.run(:instance_structure, functions[1]).returns(["  e1","  e2","  e3"])
+    @plugins.expect :run, ["  d1"],               [:instance_structure, functions[0]]
+    @plugins.expect :run, ["  e1","  e2","  e3"], [:instance_structure, functions[1]]
 
     @cmock_generator.create_instance_structure(output, functions)
 
     assert_equal(expected, output.join)
   end
 
-  should "create extern declarations for source file" do
+  it "create extern declarations for source file" do
     output = []
     expected = [ "extern jmp_buf AbortFrame;\n",
                  "\n" ]
@@ -331,7 +325,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output.flatten)
   end
 
-  should "create extern declarations for source file when using strict ordering" do
+  it "create extern declarations for source file when using strict ordering" do
     output = []
     expected = [ "extern jmp_buf AbortFrame;\n",
                  "extern int GlobalExpectCount;\n",
@@ -343,7 +337,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output.flatten)
   end
 
-  should "create mock verify functions in source file when no functions specified" do
+  it "create mock verify functions in source file when no functions specified" do
     functions = []
     output = []
     expected = "void MockPoutPoutFish_Verify(void)\n{\n}\n\n"
@@ -353,7 +347,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output.join)
   end
 
-  should "create mock verify functions in source file when extra functions specified" do
+  it "create mock verify functions in source file when extra functions specified" do
     functions = [ { :name => "First", :args => "int Candy", :return => test_return[:int] },
                   { :name => "Second", :args => "bool Smarty", :return => test_return[:string] }
                 ]
@@ -366,8 +360,8 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  Dos_Second",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_verify, functions[0]).returns(["  Uno_First","  Dos_First"])
-    @plugins.expect.run(:mock_verify, functions[1]).returns(["  Uno_Second","  Dos_Second"])
+    @plugins.expect :run, ["  Uno_First","  Dos_First"],   [:mock_verify, functions[0]]
+    @plugins.expect :run, ["  Uno_Second","  Dos_Second"], [:mock_verify, functions[1]]
 
     @cmock_generator.ordered = true
     @cmock_generator.create_mock_verify_function(output, functions)
@@ -375,7 +369,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected, output.flatten)
   end
 
-  should "create mock init functions in source file" do
+  it "create mock init functions in source file" do
     output = []
     expected = [ "void MockPoutPoutFish_Init(void)\n{\n",
                  "  MockPoutPoutFish_Destroy();\n",
@@ -387,7 +381,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected.join, output.join)
   end
 
-  should "create mock destroy functions in source file" do
+  it "create mock destroy functions in source file" do
     functions = []
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
@@ -401,7 +395,7 @@ class CMockGeneratorTest < Test::Unit::TestCase
     assert_equal(expected.join, output.join)
   end
 
-  should "create mock destroy functions in source file when specified with strict ordering" do
+  it "create mock destroy functions in source file when specified with strict ordering" do
     functions = [ { :name => "First", :args => "int Candy", :return => test_return[:int] },
                   { :name => "Second", :args => "bool Smarty", :return => test_return[:string] }
                 ]
@@ -414,15 +408,15 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  GlobalVerifyOrder = 0;\n",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_destroy, functions[0]).returns([])
-    @plugins.expect.run(:mock_destroy, functions[1]).returns(["  uno"])
+    @plugins.expect :run, [],        [:mock_destroy, functions[0]]
+    @plugins.expect :run, ["  uno"], [:mock_destroy, functions[1]]
 
     @cmock_generator_strict.create_mock_destroy_function(output, functions)
 
     assert_equal(expected.join, output.join)
   end
 
-  should "create mock implementation functions in source file" do
+  it "create mock implementation functions in source file" do
     function = { :modifier => "static",
                  :return => test_return[:int],
                  :args_string => "uint32 sandwiches, const char* named",
@@ -445,15 +439,15 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  return cmock_call_instance->ReturnVal;\n",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_implementation_precheck, function).returns(["  uno"])
-    @plugins.expect.run(:mock_implementation, function).returns(["  dos","  tres"])
+    @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
+    @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
     @cmock_generator.create_mock_implementation(output, function)
 
     assert_equal(expected.join, output.join)
   end
 
-  should "create mock implementation functions in source file with different options" do
+  it "create mock implementation functions in source file with different options" do
     function = { :modifier => "",
                  :c_calling_convention => "__stdcall",
                  :return => test_return[:int],
@@ -477,8 +471,8 @@ class CMockGeneratorTest < Test::Unit::TestCase
                  "  return cmock_call_instance->ReturnVal;\n",
                  "}\n\n"
                ]
-    @plugins.expect.run(:mock_implementation_precheck, function).returns(["  uno"])
-    @plugins.expect.run(:mock_implementation, function).returns(["  dos","  tres"])
+    @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
+    @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
     @cmock_generator.create_mock_implementation(output, function)
 

@@ -2,19 +2,16 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
+
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require 'cmock_config'
 
-class CMockConfigTest < Test::Unit::TestCase
-  def setup
-  end
 
-  def teardown
-  end
-  
-  should "use default settings when no parameters are specified" do
+describe CMockConfig, "Verify CMockConfig Module" do
+
+  it "use default settings when no parameters are specified" do
     config = CMockConfig.new
     assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],             config.mock_path)
     assert_equal(CMockConfig::CMockDefaultOptions[:includes],              config.includes)
@@ -22,8 +19,8 @@ class CMockConfigTest < Test::Unit::TestCase
     assert_equal(CMockConfig::CMockDefaultOptions[:plugins],               config.plugins)
     assert_equal(CMockConfig::CMockDefaultOptions[:treat_externs],         config.treat_externs)
   end
-  
-  should "replace only options specified in a hash" do
+
+  it "replace only options specified in a hash" do
     test_includes = ['hello']
     test_attributes = ['blah', 'bleh']
     config = CMockConfig.new(:includes => test_includes, :attributes => test_attributes)
@@ -33,8 +30,8 @@ class CMockConfigTest < Test::Unit::TestCase
     assert_equal(CMockConfig::CMockDefaultOptions[:plugins],                config.plugins)
     assert_equal(CMockConfig::CMockDefaultOptions[:treat_externs],          config.treat_externs)
   end
-  
-  should "replace only options specified in a yaml file" do
+
+  it "replace only options specified in a yaml file" do
     test_plugins = [:soda, :pizza]
     config = CMockConfig.new("#{File.expand_path(File.dirname(__FILE__))}/cmock_config_test.yml")
     assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],              config.mock_path)
@@ -43,8 +40,8 @@ class CMockConfigTest < Test::Unit::TestCase
     assert_equal(:include,                                                  config.treat_externs)
   end
 
-  should "populate treat_as map with internal standard_treat_as_map defaults, redefine defaults, and add custom values" do
-  
+  it "populate treat_as map with internal standard_treat_as_map defaults, redefine defaults, and add custom values" do
+
     user_treat_as1 = {
       'BOOL'          => 'UINT8', # redefine standard default
       'unsigned long' => 'INT',   # redefine standard default
@@ -55,10 +52,10 @@ class CMockConfigTest < Test::Unit::TestCase
       'BOOL'          => 'INT16', # redefine standard default
       'U16'           => 'HEX16'  # custom value
     }
- 
+
     config1 = CMockConfig.new({:treat_as => user_treat_as1})
     config2 = CMockConfig.new({:treat_as => user_treat_as2})
-    
+
     # ----- USER SET 1
     # standard defaults
     assert_equal('INT',      config1.treat_as['BOOL_T'])
@@ -73,16 +70,16 @@ class CMockConfigTest < Test::Unit::TestCase
     # overrides
     assert_equal('UINT8',    config1.treat_as['BOOL'])
     assert_equal('INT',      config1.treat_as['unsigned long'])
-    
+
     # added custom values
     assert_equal('UINT8',    config1.treat_as['U8'])
     assert_equal('UINT16',   config1.treat_as['U16'])
-    
+
     # standard_treat_as_map: unchanged
     assert_equal('INT',      config1.standard_treat_as_map['BOOL'])
-    assert_equal('HEX32',    config1.standard_treat_as_map['unsigned long'])    
+    assert_equal('HEX32',    config1.standard_treat_as_map['unsigned long'])
     assert_equal('STRING',   config1.standard_treat_as_map['char*'])
-    
+
     # ----- USER SET 2
     # standard defaults
     assert_equal('INT',      config2.treat_as['BOOL_T'])
@@ -97,25 +94,25 @@ class CMockConfigTest < Test::Unit::TestCase
 
     # overrides
     assert_equal('INT16',    config2.treat_as['BOOL'])
-    
+
     # added custom values
     assert_equal('HEX16',    config2.treat_as['U16'])
-    
+
     # standard_treat_as_map: unchanged
     assert_equal('INT',      config2.standard_treat_as_map['BOOL'])
-    assert_equal('HEX32',    config2.standard_treat_as_map['unsigned long'])    
+    assert_equal('HEX32',    config2.standard_treat_as_map['unsigned long'])
     assert_equal('STRING',   config2.standard_treat_as_map['char*'])
   end
-  
-  should "standard treat_as map should be incorruptable" do
+
+  it "standard treat_as map should be incorruptable" do
     config = CMockConfig.new({})
-    
+
     assert_equal('INT', config.standard_treat_as_map['BOOL_T'])
-    
+
     local = config.standard_treat_as_map
     local['BOOL_T'] = "U8"
-    
+
     assert_equal('INT', config.standard_treat_as_map['BOOL_T'])
   end
-  
+
 end

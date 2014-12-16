@@ -2,20 +2,21 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require 'cmock_generator_plugin_ignore_arg'
 
-class CMockGeneratorPluginIgnoreArgTest < Test::Unit::TestCase
-  def setup
+describe CMockGeneratorPluginIgnoreArg, "Verify CMockGeneratorPluginIgnoreArg Module" do
+
+  before do
     create_mocks :config, :utils
 
     # int *Oak(void)"
     @void_func = {:name => "Oak", :args => [], :return => test_return[:int_ptr]}
 
     # void Pine(int chicken, const int beef, int *tofu)
-    @complex_func = {:name => "Pine", 
+    @complex_func = {:name => "Pine",
                      :args => [{ :type => "int",
                                  :name => "chicken",
                                  :ptr? => false,
@@ -29,31 +30,30 @@ class CMockGeneratorPluginIgnoreArgTest < Test::Unit::TestCase
                                  :name => "tofu",
                                  :ptr? => true,
                                }],
-                     :return => test_return[:void], 
+                     :return => test_return[:void],
                      :contains_ptr? => true }
 
     #no strict ordering
     @cmock_generator_plugin_ignore_arg = CMockGeneratorPluginIgnoreArg.new(@config, @utils)
   end
 
-  def teardown
+  after do
   end
 
-  should "have set up internal accessors correctly on init" do
-    assert_equal(@utils,  @cmock_generator_plugin_ignore_arg.utils)
+  it "have set up internal priority correctly on init" do
     assert_equal(10,      @cmock_generator_plugin_ignore_arg.priority)
   end
-  
-  should "not include any additional include files" do 
+
+  it "not include any additional include files" do
     assert(!@cmock_generator_plugin_ignore_arg.respond_to?(:include_files))
   end
 
-  should "not add to typedef structure for functions with no args" do
+  it "not add to typedef structure for functions with no args" do
     returned = @cmock_generator_plugin_ignore_arg.instance_typedefs(@void_func)
     assert_equal("", returned)
   end
-  
-  should "add to tyepdef structure mock needs of functions of style 'void func(int chicken, int* pork)'" do
+
+  it "add to tyepdef structure mock needs of functions of style 'void func(int chicken, int* pork)'" do
     expected = "  int IgnoreArg_chicken;\n" +
                "  int IgnoreArg_beef;\n" +
                "  int IgnoreArg_tofu;\n"
@@ -61,7 +61,7 @@ class CMockGeneratorPluginIgnoreArgTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
 
-  should "add mock function declarations for all arguments" do
+  it "add mock function declarations for all arguments" do
     expected =
       "#define Pine_IgnoreArg_chicken()" +
       " Pine_CMockIgnoreArg_chicken(__LINE__)\n" +
@@ -79,7 +79,7 @@ class CMockGeneratorPluginIgnoreArgTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
 
-  should "add mock interfaces for all arguments" do
+  it "add mock interfaces for all arguments" do
     expected =
       "void Pine_CMockIgnoreArg_chicken(UNITY_LINE_TYPE cmock_line)\n" +
       "{\n" +
@@ -109,7 +109,7 @@ class CMockGeneratorPluginIgnoreArgTest < Test::Unit::TestCase
     assert_equal(expected, returned)
   end
 
-  should "not add a mock implementation" do
+  it "not add a mock implementation" do
     assert(!@cmock_generator_plugin_ignore_arg.respond_to?(:mock_implementation))
   end
 

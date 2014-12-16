@@ -10,8 +10,6 @@ require 'rake/clean'
 require 'rake/testtask'
 require './rakefile_helper'
 
-require 'rspec/core/rake_task'
-
 include RakefileHelpers
 
 DEFAULT_CONFIG_FILE = 'gcc.yml'
@@ -33,9 +31,9 @@ task :prep_system_tests => SYSTEM_TEST_SUPPORT_DIRS
 configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
-task :default => ['test:all']
-task :ci => [:no_color, :default]
-task :cruise => :ci
+task :default => [:test]
+task :ci      => [:no_color, :default]
+task :cruise  => :ci
 
 desc "Load configuration"
 task :config, :config_file do |t, args|
@@ -44,10 +42,10 @@ task :config, :config_file do |t, args|
   configure_toolchain(args[:config_file])
 end
 
-namespace :test do
-  desc "Run all unit and system tests"
-  task :all => [:clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
+desc "Run all unit, c, and system tests"
+task :test => [:clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
 
+namespace :test do
   desc "Run Unit Tests"
   Rake::TestTask.new('units') do |t|
     t.pattern = 'test/unit/*_test.rb'
@@ -56,7 +54,7 @@ namespace :test do
 
   #individual unit tests
   FileList['test/unit/*_test.rb'].each do |test|
-    Rake::TestTask.new(File.basename(test,'.*')) do |t|
+    Rake::TestTask.new(File.basename(test,'.*').sub('_test','')) do |t|
       t.pattern = test
       t.verbose = true
     end
@@ -88,8 +86,9 @@ namespace :test do
 
   #individual system tests
   FileList['test/system/test_interactions/*.yml'].each do |test|
-    desc "Run system test #{File.basename(test,'.*')}"
-    task "test:#{File.basename(test,'.*')}" do
+    basename = File.basename(test,'.*')
+    desc "Run system test #{basename}"
+    task basename do
       run_system_test_interactions([test])
     end
   end
@@ -103,9 +102,3 @@ end
 task :no_color do
   $colour_output = false
 end
-
-RSpec::Core::RakeTask.new(:spec) do |t|
-  spec_path = File.join(CMOCK_ROOT, 'test/spec')
-  t.pattern = spec_path + '/*_spec.rb'
-end
-
