@@ -15,14 +15,14 @@ end
 
 def create_stub(funcs)
   stub = Class.new
-  if (RUBY_VERSION.split('.')[0].to_i >= 2)
-    funcs.each_pair {|k,v| stub.define_singleton_method(k) {|unused=nil| return v } }
-  else
+  #if (RUBY_VERSION.split('.')[0].to_i >= 2)
+  #  funcs.each_pair {|k,v| stub.define_singleton_method(k) {|*unused| return v } }
+  #else
     blob = "class << stub\n"
     funcs.each_pair {|k,v| blob += "def #{k.to_s}(unused=nil)\n #{v.inspect}\nend\n" }
     blob += "end"
     eval blob
-  end
+  #end
   stub
 end
 
