@@ -16,7 +16,7 @@ end
 def create_stub(funcs)
   stub = Class.new
   funcs.each_pair do |k,v|
-    stub.define_singleton_method(k) {|unused=nil| return v }
+    stub.define_singleton_method(k) {|*unused| return v }
   end
   stub
 end
