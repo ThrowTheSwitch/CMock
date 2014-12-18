@@ -86,6 +86,22 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
     assert_equal(expected, returned)
   end
 
+  it "add another mock function declaration for functions of style 'const char* func(const int* tofu)'" do
+    function = {:name => "Pine",
+                :args => [{ :type => "int*",
+                           :name => "tofu",
+                           :ptr? => true,
+                           :const? => true,
+                         }],
+                :return => test_return[:string],
+                :contains_ptr? => true }
+
+    expected = "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, tofu, tofu_Depth, cmock_retval)\n" +
+               "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, const int* tofu, int tofu_Depth, const char* cmock_to_return);\n"
+    returned = @cmock_generator_plugin_array.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+
   it "not have a mock function implementation" do
     assert(!@cmock_generator_plugin_array.respond_to?(:mock_implementation))
   end
