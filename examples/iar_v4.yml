@@ -14,7 +14,7 @@ compiler:
     - --no_code_motion
     - --no_tbaa
     - --no_clustering
-    - --no_scheduling 
+    - --no_scheduling
     - --debug
     - --cpu_mode thumb
     - --endian little
@@ -32,7 +32,7 @@ compiler:
       - 'src/'
       - '../src/'
       - '../vendor/unity/src/'
-      - '../vendor/unity/examples/helper/'
+      - '../vendor/unity/examples/example_3/helper/'
       - 'mocks/'
       - [*tools_root, 'arm\inc\']
       - *unit_tests_path
@@ -88,4 +88,4 @@ simulator:
   :plugins: []
   :includes:
     - Types.h
-  
+
