@@ -55,10 +55,11 @@ class CMockGeneratorPluginExpectAnyArgs
     lines = ""
     if (function[:return][:void?])
       lines << "void #{function[:name]}_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line)\n{\n"
+      lines << @utils.code_add_base_expectation(function[:name], true)
     else
       lines << "void #{function[:name]}_CMockExpectAnyArgsAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
+      lines << @utils.code_add_base_expectation(function[:name], true, true)
     end
-    lines << @utils.code_add_base_expectation(function[:name], true)
     unless (function[:return][:void?])
       lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n"
     end

@@ -65,14 +65,15 @@ class CMockGeneratorPluginExpect
       else
         lines << "void #{func_name}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]})\n{\n"
       end
+      lines << @utils.code_add_base_expectation(func_name)
     else
       if (function[:args_string] == "void")
         lines << "void #{func_name}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
       else
         lines << "void #{func_name}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]})\n{\n"
       end
+      lines << @utils.code_add_base_expectation(func_name, true, true)
     end
-    lines << @utils.code_add_base_expectation(func_name)
     lines << @utils.code_call_argument_loader(function)
     lines << @utils.code_assign_argument_quickly("cmock_call_instance->ReturnVal", function[:return]) unless (function[:return][:void?])
     lines << "}\n\n"

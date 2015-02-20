@@ -34,12 +34,22 @@ class CMockGeneratorUtils
     end
   end
 
-  def code_add_base_expectation(func_name, global_ordering_supported=true)
-    lines =  "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_#{func_name}_CALL_INSTANCE));\n"
-    lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = (CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n"
-    lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"CMock has run out of memory. Please allocate more.\");\n"
+  def code_add_base_expectation(func_name, global_ordering_supported=true, is_expect_and_return=false)
+    
+    indentation = (@ignore and is_expect_and_return) ? '  ' : ''
+    lines =  "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance;\n"
+    if ((@ignore and is_expect_and_return))
+      lines << "  if (Mock.#{func_name}_IgnoreBool)\n"
+      lines << "    cmock_call_instance = (CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{func_name}_CallInstance);\n"
+      lines << "  else\n"
+      lines << "  {\n"
+    end
+    lines << "  #{indentation}CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_#{func_name}_CALL_INSTANCE));\n"
+    lines << "  #{indentation}cmock_call_instance = (CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n"
+    lines << "  #{indentation}UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"CMock has run out of memory. Please allocate more.\");\n"
+    lines << "  #{indentation}Mock.#{func_name}_CallInstance = CMock_Guts_MemChain(Mock.#{func_name}_CallInstance, cmock_guts_index);\n"
+    lines << "  }\n" if (@ignore and is_expect_and_return)
     lines << "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n"
-    lines << "  Mock.#{func_name}_CallInstance = CMock_Guts_MemChain(Mock.#{func_name}_CallInstance, cmock_guts_index);\n"
     lines << "  Mock.#{func_name}_IgnoreBool = (int)0;\n" if (@ignore)
     lines << "  cmock_call_instance->LineNumber = cmock_line;\n"
     lines << "  cmock_call_instance->CallOrder = ++GlobalExpectCount;\n" if (@ordered and global_ordering_supported)
