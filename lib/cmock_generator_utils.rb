@@ -34,13 +34,13 @@ class CMockGeneratorUtils
     end
   end
 
-  def code_add_base_expectation(func_name, global_ordering_supported=true, is_expect_and_return=false)
+  def code_add_base_expectation(func_name, global_ordering_supported=true, override_ignore=false)
     
-    indentation = (@ignore and is_expect_and_return) ? '  ' : ''
+    indentation = (@ignore and override_ignore) ? '  ' : ''
     lines =  "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance;\n"
-    if ((@ignore and is_expect_and_return))
+    if ((@ignore and override_ignore))
       lines << "  if (Mock.#{func_name}_IgnoreBool)\n"
-      lines << "    cmock_call_instance = (CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{func_name}_CallInstance);\n"
+      lines << "    cmock_call_instance = (CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
       lines << "  else\n"
       lines << "  {\n"
     end
@@ -48,7 +48,7 @@ class CMockGeneratorUtils
     lines << "  #{indentation}cmock_call_instance = (CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n"
     lines << "  #{indentation}UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"CMock has run out of memory. Please allocate more.\");\n"
     lines << "  #{indentation}Mock.#{func_name}_CallInstance = CMock_Guts_MemChain(Mock.#{func_name}_CallInstance, cmock_guts_index);\n"
-    lines << "  }\n" if (@ignore and is_expect_and_return)
+    lines << "  }\n" if (@ignore and override_ignore)
     lines << "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n"
     lines << "  Mock.#{func_name}_IgnoreBool = (int)0;\n" if (@ignore)
     lines << "  cmock_call_instance->LineNumber = cmock_line;\n"
