@@ -150,7 +150,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
 
   it "add mock interfaces for functions of style 'int func(void)'" do
     function = {:name => "Orange", :args => [], :args_string => "void", :return => test_return[:int]}
-    @utils.expect :code_add_base_expectation, "mock_retval_0 ", ["Orange"]
+    @utils.expect :code_add_base_expectation, "mock_retval_0 ", ["Orange", true, true]
     @utils.expect :code_call_argument_loader, "mock_retval_1 ", [function]
     @utils.expect :code_assign_argument_quickly, "mock_retval_2", ["cmock_call_instance->ReturnVal", function[:return]]
     expected = ["void Orange_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, int cmock_to_return)\n",
@@ -166,7 +166,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
 
   it "add mock interfaces for functions of style 'int func(char* pescado)'" do
     function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return => test_return[:int]}
-    @utils.expect :code_add_base_expectation, "mock_retval_0 ", ["Lemon"]
+    @utils.expect :code_add_base_expectation, "mock_retval_0 ", ["Lemon", true, true]
     @utils.expect :code_call_argument_loader, "mock_retval_1 ", [function]
     @utils.expect :code_assign_argument_quickly, "mock_retval_2", ["cmock_call_instance->ReturnVal", function[:return]]
     expected = ["void Lemon_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, char* pescado, int cmock_to_return)\n",
