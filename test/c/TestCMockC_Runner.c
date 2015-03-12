@@ -22,8 +22,8 @@ extern void test_ThatWeCanAskForAllSortsOfSizes(void);
 
 int main(void)
 {
-  UnityBegin();
   Unity.TestFile = "TestCMock.c";
+  UnityBegin(Unity.TestFile);
 
   RUN_TEST(test_MemNewWillReturnNullIfGivenIllegalSizes, 21);
   RUN_TEST(test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation, 32);

@@ -21,8 +21,7 @@ extern void test_ThatWeCanAskForAllSortsOfSizes(void);
 
 int main(void)
 {
-  UnityBegin();
-  Unity.TestFile = "TestCMockDynamic.c";
+  UnityBegin("TestCMockDynamic.c");
 
   RUN_TEST(test_MemNewWillReturnNullIfGivenIllegalSizes, 26);
   RUN_TEST(test_MemNewWillNowSupportSizesGreaterThanTheDefinesCMockSize, 35);
