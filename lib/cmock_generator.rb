@@ -25,9 +25,9 @@ class CMockGenerator
     here = File.dirname __FILE__
     unity_path_in_ceedling = "#{here}/../../unity" # path to Unity from within Ceedling
     unity_path_in_cmock = "#{here}/../vendor/unity" # path to Unity from within CMock
-    if Dir.exist? unity_path_in_ceedling
+    if File.exist? unity_path_in_ceedling
       require "#{unity_path_in_ceedling}/auto/type_sanitizer"
-    elsif Dir.exist? unity_path_in_cmock
+    elsif File.exist? unity_path_in_cmock
       require "#{unity_path_in_cmock}/auto/type_sanitizer"
     else
       raise "Failed to find an instance of Unity to pull in type_sanitizer module!"
