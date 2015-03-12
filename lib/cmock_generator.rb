@@ -4,9 +4,6 @@
 #   [Released under MIT License. Please refer to license.txt for details]
 # ==========================================
 
-$here = File.dirname __FILE__
-require "#{$here}/../vendor/unity/auto/type_sanitizer"
-
 class CMockGenerator
 
   attr_accessor :config, :file_writer, :module_name, :clean_mock_name, :mock_name, :utils, :plugins, :ordered
@@ -24,6 +21,18 @@ class CMockGenerator
     @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
     @includes_c_pre_header       = (@config.includes_c_pre_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
     @includes_c_post_header      = (@config.includes_c_post_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
+    
+    here = File.dirname __FILE__
+    unity_path_in_ceedling = "#{here}/../../unity" # path to Unity from within Ceedling
+    unity_path_in_cmock = "#{here}/../vendor/unity" # path to Unity from within CMock
+    if Dir.exist? unity_path_in_ceedling
+      require "#{unity_path_in_ceedling}/auto/type_sanitizer"
+    elsif Dir.exist? unity_path_in_cmock
+      require "#{unity_path_in_cmock}/auto/type_sanitizer"
+    else
+      raise "Failed to find an instance of Unity to pull in type_sanitizer module!"
+    end
+    
   end
 
   def create_mock(module_name, parsed_stuff)
