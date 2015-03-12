@@ -28,7 +28,7 @@ class CMockGenerator
   def create_mock(module_name, parsed_stuff)
     @module_name = module_name
     @mock_name   = @prefix + @module_name
-    @clean_mock_name = @mock_name.gsub(/(?:-|\s+)/, "_")
+    @clean_mock_name = @mock_name.gsub(/(?:-|\.\s+)/, "_")
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
