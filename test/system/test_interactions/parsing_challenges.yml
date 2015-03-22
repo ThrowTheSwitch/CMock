@@ -2,11 +2,12 @@
 :cmock:
   :plugins:
   - # no plugins
-  :treat_as_void: 
+  :treat_as_void:
   - VOID_TYPE_CRAZINESS_CFG
   :treat_as:
     TypeDefInt: HEX8
-  
+    VOID_TYPE_CRAZINESS_CFG*: PTR
+
 :systest:
   :types: |
     typedef unsigned short U16;
@@ -28,13 +29,14 @@
     #endif
     #define SHOULD_IGNORE_NEXT_FUNC_DEF_AS_PART_OF_MACRO   \
             void IgnoredFunction(NotAValidType ToMakeItFailIfWeActuallyMockedThis);
-    
+
     // typedef edge case; must be in mockable.h for test to compile
     // not ANSI C but it has been done and will break cmock if not handled
     typedef void VOID_TYPE_CRAZINESS_LCL;
-    
+
     VOID_TYPE_CRAZINESS_LCL void_type_craziness1(int * a, int *b, int* c);
     void void_type_craziness2(VOID_TYPE_CRAZINESS_CFG);
+    void void_type_craziness3(VOID_TYPE_CRAZINESS_CFG* a);
 
     // pointer parsing exercise
     U16  *ptr_return1(int a);
@@ -49,50 +51,51 @@
     // variable argument lists
     void var_args1(int a, ...);
     void var_args2(int a, int b, ...);
-    
+
     // parsing "stress tests"
     char
     crazy_multiline(
       int a,
       unsigned int b);
-    
+
     unsigned long int incredible_descriptors(register const unsigned short a);
-    
+
     TypeDefInt uses_typedef_like_names(TypeDefInt typedefvar);
-    
+
     void oh_brackets1(int fudge[5]);
     void oh_brackets2(int caramel[]);
     #ifdef __cplusplus
     }
     #endif
-    
-  :source: 
+
+  :source:
     :header: |
       U16* exercise_return_pointers(int a);
       void exercise_var_args(int a, int b);
       void exercise_arglist_pointers(void);
       char exercise_multiline_declarations(int a, unsigned int b);
       void exercise_double_pointers(unsigned int** a);
-      int  exercise_many_descriptors(int a); 
+      int  exercise_many_descriptors(int a);
+      void exercise_type_craziness3(VOID_TYPE_CRAZINESS_CFG* a);
       TypeDefInt exercise_typedef_like_names(TypeDefInt a);
 
     :code: |
       int A, B, C;
       unsigned int *pA, *pB, *pC;
-      
+
       U16* exercise_return_pointers(int a)
       {
         ptr_return1(a);
         ptr_return2(a);
         return ptr_return3(a);
-      }    
+      }
 
       void exercise_var_args(int a, int b)
       {
         var_args1(a, 3);
         var_args2(a, b, 'c');
       }
-      
+
       void exercise_arglist_pointers(void)
       {
         void_type_craziness1(&A, &B, &C);
@@ -111,22 +114,27 @@
         ptr_ptr_return3((unsigned int**)a);
         ptr_ptr_return4((unsigned int**)a);
       }
-      
+
       int exercise_many_descriptors(int a)
       {
         return (int)incredible_descriptors((unsigned short)a);
       }
-      
+
+      void exercise_type_craziness3(VOID_TYPE_CRAZINESS_CFG* a)
+      {
+        void_type_craziness3(a);
+      }
+
       TypeDefInt exercise_typedef_like_names(TypeDefInt a)
       {
         return uses_typedef_like_names(a);
       }
-      
+
   :tests:
     :common: |
       extern int A, B, C;
       extern unsigned int *pA, *pB, *pC;
-      
+
       void setUp(void)
       {
         A = 100;
@@ -149,7 +157,7 @@
           ptr_return3_ExpectAndReturn(2, &retval);
           TEST_ASSERT_EQUAL_PTR(&retval, exercise_return_pointers(2));
         }
-        
+
     - :pass: TRUE
       :should: 'ignore var args in expect prototype generation'
       :code: |
@@ -159,7 +167,7 @@
           var_args2_Expect(2, 3);
           exercise_var_args(2, 3);
         }
-        
+
     - :pass: TRUE
       :should: "not process a typedef'd void as anything other than void"
       :code: |
@@ -216,6 +224,16 @@
         {
           uses_typedef_like_names_ExpectAndReturn((TypeDefInt)52, (TypeDefInt)53);
           TEST_ASSERT_EQUAL(53, exercise_typedef_like_names((TypeDefInt)54));
+        }
+
+    - :pass: TRUE
+      :should: 'handle typedef of void used as a void pointer'
+      :code: |
+        test()
+        {
+          char* blah = "blah";
+          void_type_craziness3_Expect(blah);
+          exercise_type_craziness3(blah);
         }
 
 
