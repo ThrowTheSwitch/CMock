@@ -1,4 +1,4 @@
-require 'cmock'
+require "#{ENV['CMOCK_DIR']}/lib/cmock"
 
 raise "Header file to mock must be specified!" unless ARGV.length >= 1
 

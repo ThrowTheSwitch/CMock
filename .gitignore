@@ -4,3 +4,4 @@ test/system/generated
 Gemfile.lock
 .rake_t_cache
 .DS_Store
+examples/make_example/build

@@ -1,10 +1,8 @@
-require 'cmock'
 require 'fileutils'
 abs_root = FileUtils.pwd
 cmock_dir = File.expand_path(ENV.fetch('CMOCK_DIR', File.join(abs_root, '..', '..')))
-puts "___CMOCK: #{cmock_dir}"
+require "#{cmock_dir}/lib/cmock"
 unity_dir = File.join(cmock_dir, 'vendor', 'unity')
-puts "___UNITY: #{unity_dir}"
 require "#{unity_dir}/auto/generate_test_runner"
 
 src_dir =  ENV.fetch('SRC_DIR',  './src')
@@ -126,7 +124,7 @@ File.open(test_makefile, "w") do |mkfile|
 
     # Run test suite and generate report
     mkfile.puts "#{test_results}: #{test_bin}"
-    mkfile.puts "\t#{test_bin} &> #{test_results}"
+    mkfile.puts "\t-#{test_bin} &> #{test_results}"
     mkfile.puts ""
 
     test_targets << test_bin
