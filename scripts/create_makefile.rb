@@ -34,6 +34,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts "BUILD_DIR ?= ./build"
   mkfile.puts "SRC_DIR ?= ./src"
   mkfile.puts "TEST_DIR ?= ./test"
+  mkfile.puts "TEST_CFLAGS ?= -DTEST"
   mkfile.puts "CMOCK_DIR ?= #{CMOCK_DIR}"
   mkfile.puts "UNITY_DIR ?= #{UNITY_DIR}"
   mkfile.puts "TEST_BUILD_DIR ?= ${BUILD_DIR}/test"
@@ -80,7 +81,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build runner
     mkfile.puts "#{runner_obj}: #{runner_source}"
-    mkfile.puts "\t${CC} -o $@ -c $< -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC}"
     mkfile.puts ""
 
     # Collect mocks to generate
@@ -113,7 +114,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build test suite
     mkfile.puts "#{test_obj}: #{test} #{module_obj} #{mock_objs.join(' ')}"
-    mkfile.puts "\t${CC} -o $@ -c $< -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR}"
     mkfile.puts ""
 
     # Build test suite executable
@@ -142,7 +143,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     mkfile.puts ""
 
     mkfile.puts "#{mock_obj}: #{mock_src} #{mock_header}"
-    mkfile.puts "\t${CC} -o $@ -c $< -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC}"
     mkfile.puts ""
   end
 
