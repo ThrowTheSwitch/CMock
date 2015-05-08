@@ -9,7 +9,7 @@ Getting Started
     > git clone --recursive https://github.com/throwtheswitch/cmock.git
     > cd cmock
     > bundle install # Ensures you have all RubyGems needed
-    > bundle execute rake # Run all CMock library tests
+    > bundle exec rake # Run all CMock library tests
 
 API Documentation
 =================
