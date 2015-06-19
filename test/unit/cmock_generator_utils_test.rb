@@ -291,9 +291,9 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   it 'handle custom types as memory compares when we have no better way to do it with array plugin enabled' do
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
-    expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n  {\n    if (&cmock_call_instance->Expected_MyMyType == NULL)\n      { UNITY_TEST_ASSERT_NULL(MyMyType, cmock_line, \"Expected NULL. Function 'Pear' called with unexpected value for argument 'MyMyType'.\"); }\n    else\n      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE), 1, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\"); }\n  }\n"
+    expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n  {\n    if (cmock_call_instance->Expected_MyMyType == NULL)\n      { UNITY_TEST_ASSERT_NULL(MyMyType, cmock_line, \"Expected NULL. Function 'Pear' called with unexpected value for argument 'MyMyType'.\"); }\n    else\n      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(cmock_call_instance->Expected_MyMyType), (void*)(MyMyType), sizeof(MY_TYPE), 1, cmock_line, \"Function 'Pear' called with unexpected value for argument 'MyMyType'.\"); }\n  }\n"
     @unity_helper.expect :nil?, false
-    @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY', '&'],  ['MY_TYPE']
+    @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY', ''],  ['MY_TYPE']
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
 
