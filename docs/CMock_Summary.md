@@ -293,6 +293,11 @@ Defined in the yaml file, they look more like this:
   available currently are `:ignore,` `:ignore_args,` `:array,`
   `:cexception,` `:callback,` and `:return_thru_ptr`
 
+* `:strippables`:
+  An array containing a list of items to remove from the mocked header.
+  For example, use `:strippables: ['(?:functionName\s*\(+.*?\)+)']`
+  to prevent a function from being mocked.
+
 * `:treat_as`:
   The `:treat_as` list is a shortcut for when you have created typedefs
   of standard types. Why create a custom unity helper for UINT16 when
