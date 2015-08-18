@@ -45,3 +45,5 @@ unsigned int ** ptr_ptr_return4(unsigned int ** a);
 extern unsigned long int incredible_descriptors(register const unsigned short a);
 
 int32_t example_c99_type(int32_t param1);
+
+void I2CIntRegister(uint32_t ui32Base, void (*pfnHandler)(void));

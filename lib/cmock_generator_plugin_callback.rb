@@ -2,19 +2,19 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
 
 class CMockGeneratorPluginCallback
 
   attr_accessor :include_count
   attr_reader :priority
   attr_reader :config, :utils
-  
+
   def initialize(config, utils)
     @config = config
     @utils = utils
     @priority = 6
-    
+
     @include_count = @config.callback_include_count
     if (@config.callback_after_arg_check)
       alias :mock_implementation          :mock_implementation_for_callbacks
@@ -54,14 +54,14 @@ class CMockGeneratorPluginCallback
       when 7 then "    return Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')}, Mock.#{func_name}_CallbackCalls++);\n  }\n"
     end
   end
-  
+
   def nothing(function)
     return ""
   end
 
   def mock_interfaces(function)
     func_name = function[:name]
-    "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n" + 
+    "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n" +
     "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
   end
 
@@ -69,7 +69,7 @@ class CMockGeneratorPluginCallback
     "  Mock.#{function[:name]}_CallbackFunctionPointer = NULL;\n" +
     "  Mock.#{function[:name]}_CallbackCalls = 0;\n"
   end
-  
+
   def mock_verify(function)
     func_name = function[:name]
     "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n    Mock.#{func_name}_CallInstance = CMOCK_GUTS_NONE;\n"

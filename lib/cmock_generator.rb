@@ -23,7 +23,7 @@ class CMockGenerator
     @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
     @includes_c_pre_header       = (@config.includes_c_pre_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
     @includes_c_post_header      = (@config.includes_c_post_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
-    
+
     here = File.dirname __FILE__
     unity_path_in_ceedling = "#{here}/../../unity" # path to Unity from within Ceedling
     unity_path_in_cmock = "#{here}/../vendor/unity" # path to Unity from within CMock
@@ -34,7 +34,7 @@ class CMockGenerator
     else
       raise "Failed to find an instance of Unity to pull in type_sanitizer module!"
     end
-    
+
   end
 
   def create_mock(module_name, parsed_stuff)
@@ -211,9 +211,9 @@ class CMockGenerator
       file << "    UNITY_TEST_FAIL(cmock_line, \"Function '#{function[:name]}' called later than expected.\");\n"
       # file << "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, \"Out of order function calls. Function '#{function[:name]}'\");\n"
     end
-    return_type_cast = function[:return][:const?] ? "(const #{function[:return][:type]})" : ''
+    return_type = function[:return][:const?] ? "(const #{function[:return][:type]})" : ((function[:return][:type] =~ /cmock/) ? "(#{function[:return][:type]})" : '')
     file << @plugins.run(:mock_implementation, function)
-    file << "  return #{return_type_cast}cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?])
+    file << "  return #{return_type}cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?])
     file << "}\n\n"
   end
 

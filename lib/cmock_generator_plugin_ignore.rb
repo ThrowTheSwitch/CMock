@@ -39,10 +39,10 @@ class CMockGeneratorPluginIgnore
       lines << "    return;\n  }\n"
     else
       retval = function[:return].merge( { :name => "cmock_call_instance->ReturnVal"} )
-      return_type = function[:return][:const?] ? "const #{function[:return][:type]}" : function[:return][:type]
-      lines << "    if (cmock_call_instance == NULL)\n      return (#{return_type})Mock.#{function[:name]}_FinalReturn;\n"
+      return_type = function[:return][:const?] ? "(const #{function[:return][:type]})" : ((function[:return][:type] =~ /cmock/) ? "(#{function[:return][:type]})" : '')
+      lines << "    if (cmock_call_instance == NULL)\n      return #{return_type}Mock.#{function[:name]}_FinalReturn;\n"
       lines << "  " + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless (retval[:void?])
-      lines << "    return (#{return_type})cmock_call_instance->ReturnVal;\n  }\n"
+      lines << "    return #{return_type}cmock_call_instance->ReturnVal;\n  }\n"
     end
     lines
   end

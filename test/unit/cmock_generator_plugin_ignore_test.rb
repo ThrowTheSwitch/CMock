@@ -66,9 +66,9 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
     expected = ["  if (Mock.Fungus_IgnoreBool)\n",
                 "  {\n",
                 "    if (cmock_call_instance == NULL)\n",
-                "      return (int)Mock.Fungus_FinalReturn;\n",
+                "      return Mock.Fungus_FinalReturn;\n",
                 "    mock_retval_0",
-                "    return (int)cmock_call_instance->ReturnVal;\n",
+                "    return cmock_call_instance->ReturnVal;\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(function)
