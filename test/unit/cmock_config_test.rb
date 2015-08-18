@@ -60,7 +60,7 @@ describe CMockConfig, "Verify CMockConfig Module" do
     # standard defaults
     assert_equal('INT',      config1.treat_as['BOOL_T'])
     assert_equal('HEX32',    config1.treat_as['unsigned int'])
-    assert_equal('PTR',      config1.treat_as['void*'])
+    assert_equal('HEX8_ARRAY',config1.treat_as['void*'])
     assert_equal('STRING',   config1.treat_as['CSTRING'])
     assert_equal('STRING',   config1.treat_as['char*'])
     assert_equal('HEX8',     config1.treat_as['unsigned char'])
@@ -84,7 +84,7 @@ describe CMockConfig, "Verify CMockConfig Module" do
     # standard defaults
     assert_equal('INT',      config2.treat_as['BOOL_T'])
     assert_equal('HEX32',    config2.treat_as['unsigned int'])
-    assert_equal('PTR',      config2.treat_as['void*'])
+    assert_equal('HEX8_ARRAY',config2.treat_as['void*'])
     assert_equal('STRING',   config2.treat_as['CSTRING'])
     assert_equal('STRING',   config2.treat_as['char*'])
     assert_equal('HEX8',     config2.treat_as['unsigned char'])
