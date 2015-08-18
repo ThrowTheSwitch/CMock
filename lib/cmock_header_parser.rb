@@ -139,7 +139,7 @@ class CMockHeaderParser
       return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)   # we're done if we reach void by itself or ...
       arg_array = arg.split
       arg_elements = arg_array - @c_attributes              # split up words and remove known attributes
-      args << { :type   => (arg_type =arg_elements[0..-2].join(' ')),
+      args << { :type   => (arg_type = arg_elements[0..-2].join(' ')),
                 :name   => arg_elements[-1],
                 :ptr?   => divine_ptr(arg_type),
                 :const? => arg_array.include?('const')

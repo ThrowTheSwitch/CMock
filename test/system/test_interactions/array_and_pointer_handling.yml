@@ -21,6 +21,7 @@
     void no_pointers(int a, const char* b);
     int mixed(int a, int* b, int c);
     void potential_packing_problem(short *a);
+    void voidpointerfunc(void* a);
 
   :source:
     :header: |
@@ -29,6 +30,7 @@
       void function_c(void);
       int  function_d(void);
       void function_e(void);
+      void function_f(void);
 
     :code: |
       void function_a(void)
@@ -53,6 +55,10 @@
       void function_e(void) {
         short test_list[] = {-1, -2, -3, -4};
         potential_packing_problem(&test_list[1]);
+      }
+
+      void function_f(void) {
+        voidpointerfunc("hello");
       }
 
   :tests:
@@ -378,6 +384,61 @@
           potential_packing_problem_ExpectWithArray(expect_list, 3);
 
           function_e();
+        }
+
+    - :pass: TRUE
+      :should: 'handle a void pointers as arguments and still be able to use the array plugin'
+      :code: |
+        test()
+        {
+          char* expect_list = "hello";
+          voidpointerfunc_ExpectWithArray(expect_list, 5);
+
+          function_f();
+        }
+
+    - :pass: TRUE
+      :should: 'handle a void pointers as arguments and still be able to use the array plugin (short)'
+      :code: |
+        test()
+        {
+          char* expect_list = "help!";
+          voidpointerfunc_ExpectWithArray(expect_list, 3);
+
+          function_f();
+        }
+
+    - :pass: FALSE
+      :should: 'handle a void pointers as arguments and still be able to use the array plugin (fail)'
+      :code: |
+        test()
+        {
+          char* expect_list = "help!";
+          voidpointerfunc_ExpectWithArray(expect_list, 4);
+
+          function_f();
+        }
+
+    - :pass: TRUE
+      :should: 'handle a void pointer with a standard expectation (pass)'
+      :code: |
+        test()
+        {
+          char* expect_list = "h";
+          voidpointerfunc_Expect(expect_list);
+
+          function_f();
+        }
+
+    - :pass: FALSE
+      :should: 'handle a void pointer with a standard expectation (fail)'
+      :code: |
+        test()
+        {
+          char* expect_list = "g";
+          voidpointerfunc_Expect(expect_list);
+
+          function_f();
         }
 
 

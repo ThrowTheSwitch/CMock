@@ -1313,6 +1313,27 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "extract functions with void pointers" do
+    source = "void* MoreSillySongs(void* stuff);\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "void*",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => true,
+                              :const? => false,
+                              :str    => "void* cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"MoreSillySongs",
+                  :modifier=>"",
+                  :contains_ptr? => true,
+                  :args=>[ {:type=>"void*", :name=>"stuff", :ptr? => true, :const? => false}
+                         ],
+                  :args_string=>"void* stuff",
+                  :args_call=>"stuff"
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
   it "extract functions with strippable confusing junk like gcc attributes" do
     source = "int LaverneAndShirley(int Lenny, int Squiggy) __attribute__((weak)) __attribute__ ((deprecated));\n"
     expected = [{ :var_arg=>nil,
