@@ -1,5 +1,6 @@
 CC ?= gcc
 BUILD_DIR ?= ./build
+SHELL= /bin/bash
 SRC_DIR ?= ./src
 TEST_DIR ?= ./test
 TEST_BUILD_DIR ?= ${BUILD_DIR}/test
@@ -11,7 +12,9 @@ default: all
 
 all: setup test ${BUILD_DIR}/main run
 
-setup:
+setup: ${TEST_MAKEFILE}
+
+${TEST_MAKEFILE}:
 	mkdir -p ${BUILD_DIR}
 	mkdir -p ${OBJ}
 	ruby ../../scripts/create_makefile.rb
