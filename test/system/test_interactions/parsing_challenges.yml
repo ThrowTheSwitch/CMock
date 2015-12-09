@@ -231,7 +231,7 @@
       :code: |
         test()
         {
-          char* blah = "blah";
+          char blah[5] = "blah";
           void_type_craziness3_Expect(blah);
           exercise_type_craziness3(blah);
         }

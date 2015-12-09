@@ -12,6 +12,8 @@ compiler:
     - '-Werror'
     - '-Wcast-qual'
     - '-Wconversion'
+    - '-Wtautological-compare'
+    #- '-Wtautological-pointer-compare'
     - '-Wdisabled-optimization'
     - '-Wformat=2'
     - '-Winit-self'
@@ -36,6 +38,7 @@ compiler:
     - '-Wwrite-strings'
     - '-Wbad-function-cast'
     - '-Wno-missing-prototypes' #we've been lazy about things like setUp and tearDown
+    - '-Wno-invalid-token-paste'
     - '-fms-extensions'
     - '-fno-omit-frame-pointer'
     - '-ffloat-store'

@@ -58,7 +58,8 @@
       }
 
       void function_f(void) {
-        voidpointerfunc("hello");
+        char arg[6] = "hello";
+        voidpointerfunc(arg);
       }
 
   :tests:
@@ -391,7 +392,7 @@
       :code: |
         test()
         {
-          char* expect_list = "hello";
+          char expect_list[6] = "hello";
           voidpointerfunc_ExpectWithArray(expect_list, 5);
 
           function_f();
@@ -402,7 +403,7 @@
       :code: |
         test()
         {
-          char* expect_list = "help!";
+          char expect_list[6] = "help!";
           voidpointerfunc_ExpectWithArray(expect_list, 3);
 
           function_f();
@@ -413,7 +414,7 @@
       :code: |
         test()
         {
-          char* expect_list = "help!";
+          char expect_list[6] = "help!";
           voidpointerfunc_ExpectWithArray(expect_list, 4);
 
           function_f();
@@ -424,7 +425,7 @@
       :code: |
         test()
         {
-          char* expect_list = "h";
+          char expect_list[2] = "h";
           voidpointerfunc_Expect(expect_list);
 
           function_f();
@@ -435,7 +436,7 @@
       :code: |
         test()
         {
-          char* expect_list = "g";
+          char expect_list[2] = "g";
           voidpointerfunc_Expect(expect_list);
 
           function_f();
