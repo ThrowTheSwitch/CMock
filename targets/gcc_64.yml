@@ -11,6 +11,7 @@ compiler:
     - '-Wall'
     - '-Wunused-parameter'
     - '-Wno-address'
+    - '-Wno-invalid-token-paste'
     - '-std=c99'
     - '-pedantic'
   includes:
