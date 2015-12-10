@@ -108,7 +108,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "{\n" +
       "  CMOCK_Pine_CALL_INSTANCE* cmock_call_instance = " +
       "(CMOCK_Pine_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.Pine_CallInstance));\n" +
-      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"tofu ReturnThruPtr called before Expect on 'Pine'.\");\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringPtrPreExp);\n" +
       "  cmock_call_instance->ReturnThruPtr_tofu_Used = 1;\n" +
       "  cmock_call_instance->ReturnThruPtr_tofu_Val = tofu;\n" +
       "  cmock_call_instance->ReturnThruPtr_tofu_Size = cmock_size;\n" +

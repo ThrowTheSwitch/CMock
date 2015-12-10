@@ -35,6 +35,7 @@ class CMockGeneratorPluginIgnore
 
   def mock_implementation_precheck(function)
     lines = "  if (Mock.#{function[:name]}_IgnoreBool)\n  {\n"
+    lines << "    UNITY_CLR_DETAILS();\n"
     if (function[:return][:void?])
       lines << "    return;\n  }\n"
     else

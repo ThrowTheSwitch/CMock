@@ -35,7 +35,7 @@ class CMockGeneratorPluginIgnoreArg
       lines << "{\n"
       lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " +
         "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
-      lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"#{arg_name} IgnoreArg called before Expect on '#{func_name}'.\");\n"
+      lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringIgnPreExp);\n"
       lines << "  cmock_call_instance->IgnoreArg_#{arg_name} = 1;\n"
       lines << "}\n\n"
     end

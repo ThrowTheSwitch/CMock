@@ -29,6 +29,7 @@ compiler:
   defines:
     prefix: '-D'
     items:
+      - CMOCK
       - 'CMOCK_MEM_STATIC'
       - 'CMOCK_MEM_SIZE=1024'
   object_files:

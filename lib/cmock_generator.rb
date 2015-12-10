@@ -199,20 +199,22 @@ class CMockGenerator
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
+    file << "  UNITY_SET_DETAIL(\"#{function[:name]}\");\n"
     file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:name]}_CallInstance);\n"
     file << "  Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
     file << @plugins.run(:mock_implementation_precheck, function)
-    file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function '#{function[:name]}' called more times than expected.\");\n"
+    file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n"
     file << "  cmock_line = cmock_call_instance->LineNumber;\n"
     if (@ordered)
       file << "  if (cmock_call_instance->CallOrder > ++GlobalVerifyOrder)\n"
-      file << "    UNITY_TEST_FAIL(cmock_line, \"Function '#{function[:name]}' called earlier than expected.\");\n"
+      file << "    UNITY_TEST_FAIL(cmock_line, CMockStringCalledEarly);\n"
       file << "  if (cmock_call_instance->CallOrder < GlobalVerifyOrder)\n"
-      file << "    UNITY_TEST_FAIL(cmock_line, \"Function '#{function[:name]}' called later than expected.\");\n"
-      # file << "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, \"Out of order function calls. Function '#{function[:name]}'\");\n"
+      file << "    UNITY_TEST_FAIL(cmock_line, CMockStringCalledLate);\n"
+      # file << "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, CMockStringCallOrder);\n"
     end
     return_type = function[:return][:const?] ? "(const #{function[:return][:type]})" : ((function[:return][:type] =~ /cmock/) ? "(#{function[:return][:type]})" : '')
     file << @plugins.run(:mock_implementation, function)
+    file << "  UNITY_CLR_DETAILS();\n"
     file << "  return #{return_type}cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?])
     file << "}\n\n"
   end

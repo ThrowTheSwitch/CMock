@@ -85,7 +85,7 @@ describe CMockGeneratorPluginIgnoreArg, "Verify CMockGeneratorPluginIgnoreArg Mo
       "{\n" +
       "  CMOCK_Pine_CALL_INSTANCE* cmock_call_instance = " +
       "(CMOCK_Pine_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.Pine_CallInstance));\n" +
-      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"chicken IgnoreArg called before Expect on 'Pine'.\");\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringIgnPreExp);\n" +
       "  cmock_call_instance->IgnoreArg_chicken = 1;\n" +
       "}\n\n" +
 
@@ -93,7 +93,7 @@ describe CMockGeneratorPluginIgnoreArg, "Verify CMockGeneratorPluginIgnoreArg Mo
       "{\n" +
       "  CMOCK_Pine_CALL_INSTANCE* cmock_call_instance = " +
       "(CMOCK_Pine_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.Pine_CallInstance));\n" +
-      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"beef IgnoreArg called before Expect on 'Pine'.\");\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringIgnPreExp);\n" +
       "  cmock_call_instance->IgnoreArg_beef = 1;\n" +
       "}\n\n" +
 
@@ -101,7 +101,7 @@ describe CMockGeneratorPluginIgnoreArg, "Verify CMockGeneratorPluginIgnoreArg Mo
       "{\n" +
       "  CMOCK_Pine_CALL_INSTANCE* cmock_call_instance = " +
       "(CMOCK_Pine_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.Pine_CallInstance));\n" +
-      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"tofu IgnoreArg called before Expect on 'Pine'.\");\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringIgnPreExp);\n" +
       "  cmock_call_instance->IgnoreArg_tofu = 1;\n" +
       "}\n\n"
 

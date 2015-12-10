@@ -440,13 +440,15 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     expected = [ "static int SupaFunction(uint32 sandwiches, const char* named)\n",
                  "{\n",
                  "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
+                 "  UNITY_SET_DETAIL(\"SupaFunction\");\n",
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.SupaFunction_CallInstance);\n",
                  "  Mock.SupaFunction_CallInstance = CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
-                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected.\");\n",
+                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n",
                  "  cmock_line = cmock_call_instance->LineNumber;\n",
                  "  dos",
                  "  tres",
+                 "  UNITY_CLR_DETAILS();\n",
                  "  return cmock_call_instance->ReturnVal;\n",
                  "}\n\n"
                ]
@@ -472,13 +474,15 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     expected = [ "int __stdcall SupaFunction(uint32 sandwiches, corn ...)\n",
                  "{\n",
                  "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
+                 "  UNITY_SET_DETAIL(\"SupaFunction\");\n",
                  "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.SupaFunction_CallInstance);\n",
                  "  Mock.SupaFunction_CallInstance = CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
                  "  uno",
-                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"Function 'SupaFunction' called more times than expected.\");\n",
+                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n",
                  "  cmock_line = cmock_call_instance->LineNumber;\n",
                  "  dos",
                  "  tres",
+                 "  UNITY_CLR_DETAILS();\n",
                  "  return cmock_call_instance->ReturnVal;\n",
                  "}\n\n"
                ]

@@ -45,6 +45,7 @@ compiler:
   defines:
     prefix: '-D'
     items:
+      - CMOCK
   object_files:
     prefix: '-o'
     extension: '.r79'

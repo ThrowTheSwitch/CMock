@@ -52,8 +52,11 @@ describe CMockGeneratorPluginCexception, "Verify CMockGeneratorPluginCexception 
 
   it "add a mock implementation" do
     function = {:name => "Cherry", :args => [], :return => test_return[:void]}
-    expected = "  if (cmock_call_instance->ExceptionToThrow != CEXCEPTION_NONE)\n  {\n" +
-               "    Throw(cmock_call_instance->ExceptionToThrow);\n  }\n"
+    expected = "  if (cmock_call_instance->ExceptionToThrow != CEXCEPTION_NONE)\n" +
+               "  {\n" +
+               "    UNITY_CLR_DETAILS();\n" +
+               "    Throw(cmock_call_instance->ExceptionToThrow);\n" +
+               "  }\n"
     returned = @cmock_generator_plugin_cexception.mock_implementation(function)
     assert_equal(expected, returned)
   end
