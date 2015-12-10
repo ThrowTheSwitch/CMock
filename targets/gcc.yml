@@ -50,6 +50,7 @@ linker:
     destination: *systest_build_path
 
 unsupported:
+  - out_of_memory
   - unity_64bit_support
   - callingconv
 

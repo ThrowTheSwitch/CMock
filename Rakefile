@@ -62,7 +62,9 @@ namespace :test do
 
   desc "Run C Unit Tests"
   task :c => [:prep_system_tests] do
-    build_and_test_c_files
+    unless ($cfg['unsupported'].include? "C")
+      build_and_test_c_files
+    end
   end
 
   desc "Run System Tests"

@@ -5,8 +5,10 @@
 ========================================== */
 
 #include "unity.h"
+#include "cmock.h"
 
-#include "cmock_internals.h"
+//public constants to be used by mocks
+const char* CMockStringOutOfMemory = "CMock has run out of memory. Please allocate more.";
 
 //private variables
 #ifdef CMOCK_MEM_DYNAMIC
