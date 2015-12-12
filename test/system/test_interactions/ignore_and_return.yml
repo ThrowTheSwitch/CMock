@@ -159,4 +159,31 @@
           TEST_ASSERT_EQUAL(110, function(0, 8, 9));
         }
 
+    - :pass: TRUE
+      :should: 'expect call should override ignore call'
+      :code: |
+        test()
+        {
+          bar_Expect(2);
+          foo_IgnoreAndReturn(10);
+          foo_ExpectAndReturn(1, 50);
+          foo_ExpectAndReturn(2, 60);
+          foo_ExpectAndReturn(3, 70);
+          TEST_ASSERT_EQUAL(180, function(1, 2, 3));
+
+          bar_Expect(5);
+          foo_ExpectAndReturn(4, 30);
+          foo_IgnoreAndReturn(80);
+          foo_ExpectAndReturn(5, 10);
+          foo_ExpectAndReturn(6, 20);
+          TEST_ASSERT_EQUAL(60, function(4, 5, 6));
+
+          bar_Expect(8);
+          foo_ExpectAndReturn(7, 70);
+          foo_ExpectAndReturn(8, 20);
+          foo_IgnoreAndReturn(10);
+          foo_ExpectAndReturn(9, 20);
+          TEST_ASSERT_EQUAL(110, function(7, 8, 9));
+        }
+
 ...
