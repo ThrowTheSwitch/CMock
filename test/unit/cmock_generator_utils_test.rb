@@ -205,7 +205,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     function = { :name => 'Pear' }
     arg      = test_arg[:int]
     expected = "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyInt\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyInt);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_INT(cmock_call_instance->Expected_MyInt, MyInt, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
@@ -217,7 +217,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     function = { :name => 'Pear' }
     arg      = test_arg[:int_ptr]
     expected = "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyIntPtr\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyIntPtr);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_PTR(cmock_call_instance->Expected_MyIntPtr, MyIntPtr, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
@@ -227,7 +227,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     function = { :name => 'Pear' }
     arg      = test_arg[:string]
     expected = "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyStr\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyStr);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_STRING(cmock_call_instance->Expected_MyStr, MyStr, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
@@ -239,7 +239,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyMyType\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE), cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
@@ -251,7 +251,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyMyType\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_MY_TYPE(cmock_call_instance->Expected_MyMyType, MyMyType, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
@@ -263,7 +263,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyMyType\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
@@ -276,7 +276,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg      = test_arg[:int]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyInt)\n" +
                "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyInt\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyInt);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_INT(cmock_call_instance->Expected_MyInt, MyInt, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
@@ -289,7 +289,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg      = test_arg[:int_ptr]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyIntPtr)\n" +
                "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyIntPtr\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyIntPtr);\n" +
                "    if (cmock_call_instance->Expected_MyIntPtr == NULL)\n" +
                "      { UNITY_TEST_ASSERT_NULL(MyIntPtr, cmock_line, CMockStringExpNULL); }\n" +
                "    else if (cmock_call_instance->Expected_MyIntPtr_Depth == 0)\n" +
@@ -307,7 +307,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg      = test_arg[:string]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyStr)\n" +
                "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyStr\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyStr);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_STRING(cmock_call_instance->Expected_MyStr, MyStr, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
@@ -320,7 +320,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg      = test_arg[:mytype]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n" +
                "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyMyType\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
                "    if (cmock_call_instance->Expected_MyMyType == NULL)\n" +
                "      { UNITY_TEST_ASSERT_NULL(MyMyType, cmock_line, CMockStringExpNULL); }\n" +
                "    else\n" +
@@ -336,7 +336,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg      = test_arg[:mytype]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n" +
                "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyMyType\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_MY_TYPE(cmock_call_instance->Expected_MyMyType, MyMyType, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
@@ -349,7 +349,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg      = test_arg[:mytype_ptr]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyMyTypePtr)\n" +
                "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyMyTypePtr\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyTypePtr);\n" +
                "    if (cmock_call_instance->Expected_MyMyTypePtr == NULL)\n" +
                "      { UNITY_TEST_ASSERT_NULL(MyMyTypePtr, cmock_line, CMockStringExpNULL); }\n" +
                "    else if (cmock_call_instance->Expected_MyMyTypePtr_Depth == 0)\n" +
@@ -367,7 +367,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg      = test_arg[:mytype]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n" +
                "  {\n" +
-               "    UNITY_SET_DETAILS(\"Pear\",\"MyMyType\");\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
                "    UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY(&cmock_call_instance->Expected_MyMyType, &MyMyType, 1, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false

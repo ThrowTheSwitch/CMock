@@ -121,7 +121,7 @@ class CMockGeneratorUtils
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
-    lines << "    UNITY_SET_DETAILS(\"#{function[:name]}\",\"#{arg_name}\");\n"
+    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:name]},CMockString_#{arg_name});\n"
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
@@ -157,7 +157,7 @@ class CMockGeneratorUtils
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
-    lines << "    UNITY_SET_DETAILS(\"#{function[:name]}\",\"#{arg_name}\");\n"
+    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:name]},CMockString_#{arg_name});\n"
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
@@ -193,7 +193,7 @@ class CMockGeneratorUtils
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
-    lines << "    UNITY_SET_DETAILS(\"#{function[:name]}\",\"#{arg_name}\");\n"
+    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:name]},CMockString_#{arg_name});\n"
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')

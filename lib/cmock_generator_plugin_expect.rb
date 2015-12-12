@@ -81,7 +81,7 @@ class CMockGeneratorPluginExpect
 
   def mock_verify(function)
     func_name = function[:name]
-    "  UNITY_SET_DETAIL(\"#{function[:name]}\");\n" +
+    "  UNITY_SET_DETAIL(CMockString_#{function[:name]});\n" +
     "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == Mock.#{func_name}_CallInstance, cmock_line, CMockStringCalledLess);\n"
   end
 
