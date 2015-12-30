@@ -30,16 +30,20 @@
     :header: |
       #include "CException.h"
       void function_a(void);
-      void function_b(void);
-      void function_c(void);
-      int function_d(void);
-      void function_e(void);
+      int function_b(void);
 
     :code: |
       void function_a(void)
       {
         foo(bar());
         no_args();
+      }
+
+      int function_b(void)
+      {
+        POINT_T pt = { 1, 2 };
+        foo(&pt);
+        return (pt.x + pt.y);
       }
 
   :tests:
@@ -267,6 +271,38 @@
           function_a();
 
           TEST_ASSERT_EQUAL_INT_MESSAGE(1,2,"CustomFail");
+        }
+
+    - :pass: FALSE
+      :should: 'not contain mock details in failed assertion after mock which threw a CException'
+      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :code: |
+        test()
+        {
+          CEXCEPTION_T e;
+          bar_ExpectAndThrow(0x12);
+
+          Try {
+            function_a();
+          }
+          Catch(e) {}
+
+          TEST_ASSERT_EQUAL_INT_MESSAGE(1,2,"CustomFail");
+        }
+
+    - :pass: FALSE
+      :should: 'not contain mock details in failed assertion after mock which used a return thru ptr'
+      #:verify_error: 'FAIL: Expected 3 Was 7. CustomFail' #TODO: put back in once ReturnThruPtr fixed
+      :code: |
+        test()
+        {
+          POINT_T pt1 = { 1, 2 };
+          POINT_T pt2 = { 3, 4 };
+
+          foo_Expect(&pt1);
+          foo_ReturnThruPtr_a(&pt2);
+
+          TEST_ASSERT_EQUAL_INT(3, function_b());
         }
 
 ...

@@ -4,7 +4,7 @@ class CMockGeneratorPluginReturnThruPtr
 
   def initialize(config, utils)
     @utils        = utils
-    @priority     = 1
+    @priority     = 1 #TODO: it's 1 to come before ignore_arg returns... but should be after expects otherwise (like 9)
   end
 
   def instance_typedefs(function)
