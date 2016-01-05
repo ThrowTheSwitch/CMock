@@ -78,7 +78,7 @@ if ($0 == __FILE__)
   ARGV.each do |arg|
     if (arg =~ /^-o\"?([a-zA-Z0-9._\\\/:\s]+)\"?/)
       options.merge! CMockConfig.load_config_file_from_yaml( arg.gsub(/^-o/,'') )
-    elsif (arg =~ /^--([a-zA-Z0-9._\\\/:\s]+)=\"?([a-zA-Z0-9._\\\/:\s\;]+)\"?/)
+    elsif (arg =~ /^--([a-zA-Z0-9._\\\/:\s]+)=\"?([a-zA-Z0-9._\-\\\/:\s\;]+)\"?/)
       options = option_maker(options, $1, $2)
     else
       filelist << arg
