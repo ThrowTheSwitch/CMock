@@ -7,6 +7,8 @@
 #ifndef CMOCK_FRAMEWORK_H
 #define CMOCK_FRAMEWORK_H
 
+#include "cmock_internals.h"
+
 //should be big enough to index full range of CMOCK_MEM_MAX
 #ifndef CMOCK_MEM_INDEX_TYPE
 #define CMOCK_MEM_INDEX_TYPE  unsigned int

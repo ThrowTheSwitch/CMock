@@ -5,7 +5,7 @@
 ========================================== */
 
 #include "unity.h"
-#include "cmock_internals.h"
+#include "cmock.h"
 
 #define TEST_MEM_INDEX_SIZE  (sizeof(CMOCK_MEM_INDEX_TYPE))
 

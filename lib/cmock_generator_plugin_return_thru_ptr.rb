@@ -4,7 +4,7 @@ class CMockGeneratorPluginReturnThruPtr
 
   def initialize(config, utils)
     @utils        = utils
-    @priority     = 1
+    @priority     = 1 #TODO: it's 1 to come before ignore_arg returns... but should be after expects otherwise (like 9)
   end
 
   def instance_typedefs(function)
@@ -46,7 +46,7 @@ class CMockGeneratorPluginReturnThruPtr
         lines << "{\n"
         lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " +
           "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
-        lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, \"#{arg_name} ReturnThruPtr called before Expect on '#{func_name}'.\");\n"
+        lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringPtrPreExp);\n"
         lines << "  cmock_call_instance->ReturnThruPtr_#{arg_name}_Used = 1;\n"
         lines << "  cmock_call_instance->ReturnThruPtr_#{arg_name}_Val = #{arg_name};\n"
         lines << "  cmock_call_instance->ReturnThruPtr_#{arg_name}_Size = cmock_size;\n"

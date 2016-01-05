@@ -142,6 +142,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
                 "{\n",
                 "mock_retval_0 ",
                 "mock_retval_1 ",
+                "  UNITY_CLR_DETAILS();\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_expect.mock_interfaces(function)
@@ -158,6 +159,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
                 "mock_retval_0 ",
                 "mock_retval_1 ",
                 "mock_retval_2",
+                "  UNITY_CLR_DETAILS();\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_expect.mock_interfaces(function)
@@ -174,6 +176,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
                 "mock_retval_0 ",
                 "mock_retval_1 ",
                 "mock_retval_2",
+                "  UNITY_CLR_DETAILS();\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_expect.mock_interfaces(function)
@@ -188,6 +191,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
                 "{\n",
                 "mock_retval_0 ",
                 "mock_retval_1 ",
+                "  UNITY_CLR_DETAILS();\n",
                 "}\n\n"
                ].join
     @cmock_generator_plugin_expect.ordered = true
@@ -197,7 +201,8 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
 
   it "add mock verify lines" do
     function = {:name => "Banana" }
-    expected = "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == Mock.Banana_CallInstance, cmock_line, \"Function 'Banana' called less times than expected.\");\n"
+    expected = "  UNITY_SET_DETAIL(CMockString_Banana);\n" +
+               "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == Mock.Banana_CallInstance, cmock_line, CMockStringCalledLess);\n"
     returned = @cmock_generator_plugin_expect.mock_verify(function)
     assert_equal(expected, returned)
   end

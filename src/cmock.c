@@ -5,8 +5,19 @@
 ========================================== */
 
 #include "unity.h"
+#include "cmock.h"
 
-#include "cmock_internals.h"
+//public constants to be used by mocks
+const char* CMockStringOutOfMemory = "CMock has run out of memory. Please allocate more.";
+const char* CMockStringCalledMore  = "Called more times than expected.";
+const char* CMockStringCalledLess  = "Called less times than expected.";
+const char* CMockStringCalledEarly = "Called earlier than expected.";
+const char* CMockStringCalledLate  = "Called later than expected.";
+const char* CMockStringCallOrder   = "Called out of order.";
+const char* CMockStringIgnPreExp   = "IgnoreArg called before Expect.";
+const char* CMockStringPtrPreExp   = "ReturnThruPtr called before Expect.";
+const char* CMockStringExpNULL     = "Expected NULL.";
+const char* CMockStringMismatch    = "Function called with unexpected argument value.";
 
 //private variables
 #ifdef CMOCK_MEM_DYNAMIC

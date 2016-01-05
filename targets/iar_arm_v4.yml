@@ -15,7 +15,7 @@ compiler:
     - --no_code_motion
     - --no_tbaa
     - --no_clustering
-    - --no_scheduling 
+    - --no_scheduling
     - --debug
     - --cpu_mode thumb
     - --endian little
@@ -46,11 +46,12 @@ compiler:
   defines:
     prefix: '-D'
     items:
+      - CMOCK
   object_files:
     prefix: '-o'
     extension: '.r79'
     destination: *systest_build_path
-    
+
 linker:
   path: [*tools_root, 'common\bin\xlink.exe']
   options:
@@ -80,7 +81,7 @@ linker:
     prefix: '-o'
     extension: '.d79'
     destination: *systest_build_path
-    
+
 simulator:
   path: [*tools_root, 'common\bin\CSpyBat.exe']
   pre_support:
@@ -100,6 +101,7 @@ simulator:
     - sim
 
 unsupported:
+  - out_of_memory
   - nonstandard_parsed_stuff_1
   - const
   - callingconv

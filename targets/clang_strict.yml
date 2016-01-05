@@ -61,6 +61,7 @@ compiler:
   defines:
     prefix: '-D'
     items:
+      - CMOCK
       - 'UNITY_SUPPORT_64'
       - 'UNITY_POINTER_WIDTH=64'
   object_files:
@@ -83,6 +84,7 @@ linker:
     destination: *systest_build_path
 
 unsupported:
+  - out_of_memory
   - callingconv
 
 colour: true

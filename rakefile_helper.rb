@@ -264,7 +264,7 @@ module RakefileHelpers
         # some tests have additional requirements to check for (checking the actual output message)
         if (test[:verify_error]) and not (test_results[index] =~ /test#{index+1}:.*#{test[:verify_error]}/)
           total_failures += 1
-          failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:should have output matching '#{test[:verify_error]}'"
+          failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:should have output matching '#{test[:verify_error]}' but was '#{test_results[index]}'"
         end
       end
     end

@@ -2,13 +2,13 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
 
 class CMockGeneratorPluginCexception
 
   attr_reader :priority
   attr_reader :config, :utils
-  
+
   def initialize(config, utils)
     @config = config
     @utils = utils
@@ -22,7 +22,7 @@ class CMockGeneratorPluginCexception
   def instance_typedefs(function)
     "  CEXCEPTION_T ExceptionToThrow;\n"
   end
-  
+
   def mock_function_declarations(function)
     if (function[:args_string] == "void")
       return "#define #{function[:name]}_ExpectAndThrow(cmock_to_throw) #{function[:name]}_CMockExpectAndThrow(__LINE__, cmock_to_throw)\n" +
@@ -34,7 +34,8 @@ class CMockGeneratorPluginCexception
   end
 
   def mock_implementation(function)
-    "  if (cmock_call_instance->ExceptionToThrow != CEXCEPTION_NONE)\n  {\n" + 
+    "  if (cmock_call_instance->ExceptionToThrow != CEXCEPTION_NONE)\n  {\n" +
+    "    UNITY_CLR_DETAILS();\n" +
     "    Throw(cmock_call_instance->ExceptionToThrow);\n  }\n"
   end
 

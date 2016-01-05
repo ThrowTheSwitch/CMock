@@ -7,7 +7,17 @@
 #ifndef CMOCK_FRAMEWORK_INTERNALS_H
 #define CMOCK_FRAMEWORK_INTERNALS_H
 
-#include "cmock.h"
+//These are constants that the generated mocks have access to
+extern const char* CMockStringOutOfMemory;
+extern const char* CMockStringCalledMore;
+extern const char* CMockStringCalledLess;
+extern const char* CMockStringCalledEarly;
+extern const char* CMockStringCalledLate;
+extern const char* CMockStringCallOrder;
+extern const char* CMockStringIgnPreExp;
+extern const char* CMockStringPtrPreExp;
+extern const char* CMockStringExpNULL;
+extern const char* CMockStringMismatch;
 
 //define CMOCK_MEM_DYNAMIC to grab memory as needed with malloc
 //when you do that, CMOCK_MEM_SIZE is used for incremental size instead of total
