@@ -16,6 +16,12 @@ class CMockGeneratorPluginExpect
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
     @priority     = 5
+
+    if (@config.plugins.include? :expect_any_args)
+      alias :mock_implementation :mock_implementation_might_check_args
+    else
+      alias :mock_implementation :mock_implementation_always_check_args
+    end
   end
 
   def instance_typedefs(function)
@@ -48,11 +54,21 @@ class CMockGeneratorPluginExpect
     end
   end
 
-  def mock_implementation(function)
+  def mock_implementation_always_check_args(function)
     lines = ""
     function[:args].each do |arg|
       lines << @utils.code_verify_an_arg_expectation(function, arg)
     end
+    lines
+  end
+
+  def mock_implementation_might_check_args(function)
+    return "" if (function[:args].empty?)
+    lines = "  if (cmock_call_instance->IgnoreMode != CMOCK_ARG_NONE)\n  {\n"
+    function[:args].each do |arg|
+      lines << @utils.code_verify_an_arg_expectation(function, arg)
+    end
+    lines << "\n  }\n"
     lines
   end
 

@@ -79,19 +79,87 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     assert_equal(expected, returned)
   end
 
-  it "add mock function implementation for functions of style 'void func(void)'" do
+  it "add mock function implementation for functions with no arg check and of style 'void func(void)'" do
     function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:void]}
     expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
                 "    Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
-                "    return;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_after_arg_check(function)
     assert_equal(expected, returned)
   end
 
-  it "add mock function implementation for functions of style 'void func(void)' when count turned off" do
+  it "add mock function implementation for functions with no arg check and of style 'void func(void)' when count turned off" do
+    function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:void]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                "  {\n",
+                "    Mock.Apple_CallbackFunctionPointer();\n",
+                "  }\n"
+               ].join
+    @cmock_generator_plugin_callback.include_count = false
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_after_arg_check(function)
+    assert_equal(expected, returned)
+  end
+
+  it "add mock function implementation for functions with no arg check and of style 'int func(void)'" do
+    function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:int]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                "  {\n",
+                "    cmock_call_instance->ReturnVal = Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_after_arg_check(function)
+    assert_equal(expected, returned)
+  end
+
+  it "add mock function implementation for functions with no arg check and of style 'void func(int* steak, uint8_t flag)'" do
+    function = {:name => "Apple",
+                :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
+                  { :type => 'uint8_t', :name => 'flag', :ptr? => false} ],
+                :args_string => "int* steak, uint8_t flag",
+                :return=> test_return[:void]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                "  {\n",
+                "    Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_after_arg_check(function)
+    assert_equal(expected, returned)
+  end
+
+  it "add mock function implementation for functions with no arg check and of style 'void func(int* steak, uint8_t flag)' when count turned off" do
+    function = {:name => "Apple",
+                :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
+                  { :type => 'uint8_t', :name => 'flag', :ptr? => false} ],
+                :args_string => "int* steak, uint8_t flag",
+                :return=> test_return[:void]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                "  {\n",
+                "    Mock.Apple_CallbackFunctionPointer(steak, flag);\n",
+                "  }\n"
+               ].join
+    @cmock_generator_plugin_callback.include_count = false
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_after_arg_check(function)
+    assert_equal(expected, returned)
+  end
+
+  it "add mock function implementation for functions with no arg check and of style 'int16_t func(int* steak, uint8_t flag)'" do
+    function = {:name => "Apple",
+                :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
+                  { :type => 'uint8_t', :name => 'flag', :ptr? => false} ],
+                :args_string => "int* steak, uint8_t flag",
+                :return => test_return[:int]}
+    expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
+                "  {\n",
+                "    cmock_call_instance->ReturnVal = Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
+                "  }\n"
+               ].join
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_after_arg_check(function)
+    assert_equal(expected, returned)
+  end
+
+  it "add mock function implementation for functions without arg check and of style 'void func(void)' when count turned off" do
     function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:void]}
     expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
@@ -100,22 +168,22 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "  }\n"
                ].join
     @cmock_generator_plugin_callback.include_count = false
-    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_without_arg_check(function)
     assert_equal(expected, returned)
   end
 
-  it "add mock function implementation for functions of style 'int func(void)'" do
+  it "add mock function implementation for functions without arg check and of style 'int func(void)'" do
     function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:int]}
     expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
                 "    return Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_without_arg_check(function)
     assert_equal(expected, returned)
   end
 
-  it "add mock function implementation for functions of style 'void func(int* steak, uint8_t flag)'" do
+  it "add mock function implementation for functions without arg check and of style 'void func(int* steak, uint8_t flag)'" do
     function = {:name => "Apple",
                 :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
                   { :type => 'uint8_t', :name => 'flag', :ptr? => false} ],
@@ -127,11 +195,11 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "    return;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_without_arg_check(function)
     assert_equal(expected, returned)
   end
 
-  it "add mock function implementation for functions of style 'void func(int* steak, uint8_t flag)' when count turned off" do
+  it "add mock function implementation for functions without arg check and of style 'void func(int* steak, uint8_t flag)' when count turned off" do
     function = {:name => "Apple",
                 :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
                   { :type => 'uint8_t', :name => 'flag', :ptr? => false} ],
@@ -144,11 +212,11 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "  }\n"
                ].join
     @cmock_generator_plugin_callback.include_count = false
-    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_without_arg_check(function)
     assert_equal(expected, returned)
   end
 
-  it "add mock function implementation for functions of style 'int16_t func(int* steak, uint8_t flag)'" do
+  it "add mock function implementation for functions without arg check and of style 'int16_t func(int* steak, uint8_t flag)'" do
     function = {:name => "Apple",
                 :args => [ { :type => 'int*', :name => 'steak', :ptr? => true},
                   { :type => 'uint8_t', :name => 'flag', :ptr? => false} ],
@@ -159,7 +227,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "    return Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
+    returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_without_arg_check(function)
     assert_equal(expected, returned)
   end
 

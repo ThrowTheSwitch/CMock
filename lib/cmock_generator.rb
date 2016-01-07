@@ -219,7 +219,6 @@ class CMockGenerator
       file << "    UNITY_TEST_FAIL(cmock_line, CMockStringCalledEarly);\n"
       file << "  if (cmock_call_instance->CallOrder < GlobalVerifyOrder)\n"
       file << "    UNITY_TEST_FAIL(cmock_line, CMockStringCalledLate);\n"
-      # file << "  UNITY_TEST_ASSERT((cmock_call_instance->CallOrder == ++GlobalVerifyOrder), cmock_line, CMockStringCallOrder);\n"
     end
     return_type = function[:return][:const?] ? "(const #{function[:return][:type]})" : ((function[:return][:type] =~ /cmock/) ? "(#{function[:return][:type]})" : '')
     file << @plugins.run(:mock_implementation, function)

@@ -38,18 +38,18 @@ class CMockGeneratorPluginExpectAnyArgs
     end
   end
 
-  def mock_implementation(function)
-    lines = "  if (cmock_call_instance->IgnoreMode == CMOCK_ARG_NONE)\n  {\n"
-    if (function[:return][:void?])
-      lines << "    return;\n  }\n"
-    else
-      retval = function[:return].merge( { :name => "cmock_call_instance->ReturnVal"} )
-      lines << "  " + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless (retval[:void?])
-      return_type = function[:return][:const?] ? "(const #{function[:return][:type]})" : ((function[:return][:type] =~ /cmock/) ? "(#{function[:return][:type]})" : '')
-      lines << "    return #{return_type}cmock_call_instance->ReturnVal;\n  }\n"
-    end
-    lines
-  end
+  # def mock_implementation(function)
+  #   lines = "  if (cmock_call_instance->IgnoreMode == CMOCK_ARG_NONE)\n  {\n"
+  #   if (function[:return][:void?])
+  #     lines << "    return;\n  }\n"
+  #   else
+  #     retval = function[:return].merge( { :name => "cmock_call_instance->ReturnVal"} )
+  #     lines << "  " + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless (retval[:void?])
+  #     return_type = function[:return][:const?] ? "(const #{function[:return][:type]})" : ((function[:return][:type] =~ /cmock/) ? "(#{function[:return][:type]})" : '')
+  #     lines << "    return #{return_type}cmock_call_instance->ReturnVal;\n  }\n"
+  #   end
+  #   lines
+  # end
 
   def mock_interfaces(function)
     lines = ""

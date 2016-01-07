@@ -7,26 +7,19 @@
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require 'cmock_generator_plugin_expect'
 
-describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" do
+describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module with Global Ordering" do
 
   before do
     create_mocks :config, :utils
 
     @config = create_stub(
       :when_ptr => :compare_data,
-      :enforce_strict_ordering => false,
-      :respond_to? => true )
+      :enforce_strict_ordering => true,
+      :respond_to? => true,
+      :plugins => [ :expect, :expect_any_args ] )
 
     @utils.expect :helpers, {}
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)
-
-    @config_strict = create_stub(
-      :when_ptr => :compare_data,
-      :enforce_strict_ordering => true,
-      :respond_to? => true )
-
-    @utils.expect :helpers, {}
-    @cmock_generator_plugin_expect_strict = CMockGeneratorPluginExpect.new(@config_strict, @utils)
   end
 
   after do
@@ -41,38 +34,31 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
     assert(!@cmock_generator_plugin_expect.respond_to?(:include_files))
   end
 
-  it "add to typedef structure mock needs of functions of style 'void func(void)'" do
+  it "add to typedef structure mock needs of functions of style 'void func(void)' and global ordering" do
     function = {:name => "Oak", :args => [], :return => test_return[:void]}
-    expected = ""
+    expected = "  int CallOrder;\n"
     returned = @cmock_generator_plugin_expect.instance_typedefs(function)
     assert_equal(expected, returned)
   end
 
   it "add to typedef structure mock needs of functions of style 'int func(void)'" do
     function = {:name => "Elm", :args => [], :return => test_return[:int]}
-    expected = "  int ReturnVal;\n"
+    expected = "  int ReturnVal;\n  int CallOrder;\n"
     returned = @cmock_generator_plugin_expect.instance_typedefs(function)
     assert_equal(expected, returned)
   end
 
   it "add to typedef structure mock needs of functions of style 'void func(int chicken, char* pork)'" do
     function = {:name => "Cedar", :args => [{ :name => "chicken", :type => "int"}, { :name => "pork", :type => "char*"}], :return => test_return[:void]}
-    expected = "  int Expected_chicken;\n  char* Expected_pork;\n"
+    expected = "  int CallOrder;\n  int Expected_chicken;\n  char* Expected_pork;\n"
     returned = @cmock_generator_plugin_expect.instance_typedefs(function)
     assert_equal(expected, returned)
   end
 
   it "add to typedef structure mock needs of functions of style 'int func(float beef)'" do
     function = {:name => "Birch", :args => [{ :name => "beef", :type => "float"}], :return => test_return[:int]}
-    expected = "  int ReturnVal;\n  float Expected_beef;\n"
+    expected = "  int ReturnVal;\n  int CallOrder;\n  float Expected_beef;\n"
     returned = @cmock_generator_plugin_expect.instance_typedefs(function)
-    assert_equal(expected, returned)
-  end
-
-  it "add to typedef structure mock needs of functions of style 'void func(void)' and global ordering" do
-    function = {:name => "Oak", :args => [], :return => test_return[:void]}
-    expected = "  int CallOrder;\n"
-    returned = @cmock_generator_plugin_expect_strict.instance_typedefs(function)
     assert_equal(expected, returned)
   end
 
@@ -112,7 +98,10 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
 
     @utils.expect :code_verify_an_arg_expectation, " mocked_retval_1", [function, function[:args][0]]
     @utils.expect :code_verify_an_arg_expectation, " mocked_retval_2", [function, function[:args][1]]
-    expected = " mocked_retval_1 mocked_retval_2"
+    expected = "  if (cmock_call_instance->IgnoreMode != CMOCK_ARG_NONE)\n" +
+               "  {\n" +
+               " mocked_retval_1 mocked_retval_2\n" +
+               "  }\n"
     returned = @cmock_generator_plugin_expect.mock_implementation(function)
     assert_equal(expected, returned)
   end
@@ -128,9 +117,12 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module" 
   it "add mock function implementation for functions of style 'void func(int worm)' and strict ordering" do
     function = {:name => "Apple", :args => [{ :type => "int", :name => "worm" }], :return => test_return[:void]}
     @utils.expect :code_verify_an_arg_expectation, "mocked_retval_0", [function, function[:args][0]]
-    expected = "mocked_retval_0"
+    expected = "  if (cmock_call_instance->IgnoreMode != CMOCK_ARG_NONE)\n" +
+               "  {\n" +
+               "mocked_retval_0\n" +
+               "  }\n"
     @cmock_generator_plugin_expect.ordered = true
-    returned = @cmock_generator_plugin_expect_strict.mock_implementation(function)
+    returned = @cmock_generator_plugin_expect.mock_implementation(function)
     assert_equal(expected, returned)
   end
 

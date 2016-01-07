@@ -292,7 +292,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after mock which used a return thru ptr'
-      #:verify_error: 'FAIL: Expected 3 Was 7. CustomFail' #TODO: put back in once ReturnThruPtr fixed
+      :verify_error: 'FAIL: Expected 3 Was 7. CustomFail'
       :code: |
         test()
         {
@@ -302,7 +302,7 @@
           foo_Expect(&pt1);
           foo_ReturnThruPtr_a(&pt2);
 
-          TEST_ASSERT_EQUAL_INT(3, function_b());
+          TEST_ASSERT_EQUAL_INT_MESSAGE(3, function_b(), "CustomFail");
         }
 
 ...

@@ -41,29 +41,8 @@ describe CMockGeneratorPluginExpectAnyArgs, "Verify CMockGeneratorPluginExpectAn
     assert_equal(expected, returned)
   end
 
-  it "add required code to implementation with void function" do
-    function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
-    expected = ["  if (cmock_call_instance->IgnoreMode == CMOCK_ARG_NONE)\n",
-                "  {\n",
-                "    return;\n",
-                "  }\n"
-               ].join
-    returned = @cmock_generator_plugin_expect_any_args.mock_implementation(function)
-    assert_equal(expected, returned)
-  end
-
-  it "add required code to implementation with return functions" do
-    function = {:name => "Fungus", :args_string => "void", :return => test_return[:int]}
-    retval = test_return[:int].merge({ :name => "cmock_call_instance->ReturnVal"})
-    @utils.expect :code_assign_argument_quickly, '  mock_retval_0', ["Mock.Fungus_FinalReturn", retval]
-    expected = ["  if (cmock_call_instance->IgnoreMode == CMOCK_ARG_NONE)\n",
-                "  {\n",
-                "    mock_retval_0",
-                "    return cmock_call_instance->ReturnVal;\n",
-                "  }\n"
-               ].join
-    returned = @cmock_generator_plugin_expect_any_args.mock_implementation(function)
-    assert_equal(expected, returned)
+  it "should not respond to implementation requests" do
+    assert(!@cmock_generator_plugin_expect_any_args.respond_to?(:mock_implementation))
   end
 
   it "add a new mock interface for ignoring when function had no return value" do

@@ -57,7 +57,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
   end
 
   it "have set up internal priority correctly on init" do
-    assert_equal(1,       @cmock_generator_plugin_return_thru_ptr.priority)
+    assert_equal(9, @cmock_generator_plugin_return_thru_ptr.priority)
   end
 
   it "not include any additional include files" do

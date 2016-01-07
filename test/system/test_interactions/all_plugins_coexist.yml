@@ -39,6 +39,7 @@
       void function_c(void);
       int function_d(void);
       void function_e(void);
+      int function_f(void);
 
     :code: |
       void function_a(void)
@@ -69,12 +70,23 @@
         foos("Oranges");
       }
 
+      int function_f(void) {
+        int a = 1;
+        int b = 2;
+        int c;
+        POINT_T* pt = bar();
+        c = pt->x;
+        c = mixed(a, &b, c);
+        return b + c;
+      }
+
   :tests:
     :common: |
       #include "CException.h"
       void setUp(void) {}
       void tearDown(void) {}
       void my_foo_callback(POINT_T* a) { TEST_ASSERT_EQUAL_INT(2, a->x); }
+      int  my_mixed_callback(int a, int* b, int c) { return a + *b + c; }
 
     :units:
     - :pass: TRUE
@@ -384,6 +396,64 @@
           foo_StubWithCallback((CMOCK_foo_CALLBACK)my_foo_callback);
 
           function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'that a callback return value overrides the one from ExpectAndReturn'
+      :code: |
+        test()
+        {
+          int b = 2;
+          POINT_T pt1 = {3, 4};
+          bar_ExpectAndReturn(&pt1);
+          mixed_StubWithCallback((CMOCK_mixed_CALLBACK)my_mixed_callback);
+          mixed_ExpectAndReturn(1,&b,3,100);
+
+          TEST_ASSERT_EQUAL(8, function_f());
+        }
+
+    - :pass: TRUE
+      :should: 'that a callback return value overrides the one from ExpectAndReturn AND ReturnThruPtr still works'
+      :code: |
+        test()
+        {
+          int b_in = 2;
+          int b_out = 3;
+          POINT_T pt1 = {3, 4};
+          bar_ExpectAndReturn(&pt1);
+          mixed_StubWithCallback((CMOCK_mixed_CALLBACK)my_mixed_callback);
+          mixed_ExpectAndReturn(1,&b_in,3,100);
+          mixed_ReturnThruPtr_b(&b_out);
+
+          TEST_ASSERT_EQUAL(9, function_f()); // (a=1, bin=2, c=pt.x=3, bout=3, sum=9)
+        }
+
+    - :pass: TRUE
+      :should: 'that a callback return value overrides the one from ExpectAnyArgs'
+      :code: |
+        test()
+        {
+          POINT_T pt1 = {5, 4};
+          bar_ExpectAndReturn(&pt1);
+          mixed_StubWithCallback((CMOCK_mixed_CALLBACK)my_mixed_callback);
+          mixed_ExpectAnyArgsAndReturn(100);
+
+          TEST_ASSERT_EQUAL(10, function_f()); // (a=1, bin=2, c=pt.x=5, bout=2, sum=10)
+        }
+
+    - :pass: TRUE
+      :should: 'that a callback return value overrides the one from ExpectAnyArgs AND ReturnThruPtr still works'
+      :code: |
+        test()
+        {
+          int b_out = 3;
+          POINT_T pt1 = {5, 4};
+          bar_ExpectAndReturn(&pt1);
+          mixed_StubWithCallback((CMOCK_mixed_CALLBACK)my_mixed_callback);
+          mixed_ExpectAnyArgsAndReturn(100);
+          mixed_ReturnThruPtr_b(&b_out);
+
+          TEST_ASSERT_EQUAL(11, function_f()); // (a=1, bin=2, c=pt.x=5, bout=3, sum=11)
         }
 
 ...
