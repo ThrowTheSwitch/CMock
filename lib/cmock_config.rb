@@ -11,6 +11,7 @@ class CMockConfig
     :framework                   => :unity,
     :mock_path                   => 'mocks',
     :mock_prefix                 => 'Mock',
+    :mock_suffix                 => '',
     :subdir                      => nil,
     :plugins                     => [],
     :strippables                 => ['(?:__attribute__\s*\(+.*?\)+)'],
