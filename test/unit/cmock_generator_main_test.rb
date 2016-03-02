@@ -43,6 +43,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
     #no strict handling
     @config.expect :mock_prefix, "Mock"
+    @config.expect :mock_suffix, ""
     @config.expect :enforce_strict_ordering, nil
     @config.expect :framework, :unity
     @config.expect :includes, ["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"]
@@ -58,6 +59,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
     #strict handling
     @config.expect :mock_prefix, "Mock"
+    @config.expect :mock_suffix, ""
     @config.expect :enforce_strict_ordering, true
     @config.expect :framework, :unity
     @config.expect :includes, nil
@@ -77,6 +79,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
   it "create the top of a header file with optional include files from config and include file from plugin" do
     @config.expect :mock_prefix, "Mock"
+    @config.expect :mock_suffix, ""
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
@@ -112,6 +115,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
   it "handle dashes and spaces in the module name" do
     #no strict handling
     @config.expect :mock_prefix, "Mock"
+    @config.expect :mock_suffix, ""
     @config.expect :enforce_strict_ordering, nil
     @config.expect :framework, :unity
     @config.expect :includes, ["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"]
@@ -125,6 +129,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @cmock_generator2.clean_mock_name = "MockPout_Pout_Fish"
 
     @config.expect :mock_prefix, "Mock"
+    @config.expect :mock_suffix, ""
     orig_filename = "Pout-Pout Fish.h"
     define_name = "MOCKPOUT_POUT_FISH_H"
     mock_name = "MockPout_Pout_Fish"
@@ -159,6 +164,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
   it "create the top of a header file with optional include files from config" do
     @config.expect :mock_prefix, "Mock"
+    @config.expect :mock_suffix, ""
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
@@ -192,6 +198,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
   it "create the top of a header file with include file from plugin" do
     @config.expect :mock_prefix, "Mock"
+    @config.expect :mock_suffix, ""
     orig_filename = "PoutPoutFish.h"
     define_name = "MOCKPOUTPOUTFISH_H"
     mock_name = "MockPoutPoutFish"
