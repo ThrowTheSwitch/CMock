@@ -284,6 +284,9 @@ Defined in the yaml file, they look more like this:
   The prefix to append to your mock files. Defaults to “Mock”, so a file
   “USART.h” will get a mock called “MockUSART.c”
 
+* `:mock_suffix`:
+  The suffix to append to your mock files. Defaults to “”.
+
 * `:subdir`:
   Relative subdir for your mocks.  Set this to e.g. "sys" in order to
   create mock for `sys/types.h` in `:mock_path`/sys/
