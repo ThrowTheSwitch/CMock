@@ -858,7 +858,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                           {:type=>"int", :name=>"int_param", :ptr? => false, :const? => false},
                           {:type=>"int", :name=>"integer", :ptr? => false, :const? => false},
                           {:type=>"char", :name=>"character", :ptr? => false, :const? => false},
-                          {:type=>"int*", :name=>"constant", :ptr? => true, :const? => true}
+                          {:type=>"int*", :name=>"constant", :ptr? => true, :const? => false}
                         ],
                  :args_string=>"const unsigned int const_param, int int_param, int integer, char character, int* const constant",
                  :args_call=>"const_param, int_param, integer, character, constant" }]
