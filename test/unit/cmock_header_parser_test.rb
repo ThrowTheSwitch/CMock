@@ -150,6 +150,18 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.import_source(source))
   end
 
+  it "strip out ifdefs over multiple lines" do
+    source =
+      "#if defined(__TEST) \n" +
+      "    we_do_not_want_to_see_this();\n" +
+      "    or_this();\n" +
+      "#endif\n" +
+      "we_want_this"
+
+    expected = ["we_want_this"]
+
+    assert_equal(expected, @parser.import_source(source))
+  end
 
   it "smush lines together that contain continuation characters" do
     source =

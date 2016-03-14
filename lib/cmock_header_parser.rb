@@ -69,6 +69,9 @@ class CMockHeaderParser
     # remove assembler pragma sections
     source.gsub!(/^\s*#\s*pragma\s+asm\s+.*?#\s*pragma\s+endasm/m, '')
 
+    # remove if defined over multiple lines
+    source.gsub!(/^\s*#if defined+.*?#endif/m, '')
+
     # remove gcc's __attribute__ tags
     source.gsub!(/__attribute(?:__)?\s*\(\(+.*\)\)+/, '')
 
