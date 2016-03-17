@@ -311,6 +311,34 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
+  it "remove function definitions with nested braces but keep function declarations" do
+    source =
+      "uint32 func_with_decl_a(unsigned int);\n" +
+      "uint32 func_with_decl_a(unsigned int a) {\n" +
+      "  while (stuff) {\n" +
+      "    not_a_definition1(void);\n" +
+      "  }\n" +
+      "  not_a_definition2(blah, bleh);\n" +
+      "  return a;\n" +
+      "}\n" +
+      "uint32 func_with_decl_b(unsigned int);\n" +
+      "uint32 func_with_decl_b(unsigned int a)\n" +
+      "{\n" +
+      "    bar((unsigned int) a);\n" +
+      "    stripme(a);\n" +
+      "}\n"
+
+    expected =
+    [
+      "uint32 func_with_decl_a(unsigned int)",
+      "uint32 func_with_decl_a",                 #okay. it's not going to be interpretted as another function
+      "uint32 func_with_decl_b(unsigned int)",
+      "uint32 func_with_decl_b",                 #okay. it's not going to be interpretted as another function
+    ]
+
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
+
   it "remove a fully defined inline function" do
     source =
       "inline void foo(unsigned int a) { oranges = a; }\n" +
@@ -342,6 +370,34 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "  bananas = a;\n" +
       "  grapes = a;\n" +
       "  apples(bananas, grapes);\n" +
+      "}"
+
+    # ensure it's expected type of exception
+    assert_raises RuntimeError do
+      @parser.parse("module", source)
+    end
+
+    assert_equal([], @parser.funcs)
+
+    # verify exception message
+    begin
+      @parser.parse("module", source)
+    rescue RuntimeError => e
+      assert_equal("ERROR: No function prototypes found!", e.message)
+    end
+  end
+
+  it "remove a fully defined inline function that contains nested braces" do
+    source =
+      "inline void bar(unsigned int a)\n" +
+      "{" +
+      "  apples(bananas, grapes);\n" +
+      "  if (bananas == a)\n" +
+      "  {\n" +
+      "    oranges(a);\n" +
+      "    grapes = a;\n" +
+      "  }\n" +
+      "  grapefruit(bananas, grapes);\n" +
       "}"
 
     # ensure it's expected type of exception

@@ -93,11 +93,12 @@ class CMockHeaderParser
       "#{functype} #{$2.strip}(#{$3});"
     end
 
+    # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
+    while source.gsub!(/\{[^\{\}]*\{[^\{\}]*\}[^\{\}]*\}/m, '{ }')
+    end
+
     # remove function definitions by stripping off the arguments right now
     source.gsub!(/\([^\)]*\)\s*\{[^\}]*\}/m, ";")
-
-    # remove pairs of braces because no function declarations will be inside of them
-    #source.gsub!(/\{[^\}]*\}/m, '')
 
     #drop extra white space to make the rest go faster
     source.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
