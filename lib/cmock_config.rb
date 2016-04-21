@@ -84,8 +84,11 @@ class CMockConfig
   end
 
   def load_unity_helper
-    return File.new(@options[:unity_helper_path]).read if (@options[:unity_helper_path])
-    return nil
+    return nil unless (@options[:unity_helper_path])
+
+    return @options[:unity_helper_path].inject("") do |unity_helper, filename|
+      unity_helper + "\n" + File.new(filename).read
+    end
   end
 
   def standard_treat_as_map
