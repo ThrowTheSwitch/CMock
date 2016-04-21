@@ -58,6 +58,7 @@ class CMockConfig
       end
     end
     options[:unity_helper_path] ||= options[:unity_helper]
+    options[:unity_helper_path] = [options[:unity_helper_path]] if options[:unity_helper_path].is_a? String
     options[:plugins].compact!
     options[:plugins].map! {|p| p.to_sym}
     @options = options
