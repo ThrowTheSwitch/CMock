@@ -781,6 +781,28 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "should properly handle const applied after asterisk in return type" do
+
+    source = "int * const PorkRoast(void);\n"
+
+    expected = [{ :var_arg=>nil,
+                  :name=>"PorkRoast",
+                  :return=> { :type   => "int*",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => true,
+                              :const? => false,
+                              :str    => "int* cmock_to_return",
+                              :void?  => false
+                            },
+                  :modifier=>"const",
+                  :contains_ptr? => false,
+                  :args=>[],
+                  :args_string=>"void",
+                  :args_call=>""
+                }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
   it "properly detect typedef'd variants of void and use those" do
 
     source = "typedef (void) FUNKY_VOID_T;\n" +

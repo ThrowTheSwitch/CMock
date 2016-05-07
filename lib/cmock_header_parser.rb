@@ -156,8 +156,9 @@ class CMockHeaderParser
   end
 
   def divine_const(arg)
-    return false if /const[ *]/.match(arg).nil?                           # check for const
-    return false if /\*/.match(arg) and /const[^*]*\*/.match(arg).nil?    # check const comes before * indicating const data
+    return false if !(/(?:^|\s|\*)const(?:\*|\s|$)/ =~ arg)   # check for const as part of a larger word
+    return true  if (/const(?:\w|\s)*\*/ =~ arg)              # check const comes before * indicating const data
+    return false if (/\*\s*const/ =~ arg)                     # check const comes after * indicating const ptr
     return true
   end
 
@@ -220,6 +221,7 @@ class CMockHeaderParser
     #build attribute and return type strings
     decl[:modifier] = []
     rettype = []
+    full_retval = descriptors[0..-2].join(' ')
     descriptors[0..-2].each do |word|
       if @c_attributes.include?(word)
         decl[:modifier] << word
@@ -235,7 +237,7 @@ class CMockHeaderParser
     decl[:return] = { :type   => rettype,
                       :name   => 'cmock_to_return',
                       :ptr?   => divine_ptr(rettype),
-                      :const? => decl[:modifier].split(/\s/).include?('const'),
+                      :const? => divine_const(full_retval),
                       :str    => "#{rettype} cmock_to_return",
                       :void?  => (rettype == 'void')
                     }
