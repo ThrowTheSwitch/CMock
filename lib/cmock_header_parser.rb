@@ -141,10 +141,8 @@ class CMockHeaderParser
       arg_array = arg.split
       arg_elements = arg_array - @c_attributes              # split up words and remove known attributes
       args << { :type   => (arg_type = arg_elements[0..-2].join(' ')),
-                :name   => arg_elements[-1],
-                :ptr?   => divine_ptr(arg_type),
-                :const? => divine_const(arg)
-              }
+                :name   => arg_elements[-1]
+              }.merge(divine_ptr_and_const(arg))
     end
     return args
   end
@@ -160,6 +158,28 @@ class CMockHeaderParser
     return true  if (/const(?:\w|\s)*\*/ =~ arg)              # check const comes before * indicating const data
     return false if (/\*\s*const/ =~ arg)                     # check const comes after * indicating const ptr
     return true
+  end
+
+  def divine_ptr_and_const(arg)
+    divination = { :ptr? => false, :const? => false, :const_ptr? => false }
+
+    #first check if there is a pointer present and that it's not part of a C string or function definition
+    #divination[:ptr?] = (arg.split[0..-2].join.include?('*') && !arg.gsub(/(const|char|\*|\s)+/,'').empty?)
+    divination[:ptr?] = (arg.include?('*') && !arg.gsub(/(const|char|\*|\s)+/,'').empty?)
+
+    #if there isn't a const that isn't part of a larger word, we're done
+    return divination if !(/(?:^|\s|\*)const(?:\*|\s|$)/ =~ arg)
+    divination[:const?] = true
+
+    # check const comes after * indicating const ptr
+    if (/\*\s*const/ =~ arg)
+      divination[:const_ptr?] = true
+
+      #check const comes before * indicating also const data
+      divination[:const?] = (/const(?:\w|\s)*\*/ =~ arg) ? true : false
+    end
+
+    return divination
   end
 
   def clean_args(arg_list)
@@ -236,11 +256,9 @@ class CMockHeaderParser
     rettype = 'void' if (@local_as_void.include?(rettype.strip))
     decl[:return] = { :type   => rettype,
                       :name   => 'cmock_to_return',
-                      :ptr?   => divine_ptr(rettype),
-                      :const? => divine_const(full_retval),
                       :str    => "#{rettype} cmock_to_return",
                       :void?  => (rettype == 'void')
-                    }
+                    }.merge(divine_ptr_and_const(full_retval))
 
     #remove default argument statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
