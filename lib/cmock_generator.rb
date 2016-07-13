@@ -100,7 +100,7 @@ class CMockGenerator
     file << plugin_includes if (!plugin_includes.empty?)
     file << "\n"
     file << "/* Ignore the following warnings, since we are copying code */\n"
-    file << "#if defined(__GNUC__) && !defined(__ICC)\n"
+    file << "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n"
     file << "#if !defined(__clang__)\n"
     file << "#pragma GCC diagnostic ignored \"-Wpragmas\"\n"
     file << "#endif\n"
