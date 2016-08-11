@@ -293,7 +293,7 @@ Defined in the yaml file, they look more like this:
 
 * `:plugins`:
   An array of which plugins to enable. 'expect' is always active. Also
-  available currently are `:ignore,` `:ignore_args,` `:array,`
+  available currently are `:ignore,` `:ignore_arg,` `:array,`
   `:cexception,` `:callback,` and `:return_thru_ptr`
 
 * `:strippables`:
