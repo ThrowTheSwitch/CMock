@@ -6,7 +6,7 @@
 
 class CMockGenerator
 
-  attr_accessor :config, :file_writer, :module_name, :clean_mock_name, :mock_name, :utils, :plugins, :ordered
+  attr_accessor :config, :file_writer, :module_name, :clean_mock_name, :mock_name, :utils, :plugins, :weak, :ordered
 
   def initialize(config, file_writer, utils, plugins)
     @file_writer = file_writer
@@ -15,6 +15,7 @@ class CMockGenerator
     @config      = config
     @prefix      = @config.mock_prefix
     @suffix      = @config.mock_suffix
+    @weak        = @config.weak_mocks
     @ordered     = @config.enforce_strict_ordering
     @framework   = @config.framework.to_s
 
@@ -206,6 +207,9 @@ class CMockGenerator
     args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
 
     # Create mock function
+    if (@weak)
+        file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string}) __attribute ((weak));\n"
+    end
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"

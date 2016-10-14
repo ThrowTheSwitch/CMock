@@ -287,6 +287,9 @@ Defined in the yaml file, they look more like this:
 * `:mock_suffix`:
   The suffix to append to your mock files. Defaults to “”.
 
+* `:weak_mocks`:
+  When set to true, the generated mocks are defined as weak symbols. Defaults to false.
+
 * `:subdir`:
   Relative subdir for your mocks.  Set this to e.g. "sys" in order to
   create mock for `sys/types.h` in `:mock_path`/sys/
