@@ -15,7 +15,7 @@ class CMockGenerator
     @config      = config
     @prefix      = @config.mock_prefix
     @suffix      = @config.mock_suffix
-    @weak        = @config.weak_mocks
+    @weak        = @config.weak
     @ordered     = @config.enforce_strict_ordering
     @framework   = @config.framework.to_s
 
@@ -207,8 +207,12 @@ class CMockGenerator
     args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
 
     # Create mock function
-    if (@weak)
-        file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string}) __attribute ((weak));\n"
+    if (not @weak.empty?)
+        file << "#if defined (__IAR_SYSTEMS_ICC__)\n"
+        file << "#pragma weak #{function[:name]}\n"
+        file << "#else\n"
+        file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string}) #{weak};\n"
+        file << "#endif\n\n"
     end
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
