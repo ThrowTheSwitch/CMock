@@ -12,6 +12,7 @@ class CMockConfig
     :mock_path                   => 'mocks',
     :mock_prefix                 => 'Mock',
     :mock_suffix                 => '',
+    :weak                        => '',
     :subdir                      => nil,
     :plugins                     => [],
     :strippables                 => ['(?:__attribute__\s*\(+.*?\)+)'],
