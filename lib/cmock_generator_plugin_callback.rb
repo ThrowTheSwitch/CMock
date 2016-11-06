@@ -80,6 +80,7 @@ class CMockGeneratorPluginCallback
   def mock_interfaces(function)
     func_name = function[:name]
     "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n" +
+	"  Mock.#{func_name}_IgnoreBool = (int)0;\n" +
     "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
   end
 
