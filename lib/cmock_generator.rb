@@ -222,8 +222,9 @@ class CMockGenerator
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
+    file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance;\n"
     file << "  UNITY_SET_DETAIL(CMockString_#{function[:name]});\n"
-    file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:name]}_CallInstance);\n"
+    file << "  cmock_call_instance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:name]}_CallInstance);\n"
     file << "  Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
     file << @plugins.run(:mock_implementation_precheck, function)
     file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n"
