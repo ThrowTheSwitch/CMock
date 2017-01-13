@@ -232,6 +232,8 @@ class CMockGeneratorPluginExpect
       file_name = "_EPSGSPACECONV"
     elsif(file_name.match("D3EDITOP_INTRINSICS"))
       file_name = "D3EDITOP_INTRINISCS"
+    elsif(file_name.match("STAT_INTRINSICS"))
+      file_name = /STAT(LIB)?_INTRINSICS/m
     end
 
     return file_name
