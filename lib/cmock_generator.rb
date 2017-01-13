@@ -420,9 +420,7 @@ class CMockGenerator
 
     # This check is designed to remove the #ifndef FILENAME that begins each file.
     file_name = filename_format(function)
-    puts "File name: #{file_name}"
     (definition+"\n").split(/^/m).each do |word|
-      puts "#{word}"
       if !(word.match(file_name))
         file << "#{word}"
       end
