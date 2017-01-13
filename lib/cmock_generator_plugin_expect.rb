@@ -2,7 +2,7 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
 
 class CMockGeneratorPluginExpect
 
@@ -103,7 +103,7 @@ class CMockGeneratorPluginExpect
                "#{expect_function}" +
                "#{expect_reset_function}"
       end
-    else        
+    else
       if (function[:return][:void?])
         return "#define #{function[:name]}_Expect(#{function[:args_call]}) #{function[:name]}_CMockExpect(__LINE__, #{function[:args_call]})\n" +
                "#{@api} void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n" +
@@ -169,10 +169,14 @@ class CMockGeneratorPluginExpect
 
     definition = preprocessor_formatting(function)
     file_name = filename_format(function)
-    if (definition.include?(file_name))
-      definition = ''
-    end
-    "  #{definition}\n  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == Mock.#{func_name}_CallInstance, cmock_line, \"Function '#{func_name}' called less times than expected.\");\n  if (#{func_name}_CMockExpectedResult() == 1)\n    {return 1;} // Function called with incorrect argument values.\n" 
+    definition_lines = (definition+"\n").split(/#if/m)
+    definition_lines.map! {|word|
+      word.match(file_name) || word.include?("GOTHIC_PUBLIC") ?
+        '' : word.start_with?("\n") ?
+        word : '#if' + word
+    }
+
+    "  #{definition_lines.join}\n  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == Mock.#{func_name}_CallInstance, cmock_line, \"Function '#{func_name}' called less times than expected.\");\n  if (#{func_name}_CMockExpectedResult() == 1)\n    {return 1;} // Function called with incorrect argument values.\n"
   end
 
   #
@@ -184,10 +188,13 @@ class CMockGeneratorPluginExpect
 
     definition = preprocessor_formatting(function)
     file_name = filename_format(function)
-    if (definition.include?(file_name))
-      definition = ''
-    end
-    "  #{definition}\n" +
+    definition_lines = (definition+"\n").split(/#if/m)
+    definition_lines.map! {|word|
+      word.match(file_name) || word.include?("GOTHIC_PUBLIC") ?
+        '' : word.start_with?("\n") ?
+        word : '#if' + word
+    }
+    "  #{definition_lines.join}\n" +
     "  #{function[:name]}_CMockResetExpectedResult();"
   end
 

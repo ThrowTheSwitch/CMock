@@ -93,11 +93,6 @@ class CMockGeneratorPluginCallback
   #
   def mock_destroy(function)
   
-    definition = preprocessor_formatting(function)
-    file_name = filename_format(function)
-    if (definition.include?(file_name))
-      definition = ''
-    end
     "  Mock.#{function[:name]}_CallbackFunctionPointer = NULL;\n" +
     "  Mock.#{function[:name]}_CallbackCalls = 0;\n"
   end
