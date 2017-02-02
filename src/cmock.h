@@ -18,7 +18,7 @@
 
 #define CMOCK_ARG_MODE    CMOCK_MEM_INDEX_TYPE
 #define CMOCK_ARG_ALL     0
-#define CMOCK_ARG_NONE    ((CMOCK_MEM_INDEX_TYPE)(~0))
+#define CMOCK_ARG_NONE    ((CMOCK_MEM_INDEX_TYPE)(~0U))
 
 //-------------------------------------------------------
 // Memory API
