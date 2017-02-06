@@ -59,7 +59,19 @@ extern const char* CMockStringMismatch;
 
 //0 for no alignment, 1 for 16-bit, 2 for 32-bit, 3 for 64-bit
 #ifndef CMOCK_MEM_ALIGN
-#define CMOCK_MEM_ALIGN (2)
+  #ifdef UNITY_LONG_WIDTH
+    #if (UNITY_LONG_WIDTH == 16)
+      #define CMOCK_MEM_ALIGN (1)
+    #elif (UNITY_LONG_WIDTH == 32)
+      #define CMOCK_MEM_ALIGN (2)
+    #elif (UNITY_LONG_WIDTH == 64)
+      #define CMOCK_MEM_ALIGN (3)
+    #else
+      #define CMOCK_MEM_ALIGN (2)
+    #endif
+  #else
+    #define CMOCK_MEM_ALIGN (2)
+  #endif
 #endif
 
 //amount of memory to allow cmock to use in its internal heap
