@@ -79,8 +79,12 @@ class CMockGeneratorPluginCallback
 
   def mock_interfaces(function)
     func_name = function[:name]
-    "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n" +
-    "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
+    lines = ""
+    lines << "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
+    if @config.plugins.include? :ignore
+      lines << "  Mock.#{func_name}_IgnoreBool = (int)0;\n"
+    end
+    lines << "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
   end
 
   def mock_destroy(function)
