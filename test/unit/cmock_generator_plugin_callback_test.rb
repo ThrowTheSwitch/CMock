@@ -240,6 +240,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
 
     expected = ["void Lemon_StubWithCallback(CMOCK_Lemon_CALLBACK Callback)\n",
                 "{\n",
+                "  Mock.Lemon_IgnoreBool = (int)0;\n",
                 "  Mock.Lemon_CallbackFunctionPointer = Callback;\n",
                 "}\n\n"
                ].join
