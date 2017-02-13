@@ -14,6 +14,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
 
     @config.expect :callback_include_count, true
     @config.expect :callback_after_arg_check, false
+    @config.expect :plugins, [:ignore]
 
     @cmock_generator_plugin_callback = CMockGeneratorPluginCallback.new(@config, @utils)
   end
