@@ -16,6 +16,7 @@ extern const char* CMockStringCalledLate;
 extern const char* CMockStringCallOrder;
 extern const char* CMockStringIgnPreExp;
 extern const char* CMockStringPtrPreExp;
+extern const char* CMockStringPtrIsNULL;
 extern const char* CMockStringExpNULL;
 extern const char* CMockStringMismatch;
 
