@@ -187,9 +187,9 @@ class CMockHeaderParser
       return 'void'
     else
       c=0
-      arg_list.gsub!(/(\w+)(?:\s*\[[\s\d\w+-]*\])+/,'*\1')  # magically turn brackets into asterisks
-      arg_list.gsub!(/\s+\*/,'*')                           # remove space to place asterisks with type (where they belong)
-      arg_list.gsub!(/\*(\w)/,'* \1')                       # pull asterisks away from arg to place asterisks with type (where they belong)
+      arg_list.gsub!(/(\w+)(?:\s*\[\(*[\s\d\w+-]*\)*\])+/,'*\1')  # magically turn brackets into asterisks, also match for parentheses that come from macros
+      arg_list.gsub!(/\s+\*/,'*')                                 # remove space to place asterisks with type (where they belong)
+      arg_list.gsub!(/\*(\w)/,'* \1')                             # pull asterisks away from arg to place asterisks with type (where they belong)
 
       #scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s\*]+)\(+\s*\*[\*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |m|
