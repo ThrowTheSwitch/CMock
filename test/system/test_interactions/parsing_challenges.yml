@@ -64,6 +64,8 @@
 
     void oh_brackets1(int fudge[5]);
     void oh_brackets2(int caramel[]);
+    void oh_brackets3(int toffee[(32)]);
+    void oh_brackets4(int taffy[ (64) ]);
     #ifdef __cplusplus
     }
     #endif
