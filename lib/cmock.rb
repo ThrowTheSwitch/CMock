@@ -13,9 +13,6 @@
   "cmock_generator_utils",
   "cmock_unityhelper_parser"].each {|req| require "#{File.expand_path(File.dirname(__FILE__))}/#{req}"}
 
-
-$QUICK_RUBY_VERSION = RUBY_VERSION.split('.').inject(0){|vv,v| vv * 100 + v.to_i }
-
 class CMock
 
   def initialize(options=nil)

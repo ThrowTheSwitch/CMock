@@ -21,12 +21,8 @@ describe CMockPluginManager, "Verify CMockPluginManager Module" do
       :ignore => :args_and_calls
     )
 
-    #if (RUBY_VERSION.split('.')[0].to_i >= 2)
-    #  @config.define_singleton_method( :plugins ){ @plugins || [] }
-    #  @config.define_singleton_method( :plugins= ){ |val| @plugins = val }
-    #else
-      eval "class << @config\ndef plugins\n@plugins||[]\nend\ndef plugins=(val)\n@plugins=val\nend\nend\n"
-    #end
+    eval "class << @config\ndef plugins\n@plugins||[]\nend\ndef plugins=(val)\n@plugins=val\nend\nend\n"
+
   end
 
   after do

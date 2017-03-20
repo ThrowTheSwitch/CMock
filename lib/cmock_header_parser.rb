@@ -48,7 +48,7 @@ class CMockHeaderParser
   def import_source(source)
 
     # let's clean up the encoding in case they've done anything weird with the characters we might find
-    source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil) if ($QUICK_RUBY_VERSION > 10900)
+    source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
     # void must be void for cmock _ExpectAndReturn calls to process properly, not some weird typedef which equates to void
     # to a certain extent, this action assumes we're chewing on pre-processed header files, otherwise we'll most likely just get stuff from @treat_as_void
