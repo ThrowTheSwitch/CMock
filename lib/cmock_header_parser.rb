@@ -94,8 +94,7 @@ class CMockHeaderParser
     end
 
     # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
-    while source.gsub!(/\{[^\{\}]*\{[^\{\}]*\}[^\{\}]*\}/m, '{ }')
-    end
+    source.gsub!(/\{([^\{\}]*|\g<0>)*\}/m, '{ }')
 
     # remove function definitions by stripping off the arguments right now
     source.gsub!(/\([^\)]*\)\s*\{[^\}]*\}/m, ";")
