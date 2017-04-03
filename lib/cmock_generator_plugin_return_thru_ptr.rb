@@ -65,7 +65,7 @@ class CMockGeneratorPluginReturnThruPtr
         lines << "  if (cmock_call_instance->ReturnThruPtr_#{arg_name}_Used)\n"
         lines << "  {\n"
         lines << "    UNITY_TEST_ASSERT_NOT_NULL(#{arg_name}, cmock_line, CMockStringPtrIsNULL);\n"
-        lines << "    memcpy(#{arg_name}, cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
+        lines << "    memcpy((void*)#{arg_name}, (void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
         lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Size);\n"
         lines << "  }\n"
       end
