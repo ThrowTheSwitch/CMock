@@ -1,11 +1,13 @@
-[All code is copyright © 2007-2017 ThrowTheSwitch.org
-by Mike Karlesky, Mark VanderVoord, and Greg Williams.
+CMock: A Summary
+================
 
-This Documentation Is Released Under a Creative Commons 3.0
-Attribution Share-Alike License]
+*[ThrowTheSwitch.org](http://throwtheswitch.org)*
 
-What the What?
-==============
+*This documentation is released under a Creative Commons 3.0 Attribution Share-Alike License*
+
+
+What Exactly Are We Talking About Here?
+---------------------------------------
 
 CMock is a nice little tool which takes your header files and creates
 a Mock interface for it so that you can more easily unit test modules
@@ -73,9 +75,15 @@ have it. You can prove it by typing the following:
     
 
 If it replied in a way that implies ignorance, then you're going to
-need to install it. You can go to ruby-lang.org to get the latest
-version. You're also going to need to do that if it replied with a
-version that is older than 2.0.0. Go ahead. We'll wait.
+need to install it. You can go to [ruby-lang](https://ruby-lang.org) 
+to get the latest version. You're also going to need to do that if it 
+replied with a version that is older than 2.0.0. Go ahead. We'll wait.
+
+Once you have Ruby, you have three options:
+
+* Clone the latest [CMock repo on github](https://github.com/ThrowTheSwitch/CMock/)
+* Download the latest [CMock zip from github](https://github.com/ThrowTheSwitch/CMock/)
+* Install Ceedling (which has it built in!) through your commandline using `gem install ceedling`.
 
 
 Generated Mock Module Summary
@@ -424,48 +432,47 @@ from the defaults. We've tried to specify what the defaults are below.
     default list. Therefore, if you want to override something, you must
     reassign it to something else (or to *nil* if you don't want it)
     
-  * default: {
-      'int'             => 'INT',
-      'char'            => 'INT8',
-      'short'           => 'INT16',
-      'long'            => 'INT',
-      'int8'            => 'INT8',
-      'int16'           => 'INT16',
-      'int32'           => 'INT',
-      'int8_t'          => 'INT8',
-      'int16_t'         => 'INT16',
-      'int32_t'         => 'INT',
-      'INT8_T'          => 'INT8',
-      'INT16_T'         => 'INT16',
-      'INT32_T'         => 'INT',
-      'bool'            => 'INT',
-      'bool_t'          => 'INT',
-      'BOOL'            => 'INT',
-      'BOOL_T'          => 'INT',
-      'unsigned int'    => 'HEX32',
-      'unsigned long'   => 'HEX32',
-      'uint32'          => 'HEX32',
-      'uint32_t'        => 'HEX32',
-      'UINT32'          => 'HEX32',
-      'UINT32_T'        => 'HEX32',
-      'void*'           => 'HEX8_ARRAY',
-      'unsigned short'  => 'HEX16',
-      'uint16'          => 'HEX16',
-      'uint16_t'        => 'HEX16',
-      'UINT16'          => 'HEX16',
-      'UINT16_T'        => 'HEX16',
-      'unsigned char'   => 'HEX8',
-      'uint8'           => 'HEX8',
-      'uint8_t'         => 'HEX8',
-      'UINT8'           => 'HEX8',
-      'UINT8_T'         => 'HEX8',
-      'char*'           => 'STRING',
-      'pCHAR'           => 'STRING',
-      'cstring'         => 'STRING',
-      'CSTRING'         => 'STRING',
-      'float'           => 'FLOAT',
-      'double'          => 'FLOAT'
-      }
+  * default:
+    * 'int': 'INT'
+    * 'char': 'INT8'
+    * 'short': 'INT16'
+    * 'long': 'INT'
+    * 'int8': 'INT8'
+    * 'int16': 'INT16'
+    * 'int32': 'INT'
+    * 'int8_t': 'INT8'
+    * 'int16_t': 'INT16'
+    * 'int32_t': 'INT'
+    * 'INT8_T': 'INT8'
+    * 'INT16_T': 'INT16'
+    * 'INT32_T': 'INT'
+    * 'bool': 'INT'
+    * 'bool_t': 'INT'
+    * 'BOOL': 'INT'
+    * 'BOOL_T': 'INT'
+    * 'unsigned int': 'HEX32'
+    * 'unsigned long': 'HEX32'
+    * 'uint32': 'HEX32'
+    * 'uint32_t': 'HEX32'
+    * 'UINT32': 'HEX32'
+    * 'UINT32_T': 'HEX32'
+    * 'void*': 'HEX8_ARRAY'
+    * 'unsigned short': 'HEX16'
+    * 'uint16': 'HEX16'
+    * 'uint16_t': 'HEX16'
+    * 'UINT16': 'HEX16'
+    * 'UINT16_T': 'HEX16'
+    * 'unsigned char': 'HEX8'
+    * 'uint8': 'HEX8'
+    * 'uint8_t': 'HEX8'
+    * 'UINT8': 'HEX8'
+    * 'UINT8_T': 'HEX8'
+    * 'char*': 'STRING'
+    * 'pCHAR': 'STRING'
+    * 'cstring': 'STRING'
+    * 'CSTRING': 'STRING'
+    * 'float': 'FLOAT'
+    * 'double': 'FLOAT'
 
 * `:treat_as_void`:
   We've seen "fun" legacy systems typedef 'void' with a custom type,
