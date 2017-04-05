@@ -162,7 +162,7 @@ care how many times it was called, right?
 * `retval func(params)` => `void func_IgnoreAndReturn(retval_to_return)`
 
 
-Ignore Args:
+Ignore Arg:
 ------------
 
 Maybe you overall want to use Expect and its similar variations, but you don't care
@@ -576,4 +576,13 @@ based on other settings, particularly Unity's settings.
 * `CMOCK_MEM_INDEX_TYPE`
   This needs to be something big enough to point anywhere in Cmock's
   memory space... usually it's an unsigned int.
+
+Examples
+========
+
+You can look in the examples directory for a couple of examples on how 
+you might tool CMock into your build process. You may also want to consider
+using [Ceedling](https://throwtheswitch.org/Ceedling). Please note that
+these examples are meant to show how the build process works. They have 
+failing tests ON PURPOSE to show what that would look like. Don't be alarmed. ;)
 
