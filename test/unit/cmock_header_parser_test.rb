@@ -325,6 +325,18 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "{\n" +
       "    bar((unsigned int) a);\n" +
       "    stripme(a);\n" +
+      "}\n" +
+      "uint32 func_with_decl_c(unsigned int);\n" +
+      "uint32 func_with_decl_c(unsigned int a)\n" +
+      "{\n" +
+      "    if(a > 0)\n" +
+      "    {\n" +
+      "       return 1;\n" +
+      "    }\n" +
+      "    else\n"+
+      "    {\n" +
+      "       return 2;\n" +
+      "    }\n" +
       "}\n"
 
     expected =
@@ -333,6 +345,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "uint32 func_with_decl_a",                 #okay. it's not going to be interpretted as another function
       "uint32 func_with_decl_b(unsigned int)",
       "uint32 func_with_decl_b",                 #okay. it's not going to be interpretted as another function
+      "uint32 func_with_decl_c(unsigned int)",
+      "uint32 func_with_decl_c",                 #okay. it's not going to be interpretted as another function
     ]
 
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
