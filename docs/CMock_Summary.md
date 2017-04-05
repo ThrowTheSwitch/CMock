@@ -295,9 +295,11 @@ from the defaults. We've tried to specify what the defaults are below.
   These are attributes that CMock should ignore for you for testing
   purposes. Custom compiler extensions and externs are handy things to
   put here. If your compiler is choking on some extended syntax, this
-  is often a good place to look.
+  is often a good place to look. 
   
   * defaults: ['__ramfunc', '__irq', '__fiq', 'register', 'extern']
+  * **note:** this option will reinsert these attributes onto the mock's calls.
+    If that isn't what you are looking for, check out :strippables.
 
 * `:c_calling_conventions`:
   Similarly, CMock may need to understand which C calling conventions
@@ -306,6 +308,8 @@ from the defaults. We've tried to specify what the defaults are below.
   but there are many compilers out there, and therefore many other options.
   
   * defaults: ['__stdcall', '__cdecl', '__fastcall']
+  * **note:** this option will reinsert these attributes onto the mock's calls.
+    If that isn't what you are looking for, check out :strippables.
 
 * `:callback_after_arg_check`:
   Tell `:callback` plugin to do the normal argument checking **before** it
@@ -389,12 +393,6 @@ from the defaults. We've tried to specify what the defaults are below.
   at the same time.
   
   * default: ""
-  
-* `:subdir`:
-  This is a relative subdirectory for your mocks.  Set this to e.g. "sys" in 
-  order to create a mock for `sys/types.h` in `(:mock_path)/sys/`.
-  
-  * default: ""
 
 * `:plugins`:
   An array of which plugins to enable. ':expect' is always active. Also
@@ -412,12 +410,19 @@ from the defaults. We've tried to specify what the defaults are below.
   An array containing a list of items to remove from the header
   before deciding what should be mocked. This can be something simple
   like a compiler extension CMock wouldn't recognize, or could be a
-  regex to reject certain function name patterns. For example, use 
-  `:strippables: ['(?:functionName\s*\(+.*?\)+)']`
+  regex to reject certain function name patterns. This is a great way to 
+  get rid of compiler extensions when your test compiler doesn't support
+  them. For example, use `:strippables: ['(?:functionName\s*\(+.*?\)+)']`
   to prevent a function `functionName` from being mocked. By default, it
   is ignoring all gcc attribute extensions.
   
   * default: ['(?:__attribute__\s*\(+.*?\)+)']
+  
+* `:subdir`:
+  This is a relative subdirectory for your mocks.  Set this to e.g. "sys" in 
+  order to create a mock for `sys/types.h` in `(:mock_path)/sys/`.
+  
+  * default: ""
 
 * `:treat_as`:
   The `:treat_as` list is a shortcut for when you have created typedefs
