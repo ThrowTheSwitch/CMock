@@ -6,16 +6,16 @@
 
 require 'yaml'
 require 'fileutils'
-require './vendor/unity/auto/generate_test_runner'
-require './vendor/unity/auto/unity_test_summary'
-require './test/system/systest_generator'
-require './vendor/unity/auto/colour_reporter.rb'
+require '../vendor/unity/auto/generate_test_runner'
+require '../vendor/unity/auto/unity_test_summary'
+require '../vendor/unity/auto/colour_reporter.rb'
+require './system/systest_generator'
 
 module RakefileHelpers
 
-  SYSTEST_GENERATED_FILES_PATH   = 'test/system/generated/'
-  SYSTEST_BUILD_FILES_PATH       = 'test/system/build/'
-  SYSTEST_COMPILE_MOCKABLES_PATH = 'test/system/test_compilation/'
+  SYSTEST_GENERATED_FILES_PATH   = './system/generated/'
+  SYSTEST_BUILD_FILES_PATH       = './system/build/'
+  SYSTEST_COMPILE_MOCKABLES_PATH = './system/test_compilation/'
   C_EXTENSION = '.c'
   RESULT_EXTENSION = '.result'
 
@@ -172,7 +172,7 @@ module RakefileHelpers
   end
 
   def run_system_test_interactions(test_case_files)
-    load './lib/cmock.rb'
+    load '../lib/cmock.rb'
 
     SystemTestGenerator.new.generate_files(test_case_files)
     test_files = FileList.new(SYSTEST_GENERATED_FILES_PATH + 'test*.c')
@@ -308,7 +308,7 @@ module RakefileHelpers
   end
 
   def run_system_test_compilations(mockables)
-    load './lib/cmock.rb'
+    load '../lib/cmock.rb'
 
     load_configuration($cfg_file)
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
@@ -326,7 +326,7 @@ module RakefileHelpers
   end
 
   def run_system_test_profiles(mockables)
-    load './lib/cmock.rb'
+    load '../lib/cmock.rb'
 
     load_configuration($cfg_file)
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
@@ -353,7 +353,7 @@ module RakefileHelpers
     report "UNIT TEST C CODE\n"
     report "----------------\n"
     errors = false
-    FileList.new("test/c/*.yml").each do |yaml_file|
+    FileList.new("c/*.yml").each do |yaml_file|
       test = YAML.load(File.read(yaml_file))
       report "\nTesting #{yaml_file.sub('.yml','')}"
       report "(#{test[:options].join(', ')})"

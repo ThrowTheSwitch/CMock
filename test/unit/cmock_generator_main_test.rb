@@ -7,7 +7,7 @@
 $ThisIsOnlyATest = true
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require 'cmock_generator'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator'
 
 class MockedPluginHelper
   def initialize return_this

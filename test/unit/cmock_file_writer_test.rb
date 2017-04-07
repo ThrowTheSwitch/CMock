@@ -5,7 +5,7 @@
 # ==========================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require 'cmock_file_writer'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_file_writer'
 
 describe CMockFileWriter, "Verify CMockFileWriter Module" do
 

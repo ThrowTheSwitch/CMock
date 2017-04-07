@@ -1,9 +1,9 @@
 ---
 :files:
-  - 'src/cmock.c'
-  - 'test/c/TestCMockC.c'
-  - 'test/c/TestCMockC_Runner.c'
-  - 'vendor/unity/src/unity.c'
+  - '../src/cmock.c'
+  - './c/TestCMockC.c'
+  - './c/TestCMockC_Runner.c'
+  - '../vendor/unity/src/unity.c'
 :options:
   - 'TEST'
   - 'CMOCK_MEM_STATIC'

@@ -5,7 +5,7 @@
 # ==========================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require 'cmock_generator_plugin_ignore_arg'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_ignore_arg'
 
 describe CMockGeneratorPluginIgnoreArg, "Verify CMockGeneratorPluginIgnoreArg Module" do
 

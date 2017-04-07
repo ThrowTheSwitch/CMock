@@ -5,7 +5,7 @@
 # ==========================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require 'cmock_generator_plugin_cexception'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_cexception'
 
 describe CMockGeneratorPluginCexception, "Verify CMockGeneratorPluginCexception Module" do
 

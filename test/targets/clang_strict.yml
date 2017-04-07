@@ -1,16 +1,16 @@
 ---
 compiler:
   path: clang
-  source_path:     &systest_generated_path 'test/system/generated/'
-  unit_tests_path: &unit_tests_path 'examples/test/'
-  mocks_path:      &systest_mocks_path 'test/system/generated/'
-  build_path:      &systest_build_path 'test/system/build/'
+  source_path:     &systest_generated_path './system/generated/'
+  unit_tests_path: &unit_tests_path '../examples/test/'
+  mocks_path:      &systest_mocks_path './system/generated/'
+  build_path:      &systest_build_path './system/build/'
   options:
     - '-c'
     - '-Wall'
     - '-Wextra'
     - '-Werror'
-    - '-Wcast-qual'
+    #- '-Wcast-qual'
     - '-Wconversion'
     - '-Wtautological-compare'
     #- '-Wtautological-pointer-compare'
@@ -41,7 +41,7 @@ compiler:
     - '-Wno-invalid-token-paste'
     - '-fms-extensions'
     - '-fno-omit-frame-pointer'
-    - '-ffloat-store'
+    #- '-ffloat-store'
     - '-fno-common'
     - '-fstrict-aliasing'
     - '-std=gnu99'
@@ -53,11 +53,11 @@ compiler:
       - *systest_generated_path
       - *unit_tests_path
       - *systest_mocks_path
-      - 'src/'
-      - 'vendor/unity/src/'
-      - 'vendor/c_exception/lib/'
-      - 'test/system/test_compilation/'
-      - 'test/'
+      - '../src/'
+      - '../vendor/unity/src/'
+      - '../vendor/c_exception/lib/'
+      - './system/test_compilation/'
+      - './'
   defines:
     prefix: '-D'
     items:

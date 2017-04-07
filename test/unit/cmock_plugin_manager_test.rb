@@ -5,10 +5,10 @@
 # ==========================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require 'cmock_plugin_manager'
-require 'cmock_generator_plugin_expect'
-require 'cmock_generator_plugin_ignore'
-require 'cmock_generator_plugin_cexception'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_plugin_manager'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_expect'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_ignore'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_cexception'
 
 describe CMockPluginManager, "Verify CMockPluginManager Module" do
 

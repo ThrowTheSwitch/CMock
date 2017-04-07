@@ -1,9 +1,9 @@
 ---
 :files:
-  - 'src/cmock.c'
-  - 'test/c/TestCMockCDynamic.c'
-  - 'test/c/TestCMockCDynamic_Runner.c'
-  - 'vendor/unity/src/unity.c'
+  - '../src/cmock.c'
+  - './c/TestCMockCDynamic.c'
+  - './c/TestCMockCDynamic_Runner.c'
+  - '../vendor/unity/src/unity.c'
 :options:
   - 'TEST'
   - 'CMOCK_MEM_DYNAMIC'

@@ -16,4 +16,4 @@ install:
   - bundle install
   
 script:
-  - bundle exec rake ci
+  - bundle exec cd test && rake ci

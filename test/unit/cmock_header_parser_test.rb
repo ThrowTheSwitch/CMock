@@ -7,7 +7,7 @@
 $ThisIsOnlyATest = true
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
-require 'cmock_header_parser'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_header_parser'
 
 describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 

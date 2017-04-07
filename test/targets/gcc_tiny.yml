@@ -1,10 +1,10 @@
 ---
 compiler:
   path: gcc
-  source_path:     &systest_generated_path 'test/system/generated/'
-  unit_tests_path: &unit_tests_path 'examples/test/'
-  mocks_path:      &systest_mocks_path 'test/system/generated/'
-  build_path:      &systest_build_path 'test/system/build/'
+  source_path:     &systest_generated_path './system/generated/'
+  unit_tests_path: &unit_tests_path '../examples/test/'
+  mocks_path:      &systest_mocks_path './system/generated/'
+  build_path:      &systest_build_path './system/build/'
   options:
     - '-c'
     - '-Wall'
@@ -21,11 +21,11 @@ compiler:
       - *systest_generated_path
       - *unit_tests_path
       - *systest_mocks_path
-      - 'src/'
-      - 'vendor/unity/src/'
-      - 'vendor/c_exception/lib/'
-      - 'test/system/test_compilation/'
-      - 'test/'
+      - '../src/'
+      - '../vendor/unity/src/'
+      - '../vendor/c_exception/lib/'
+      - './system/test_compilation/'
+      - './'
   defines:
     prefix: '-D'
     items:
