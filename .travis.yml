@@ -14,6 +14,8 @@ before_install:
   
 install:
   - bundle install
+  - gem install rspec
+  - gem install rubocop
   
 script:
-  - bundle exec cd test && rake ci
+  - cd test && rake ci
