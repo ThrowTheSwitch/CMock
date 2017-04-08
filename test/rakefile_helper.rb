@@ -162,11 +162,11 @@ module RakefileHelpers
 
   def report_summary
     summary = UnityTestSummary.new
-    summary.set_root_path(File.expand_path(File.dirname(__FILE__)) + '/')
+    summary.root = File.expand_path(File.dirname(__FILE__)) + '/'
     results_glob = "#{$cfg['compiler']['build_path']}*.test*"
     results_glob.gsub!(/\\/, '/')
     results = Dir[results_glob]
-    summary.set_targets(results)
+    summary.targets = results
     summary.run
     fail_out "FAIL: There were failures" if (summary.failures > 0)
   end

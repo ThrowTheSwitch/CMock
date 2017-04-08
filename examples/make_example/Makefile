@@ -14,7 +14,7 @@ all: setup test ${BUILD_DIR}/main run
 setup:
 	mkdir -p ${BUILD_DIR}
 	mkdir -p ${OBJ}
-	ruby ../../scripts/create_makefile.rb
+	ruby ../../scripts/create_makefile.rb --silent
 
 clean:
 	rm -rf ${BUILD_DIR}
@@ -23,7 +23,7 @@ ${BUILD_DIR}/main: ${SRC_DIR}/main.c ${SRC_DIR}/foo.c
 	${CC} $< -o $@
 
 run:
-	./build/main
+	./build/main || true
 
 test: setup
 

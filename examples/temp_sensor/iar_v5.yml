@@ -29,10 +29,10 @@ compiler:
     prefix: '-I'
     items:
       - 'src/'
-      - '../src/'
-      - '../vendor/unity/src/'
-      - '../vendor/unity/examples/example_3/helper/'
-      - 'mocks/'
+      - '../../src/'
+      - '../../vendor/unity/src/'
+      - '../../vendor/unity/examples/example_3/helper/'
+      - './build/mocks/'
       - [*tools_root, 'arm\inc\']
       - *unit_tests_path
   defines:
@@ -77,4 +77,5 @@ simulator:
   :plugins: []
   :includes:
     - Types.h
+  :mock_path: ./build/mocks
 

@@ -9,10 +9,10 @@ compiler:
     prefix: '-I'
     items:
       - 'src/'
-      - '../src/'
-      - '../vendor/unity/src/'
-      - '../vendor/unity/examples/example_3/helper/'
-      - 'mocks/'
+      - '../../src/'
+      - '../../vendor/unity/src/'
+      - '../../vendor/unity/examples/example_3/helper/'
+      - './build/mocks/'
       - *unit_tests_path
   defines:
     prefix: '-D'
@@ -39,5 +39,6 @@ linker:
   :plugins: []
   :includes:
     - Types.h
+  :mock_path: ./build/mocks
 
 colour: true

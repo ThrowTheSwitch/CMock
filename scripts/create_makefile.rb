@@ -27,6 +27,8 @@ end
 
 all_headers_to_mock = []
 
+suppress_error = !ARGV.nil? && !ARGV.empty? && (ARGV[0].upcase == "--SILENT")
+
 File.open(TEST_MAKEFILE, "w") do |mkfile|
 
   # Define make variables
@@ -103,7 +105,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
         end
       end
       raise "Module header '#{name}' not found to mock!" unless header_to_mock
-      headers_to_mock << header_to_mock 
+      headers_to_mock << header_to_mock
     end
     all_headers_to_mock += headers_to_mock
     mock_objs = headers_to_mock.map do |hdr|
@@ -149,7 +151,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
   # Create test summary task
   mkfile.puts "test_summary:"
-  mkfile.puts "\t@UNITY_DIR=${UNITY_DIR} ruby ${CMOCK_DIR}/scripts/test_summary.rb"
+  mkfile.puts "\t@UNITY_DIR=${UNITY_DIR} ruby ${CMOCK_DIR}/scripts/test_summary.rb #{suppress_error ? '--silent' : ''}"
   mkfile.puts ""
   mkfile.puts ".PHONY: test_summary"
   mkfile.puts ""

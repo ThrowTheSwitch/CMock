@@ -1,10 +1,12 @@
 require 'yaml'
 require 'fileutils'
-require '../vendor/unity/auto/unity_test_summary'
-require '../vendor/unity/auto/generate_test_runner'
-require '../vendor/unity/auto/colour_reporter'
+require '../../vendor/unity/auto/unity_test_summary'
+require '../../vendor/unity/auto/generate_test_runner'
+require '../../vendor/unity/auto/colour_reporter'
 
 module RakefileHelpers
+
+  $return_error_on_failures = false
 
   C_EXTENSION = '.c'
 
@@ -145,11 +147,11 @@ module RakefileHelpers
     return {:command => command, :pre_support => pre_support, :post_support => post_support}
   end
 
-  def execute(command_string, verbose=true)
+  def execute(command_string, verbose=true, ok_to_fail=false)
     report command_string
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
-    if $?.exitstatus != 0
+    unless $?.exitstatus.zero? || ok_to_fail
       raise "Command failed. (Returned #{$?.exitstatus})"
     end
     return output
@@ -157,13 +159,13 @@ module RakefileHelpers
 
   def report_summary
     summary = UnityTestSummary.new
-    summary.set_root_path(HERE)
+    summary.root = HERE
     results_glob = "#{$cfg['compiler']['build_path']}*.test*"
     results_glob.gsub!(/\\/, '/')
     results = Dir[results_glob]
-    summary.set_targets(results)
+    summary.targets = results
     report summary.run
-    raise "There were failures" if (summary.failures > 0)
+    raise "There were failures" if (summary.failures > 0) && $return_error_on_failures
   end
 
   def run_tests(test_files)
@@ -188,7 +190,7 @@ module RakefileHelpers
 
         #create mocks if needed
         if (header =~ /Mock/)
-          require "../lib/cmock.rb"
+          require "../../lib/cmock.rb"
           @cmock ||= CMock.new($cfg_file)
           @cmock.setup_mocks([$cfg['compiler']['source_path']+header.gsub('Mock','')])
         end
@@ -231,7 +233,7 @@ module RakefileHelpers
       else
         cmd_str = "#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}"
       end
-      output = execute(cmd_str)
+      output = execute(cmd_str, true, true)
       test_results = $cfg['compiler']['build_path'] + test_base
       if output.match(/OK$/m).nil?
         test_results += '.testfail'
