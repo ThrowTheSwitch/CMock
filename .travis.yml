@@ -25,5 +25,5 @@ script:
   - make setup 
   - make test
   - cd ..
-  - cd examples && cd temp_sensor 
+  - cd temp_sensor 
   - rake ci
