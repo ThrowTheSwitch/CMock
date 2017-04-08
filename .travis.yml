@@ -19,5 +19,11 @@ install:
   
 script:
   - cd test && rake ci
-  - cd examples && cd make_example && make clean && make setup && make test
-  - cd examples && cd temp_sensor && rake ci
+  - cd ..
+  - cd examples && cd make_example
+  - make clean 
+  - make setup 
+  - make test
+  - cd ..
+  - cd examples && cd temp_sensor 
+  - rake ci
