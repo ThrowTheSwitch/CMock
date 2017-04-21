@@ -73,7 +73,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     module_src = File.join(SRC_DIR, "#{src_module_name}.c")
     module_obj = File.join(OBJ_DIR, "#{src_module_name}.o")
     mkfile.puts "#{module_obj}: #{module_src}"
-    mkfile.puts "\t${CC} -o $@ -c $< -DTEST -I #{SRC_DIR} $(INCLUDE_PATH)"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} ${INCLUDE_PATH}"
     mkfile.puts ""
 
     # Create runners
@@ -83,7 +83,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build runner
     mkfile.puts "#{runner_obj}: #{runner_source}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} $(INCLUDE_PATH)"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} ${INCLUDE_PATH}"
     mkfile.puts ""
 
     # Collect mocks to generate
@@ -116,7 +116,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build test suite
     mkfile.puts "#{test_obj}: #{test} #{module_obj} #{mock_objs.join(' ')}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR} $(INCLUDE_PATH)"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR} ${INCLUDE_PATH}"
     mkfile.puts ""
 
     # Build test suite executable
@@ -145,7 +145,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     mkfile.puts ""
 
     mkfile.puts "#{mock_obj}: #{mock_src} #{mock_header}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} $(INCLUDE_PATH)"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} ${INCLUDE_PATH}"
     mkfile.puts ""
   end
 
