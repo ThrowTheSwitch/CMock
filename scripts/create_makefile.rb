@@ -122,7 +122,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     # Build test suite executable
     test_objs = "#{test_obj} #{runner_obj} #{module_obj} #{mock_objs.join(' ')} #{UNITY_OBJ} #{CMOCK_OBJ}"
     mkfile.puts "#{test_bin}: #{test_objs}"
-    mkfile.puts "\t${CC} -o $@ #{test_objs}"
+    mkfile.puts "\t${CC} -o $@ ${LDFLAGS} #{test_objs}"
     mkfile.puts ""
 
     # Run test suite and generate report
