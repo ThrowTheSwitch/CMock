@@ -59,6 +59,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   test_targets = []
   generator = UnityTestRunnerGenerator.new
   all_headers = Dir["#{SRC_DIR}/**/*.h"]
+  makefile_targets = []
 
   test_sources.each do |test|
     module_name = File.basename(test, '.c')
@@ -69,12 +70,37 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     test_bin = File.join(TEST_BIN_DIR, module_name)
     test_results = File.join(TEST_BIN_DIR, module_name + '.result')
 
+    cfg = {
+      src: test,
+      includes: generator.find_includes(File.readlines(test).join(''))
+    }
+
     # Build main project modules, with TEST defined
     module_src = File.join(SRC_DIR, "#{src_module_name}.c")
     module_obj = File.join(OBJ_DIR, "#{src_module_name}.o")
-    mkfile.puts "#{module_obj}: #{module_src}"
-    mkfile.puts "\t${CC} -o $@ -c $< -DTEST -I #{SRC_DIR}"
-    mkfile.puts ""
+    if not makefile_targets.include? module_obj
+        makefile_targets.push(module_obj)
+        mkfile.puts "#{module_obj}: #{module_src}"
+        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} ${INCLUDE_PATH}"
+        mkfile.puts ""
+    end
+
+    # process link-only files
+    linkonly = cfg[:includes][:linkonly]
+    linkonly_objs = []
+    linkonly.each do |linkonlyfile|
+        linkonlybase = File.basename(linkonlyfile)
+        linkonlymodule_src = File.join(SRC_DIR, "#{linkonlyfile}.c")
+        linkonlymodule_obj = File.join(OBJ_DIR, "#{linkonlybase}.o")
+        linkonly_objs.push(linkonlymodule_obj)
+        #only create the target if we didn't already
+        if not makefile_targets.include? linkonlymodule_obj
+            makefile_targets.push(linkonlymodule_obj)
+            mkfile.puts "#{linkonlymodule_obj}: #{linkonlymodule_src}"
+            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} ${INCLUDE_PATH}"
+            mkfile.puts ""
+        end
+    end
 
     # Create runners
     mkfile.puts "#{runner_source}: #{test}"
@@ -83,17 +109,14 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build runner
     mkfile.puts "#{runner_obj}: #{runner_source}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} ${INCLUDE_PATH}"
     mkfile.puts ""
 
     # Collect mocks to generate
-    cfg = {
-      src: test,
-      includes: generator.find_includes(File.readlines(test).join(''))
-    }
     system_mocks = cfg[:includes][:system].select{|name| name =~ MOCK_MATCHER}
     raise "Mocking of system headers is not yet supported!" if !system_mocks.empty?
     local_mocks = cfg[:includes][:local].select{|name| name =~ MOCK_MATCHER}
+
     module_names_to_mock = local_mocks.map{|name| "#{name.sub(/#{MOCK_PREFIX}/,'')}.h"}
     headers_to_mock = []
     module_names_to_mock.each do |name|
@@ -116,13 +139,13 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build test suite
     mkfile.puts "#{test_obj}: #{test} #{module_obj} #{mock_objs.join(' ')}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR} ${INCLUDE_PATH}"
     mkfile.puts ""
 
     # Build test suite executable
-    test_objs = "#{test_obj} #{runner_obj} #{module_obj} #{mock_objs.join(' ')} #{UNITY_OBJ} #{CMOCK_OBJ}"
+    test_objs = "#{test_obj} #{runner_obj} #{module_obj} #{mock_objs.join(' ')} #{linkonly_objs.join(' ')} #{UNITY_OBJ} #{CMOCK_OBJ}"
     mkfile.puts "#{test_bin}: #{test_objs}"
-    mkfile.puts "\t${CC} -o $@ #{test_objs}"
+    mkfile.puts "\t${CC} -o $@ ${LDFLAGS} #{test_objs}"
     mkfile.puts ""
 
     # Run test suite and generate report
@@ -145,7 +168,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     mkfile.puts ""
 
     mkfile.puts "#{mock_obj}: #{mock_src} #{mock_header}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} ${INCLUDE_PATH}"
     mkfile.puts ""
   end
 
