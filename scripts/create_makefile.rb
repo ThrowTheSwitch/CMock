@@ -150,7 +150,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Run test suite and generate report
     mkfile.puts "#{test_results}: #{test_bin}"
-    mkfile.puts "\t-#{test_bin} &> #{test_results}"
+    mkfile.puts "\t-#{test_bin} > #{test_results} 2>&1"
     mkfile.puts ""
 
     test_targets << test_bin
