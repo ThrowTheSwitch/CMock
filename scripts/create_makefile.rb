@@ -68,7 +68,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     runner_source = File.join(RUNNERS_DIR, "runner_#{module_name}.c")
     runner_obj = File.join(OBJ_DIR, "runner_#{module_name}.o")
     test_bin = File.join(TEST_BIN_DIR, module_name)
-    test_results = File.join(TEST_BIN_DIR, module_name + '.result')
+    test_results = File.join(TEST_BIN_DIR, module_name + '.testresult')
 
     cfg = {
       src: test,
@@ -180,7 +180,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts ""
 
   # Create target to run all tests
-  mkfile.puts "test: #{test_targets.map{|t| t + '.result'}.join(' ')} test_summary"
+  mkfile.puts "test: #{test_targets.map{|t| t + '.testresult'}.join(' ')} test_summary"
   mkfile.puts ""
 
 end
