@@ -58,7 +58,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   test_sources = Dir["#{TEST_DIR}/**/test_*.c"]
   test_targets = []
   generator = UnityTestRunnerGenerator.new
-  all_headers = Dir["#{SRC_DIR}/**/*.h"]
+  all_headers = Dir["#{SRC_DIR}/**/{[!mock_]}*.h"]  #headers that begin with mock_ are not included
   makefile_targets = []
 
   test_sources.each do |test|
@@ -130,6 +130,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
       raise "Module header '#{name}' not found to mock!" unless header_to_mock
       headers_to_mock << header_to_mock
     end
+
     all_headers_to_mock += headers_to_mock
     mock_objs = headers_to_mock.map do |hdr|
       mock_name = MOCK_PREFIX + File.basename(hdr, '.h')
