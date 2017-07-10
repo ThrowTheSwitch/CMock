@@ -105,6 +105,9 @@ class CMockHeaderParser
     # remove gcc's __attribute__ tags
     source.gsub(/__attrbute__\s*\(\(\.*\)\)/, '')
 
+    # remove usage of GOTH_DEPREACTED macro.
+    source.gsub!(/^\s*GOTH_DEPRECATED\s*\(\".*\"\)\s*$/, '')
+
     # remove preprocessor statements and extern "C"
 	#source.gsub!(/^\s*#.*/, '')
 	source.gsub!(/extern\s/, 'GOTHIC_PUBLIC ')
