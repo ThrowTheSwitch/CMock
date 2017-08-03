@@ -98,6 +98,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "\n",
       "/* Ignore the following warnings, since we are copying code */\n",
       "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n",
+      "#pragma GCC diagnostic push\n",
       "#if !defined(__clang__)\n",
       "#pragma GCC diagnostic ignored \"-Wpragmas\"\n",
       "#endif\n",
@@ -150,6 +151,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "\n",
       "/* Ignore the following warnings, since we are copying code */\n",
       "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n",
+      "#pragma GCC diagnostic push\n",
       "#if !defined(__clang__)\n",
       "#pragma GCC diagnostic ignored \"-Wpragmas\"\n",
       "#endif\n",
@@ -185,6 +187,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "\n",
       "/* Ignore the following warnings, since we are copying code */\n",
       "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n",
+      "#pragma GCC diagnostic push\n",
       "#if !defined(__clang__)\n",
       "#pragma GCC diagnostic ignored \"-Wpragmas\"\n",
       "#endif\n",
@@ -221,6 +224,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "\n",
       "/* Ignore the following warnings, since we are copying code */\n",
       "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n",
+      "#pragma GCC diagnostic push\n",
       "#if !defined(__clang__)\n",
       "#pragma GCC diagnostic ignored \"-Wpragmas\"\n",
       "#endif\n",
@@ -272,7 +276,13 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
   it "append the proper footer to the header file" do
     output = []
-    expected = ["\n#endif\n"]
+    expected = ["\n",
+                "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n",
+                "#pragma GCC diagnostic pop\n",
+                "#endif\n",
+                "\n",
+                "#endif\n"
+                ]
 
     @cmock_generator.create_mock_header_footer(output)
 
