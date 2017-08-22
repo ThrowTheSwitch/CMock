@@ -155,7 +155,6 @@ class CMockHeaderParser
       arg_array = arg.split
       ptr_const_info = divine_ptr_and_const(arg)
       arg_elements = arg_array - (ptr_const_info[:ptr?] ? @c_attr_noconst : @c_attributes)
-      ptr_const_info = divine_ptr_and_const(arg)
       args << { :type   => arg_elements[0..(ptr_const_info[:const_ptr?] ? -3 : -2)].join(' '),
                 :name   => arg_elements[-1]
               }.merge(ptr_const_info)
