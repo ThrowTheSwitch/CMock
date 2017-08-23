@@ -313,7 +313,7 @@ from the defaults. We've tried to specify what the defaults are below.
 
 * `:callback_after_arg_check`:
   Tell `:callback` plugin to do the normal argument checking **before** it
-  calls the callback function by setting this to true. WHen false, the
+  calls the callback function by setting this to true. When false, the
   callback function is called **instead** of the argument verification.
   
   * default: false
@@ -504,7 +504,7 @@ from the defaults. We've tried to specify what the defaults are below.
   * default: []
 
 * `:verbosity`:
-  How loud shoudl CMock be?
+  How loud should CMock be?
   
   * 0 for errors only
   * 1 for errors and warnings
