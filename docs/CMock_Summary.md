@@ -580,7 +580,7 @@ based on other settings, particularly Unity's settings.
 Examples
 ========
 
-You can look in the examples directory for a couple of examples on how 
+You can look in the [examples directory](/examples/) for a couple of examples on how
 you might tool CMock into your build process. You may also want to consider
 using [Ceedling](https://throwtheswitch.org/Ceedling). Please note that
 these examples are meant to show how the build process works. They have 
