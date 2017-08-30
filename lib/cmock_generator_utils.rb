@@ -112,12 +112,11 @@ class CMockGeneratorUtils
                  else
                    (@helpers.nil? or @helpers[:unity_helper].nil?) ? ["UNITY_TEST_ASSERT_EQUAL",''] : @helpers[:unity_helper].get_helper(c_type)
                  end
-    unity_msg  = "Function '#{function[:name]}' called with unexpected value for argument '#{arg_name}'."
-    return c_type, arg_name, expected, ignore, unity_func[0], unity_func[1], unity_msg
+    return c_type, arg_name, expected, ignore, unity_func[0], unity_func[1]
   end
 
   def code_verify_an_arg_expectation_with_no_arrays(function, arg)
-    c_type, arg_name, expected, ignore, unity_func, pre, unity_msg = lookup_expect_type(function, arg)
+    c_type, arg_name, expected, ignore, unity_func, pre = lookup_expect_type(function, arg)
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
@@ -152,7 +151,7 @@ class CMockGeneratorUtils
   end
 
   def code_verify_an_arg_expectation_with_normal_arrays(function, arg)
-    c_type, arg_name, expected, ignore, unity_func, pre, unity_msg = lookup_expect_type(function, arg)
+    c_type, arg_name, expected, ignore, unity_func, pre = lookup_expect_type(function, arg)
     depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
@@ -188,7 +187,7 @@ class CMockGeneratorUtils
   end
 
   def code_verify_an_arg_expectation_with_smart_arrays(function, arg)
-    c_type, arg_name, expected, ignore, unity_func, pre, unity_msg = lookup_expect_type(function, arg)
+    c_type, arg_name, expected, ignore, unity_func, pre = lookup_expect_type(function, arg)
     depth_name = (arg[:ptr?]) ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
