@@ -68,7 +68,7 @@ class CMockGeneratorPluginExpect
     function[:args].each do |arg|
       lines << @utils.code_verify_an_arg_expectation(function, arg)
     end
-    lines << "\n  }\n"
+    lines << "  }\n"
     lines
   end
 
