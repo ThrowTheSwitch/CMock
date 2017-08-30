@@ -2,12 +2,12 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-# ========================================== 
+# ==========================================
 
 class CMockPluginManager
 
   attr_accessor :plugins
-  
+
   def initialize(config, utils)
     @plugins = []
     plugins_to_load = [:expect, config.plugins].flatten.uniq.compact
@@ -25,7 +25,7 @@ class CMockPluginManager
     end
     @plugins.sort! {|a,b| a.priority <=> b.priority }
   end
-  
+
   def run(method, args=nil)
     if args.nil?
       return @plugins.collect{ |plugin| plugin.send(method) if plugin.respond_to?(method) }.flatten.join
@@ -33,7 +33,7 @@ class CMockPluginManager
       return @plugins.collect{ |plugin| plugin.send(method, args) if plugin.respond_to?(method) }.flatten.join
     end
   end
-  
+
   def camelize(lower_case_and_underscored_word)
     lower_case_and_underscored_word.gsub(/\/(.?)/) { "::" + $1.upcase }.gsub(/(^|_)(.)/) { $2.upcase }
   end
