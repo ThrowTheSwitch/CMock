@@ -96,11 +96,12 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
   it "add mock function implementation for functions of style 'int func(int veal, unsigned int sushi)'" do
     function = {:name => "Cherry", :args => [ { :type => "int", :name => "veal" }, { :type => "unsigned int", :name => "sushi" } ], :return => test_return[:int]}
 
-    @utils.expect :code_verify_an_arg_expectation, " mocked_retval_1", [function, function[:args][0]]
-    @utils.expect :code_verify_an_arg_expectation, " mocked_retval_2", [function, function[:args][1]]
+    @utils.expect :code_verify_an_arg_expectation, "mocked_retval_1\n", [function, function[:args][0]]
+    @utils.expect :code_verify_an_arg_expectation, "mocked_retval_2\n", [function, function[:args][1]]
     expected = "  if (cmock_call_instance->IgnoreMode != CMOCK_ARG_NONE)\n" +
                "  {\n" +
-               " mocked_retval_1 mocked_retval_2\n" +
+               "mocked_retval_1\n" +
+               "mocked_retval_2\n" +
                "  }\n"
     returned = @cmock_generator_plugin_expect.mock_implementation(function)
     assert_equal(expected, returned)
@@ -116,7 +117,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
 
   it "add mock function implementation for functions of style 'void func(int worm)' and strict ordering" do
     function = {:name => "Apple", :args => [{ :type => "int", :name => "worm" }], :return => test_return[:void]}
-    @utils.expect :code_verify_an_arg_expectation, "mocked_retval_0", [function, function[:args][0]]
+    @utils.expect :code_verify_an_arg_expectation, "mocked_retval_0\n", [function, function[:args][0]]
     expected = "  if (cmock_call_instance->IgnoreMode != CMOCK_ARG_NONE)\n" +
                "  {\n" +
                "mocked_retval_0\n" +
@@ -128,12 +129,12 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
 
   it "add mock interfaces for functions of style 'void func(void)'" do
     function = {:name => "Pear", :args => [], :args_string => "void", :return => test_return[:void]}
-    @utils.expect :code_add_base_expectation, "mock_retval_0 ", ["Pear"]
-    @utils.expect :code_call_argument_loader, "mock_retval_1 ", [function]
+    @utils.expect :code_add_base_expectation, "mock_retval_0\n", ["Pear"]
+    @utils.expect :code_call_argument_loader, "mock_retval_1\n", [function]
     expected = ["void Pear_CMockExpect(UNITY_LINE_TYPE cmock_line)\n",
                 "{\n",
-                "mock_retval_0 ",
-                "mock_retval_1 ",
+                "mock_retval_0\n",
+                "mock_retval_1\n",
                 "  UNITY_CLR_DETAILS();\n",
                 "}\n\n"
                ].join
@@ -143,14 +144,14 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
 
   it "add mock interfaces for functions of style 'int func(void)'" do
     function = {:name => "Orange", :args => [], :args_string => "void", :return => test_return[:int]}
-    @utils.expect :code_add_base_expectation, "mock_retval_0 ", ["Orange"]
-    @utils.expect :code_call_argument_loader, "mock_retval_1 ", [function]
-    @utils.expect :code_assign_argument_quickly, "mock_retval_2", ["cmock_call_instance->ReturnVal", function[:return]]
+    @utils.expect :code_add_base_expectation, "mock_retval_0\n", ["Orange"]
+    @utils.expect :code_call_argument_loader, "mock_retval_1\n", [function]
+    @utils.expect :code_assign_argument_quickly, "mock_retval_2\n", ["cmock_call_instance->ReturnVal", function[:return]]
     expected = ["void Orange_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, int cmock_to_return)\n",
                 "{\n",
-                "mock_retval_0 ",
-                "mock_retval_1 ",
-                "mock_retval_2",
+                "mock_retval_0\n",
+                "mock_retval_1\n",
+                "mock_retval_2\n",
                 "  UNITY_CLR_DETAILS();\n",
                 "}\n\n"
                ].join
@@ -160,14 +161,14 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
 
   it "add mock interfaces for functions of style 'int func(char* pescado)'" do
     function = {:name => "Lemon", :args => [{ :type => "char*", :name => "pescado"}], :args_string => "char* pescado", :return => test_return[:int]}
-    @utils.expect :code_add_base_expectation, "mock_retval_0 ", ["Lemon"]
-    @utils.expect :code_call_argument_loader, "mock_retval_1 ", [function]
-    @utils.expect :code_assign_argument_quickly, "mock_retval_2", ["cmock_call_instance->ReturnVal", function[:return]]
+    @utils.expect :code_add_base_expectation, "mock_retval_0\n", ["Lemon"]
+    @utils.expect :code_call_argument_loader, "mock_retval_1\n", [function]
+    @utils.expect :code_assign_argument_quickly, "mock_retval_2\n", ["cmock_call_instance->ReturnVal", function[:return]]
     expected = ["void Lemon_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, char* pescado, int cmock_to_return)\n",
                 "{\n",
-                "mock_retval_0 ",
-                "mock_retval_1 ",
-                "mock_retval_2",
+                "mock_retval_0\n",
+                "mock_retval_1\n",
+                "mock_retval_2\n",
                 "  UNITY_CLR_DETAILS();\n",
                 "}\n\n"
                ].join
@@ -177,12 +178,12 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
 
   it "add mock interfaces for functions when using ordering" do
     function = {:name => "Pear", :args => [], :args_string => "void", :return => test_return[:void]}
-    @utils.expect :code_add_base_expectation, "mock_retval_0 ", ["Pear"]
-    @utils.expect :code_call_argument_loader, "mock_retval_1 ", [function]
+    @utils.expect :code_add_base_expectation, "mock_retval_0\n", ["Pear"]
+    @utils.expect :code_call_argument_loader, "mock_retval_1\n", [function]
     expected = ["void Pear_CMockExpect(UNITY_LINE_TYPE cmock_line)\n",
                 "{\n",
-                "mock_retval_0 ",
-                "mock_retval_1 ",
+                "mock_retval_0\n",
+                "mock_retval_1\n",
                 "  UNITY_CLR_DETAILS();\n",
                 "}\n\n"
                ].join
