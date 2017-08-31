@@ -160,30 +160,20 @@ class CMockHeaderParser
   end
 
   def divine_const(arg)
-    return false if !(/(?:^|\s|\*)const(?:\*|\s|$)/ =~ arg)   # check for const as part of a larger word
-    return true  if (/const(?:\w|\s)*\*/ =~ arg)              # check const comes before * indicating const data
-    return false if (/\*\s*const/ =~ arg)                     # check const comes after * indicating const ptr
-    return true
+    # a non-pointer arg containing "const" is a constant
+    # an arg containing "const" before the last * is a pointer to a constant
+    return ( arg.include?('*') ? (/(^|\s|\*)const(\s(\w|\s)*)?\*(?!.*\*)/ =~ arg)
+                               : (/(^|\s)const(\s|$)/ =~ arg) ) ? true : false
   end
 
   def divine_ptr_and_const(arg)
-    divination = { :ptr? => false, :const? => false, :const_ptr? => false }
+    divination = {}
 
-    #first check if there is a pointer present and that it's not part of a C string or function definition
-    #divination[:ptr?] = (arg.split[0..-2].join.include?('*') && !arg.gsub(/(const|char|\*|\s)+/,'').empty?)
-    divination[:ptr?] = (arg.include?('*') && !arg.gsub(/(const|char|\*|\s)+/,'').empty?)
+    divination[:ptr?] = divine_ptr(arg)
+    divination[:const?] = divine_const(arg)
 
-    #if there isn't a const that isn't part of a larger word, we're done
-    return divination if !(/(?:^|\s|\*)const(?:\*|\s|$)/ =~ arg)
-    divination[:const?] = true
-
-    # check const comes after * indicating const ptr
-    if (/\*\s*const/ =~ arg)
-      divination[:const_ptr?] = true
-
-      #check const comes before * indicating also const data
-      divination[:const?] = (/const(?:\w|\s)*\*/ =~ arg) ? true : false
-    end
+    # an arg containing "const" after the last * is a constant pointer
+    divination[:const_ptr?] = (/\*(?!.*\*)\s*const(\s|$)/ =~ arg) ? true : false
 
     return divination
   end

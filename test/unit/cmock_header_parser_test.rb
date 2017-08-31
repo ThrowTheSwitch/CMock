@@ -1510,4 +1510,38 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "divines all permutations of ptr, const, and const_ptr correctly" do
+    truth_table = [
+      # argument                                           ptr    const  const_ptr
+      [ "constNOTconst constNOTconst",                     false, false, false ],
+      [ "const constNOTconst constNOTconst",               false, true,  false ],
+      [ "constNOTconst const constNOTconst",               false, true,  false ],
+      [ "constNOTconst *constNOTconst",                    true,  false, false ],
+      [ "const constNOTconst *constNOTconst",              true,  true,  false ],
+      [ "constNOTconst const *constNOTconst",              true,  true,  false ],
+      [ "constNOTconst *const constNOTconst",              true,  false, true ],
+      [ "const constNOTconst *const constNOTconst",        true,  true,  true ],
+      [ "constNOTconst const *const constNOTconst",        true,  true,  true ],
+      [ "constNOTconst **constNOTconst",                   true,  false, false ],
+      [ "const constNOTconst **constNOTconst",             true,  false, false ],
+      [ "constNOTconst const **constNOTconst",             true,  false, false ],
+      [ "constNOTconst *const *constNOTconst",             true,  true,  false ],
+      [ "const constNOTconst *const *constNOTconst",       true,  true,  false ],
+      [ "constNOTconst const *const *constNOTconst",       true,  true,  false ],
+      [ "constNOTconst **const constNOTconst",             true,  false, true ],
+      [ "const constNOTconst **const constNOTconst",       true,  false, true ],
+      [ "constNOTconst const **const constNOTconst",       true,  false, true ],
+      [ "constNOTconst *const *const constNOTconst",       true,  true,  true ],
+      [ "const constNOTconst *const *const constNOTconst", true,  true,  true ],
+      [ "constNOTconst const *const *const constNOTconst", true,  true,  true ]
+    ]
+
+    truth_table.each do |entry|
+      assert_equal(@parser.divine_ptr(entry[0]), entry[1])
+      assert_equal(@parser.divine_const(entry[0]), entry[2])
+      assert_equal(@parser.divine_ptr_and_const(entry[0]),
+        { ptr?: entry[1], const?: entry[2], const_ptr?: entry[3] })
+    end
+  end
+
 end
