@@ -146,16 +146,17 @@ class CMockHeaderParser
       return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)   # we're done if we reach void by itself or ...
       arg_array = arg.split
       arg_elements = arg_array - @c_attributes              # split up words and remove known attributes
-      args << { :type   => (arg_type = arg_elements[0..-2].join(' ')),
+      args << { :type   => arg_elements[0..-2].join(' '),
                 :name   => arg_elements[-1]
               }.merge(divine_ptr_and_const(arg))
     end
     return args
   end
 
-  def divine_ptr(arg_type)
-    return false unless arg_type.include? '*'
-    return false if arg_type.gsub(/(const|char|\*|\s)+/,'').empty?
+  def divine_ptr(arg)
+    return false unless arg.include? '*'
+    # treat "const char *" and similar as a string, not a pointer
+    return false if /(^|\s)(const\s+)?char(\s+const)?\s*\*(?!.*\*)/ =~ arg
     return true
   end
 
