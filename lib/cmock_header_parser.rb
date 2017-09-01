@@ -228,8 +228,8 @@ class CMockHeaderParser
 
     #process function attributes, return type, and name
     descriptors = regex_match[1]
-    descriptors.gsub!(/\s+\*/,'*')     #remove space to place asterisks with return type (where they belong)
-    descriptors.gsub!(/\*(\w)/,'* \1') #pull asterisks away from function name to place asterisks with return type (where they belong)
+    descriptors.gsub!(/(\w)\*/,'\1 *') #pull asterisks away from preceding word
+    descriptors.gsub!(/\*(\w)/,'* \1') #pull asterisks away from following word
     descriptors = descriptors.split    #array of all descriptor strings
 
     #grab name
@@ -249,7 +249,7 @@ class CMockHeaderParser
       end
     end
     decl[:modifier] = decl[:modifier].join(' ')
-    rettype = rettype.join(' ')
+    rettype = rettype.join(' ').gsub(/\s+\*/,'*') #remove space before asterisks
     rettype = 'void' if (@local_as_void.include?(rettype.strip))
     decl[:return] = { :type   => rettype,
                       :name   => 'cmock_to_return',
