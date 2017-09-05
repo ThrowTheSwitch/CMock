@@ -65,6 +65,10 @@ class CMockGeneratorPluginIgnore
     lines << "}\n\n"
   end
 
+  def mock_ignore(function)
+    "  Mock.#{function[:name]}_IgnoreBool = (int) 1;\n"
+  end
+
   def mock_verify(function)
     func_name = function[:name]
     "  if (Mock.#{func_name}_IgnoreBool)\n    Mock.#{func_name}_CallInstance = CMOCK_GUTS_NONE;\n"

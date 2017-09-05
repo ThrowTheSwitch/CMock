@@ -19,6 +19,7 @@ class CMockConfig
     :attributes                  => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],
     :c_calling_conventions       => ['__stdcall', '__cdecl', '__fastcall'],
     :enforce_strict_ordering     => false,
+    :strict_mock_calling         => true,
     :unity_helper_path           => false,
     :treat_as                    => {},
     :treat_as_void               => [],

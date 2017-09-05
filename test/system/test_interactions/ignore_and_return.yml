@@ -159,4 +159,12 @@
           TEST_ASSERT_EQUAL(110, function(0, 8, 9));
         }
 
+    - :pass: FALSE
+      :should: 'Without "TODO" specified, Expect/Ignore/... of bar is required. Test should fail.'
+      :code: |
+        test()
+        {
+          function(1, 2, 3);
+        }
+
 ...
