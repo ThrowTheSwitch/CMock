@@ -541,6 +541,21 @@ from the defaults. We've tried to specify what the defaults are below.
   
   * default: :smart
 
+* `:strict_mock_calling`:
+  CMock always enforces you to specify what to do when a mocked function is called.
+  If you did not specify any action for the mocked function (no _Expect,_Ignore, ...),
+  the test will fail when the mocked function got called (because you did not specify an action!).
+
+  You might not want this behaviour.
+  You might want all calls to mock functions to be 'ignored' at the start of a test case.
+  You can then define actions for the mock functions you are interested in.
+  If so, set this to false.
+
+  * default: true
+  * **note:**
+    If this option is disabled, the mocked functions will return
+	a default value (0x0) when called (and only if they have to return something ofcourse).
+
 
 Compiled Options:
 -----------------
