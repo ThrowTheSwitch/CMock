@@ -68,15 +68,15 @@ Installing
 ==========
 
 The first thing you need to do to install CMock is to get yourself
-a copy of Ruby. If you're on linux or osx, you probably already 
+a copy of Ruby. If you're on linux or osx, you probably already
 have it. You can prove it by typing the following:
 
     ruby --version
-    
+
 
 If it replied in a way that implies ignorance, then you're going to
-need to install it. You can go to [ruby-lang](https://ruby-lang.org) 
-to get the latest version. You're also going to need to do that if it 
+need to install it. You can go to [ruby-lang](https://ruby-lang.org)
+to get the latest version. You're also going to need to do that if it
 replied with a version that is older than 2.0.0. Go ahead. We'll wait.
 
 Once you have Ruby, you have three options:
@@ -128,12 +128,12 @@ if there are some.
 Array:
 ------
 
-An ExpectWithArray is another variant of Expect. Like expect, it cares about 
-the number of times a mock is called, the arguments it is called with, and the 
-values it is to return. This variant has another feature, though. For anything 
-that resembles a pointer or array, it breaks the argument into TWO arguments. 
+An ExpectWithArray is another variant of Expect. Like expect, it cares about
+the number of times a mock is called, the arguments it is called with, and the
+values it is to return. This variant has another feature, though. For anything
+that resembles a pointer or array, it breaks the argument into TWO arguments.
 The first is the original pointer. The second specify the number of elements
-it is to verify of that array. If you specify 1, it'll check one object. If 2, 
+it is to verify of that array. If you specify 1, it'll check one object. If 2,
 it'll assume your pointer is pointing at the first of two elements in an array.
 If you specify zero elements, it will check just the pointer if
 `:smart` mode is configured or fail if `:compare_data` is set.
@@ -151,9 +151,9 @@ Maybe you don't care about the number of times a particular function is called o
 the actual arguments it is called with. In that case, you want to use Ignore. Ignore
 only needs to be called once per test. It will then ignore any further calls to that
 particular mock. The IgnoreAndReturn works similarly, except that it has the added
-benefit of knowing what to return when that call happens. If the mock is called more 
+benefit of knowing what to return when that call happens. If the mock is called more
 times than IgnoreAndReturn was called, it will keep returning the last value without
-complaint. If it's called less times, it will also ignore that. You SAID you didn't 
+complaint. If it's called less times, it will also ignore that. You SAID you didn't
 care how many times it was called, right?
 
 * `void func(void)` => `void func_Ignore(void)`
@@ -179,7 +179,7 @@ ReturnThruPtr:
 --------------
 
 Another option which operates on a particular argument of a function is the ReturnThruPtr
-plugin. For every argument that resembles a pointer or reference, CMock generates an 
+plugin. For every argument that resembles a pointer or reference, CMock generates an
 instance of this function. Just as the AndReturn functions support injecting one or more
 return values into a queue, this function lets you specify one or more return values which
 are queued up and copied into the space being pointed at each time the mock is called.
@@ -195,7 +195,7 @@ Callback:
 If all those other options don't work, and you really need to do something custom, you
 still have a choice. As soon as you stub a callback in a test, it will call the callback
 whenever the mock is encountered and return the retval returned from the callback (if any)
-instead of performing the usual expect checks. It can be configured to check the arguments 
+instead of performing the usual expect checks. It can be configured to check the arguments
 first (like expects) or just jump directly to the callback.
 
 * `void func(void)` => `void func_StubWithCallback(CMOCK_func_CALLBACK callback)`
@@ -211,8 +211,8 @@ where `CMOCK_func_CALLBACK` looks like: `retval func(params, int NumCalls)`
 Cexception:
 -----------
 
-Finally, if you are using Cexception for error handling, you can use this to throw errors 
-from inside mocks. Like Expects, it remembers which call was supposed to throw the error, 
+Finally, if you are using Cexception for error handling, you can use this to throw errors
+from inside mocks. Like Expects, it remembers which call was supposed to throw the error,
 and it still checks parameters first.
 
 * `void func(void)` => `void func_ExpectAndThrow(value_to_throw)`
@@ -295,8 +295,8 @@ from the defaults. We've tried to specify what the defaults are below.
   These are attributes that CMock should ignore for you for testing
   purposes. Custom compiler extensions and externs are handy things to
   put here. If your compiler is choking on some extended syntax, this
-  is often a good place to look. 
-  
+  is often a good place to look.
+
   * defaults: ['__ramfunc', '__irq', '__fiq', 'register', 'extern']
   * **note:** this option will reinsert these attributes onto the mock's calls.
     If that isn't what you are looking for, check out :strippables.
@@ -306,7 +306,7 @@ from the defaults. We've tried to specify what the defaults are below.
   might show up in your codebase. If it encounters something it doesn't
   recognize, it's not going to mock it. We have the most common covered,
   but there are many compilers out there, and therefore many other options.
-  
+
   * defaults: ['__stdcall', '__cdecl', '__fastcall']
   * **note:** this option will reinsert these attributes onto the mock's calls.
     If that isn't what you are looking for, check out :strippables.
@@ -315,7 +315,7 @@ from the defaults. We've tried to specify what the defaults are below.
   Tell `:callback` plugin to do the normal argument checking **before** it
   calls the callback function by setting this to true. When false, the
   callback function is called **instead** of the argument verification.
-  
+
   * default: false
 
 * `:callback_include_count`:
@@ -323,14 +323,14 @@ from the defaults. We've tried to specify what the defaults are below.
   number of times the callback has been called. If set to false, the
   callback has the same interface as the mocked function. This can be
   handy when you're wanting to use callback as a stub.
-  
+
   * default: true
 
 * `:cexception_include`:
   Tell `:cexception` plugin where to find CException.h... You only need to
   define this if it's not in your build path already... which it usually
   will be for the purpose of your builds.
-  
+
   * default: *nil*
 
 * `:enforce_strict_ordering`:
@@ -339,14 +339,14 @@ from the defaults. We've tried to specify what the defaults are below.
   will verify that the sizes are in the order you specified. You might
   *also* want to make sure that all different functions are called in a
   particular order. If so, set this to true.
-  
+
   * default: false
 
 * `:framework`:
   Currently the only option is `:unity.` Eventually if we support other
   unity test frameworks (or if you write one for us), they'll get added
   here.
-  
+
   : default: :unity
 
 * `:includes`:
@@ -354,11 +354,11 @@ from the defaults. We've tried to specify what the defaults are below.
   mocks. Useful for global types and definitions used in your project.
   There are more specific versions if you care WHERE in the mock files
   the includes get placed. You can define any or all of these options.
-  
+
   * `:includes`
   * `:includes_h_pre_orig_header`
   * `:includes_h_post_orig_header`
-  * `:includes_c_pre_header` 
+  * `:includes_c_pre_header`
   * `:includes_c_post_header`
   * default: nil #for all 5 options
 
@@ -368,60 +368,60 @@ from the defaults. We've tried to specify what the defaults are below.
   the time (though it tries its best). If it comes across a type it doesn't
   recognize, you have a choice on how you want it to handle it. It can either
   perform a raw memory comparison and report any differences, or it can fail
-  with a meaningful message. Either way, this feature will only happen after 
+  with a meaningful message. Either way, this feature will only happen after
   all other mechanisms have failed (The thing encountered isn't a standard
   type. It isn't in the :treat_as list. It isn't in a custom unity_helper).
 
   * default: true
-  
+
 * `:mock_path`:
   The directory where you would like the mock files generated to be
   placed.
-  
+
   * default: mocks
 
 * `:mock_prefix`:
   The prefix to prepend to your mock files. For example, if it's “Mock”, a file
   “USART.h” will get a mock called “MockUSART.c”. This CAN be used with a suffix
   at the same time.
-  
+
   * default: Mock
 
 * `:mock_suffix`:
   The suffix to append to your mock files. For example, it it's "_Mock", a file
   "USART.h" will get a mock called "USART_Mock.h". This CAN be used with a prefix
   at the same time.
-  
+
   * default: ""
 
 * `:plugins`:
   An array of which plugins to enable. ':expect' is always active. Also
   available currently:
-  
-  * `:ignore` 
-  * `:ignore_arg` 
+
+  * `:ignore`
+  * `:ignore_arg`
   * `:expect_any_args`
   * `:array`
-  * `:cexception` 
-  * `:callback` 
+  * `:cexception`
+  * `:callback`
   * `:return_thru_ptr`
 
 * `:strippables`:
   An array containing a list of items to remove from the header
   before deciding what should be mocked. This can be something simple
   like a compiler extension CMock wouldn't recognize, or could be a
-  regex to reject certain function name patterns. This is a great way to 
+  regex to reject certain function name patterns. This is a great way to
   get rid of compiler extensions when your test compiler doesn't support
   them. For example, use `:strippables: ['(?:functionName\s*\(+.*?\)+)']`
   to prevent a function `functionName` from being mocked. By default, it
   is ignoring all gcc attribute extensions.
-  
+
   * default: ['(?:__attribute__\s*\(+.*?\)+)']
-  
+
 * `:subdir`:
-  This is a relative subdirectory for your mocks.  Set this to e.g. "sys" in 
+  This is a relative subdirectory for your mocks.  Set this to e.g. "sys" in
   order to create a mock for `sys/types.h` in `(:mock_path)/sys/`.
-  
+
   * default: ""
 
 * `:treat_as`:
@@ -432,11 +432,11 @@ from the defaults. We've tried to specify what the defaults are below.
   did that one for you). Maybe you have a type that is a pointer to an
   array of unsigned characters? No problem, just add 'UINT8_T*' =>
   'HEX8*'
-  
-  * NOTE: unlike the other options, your specifications MERGE with the 
+
+  * NOTE: unlike the other options, your specifications MERGE with the
     default list. Therefore, if you want to override something, you must
     reassign it to something else (or to *nil* if you don't want it)
-    
+
   * default:
     * 'int': 'INT'
     * 'char': 'INT8'
@@ -483,14 +483,14 @@ from the defaults. We've tried to specify what the defaults are below.
   We've seen "fun" legacy systems typedef 'void' with a custom type,
   like MY_VOID. Add any instances of those to this list to help CMock
   understand how to deal with your code.
-  
+
   * default: []
 
 * `:treat_externs`:
   This specifies how you want CMock to handle functions that have been
   marked as extern in the header file. Should it mock them?
-  
-  * `:include` will mock externed functions 
+
+  * `:include` will mock externed functions
   * `:exclude` will ignore externed functions (default).
 
 * `:unity_helper_path`:
@@ -500,23 +500,23 @@ from the defaults. We've tried to specify what the defaults are below.
   trick is that you make sure you follow the naming convention:
   `UNITY_TEST_ASSERT_EQUAL_YourType`. If it finds macros of the right
   shape that match that pattern, it'll use them.
-  
+
   * default: []
 
 * `:verbosity`:
   How loud should CMock be?
-  
+
   * 0 for errors only
   * 1 for errors and warnings
-  * 2 for normal (default) 
+  * 2 for normal (default)
   * 3 for verbose
 
 * `:weak`:
-  When set this to some value, the generated mocks are defined as weak 
+  When set this to some value, the generated mocks are defined as weak
   symbols using the configured format. This allows them to be overridden
-  in particular tests. 
-  
-  * Set to '__attribute ((weak))' for weak mocks when using GCC. 
+  in particular tests.
+
+  * Set to '__attribute ((weak))' for weak mocks when using GCC.
   * Set to any non-empty string for weak mocks when using IAR.
   * default: ""
 
@@ -525,7 +525,7 @@ from the defaults. We've tried to specify what the defaults are below.
   it, it usually contains function prototypes (otherwise what was the
   point?). You can control what happens when this isn't true. You can
   set this to `:warn,` `:ignore,` or `:error`
-  
+
   * default: :warn
 
 * `:when_ptr`:
@@ -538,30 +538,30 @@ from the defaults. We've tried to specify what the defaults are below.
   single element of what is being pointed to. So if you have a pointer
   to a struct called ORGAN_T, it will compare one ORGAN_T (whatever that
   is).
-  
+
   * default: :smart
 
-* `:strict_mock_calling`:
-  CMock always enforces you to specify what to do when a mocked function is called.
-  If you did not specify any action for the mocked function (no _Expect,_Ignore, ...),
-  the test will fail when the mocked function got called (because you did not specify an action!).
+* `:fail_on_unexpected_calls`:
+  By default, CMock will fail a test if a mock is called without _Expect and _Ignore
+  called first. While this forces test writers to be more explicit in their expectations,
+  it can clutter tests with _Expect or _Ignore calls for functions which are not the focus
+  of the test. While this is a good indicator that this module should be refactored, some
+  users are not fans of the additional noise.
 
-  You might not want this behaviour.
-  You might want all calls to mock functions to be 'ignored' at the start of a test case.
-  You can then define actions for the mock functions you are interested in.
-  If so, set this to false.
+  Therefore, :fail_on_unexpected_calls can be set to false to force all mocks to start with
+  the assumption that they are operating as _Ignore unless otherwise specified.
 
   * default: true
   * **note:**
     If this option is disabled, the mocked functions will return
-	a default value (0x0) when called (and only if they have to return something ofcourse).
+    a default value (0) when called (and only if they have to return something of course).
 
 
 Compiled Options:
 -----------------
 
 A number of #defines also exist for customizing the cmock experience.
-Feel free to pass these into your compiler or whatever is most 
+Feel free to pass these into your compiler or whatever is most
 convenient. CMock will otherwise do its best to guess what you want
 based on other settings, particularly Unity's settings.
 
@@ -598,6 +598,6 @@ Examples
 You can look in the [examples directory](/examples/) for a couple of examples on how
 you might tool CMock into your build process. You may also want to consider
 using [Ceedling](https://throwtheswitch.org/Ceedling). Please note that
-these examples are meant to show how the build process works. They have 
+these examples are meant to show how the build process works. They have
 failing tests ON PURPOSE to show what that would look like. Don't be alarmed. ;)
 

@@ -18,7 +18,7 @@ class CMockGenerator
     @weak        = @config.weak
     @ordered     = @config.enforce_strict_ordering
     @framework   = @config.framework.to_s
-    @strict_mock_calling = @config.strict_mock_calling
+    @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
 
     @subdir      = @config.subdir
 
@@ -204,7 +204,7 @@ class CMockGenerator
     file << "  memset(&Mock, 0, sizeof(Mock));\n"
     file << functions.collect {|function| @plugins.run(:mock_destroy, function)}.join
 
-    unless (@strict_mock_calling)
+    unless (@fail_on_unexpected_calls)
       file << functions.collect {|function| @plugins.run(:mock_ignore, function)}.join
     end
 

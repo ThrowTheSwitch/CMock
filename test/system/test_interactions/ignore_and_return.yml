@@ -160,7 +160,7 @@
         }
 
     - :pass: FALSE
-      :should: 'With "strict_mock_calling" enabled, Expect/Ignore/... of bar is required and test fails.'
+      :should: 'With "fail_on_unexpected_calls" enabled, Expect/Ignore/... of bar is required and test fails.'
       :code: |
         test()
         {

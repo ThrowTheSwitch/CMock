@@ -2,7 +2,7 @@
 :cmock:
   :plugins:
   - 'ignore'
-  :strict_mock_calling: FALSE
+  :fail_on_unexpected_calls: FALSE
 
 :systest:
   :types: |
@@ -27,7 +27,7 @@
       void tearDown(void) {}
     :units:
     - :pass: TRUE
-      :should: 'With "strict_mock_calling" disabled, Expect/Ignore/... of bar is NOT required.'
+      :should: 'With "fail_on_unexpected_calls" disabled, Expect/Ignore/... of bar is NOT required.'
       :code: |
         test()
         {
