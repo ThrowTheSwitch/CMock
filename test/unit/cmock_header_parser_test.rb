@@ -805,6 +805,39 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "should properly handle const before or after return type" do
+
+    sources = [
+      "const int * PorkRoast(void);\n",
+      "int const * PorkRoast(void);\n",
+      "const int* PorkRoast(void);\n",
+      "int const* PorkRoast(void);\n",
+      "const int *PorkRoast(void);\n",
+      "int const *PorkRoast(void);\n"
+    ]
+
+    expected = [{ :var_arg=>nil,
+                  :name=>"PorkRoast",
+                  :return=> { :type   => "int*",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => true,
+                              :const? => true,
+                              :const_ptr? => false,
+                              :str    => "int* cmock_to_return",
+                              :void?  => false
+                            },
+                  :modifier=>"const",
+                  :contains_ptr? => false,
+                  :args=>[],
+                  :args_string=>"void",
+                  :args_call=>""
+                }]
+
+    sources.each do |source|
+      assert_equal(expected, @parser.parse("module", source)[:functions])
+    end
+  end
+
   it "should properly handle const applied after asterisk in return type (not legal C, but sometimes used)" do
 
     source = "int * const PorkRoast(void);\n"
@@ -1052,7 +1085,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, result[:functions])
   end
 
-  it "handle arrays and treat them as pointers" do
+  it "handle arrays and treat them as pointers or strings" do
     source = "void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], char thing3 [][2 ][ 3], int* thing4[4])"
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -1068,7 +1101,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :contains_ptr? => true,
                  :args=>[ {:type=>"CUSTOM_TYPE*", :name=>"thing1", :ptr? => true, :const? => false, :const_ptr? => false},
                           {:type=>"int*", :name=>"thing2", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"char*", :name=>"thing3", :ptr? => true, :const? => false, :const_ptr? => false},  #THIS one will likely change in the future when we improve multidimensional array support
+                          {:type=>"char*", :name=>"thing3", :ptr? => false, :const? => false, :const_ptr? => false},  #THIS one will likely change in the future when we improve multidimensional array support
                           {:type=>"int**", :name=>"thing4", :ptr? => true, :const? => false, :const_ptr? => false}    #THIS one will likely change in the future when we improve multidimensional array support
                         ],
                  :args_string=>"CUSTOM_TYPE* thing1, int* thing2, char* thing3, int** thing4",
@@ -1407,7 +1440,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                    :contains_ptr? => true,
                    :args=>[ {:type=>"sqlite3_stmt*", :name=>"cmock_arg2", :ptr? => true, :const? => false, :const_ptr? => false},
                             {:type=>"int", :name=>"cmock_arg3", :ptr? => false, :const? => false, :const_ptr? => false},
-                            {:type=>"char*", :name=>"cmock_arg4", :ptr? => true, :const? => true, :const_ptr? => false},
+                            {:type=>"char*", :name=>"cmock_arg4", :ptr? => false, :const? => true, :const_ptr? => false},
                             {:type=>"int", :name=>"n", :ptr? => false, :const? => false, :const_ptr? => false},
                             {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false}
                           ],
@@ -1508,6 +1541,71 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :args_call=>"Cliff, Claire"
                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "divines all permutations of ptr, const, and const_ptr correctly" do
+    truth_table = [
+      # argument                                           ptr    const  const_ptr
+      [ "constNOTconst constNOTconst",                     false, false, false ],
+      [ "const constNOTconst constNOTconst",               false, true,  false ],
+      [ "constNOTconst const constNOTconst",               false, true,  false ],
+      [ "constNOTconst *constNOTconst",                    true,  false, false ],
+      [ "const constNOTconst *constNOTconst",              true,  true,  false ],
+      [ "constNOTconst const *constNOTconst",              true,  true,  false ],
+      [ "constNOTconst *const constNOTconst",              true,  false, true ],
+      [ "const constNOTconst *const constNOTconst",        true,  true,  true ],
+      [ "constNOTconst const *const constNOTconst",        true,  true,  true ],
+      [ "constNOTconst **constNOTconst",                   true,  false, false ],
+      [ "const constNOTconst **constNOTconst",             true,  false, false ],
+      [ "constNOTconst const **constNOTconst",             true,  false, false ],
+      [ "constNOTconst *const *constNOTconst",             true,  true,  false ],
+      [ "const constNOTconst *const *constNOTconst",       true,  true,  false ],
+      [ "constNOTconst const *const *constNOTconst",       true,  true,  false ],
+      [ "constNOTconst **const constNOTconst",             true,  false, true ],
+      [ "const constNOTconst **const constNOTconst",       true,  false, true ],
+      [ "constNOTconst const **const constNOTconst",       true,  false, true ],
+      [ "constNOTconst *const *const constNOTconst",       true,  true,  true ],
+      [ "const constNOTconst *const *const constNOTconst", true,  true,  true ],
+      [ "constNOTconst const *const *const constNOTconst", true,  true,  true ]
+    ]
+
+    truth_table.each do |entry|
+      assert_equal(@parser.divine_ptr(entry[0]), entry[1])
+      assert_equal(@parser.divine_const(entry[0]), entry[2])
+      assert_equal(@parser.divine_ptr_and_const(entry[0]),
+        { ptr?: entry[1], const?: entry[2], const_ptr?: entry[3] })
+    end
+  end
+
+  it "divines ptr correctly for string types" do
+    truth_table = [
+      # argument                      ptr
+      [ "char s",                     false ],
+      [ "const char s",               false ],
+      [ "char const s",               false ],
+      [ "char *s",                    false ],
+      [ "const char *s",              false ],
+      [ "char const *s",              false ],
+      [ "char *const s",              false ],
+      [ "const char *const s",        false ],
+      [ "char const *const s",        false ],
+      [ "char **s",                   true  ],
+      [ "const char **s",             true  ],
+      [ "char const **s",             true  ],
+      [ "char *const *s",             true  ],
+      [ "const char *const *s",       true  ],
+      [ "char const *const *s",       true  ],
+      [ "char **const s",             true  ],
+      [ "const char **const s",       true  ],
+      [ "char const **const s",       true  ],
+      [ "char *const *const s",       true  ],
+      [ "const char *const *const s", true  ],
+      [ "char const *const *const s", true  ]
+    ]
+
+    truth_table.each do |entry|
+      assert_equal(@parser.divine_ptr(entry[0]), entry[1])
+    end
   end
 
 end
