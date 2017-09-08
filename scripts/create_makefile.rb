@@ -58,7 +58,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   test_sources = Dir["#{TEST_DIR}/**/test_*.c"]
   test_targets = []
   generator = UnityTestRunnerGenerator.new
-  all_headers = Dir["#{SRC_DIR}/**/*.h"]
+  all_headers = Dir["#{SRC_DIR}/**/{[!mock_]}*.h"]  #headers that begin with mock_ are not included
   makefile_targets = []
 
   test_sources.each do |test|
@@ -68,7 +68,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     runner_source = File.join(RUNNERS_DIR, "runner_#{module_name}.c")
     runner_obj = File.join(OBJ_DIR, "runner_#{module_name}.o")
     test_bin = File.join(TEST_BIN_DIR, module_name)
-    test_results = File.join(TEST_BIN_DIR, module_name + '.result')
+    test_results = File.join(TEST_BIN_DIR, module_name + '.testresult')
 
     cfg = {
       src: test,
@@ -130,6 +130,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
       raise "Module header '#{name}' not found to mock!" unless header_to_mock
       headers_to_mock << header_to_mock
     end
+
     all_headers_to_mock += headers_to_mock
     mock_objs = headers_to_mock.map do |hdr|
       mock_name = MOCK_PREFIX + File.basename(hdr, '.h')
@@ -150,7 +151,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Run test suite and generate report
     mkfile.puts "#{test_results}: #{test_bin}"
-    mkfile.puts "\t-#{test_bin} &> #{test_results}"
+    mkfile.puts "\t-#{test_bin} > #{test_results} 2>&1"
     mkfile.puts ""
 
     test_targets << test_bin
@@ -180,7 +181,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts ""
 
   # Create target to run all tests
-  mkfile.puts "test: #{test_targets.map{|t| t + '.result'}.join(' ')} test_summary"
+  mkfile.puts "test: #{test_targets.map{|t| t + '.testresult'}.join(' ')} test_summary"
   mkfile.puts ""
 
 end
