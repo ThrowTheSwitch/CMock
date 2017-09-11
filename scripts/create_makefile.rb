@@ -18,8 +18,9 @@ RUNNERS_DIR = File.join(TEST_BUILD_DIR, 'runners')
 MOCKS_DIR = File.join(TEST_BUILD_DIR, 'mocks')
 TEST_BIN_DIR = TEST_BUILD_DIR
 MOCK_PREFIX = ENV.fetch('TEST_MOCK_PREFIX', 'mock_')
+MOCK_SUFFIX = ENV.fetch('TEST_MOCK_SUFFIX', '')
 TEST_MAKEFILE = ENV.fetch('TEST_MAKEFILE', File.join(TEST_BUILD_DIR, 'MakefileTestSupport'))
-MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-\.]+/
+MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-\.]+#{MOCK_SUFFIX}/
 
 [TEST_BUILD_DIR, OBJ_DIR, RUNNERS_DIR, MOCKS_DIR, TEST_BIN_DIR].each do |dir|
   FileUtils.mkdir_p dir
@@ -58,7 +59,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   test_sources = Dir["#{TEST_DIR}/**/test_*.c"]
   test_targets = []
   generator = UnityTestRunnerGenerator.new
-  all_headers = Dir["#{SRC_DIR}/**/{[!mock_]}*.h"]  #headers that begin with mock_ are not included
+  all_headers = Dir["#{SRC_DIR}/**/{[!#{MOCK_PREFIX}]}*{[!#{MOCK_SUFFIX}]}.h"]  #headers that begin with prefix or end with suffix are not included
   makefile_targets = []
 
   test_sources.each do |test|
