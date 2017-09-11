@@ -861,6 +861,69 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "properly parse const and pointer argument types with no arg names" do
+
+    source = "void foo(int const*, int*const, const int*, const int*const, int const*const, int*, int, const int);\n"
+
+    expected = [{ :name => "foo",
+                  :modifier => "",
+                  :return => { :type       => "void",
+                               :name       => "cmock_to_return",
+                               :str        => "void cmock_to_return",
+                               :void?      => true,
+                               :ptr?       => false,
+                               :const?     => false,
+                               :const_ptr? => false
+                             },
+                  :var_arg => nil,
+                  :args_string => "int const* cmock_arg1, int* const cmock_arg2, const int* cmock_arg3, const int* const cmock_arg4, " +
+                                  "int const* const cmock_arg5, int* cmock_arg6, int cmock_arg7, const int cmock_arg8",
+                  :args => [{ :type=>"int const*", :name => "cmock_arg1", :ptr? => true,  :const? => true,  :const_ptr? => false },
+                            { :type=>"int*",       :name => "cmock_arg2", :ptr? => true,  :const? => false, :const_ptr? => true  },
+                            { :type=>"const int*", :name => "cmock_arg3", :ptr? => true,  :const? => true,  :const_ptr? => false },
+                            { :type=>"const int*", :name => "cmock_arg4", :ptr? => true,  :const? => true,  :const_ptr? => true  },
+                            { :type=>"int const*", :name => "cmock_arg5", :ptr? => true,  :const? => true,  :const_ptr? => true  },
+                            { :type=>"int*",       :name => "cmock_arg6", :ptr? => true,  :const? => false, :const_ptr? => false },
+                            { :type=>"int",        :name => "cmock_arg7", :ptr? => false, :const? => false, :const_ptr? => false },
+                            { :type=>"int",        :name => "cmock_arg8", :ptr? => false, :const? => true,  :const_ptr? => false }],
+                  :args_call => "cmock_arg1, cmock_arg2, cmock_arg3, cmock_arg4, cmock_arg5, cmock_arg6, cmock_arg7, cmock_arg8",
+                  :contains_ptr? => true
+                }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "properly parse const and pointer argument types with arg names" do
+
+    source = "void bar(int const* param1, int*const param2, const int* param3, const int*const param4,\n" +
+             "         int const*const param5, int*param6, int param7, const int param8);\n"
+
+    expected = [{ :name => "bar",
+                  :modifier => "",
+                  :return => { :type       => "void",
+                               :name       => "cmock_to_return",
+                               :str        => "void cmock_to_return",
+                               :void?      => true,
+                               :ptr?       => false,
+                               :const?     => false,
+                               :const_ptr? => false
+                             },
+                  :var_arg => nil,
+                  :args_string => "int const* param1, int* const param2, const int* param3, const int* const param4, " +
+                                  "int const* const param5, int* param6, int param7, const int param8",
+                  :args => [{ :type=>"int const*", :name => "param1", :ptr? => true,  :const? => true,  :const_ptr? => false },
+                            { :type=>"int*",       :name => "param2", :ptr? => true,  :const? => false, :const_ptr? => true  },
+                            { :type=>"const int*", :name => "param3", :ptr? => true,  :const? => true,  :const_ptr? => false },
+                            { :type=>"const int*", :name => "param4", :ptr? => true,  :const? => true,  :const_ptr? => true  },
+                            { :type=>"int const*", :name => "param5", :ptr? => true,  :const? => true,  :const_ptr? => true  },
+                            { :type=>"int*",       :name => "param6", :ptr? => true,  :const? => false, :const_ptr? => false },
+                            { :type=>"int",        :name => "param7", :ptr? => false, :const? => false, :const_ptr? => false },
+                            { :type=>"int",        :name => "param8", :ptr? => false, :const? => true,  :const_ptr? => false }],
+                  :args_call => "param1, param2, param3, param4, param5, param6, param7, param8",
+                  :contains_ptr? => true
+                }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
   it "properly detect typedef'd variants of void and use those" do
 
     source = "typedef (void) FUNKY_VOID_T;\n" +
@@ -937,7 +1000,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :name=>"Penny",
                   :modifier=>"",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"struct _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :const? => true, :const_ptr? => true} ],
+                  :args=>[ {:type=>"struct const _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :const? => true, :const_ptr? => true} ],
                   :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy",
                   :args_call=>"BillyBuddy"
                 },
@@ -1440,7 +1503,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                    :contains_ptr? => true,
                    :args=>[ {:type=>"sqlite3_stmt*", :name=>"cmock_arg2", :ptr? => true, :const? => false, :const_ptr? => false},
                             {:type=>"int", :name=>"cmock_arg3", :ptr? => false, :const? => false, :const_ptr? => false},
-                            {:type=>"char*", :name=>"cmock_arg4", :ptr? => false, :const? => true, :const_ptr? => false},
+                            {:type=>"const char*", :name=>"cmock_arg4", :ptr? => false, :const? => true, :const_ptr? => false},
                             {:type=>"int", :name=>"n", :ptr? => false, :const? => false, :const_ptr? => false},
                             {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false}
                           ],

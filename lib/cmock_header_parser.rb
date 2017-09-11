@@ -6,12 +6,13 @@
 
 class CMockHeaderParser
 
-  attr_accessor :funcs, :c_attributes, :treat_as_void, :treat_externs
+  attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs
 
   def initialize(cfg)
     @funcs = []
     @c_strippables = cfg.strippables
-    @c_attributes = (['const'] + cfg.attributes).uniq
+    @c_attr_noconst = cfg.attributes.uniq - ['const']
+    @c_attributes = ['const'] + c_attr_noconst
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
     @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]+-]*)\)$/m
@@ -144,11 +145,19 @@ class CMockHeaderParser
     arg_list.split(',').each do |arg|
       arg.strip!
       return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)   # we're done if we reach void by itself or ...
+
+      # Split up words and remove known attributes, but in case of pointer args, don't remove any
+      # 'const' from the type that it points to, since that may change the underlying assembly-code
+      # pointer type on some embedded platforms, making it point to RAM instead of ROM. (I.e. For
+      # pointer args, remove 'const' only when it applies to the pointer itself. For non-pointer
+      # args, remove 'const' regardless.)
+      #
       arg_array = arg.split
-      arg_elements = arg_array - @c_attributes              # split up words and remove known attributes
-      args << { :type   => arg_elements[0..-2].join(' '),
+      ptr_const_info = divine_ptr_and_const(arg)
+      arg_elements = arg_array - (arg.include?('*') ? @c_attr_noconst : @c_attributes)
+      args << { :type   => arg_elements[0..(ptr_const_info[:const_ptr?] ? -3 : -2)].join(' '),
                 :name   => arg_elements[-1]
-              }.merge(divine_ptr_and_const(arg))
+              }.merge(ptr_const_info)
     end
     return args
   end
