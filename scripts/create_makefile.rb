@@ -59,7 +59,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   test_sources = Dir["#{TEST_DIR}/**/test_*.c"]
   test_targets = []
   generator = UnityTestRunnerGenerator.new
-  all_headers = Dir["#{SRC_DIR}/**/*.h"].reject{ |f| f["/#{MOCK_PREFIX}"] || f["#{MOCK_SUFFIX}.h"]} #headers that begin with suffix or end with suffix are not included
+  all_headers = Dir["#{SRC_DIR}/**/{[!#{MOCK_PREFIX}]}*{[!#{MOCK_SUFFIX}]}.h"]  #headers that begin with prefix or end with suffix are not included
   makefile_targets = []
 
   test_sources.each do |test|
