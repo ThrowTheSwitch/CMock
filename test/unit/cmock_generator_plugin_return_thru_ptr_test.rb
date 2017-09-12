@@ -27,9 +27,9 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
                                  :name => "chicken",
                                  :ptr? => false,
                                },
-                               { :type => "int*",
-                                 :name => "beef",
-                                 :ptr? => true,
+                               { :type   => "const int*",
+                                 :name   => "beef",
+                                 :ptr?   => true,
                                  :const? => true,
                                },
                                { :type => "int*",
@@ -52,7 +52,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
 
   def complex_func_expect
     @utils.expect :ptr_or_str?, false, ['int']
-    @utils.expect :ptr_or_str?, true, ['int*']
+    @utils.expect :ptr_or_str?, true, ['const int*']
     @utils.expect :ptr_or_str?, true, ['int*']
   end
 

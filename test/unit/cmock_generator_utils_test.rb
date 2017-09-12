@@ -20,7 +20,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     @config.expect :plugins, []
     @config.expect :plugins, []
     @config.expect :plugins, []
-    @config.expect :treat_as, {'int' => 'INT','short' => 'INT16','long' => 'INT','char' => 'INT8','char*' => 'STRING'}
+    @config.expect :treat_as, {'int' => 'INT','short' => 'INT16','long' => 'INT','char' => 'INT8','const char*' => 'STRING'}
     @cmock_generator_utils_simple = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper})
 
     @config.expect :when_ptr, :smart
@@ -31,7 +31,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
     @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
     @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
-    @config.expect :treat_as, {'int' => 'INT','short' => 'INT16','long' => 'INT','char' => 'INT8','uint32_t' => 'HEX32','char*' => 'STRING'}
+    @config.expect :treat_as, {'int' => 'INT','short' => 'INT16','long' => 'INT','char' => 'INT8','uint32_t' => 'HEX32','const char*' => 'STRING'}
     @cmock_generator_utils_complex = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper, :A=>1, :B=>2})
   end
 
@@ -99,8 +99,8 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg1 = { :name => "Orange", :const? => false, :type => 'int', :ptr? => false }
     expected1 = "  cmock_call_instance->Expected_Orange = Orange;\n"
 
-    arg2 = { :name => "Lemon", :const? => true, :type => 'const char*', :ptr? => true }
-    expected2 = "  cmock_call_instance->Expected_Lemon = (const char*)Lemon;\n"
+    arg2 = { :name => "Lemon", :const? => true, :type => 'const char*', :ptr? => false }
+    expected2 = "  cmock_call_instance->Expected_Lemon = Lemon;\n"
 
     arg3 = { :name => "Kiwi", :const? => false, :type => 'KIWI_T*', :ptr? => true }
     expected3 = "  cmock_call_instance->Expected_Kiwi = Kiwi;\n"
@@ -119,8 +119,8 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     expected1 = "  cmock_call_instance->Expected_Orange = Orange;\n" +
                 "  cmock_call_instance->IgnoreArg_Orange = 0;\n"
 
-    arg2 = { :name => "Lemon", :const? => true, :type => 'const char*', :ptr? => true }
-    expected2 = "  cmock_call_instance->Expected_Lemon = (const char*)Lemon;\n" +
+    arg2 = { :name => "Lemon", :const? => true, :type => 'const char*', :ptr? => false }
+    expected2 = "  cmock_call_instance->Expected_Lemon = Lemon;\n" +
                 "  cmock_call_instance->Expected_Lemon_Depth = Lemon_Depth;\n" +
                 "  cmock_call_instance->IgnoreArg_Lemon = 0;\n"
 
@@ -154,7 +154,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     expected = "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, stuff)\n{\n" +
                "  cmock_call_instance->Expected_MyIntPtr = MyIntPtr;\n" +
                "  memcpy(&cmock_call_instance->Expected_MyMyType, &MyMyType, sizeof(MY_TYPE));\n" +
-               "  cmock_call_instance->Expected_MyStr = (char*)MyStr;\n" +
+               "  cmock_call_instance->Expected_MyStr = MyStr;\n" +
                "}\n\n"
     assert_equal(expected, @cmock_generator_utils_simple.code_add_argument_loader(function))
   end
@@ -171,7 +171,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "  cmock_call_instance->ReturnThruPtr_MyIntPtr_Used = 0;\n" +
                "  memcpy(&cmock_call_instance->Expected_MyMyType, &MyMyType, sizeof(MY_TYPE));\n" +
                "  cmock_call_instance->IgnoreArg_MyMyType = 0;\n" +
-               "  cmock_call_instance->Expected_MyStr = (char*)MyStr;\n" +
+               "  cmock_call_instance->Expected_MyStr = MyStr;\n" +
                "  cmock_call_instance->IgnoreArg_MyStr = 0;\n" +
                "}\n\n"
     assert_equal(expected, @cmock_generator_utils_complex.code_add_argument_loader(function))
@@ -231,7 +231,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "    UNITY_TEST_ASSERT_EQUAL_STRING(cmock_call_instance->Expected_MyStr, MyStr, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
-    @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_STRING',''], ['char*']
+    @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_STRING',''], ['const char*']
     assert_equal(expected, @cmock_generator_utils_simple.code_verify_an_arg_expectation(function, arg))
   end
 
@@ -311,7 +311,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "    UNITY_TEST_ASSERT_EQUAL_STRING(cmock_call_instance->Expected_MyStr, MyStr, cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
-    @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_STRING',''], ['char*']
+    @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_STRING',''], ['const char*']
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
 
