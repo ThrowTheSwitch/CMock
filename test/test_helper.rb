@@ -33,11 +33,12 @@ end
 
 def test_arg
   {
-    :int        => {:type => "int",         :name => 'MyInt',       :ptr? => false, :const? => false},
-    :int_ptr    => {:type => "int*",        :name => 'MyIntPtr',    :ptr? => true,  :const? => false},
-    :mytype     => {:type => "MY_TYPE",     :name => 'MyMyType',    :ptr? => false, :const? => true},
-    :mytype_ptr => {:type => "MY_TYPE*",    :name => 'MyMyTypePtr', :ptr? => true,  :const? => false},
-    :string     => {:type => "const char*", :name => 'MyStr',       :ptr? => false, :const? => true},
+    :int        => {:type => "int",         :name => 'MyInt',       :ptr? => false, :const? => false, :const_ptr? => false},
+    :int_ptr    => {:type => "int*",        :name => 'MyIntPtr',    :ptr? => true,  :const? => false, :const_ptr? => false},
+    :const_ptr  => {:type => "int*",        :name => 'MyConstPtr',  :ptr? => true,  :const? => false, :const_ptr? => true},
+    :double_ptr => {:type => "int const**", :name => 'MyDoublePtr', :ptr? => true,  :const? => true,  :const_ptr? => false},
+    :mytype     => {:type => "MY_TYPE",     :name => 'MyMyType',    :ptr? => false, :const? => true,  :const_ptr? => false},
+    :mytype_ptr => {:type => "MY_TYPE*",    :name => 'MyMyTypePtr', :ptr? => true,  :const? => false, :const_ptr? => false},
+    :string     => {:type => "const char*", :name => 'MyStr',       :ptr? => false, :const? => true,  :const_ptr? => false},
   }
 end
-

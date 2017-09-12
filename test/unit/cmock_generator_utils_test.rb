@@ -177,6 +177,23 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     assert_equal(expected, @cmock_generator_utils_complex.code_add_argument_loader(function))
   end
 
+  it 'create an argument loader when the function has pointer arguments supporting arrays' do
+    function = { :name => "Melon",
+                 :args_string => "stuff",
+                 :args => [test_arg[:const_ptr], test_arg[:double_ptr]]
+    }
+    expected = "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, int* const MyConstPtr, int MyConstPtr_Depth, int const** MyDoublePtr, int MyDoublePtr_Depth)\n{\n" +
+               "  cmock_call_instance->Expected_MyConstPtr = MyConstPtr;\n" +
+               "  cmock_call_instance->Expected_MyConstPtr_Depth = MyConstPtr_Depth;\n" +
+               "  cmock_call_instance->IgnoreArg_MyConstPtr = 0;\n" +
+               "  cmock_call_instance->ReturnThruPtr_MyConstPtr_Used = 0;\n" +
+               "  cmock_call_instance->Expected_MyDoublePtr = MyDoublePtr;\n" +
+               "  cmock_call_instance->Expected_MyDoublePtr_Depth = MyDoublePtr_Depth;\n" +
+               "  cmock_call_instance->IgnoreArg_MyDoublePtr = 0;\n" +
+               "}\n\n"
+    assert_equal(expected, @cmock_generator_utils_complex.code_add_argument_loader(function))
+  end
+
   it "not call argument loader if there are no arguments to actually use for this function" do
     function = { :name => "Pineapple", :args_string => "void" }
 
