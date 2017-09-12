@@ -805,32 +805,57 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  it "should properly handle const before or after return type" do
-
+  it "should properly handle const before return type" do
     sources = [
       "const int * PorkRoast(void);\n",
-      "int const * PorkRoast(void);\n",
       "const int* PorkRoast(void);\n",
+      "const int *PorkRoast(void);\n"
+    ]
+
+    expected = [{ :var_arg => nil,
+                  :name    => "PorkRoast",
+                  :return  => { :type       => "const int*",
+                                :name       => 'cmock_to_return',
+                                :ptr?       => true,
+                                :const?     => true,
+                                :const_ptr? => false,
+                                :str        => "const int* cmock_to_return",
+                                :void?      => false
+                              },
+                  :modifier      => "",
+                  :contains_ptr? => false,
+                  :args          => [],
+                  :args_string   => "void",
+                  :args_call     => ""
+                }]
+
+    sources.each do |source|
+      assert_equal(expected, @parser.parse("module", source)[:functions])
+    end
+  end
+
+  it "should properly handle const before return type" do
+    sources = [
+      "int const * PorkRoast(void);\n",
       "int const* PorkRoast(void);\n",
-      "const int *PorkRoast(void);\n",
       "int const *PorkRoast(void);\n"
     ]
 
-    expected = [{ :var_arg=>nil,
-                  :name=>"PorkRoast",
-                  :return=> { :type   => "int*",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => true,
-                              :const? => true,
-                              :const_ptr? => false,
-                              :str    => "int* cmock_to_return",
-                              :void?  => false
-                            },
-                  :modifier=>"const",
+    expected = [{ :var_arg => nil,
+                  :name    => "PorkRoast",
+                  :return  => { :type       => "int const*",
+                                :name       => 'cmock_to_return',
+                                :ptr?       => true,
+                                :const?     => true,
+                                :const_ptr? => false,
+                                :str        => "int const* cmock_to_return",
+                                :void?      => false
+                              },
+                  :modifier      => "",
                   :contains_ptr? => false,
-                  :args=>[],
-                  :args_string=>"void",
-                  :args_call=>""
+                  :args          => [],
+                  :args_string   => "void",
+                  :args_call     => ""
                 }]
 
     sources.each do |source|

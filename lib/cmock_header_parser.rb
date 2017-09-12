@@ -140,24 +140,51 @@ class CMockHeaderParser
     return funcs
   end
 
+  def parse_type_and_name(arg)
+    # Split up words and remove known attributes.  For pointer types, make sure
+    # to remove 'const' only when it applies to the pointer itself, not when it
+    # applies to the type pointed to.  For non-pointer types, remove any
+    # occurrence of 'const'.
+    arg.gsub!(/(\w)\*/,'\1 *') # pull asterisks away from preceding word
+    arg.gsub!(/\*(\w)/,'* \1') # pull asterisks away from following word
+    arg_array = arg.split
+    arg_info = divine_ptr_and_const(arg)
+    arg_info[:name] = arg_array[-1]
+
+    attributes = arg.include?('*') ? @c_attr_noconst : @c_attributes
+    attr_array = []
+    type_array = []
+
+    arg_array[0..-2].each do |word|
+      if attributes.include?(word)
+        attr_array << word
+      elsif @c_calling_conventions.include?(word)
+        arg_info[:c_calling_convention] = word
+      else
+        type_array << word
+      end
+    end
+
+    if arg_info[:const_ptr?]
+      attr_array << 'const'
+      type_array.delete_at(type_array.rindex('const'))
+    end
+
+    arg_info[:modifier] = attr_array.join(' ')
+    arg_info[:type] = type_array.join(' ').gsub(/\s+\*/,'*') # remove space before asterisks
+    return arg_info
+  end
+
   def parse_args(arg_list)
     args = []
     arg_list.split(',').each do |arg|
       arg.strip!
       return args if (arg =~ /^\s*((\.\.\.)|(void))\s*$/)   # we're done if we reach void by itself or ...
 
-      # Split up words and remove known attributes, but in case of pointer args, don't remove any
-      # 'const' from the type that it points to, since that may change the underlying assembly-code
-      # pointer type on some embedded platforms, making it point to RAM instead of ROM. (I.e. For
-      # pointer args, remove 'const' only when it applies to the pointer itself. For non-pointer
-      # args, remove 'const' regardless.)
-      #
-      arg_array = arg.split
-      ptr_const_info = divine_ptr_and_const(arg)
-      arg_elements = arg_array - (arg.include?('*') ? @c_attr_noconst : @c_attributes)
-      args << { :type   => arg_elements[0..(ptr_const_info[:const_ptr?] ? -3 : -2)].join(' '),
-                :name   => arg_elements[-1]
-              }.merge(ptr_const_info)
+      arg_info = parse_type_and_name(arg)
+      arg_info.delete(:modifier)             # don't care about this
+      arg_info.delete(:c_calling_convention) # don't care about this
+      args << arg_info
     end
     return args
   end
@@ -236,35 +263,24 @@ class CMockHeaderParser
     args = regex_match[2].strip
 
     #process function attributes, return type, and name
-    descriptors = regex_match[1]
-    descriptors.gsub!(/(\w)\*/,'\1 *') #pull asterisks away from preceding word
-    descriptors.gsub!(/\*(\w)/,'* \1') #pull asterisks away from following word
-    descriptors = descriptors.split    #array of all descriptor strings
+    parsed = parse_type_and_name(regex_match[1])
 
-    #grab name
-    decl[:name] = descriptors[-1]      #snag name as last array item
-
-    #build attribute and return type strings
-    decl[:modifier] = []
-    rettype = []
-    full_retval = descriptors[0..-2].join(' ')
-    descriptors[0..-2].each do |word|
-      if @c_attributes.include?(word)
-        decl[:modifier] << word
-      elsif @c_calling_conventions.include?(word)
-        decl[:c_calling_convention] = word
-      else
-        rettype << word
-      end
+    decl[:name] = parsed[:name]
+    decl[:modifier] = parsed[:modifier]
+    unless parsed[:c_calling_convention].nil?
+      decl[:c_calling_convention] = parsed[:c_calling_convention]
     end
-    decl[:modifier] = decl[:modifier].join(' ')
-    rettype = rettype.join(' ').gsub(/\s+\*/,'*') #remove space before asterisks
+
+    rettype = parsed[:type]
     rettype = 'void' if (@local_as_void.include?(rettype.strip))
-    decl[:return] = { :type   => rettype,
-                      :name   => 'cmock_to_return',
-                      :str    => "#{rettype} cmock_to_return",
-                      :void?  => (rettype == 'void')
-                    }.merge(divine_ptr_and_const(full_retval))
+    decl[:return] = { :type       => rettype,
+                      :name       => 'cmock_to_return',
+                      :str        => "#{rettype} cmock_to_return",
+                      :void?      => (rettype == 'void'),
+                      :ptr?       => parsed[:ptr?],
+                      :const?     => parsed[:const?],
+                      :const_ptr? => parsed[:const_ptr?]
+                    }
 
     #remove default argument statements from mock definitions
     args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
