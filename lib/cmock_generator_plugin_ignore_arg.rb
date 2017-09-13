@@ -29,14 +29,12 @@ class CMockGeneratorPluginIgnoreArg
     lines = []
     func_name = function[:name]
     function[:args].each do |arg|
-      arg_name = arg[:name]
-      arg_type = arg[:type]
-      lines << "void #{function[:name]}_CMockIgnoreArg_#{arg[:name]}(UNITY_LINE_TYPE cmock_line)\n"
+      lines << "void #{func_name}_CMockIgnoreArg_#{arg[:name]}(UNITY_LINE_TYPE cmock_line)\n"
       lines << "{\n"
       lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " +
         "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
       lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringIgnPreExp);\n"
-      lines << "  cmock_call_instance->IgnoreArg_#{arg_name} = 1;\n"
+      lines << "  cmock_call_instance->IgnoreArg_#{arg[:name]} = 1;\n"
       lines << "}\n\n"
     end
     lines

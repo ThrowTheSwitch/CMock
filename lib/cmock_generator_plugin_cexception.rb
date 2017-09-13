@@ -41,7 +41,6 @@ class CMockGeneratorPluginCexception
 
   def mock_interfaces(function)
     arg_insert = (function[:args_string] == "void") ? "" : "#{function[:args_string]}, "
-    call_string = function[:args].map{|m| m[:name]}.join(', ')
     [ "void #{function[:name]}_CMockExpectAndThrow(UNITY_LINE_TYPE cmock_line, #{arg_insert}CEXCEPTION_T cmock_to_throw)\n{\n",
       @utils.code_add_base_expectation(function[:name]),
       @utils.code_call_argument_loader(function),
