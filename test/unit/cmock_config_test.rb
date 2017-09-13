@@ -14,7 +14,8 @@ describe CMockConfig, "Verify CMockConfig Module" do
   it "use default settings when no parameters are specified" do
     config = CMockConfig.new
     assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],             config.mock_path)
-    assert_equal(CMockConfig::CMockDefaultOptions[:includes],              config.includes)
+    assert_nil(CMockConfig::CMockDefaultOptions[:includes])
+    assert_nil(config.includes)
     assert_equal(CMockConfig::CMockDefaultOptions[:attributes],            config.attributes)
     assert_equal(CMockConfig::CMockDefaultOptions[:plugins],               config.plugins)
     assert_equal(CMockConfig::CMockDefaultOptions[:treat_externs],         config.treat_externs)
@@ -35,7 +36,8 @@ describe CMockConfig, "Verify CMockConfig Module" do
     test_plugins = [:soda, :pizza]
     config = CMockConfig.new("#{File.expand_path(File.dirname(__FILE__))}/cmock_config_test.yml")
     assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],              config.mock_path)
-    assert_equal(CMockConfig::CMockDefaultOptions[:includes],               config.includes)
+    assert_nil(CMockConfig::CMockDefaultOptions[:includes])
+    assert_nil(config.includes)
     assert_equal(test_plugins,                                              config.plugins)
     assert_equal(:include,                                                  config.treat_externs)
   end
