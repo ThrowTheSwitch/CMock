@@ -460,6 +460,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "uint32 extern_name_func(unsigned int);\n" +
       "uint32 funcinline(unsigned int);\n" +
       "inline void inlineBar(unsigned int);\n" +
+      "extern int extern_bar(void);\n" +
       "static inline void staticinlineBar(unsigned int);\n" +
       "static inline void bar(unsigned int);\n" +
       "static inline void bar(unsigned int)\n" +
@@ -485,6 +486,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "uint32 extern_name_func(unsigned int);\n" +
       "uint32 funcinline(unsigned int);\n" +
       "inline void inlineBar(unsigned int);\n" +
+      "extern int extern_bar(void);\n" +
       "static inline void staticinlineBar(unsigned int);\n" +
       "static inline void bar(unsigned int);\n" +
       "static inline void bar(unsigned int)\n" +
@@ -497,6 +499,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "uint32 extern_name_func(unsigned int)",
       "uint32 funcinline(unsigned int)",
       "void inlineBar(unsigned int)",
+      "extern int extern_bar(void)",
       "void staticinlineBar(unsigned int)",
       "void bar(unsigned int)"
     ]

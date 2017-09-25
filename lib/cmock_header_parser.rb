@@ -141,7 +141,7 @@ class CMockHeaderParser
     if (@treat_inline == :include)
       src_lines.each {
         |src_line|
-        src_line.gsub!(/^inline/, "")
+        src_line.gsub!(/^inline/, "") # Remove "inline" so that they are 'normal' functions
       }
     else
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?}        # remove inline functions
