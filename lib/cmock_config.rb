@@ -29,6 +29,7 @@ class CMockConfig
     :when_ptr                    => :compare_data,   #the options being :compare_ptr, :compare_data, or :smart
     :verbosity                   => 2,               #the options being 0 errors only, 1 warnings and errors, 2 normal info, 3 verbose
     :treat_externs               => :exclude,        #the options being :include or :exclude
+    :treat_inline                => :exclude,        #the options being :include or :exclude
     :callback_include_count      => true,
     :callback_after_arg_check    => false,
     :includes                    => nil,

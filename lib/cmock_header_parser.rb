@@ -6,7 +6,7 @@
 
 class CMockHeaderParser
 
-  attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs
+  attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inline
 
   def initialize(cfg)
     @funcs = []
@@ -24,7 +24,9 @@ class CMockHeaderParser
     @local_as_void = @treat_as_void
     @verbosity = cfg.verbosity
     @treat_externs = cfg.treat_externs
+    @treat_inline = cfg.treat_inline
     @c_strippables += ['extern'] if (@treat_externs == :include) #we'll need to remove the attribute if we're allowing externs
+    @c_strippables += ['inline'] if (@treat_inline == :include) #we'll need to remove the attribute if we're allowing externs
   end
 
   def parse(name, source)
