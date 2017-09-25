@@ -454,6 +454,45 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
+  it "leave inline functions if inline to be included" do
+    source =
+      "extern uint32 foobar(unsigned int);\n" +
+      "uint32 extern_name_func(unsigned int);\n" +
+      "uint32 funcinline(unsigned int);\n" +
+      "inline void inlineBar(unsigned int);\n" +
+      "static inline void bar(unsigned int);\n"
+
+    expected =
+    [ "uint32 extern_name_func(unsigned int)",
+      "uint32 funcinline(unsigned int)",
+      "void inlineBar(unsigned int)",
+      "void bar(unsigned int)"
+    ]
+
+    @parser.treat_inline = :include
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
+
+  it "leave inline and extern functions if inline and extern to be included" do
+    source =
+      "extern uint32 foobar(unsigned int);\n" +
+      "uint32 extern_name_func(unsigned int);\n" +
+      "uint32 funcinline(unsigned int);\n" +
+      "inline void inlineBar(unsigned int);\n" +
+      "static inline void bar(unsigned int);\n"
+
+    expected =
+    [ "extern uint32 foobar(unsigned int)",
+      "uint32 extern_name_func(unsigned int)",
+      "uint32 funcinline(unsigned int)",
+      "void inlineBar(unsigned int)",
+      "void bar(unsigned int)"
+    ]
+
+    @parser.treat_externs = :include
+    @parser.treat_inline = :include
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
 
   it "remove defines" do
     source =

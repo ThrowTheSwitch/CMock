@@ -126,11 +126,20 @@ class CMockHeaderParser
     src_lines = source.split(/\s*;\s*/).uniq
     src_lines.delete_if {|line| line.strip.length == 0}                            # remove blank lines
     src_lines.delete_if {|line| !(line =~ /[\w\s\*]+\(+\s*\*[\*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s\*]*,?)*\s*\)/).nil?}     #remove function pointer arrays
-    if (@treat_externs == :include)
-      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?}        # remove inline functions
-    else
-      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern|inline)\s+/).nil?} # remove inline and extern functions
+
+    unless (@treat_externs == :include)
+      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern)\s+/).nil?} # remove extern functions
     end
+
+    if (@treat_inline == :include)
+      src_lines.each {
+        |src_line|
+        src_line.gsub!(/^inline/, "")
+      }
+    else
+      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?}        # remove inline functions
+    end
+
     src_lines.delete_if {|line| line.empty? } #drop empty lines
   end
 
