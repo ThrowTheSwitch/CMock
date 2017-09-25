@@ -112,6 +112,13 @@ class CMockHeaderParser
       end
     end
 
+    if (@treat_inline == :include)
+      # Functions having "{ }" at this point are/were inline functions,
+      # User wants them in so 'disguise' them as normal functions with the ";"
+      source.gsub!("{ }", ";")
+    end
+
+
     # remove function definitions by stripping off the arguments right now
     source.gsub!(/\([^\)]*\)\s*\{[^\}]*\}/m, ";")
 

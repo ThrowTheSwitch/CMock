@@ -460,12 +460,18 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "uint32 extern_name_func(unsigned int);\n" +
       "uint32 funcinline(unsigned int);\n" +
       "inline void inlineBar(unsigned int);\n" +
-      "static inline void bar(unsigned int);\n"
+      "static inline void staticinlineBar(unsigned int);\n" +
+      "static inline void bar(unsigned int);\n" +
+      "static inline void bar(unsigned int)\n" +
+      "{\n" +
+      " // NOP\n" +
+      "}\n"
 
     expected =
     [ "uint32 extern_name_func(unsigned int)",
       "uint32 funcinline(unsigned int)",
       "void inlineBar(unsigned int)",
+      "void staticinlineBar(unsigned int)",
       "void bar(unsigned int)"
     ]
 
@@ -479,13 +485,19 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "uint32 extern_name_func(unsigned int);\n" +
       "uint32 funcinline(unsigned int);\n" +
       "inline void inlineBar(unsigned int);\n" +
-      "static inline void bar(unsigned int);\n"
+      "static inline void staticinlineBar(unsigned int);\n" +
+      "static inline void bar(unsigned int);\n" +
+      "static inline void bar(unsigned int)\n" +
+      "{\n" +
+      " // NOP\n" +
+      "}\n"
 
     expected =
     [ "extern uint32 foobar(unsigned int)",
       "uint32 extern_name_func(unsigned int)",
       "uint32 funcinline(unsigned int)",
       "void inlineBar(unsigned int)",
+      "void staticinlineBar(unsigned int)",
       "void bar(unsigned int)"
     ]
 
