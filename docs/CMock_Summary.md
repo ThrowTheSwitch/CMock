@@ -597,7 +597,7 @@ Examples
 
 You can look in the [examples directory](/examples/) for a couple of examples on how
 you might tool CMock into your build process. You may also want to consider
-using [Ceedling](https://throwtheswitch.org/Ceedling). Please note that
+using [Ceedling](https://throwtheswitch.org/ceedling). Please note that
 these examples are meant to show how the build process works. They have
 failing tests ON PURPOSE to show what that would look like. Don't be alarmed. ;)
 
