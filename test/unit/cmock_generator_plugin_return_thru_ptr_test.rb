@@ -124,11 +124,13 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     expected =
       "  if (cmock_call_instance->ReturnThruPtr_tofu_Used)\n" +
       "  {\n" +
-      "    memcpy(tofu, cmock_call_instance->ReturnThruPtr_tofu_Val,\n" +
+      "    UNITY_TEST_ASSERT_NOT_NULL(tofu, cmock_line, CMockStringPtrIsNULL);\n" +
+      "    memcpy((void*)tofu, (void*)cmock_call_instance->ReturnThruPtr_tofu_Val,\n" +
       "      cmock_call_instance->ReturnThruPtr_tofu_Size);\n" +
-      "  }\n" +
+      "  }\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_implementation(@complex_func).join("")
+    assert_equal(expected, returned)
   end
 
 end

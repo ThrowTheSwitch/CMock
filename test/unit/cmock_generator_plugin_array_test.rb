@@ -37,8 +37,8 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
   end
 
   it "have set up internal priority" do
-    assert_equal(nil,     @cmock_generator_plugin_array.unity_helper)
-    assert_equal(8,       @cmock_generator_plugin_array.priority)
+    assert_nil(@cmock_generator_plugin_array.unity_helper)
+    assert_equal(8, @cmock_generator_plugin_array.priority)
   end
 
   it "not include any additional include files" do

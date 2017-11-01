@@ -40,7 +40,6 @@ class CMockGeneratorPluginReturnThruPtr
     func_name = function[:name]
     function[:args].each do |arg|
       arg_name = arg[:name]
-      arg_type = arg[:type]
       if (@utils.ptr_or_str?(arg[:type]) and not arg[:const?])
         lines << "void #{func_name}_CMockReturnMemThruPtr_#{arg_name}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg_name}, int cmock_size)\n"
         lines << "{\n"
@@ -60,7 +59,6 @@ class CMockGeneratorPluginReturnThruPtr
     lines = []
     function[:args].each do |arg|
       arg_name = arg[:name]
-      arg_type = arg[:type]
       if (@utils.ptr_or_str?(arg[:type]) and not arg[:const?])
         lines << "  if (cmock_call_instance->ReturnThruPtr_#{arg_name}_Used)\n"
         lines << "  {\n"
