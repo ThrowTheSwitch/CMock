@@ -48,12 +48,17 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemNew(CMOCK_MEM_INDEX_TYPE size)
     size = (size + CMOCK_MEM_ALIGN_MASK) & ~CMOCK_MEM_ALIGN_MASK;
   if ((CMock_Guts_BufferSize - CMock_Guts_FreePtr) < size)
   {
-#ifdef CMOCK_MEM_DYNAMIC
-    CMock_Guts_BufferSize += CMOCK_MEM_SIZE + size;
-    CMock_Guts_Buffer = realloc(CMock_Guts_Buffer, (size_t)CMock_Guts_BufferSize);
-    if (CMock_Guts_Buffer == NULL)
-#endif //yes that if will continue to the return below if TRUE
-      return CMOCK_GUTS_NONE;
+#ifndef CMOCK_MEM_DYNAMIC
+    return CMOCK_GUTS_NONE; // nothing we can do; our static buffer is out of memory
+#else
+    // our dynamic buffer does not have enough room; request more via realloc()
+    CMOCK_MEM_INDEX_TYPE new_buffersize = CMock_Guts_BufferSize + CMOCK_MEM_SIZE + size;
+    unsigned char* new_buffer = realloc(CMock_Guts_Buffer, (size_t)new_buffersize);
+    if (new_buffer == NULL)
+      return CMOCK_GUTS_NONE; // realloc() failed; out of memory
+    CMock_Guts_Buffer = new_buffer;
+    CMock_Guts_BufferSize = new_buffersize;
+#endif
   }
 
   //determine where we're putting this new block, and init its pointer to be the end of the line
