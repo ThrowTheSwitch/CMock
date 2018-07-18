@@ -18,6 +18,7 @@ If you plan to help with the development of CMock (or just want to verify that i
 perform its self tests on your system) then you can enter the test directory and then
 ask it to test:
 
+    > cd test
     > rake # Run all CMock self tests
 
 API Documentation
