@@ -92,7 +92,7 @@ class CMockGeneratorPluginCallback
 
   def mock_verify(function)
     func_name = function[:name]
-    "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n    Mock.#{func_name}_CallInstance = CMOCK_GUTS_NONE;\n"
+    "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n    call_instance = CMOCK_GUTS_NONE;\n"
   end
 
 end

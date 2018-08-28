@@ -190,9 +190,15 @@ class CMockGenerator
 
   def create_mock_verify_function(file, functions)
     file << "void #{@clean_mock_name}_Verify(void)\n{\n"
-    verifications = functions.collect {|function| @plugins.run(:mock_verify, function)}.join
-    file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n" unless verifications.empty?
-    file << verifications
+    verifications = functions.collect do |function|
+      v = @plugins.run(:mock_verify, function)
+      v.empty? ? v : ["  call_instance = Mock.#{function[:name]}_CallInstance;\n", v]
+    end.join
+    unless verifications.empty?
+      file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
+      file << "  CMOCK_MEM_INDEX_TYPE call_instance;\n"
+      file << verifications
+    end
     file << "}\n\n"
   end
 
