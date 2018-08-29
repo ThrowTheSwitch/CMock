@@ -14,6 +14,7 @@ class CMockHeaderParser
     @c_attr_noconst = cfg.attributes.uniq - ['const']
     @c_attributes = ['const'] + c_attr_noconst
     @c_calling_conventions = cfg.c_calling_conventions.uniq
+    @treat_as_array = cfg.treat_as_array
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
     @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]+-]*)\)$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
@@ -184,6 +185,15 @@ class CMockHeaderParser
       arg_info = parse_type_and_name(arg)
       arg_info.delete(:modifier)             # don't care about this
       arg_info.delete(:c_calling_convention) # don't care about this
+
+      # in C, array arguments implicitly degrade to pointers
+      # make the translation explicit here to simplify later logic
+      if @treat_as_array[arg_info[:type]] and not arg_info[:ptr?] then
+        arg_info[:type] = "#{@treat_as_array[arg_info[:type]]}*"
+        arg_info[:type] = "const #{arg_info[:type]}" if arg_info[:const?]
+        arg_info[:ptr?] = true
+      end
+
       args << arg_info
     end
     return args

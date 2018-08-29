@@ -19,6 +19,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @config.expect :c_calling_conventions, ['__stdcall']
     @config.expect :treat_as_void, ['MY_FUNKY_VOID']
     @config.expect :treat_as, { "BANJOS" => "INT", "TUBAS" => "HEX16"}
+    @config.expect :treat_as_array, {"IntArray" => "int", "Book" => "Page"}
     @config.expect :when_no_prototypes, :error
     @config.expect :verbosity, 1
     @config.expect :treat_externs, :exclude
@@ -947,6 +948,32 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :contains_ptr? => true
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "converts typedef'd array arguments to pointers" do
+
+    source = "Book AddToBook(Book book, const IntArray values);\n"
+
+    expected = [{ :name => "AddToBook",
+                  :modifier=>"",
+                  :return  => { :type       => "Book",
+                                :name       => "cmock_to_return",
+                                :str        => "Book cmock_to_return",
+                                :void?      => false,
+                                :ptr?       => false,
+                                :const?     => false,
+                                :const_ptr? => false
+                              },
+                  :var_arg => nil,
+                  :args => [{ :type => "Page*",      :name => "book",   :ptr? => true, :const? => false, :const_ptr? => false },
+                            { :type => "const int*", :name => "values", :ptr? => true, :const? => true,  :const_ptr? => false }],
+                  :args_string => "Book book, const IntArray values",
+                  :args_call => "book, values",
+                  :contains_ptr? => true
+                }]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+
   end
 
   it "properly detect typedef'd variants of void and use those" do
