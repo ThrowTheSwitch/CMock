@@ -110,10 +110,15 @@ class CMockHeaderParser
 
     # remove preprocessor statements and extern "C"
 	#source.gsub!(/^\s*#.*/, '')
-	source.gsub!(/extern\s/, 'GOTHIC_PUBLIC ')
+    source.gsub!(/extern\s/, 'GOTHIC_PUBLIC ')
     source.gsub!(/extern\s+\"C\"\s+\{/, '')
-	#source.gsub!(/\#ifndef\s\w*#{name.gsub(".h","").upcase}/, '')
-	#source.gsub!(/\#define\s\w*#{name.gsub(".h","").upcase}/, '')
+
+    # Do not include duplicate function declarations specific for
+    # gcc version >= 3.
+    source.gsub!(/__GNUC__/, '0 && __GNUC__')
+
+    #source.gsub!(/\#ifndef\s\w*#{name.gsub(".h","").upcase}/, '')
+    #source.gsub!(/\#define\s\w*#{name.gsub(".h","").upcase}/, '')
 
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
