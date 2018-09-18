@@ -22,6 +22,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @config.expect :when_no_prototypes, :error
     @config.expect :verbosity, 1
     @config.expect :treat_externs, :exclude
+    @config.expect :array_size_type, ['int', 'size_t']
+    @config.expect :array_size_name, 'size|len'
 
     @parser = CMockHeaderParser.new(@config)
   end
