@@ -34,13 +34,13 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
   # Define make variables
   mkfile.puts "CC ?= gcc"
-  mkfile.puts "BUILD_DIR ?= ./build"
-  mkfile.puts "SRC_DIR ?= ./src"
-  mkfile.puts "TEST_DIR ?= ./test"
+  mkfile.puts "BUILD_DIR = #{BUILD_DIR}"
+  mkfile.puts "SRC_DIR = #{SRC_DIR}"
+  mkfile.puts "TEST_DIR = #{TEST_DIR}"
   mkfile.puts "TEST_CFLAGS ?= -DTEST"
   mkfile.puts "CMOCK_DIR ?= #{CMOCK_DIR}"
   mkfile.puts "UNITY_DIR ?= #{UNITY_DIR}"
-  mkfile.puts "TEST_BUILD_DIR ?= ${BUILD_DIR}/test"
+  mkfile.puts "TEST_BUILD_DIR = ${TEST_BUILD_DIR}"
   mkfile.puts "TEST_MAKEFILE = ${TEST_BUILD_DIR}/MakefileTestSupport"
   mkfile.puts "OBJ ?= ${BUILD_DIR}/obj"
   mkfile.puts "OBJ_DIR = ${OBJ}"
@@ -96,7 +96,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     if not makefile_targets.include? module_obj
         makefile_targets.push(module_obj)
         mkfile.puts "#{module_obj}: #{module_src}"
-        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} ${INCLUDE_PATH}"
+        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I ${SRC_DIR} ${INCLUDE_PATH}"
         mkfile.puts ""
     end
 
@@ -112,7 +112,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
         if not makefile_targets.include? linkonlymodule_obj
             makefile_targets.push(linkonlymodule_obj)
             mkfile.puts "#{linkonlymodule_obj}: #{linkonlymodule_src}"
-            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} ${INCLUDE_PATH}"
+            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I ${SRC_DIR} ${INCLUDE_PATH}"
             mkfile.puts ""
         end
     end
