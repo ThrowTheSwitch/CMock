@@ -1,5 +1,6 @@
 test/system/build
 test/system/generated
+build/
 *.sublime-project
 Gemfile.lock
 .rake_t_cache
