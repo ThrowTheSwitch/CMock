@@ -39,7 +39,7 @@ target_include_directories("cmock"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
         "$<INSTALL_INTERFACE:src>"
 
-    PRIVATE "src" "${CMAKE_SOURCE_DIR}/external/unity/src"
+    PRIVATE "src" "${CMAKE_SOURCE_DIR}/vendor/unity/src"
 )
 
 
