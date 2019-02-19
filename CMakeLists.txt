@@ -67,3 +67,5 @@ install(EXPORT cmockConfig DESTINATION share/cmockConfig/cmake)
 
 # This makes the project importable from the build directory
 export(TARGETS cmock FILE cmockConfig.cmake)
+
+
