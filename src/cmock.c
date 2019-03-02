@@ -10,7 +10,7 @@
 //public constants to be used by mocks
 const char* CMockStringOutOfMemory = "CMock has run out of memory. Please allocate more.";
 const char* CMockStringCalledMore  = "Called more times than expected.";
-const char* CMockStringCalledLess  = "Called less times than expected.";
+const char* CMockStringCalledLess  = "Called fewer times than expected.";
 const char* CMockStringCalledEarly = "Called earlier than expected.";
 const char* CMockStringCalledLate  = "Called later than expected.";
 const char* CMockStringCallOrder   = "Called out of order.";
