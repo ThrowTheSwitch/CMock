@@ -66,7 +66,7 @@
         }
 
     - :pass: FALSE
-      :should: 'ignore foo() call details and notice if we called foo() less times than expected'
+      :should: 'ignore foo() call details and notice if we called foo() fewer times than expected'
       :code: |
         test()
         {
