@@ -170,6 +170,14 @@ void* CMock_Guts_GetAddressFor(CMOCK_MEM_INDEX_TYPE index)
 }
 
 //-------------------------------------------------------
+// CMock_Guts_MemBytesCapacity
+//-------------------------------------------------------
+CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesCapacity(void)
+{
+    return sizeof(CMock_Guts_BufferArray);
+}
+
+//-------------------------------------------------------
 // CMock_Guts_MemBytesFree
 //-------------------------------------------------------
 CMOCK_MEM_INDEX_TYPE CMock_Guts_MemBytesFree(void)
