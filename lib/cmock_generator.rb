@@ -57,9 +57,7 @@ class CMockGenerator
   private if $ThisIsOnlyATest.nil? ##############################
 
   def create_mock_subdir()
-    if @subdir
-      @file_writer.create_subdir(@subdir)
-    end
+    @file_writer.create_subdir(@subdir)
   end
 
   def create_mock_header_file(parsed_stuff)
