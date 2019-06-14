@@ -73,7 +73,7 @@ class CMockGeneratorUtils
     if (arg[:ptr?] or @treat_as.include?(arg[:type]))
       "  #{dest} = #{arg[:name]};\n"
     else
-      "  memcpy(&#{dest}, &#{arg[:name]}, sizeof(#{arg[:type]}));\n"
+      "  memcpy((void*)&#{dest}, (void*)&#{arg[:name]}, sizeof(#{arg[:type]}));\n"
     end
   end
 
