@@ -106,7 +106,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     expected3 = "  cmock_call_instance->Expected_Kiwi = Kiwi;\n"
 
     arg4 = { :name => "Lime", :const? => false, :type => 'LIME_T', :ptr? => false }
-    expected4 = "  memcpy(&cmock_call_instance->Expected_Lime, &Lime, sizeof(LIME_T));\n"
+    expected4 = "  memcpy((void*)(&cmock_call_instance->Expected_Lime), (void*)(&Lime), sizeof(LIME_T));\n"
 
     assert_equal(expected1, @cmock_generator_utils_simple.code_add_an_arg_expectation(arg1))
     assert_equal(expected2, @cmock_generator_utils_simple.code_add_an_arg_expectation(arg2))
@@ -131,7 +131,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                 "  cmock_call_instance->ReturnThruPtr_Kiwi_Used = 0;\n"
 
     arg4 = { :name => "Lime", :const? => false, :type => 'LIME_T', :ptr? => false }
-    expected4 = "  memcpy(&cmock_call_instance->Expected_Lime, &Lime, sizeof(LIME_T));\n" +
+    expected4 = "  memcpy((void*)(&cmock_call_instance->Expected_Lime), (void*)(&Lime), sizeof(LIME_T));\n" +
                 "  cmock_call_instance->IgnoreArg_Lime = 0;\n"
 
     assert_equal(expected1, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg1))
@@ -153,7 +153,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     }
     expected = "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, stuff)\n{\n" +
                "  cmock_call_instance->Expected_MyIntPtr = MyIntPtr;\n" +
-               "  memcpy(&cmock_call_instance->Expected_MyMyType, &MyMyType, sizeof(MY_TYPE));\n" +
+               "  memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE));\n" +
                "  cmock_call_instance->Expected_MyStr = MyStr;\n" +
                "}\n\n"
     assert_equal(expected, @cmock_generator_utils_simple.code_add_argument_loader(function))
@@ -169,7 +169,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "  cmock_call_instance->Expected_MyIntPtr_Depth = MyIntPtr_Depth;\n" +
                "  cmock_call_instance->IgnoreArg_MyIntPtr = 0;\n" +
                "  cmock_call_instance->ReturnThruPtr_MyIntPtr_Used = 0;\n" +
-               "  memcpy(&cmock_call_instance->Expected_MyMyType, &MyMyType, sizeof(MY_TYPE));\n" +
+               "  memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE));\n" +
                "  cmock_call_instance->IgnoreArg_MyMyType = 0;\n" +
                "  cmock_call_instance->Expected_MyStr = MyStr;\n" +
                "  cmock_call_instance->IgnoreArg_MyStr = 0;\n" +
