@@ -30,6 +30,7 @@ CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemEndOfChain(CMOCK_MEM_INDEX_TYPE root_index);
 
 void*                 CMock_Guts_GetAddressFor(CMOCK_MEM_INDEX_TYPE index);
 
+CMOCK_MEM_INDEX_TYPE CMock_Guts_MemBytesCapacity(void);
 CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesFree(void);
 CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesUsed(void);
 void                  CMock_Guts_MemFreeAll(void);
