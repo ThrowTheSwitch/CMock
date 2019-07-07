@@ -179,7 +179,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module W
   it "add mock verify lines" do
     function = {:name => "Banana" }
     expected = "  UNITY_SET_DETAIL(CMockString_Banana);\n" +
-               "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == Mock.Banana_CallInstance, cmock_line, CMockStringCalledLess);\n"
+               "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == call_instance, cmock_line, CMockStringCalledLess);\n"
     returned = @cmock_generator_plugin_expect.mock_verify(function)
     assert_equal(expected, returned)
   end

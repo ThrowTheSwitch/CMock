@@ -412,8 +412,11 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = [ "void MockPoutPoutFish_Verify(void)\n{\n",
                  "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
+                 "  CMOCK_MEM_INDEX_TYPE call_instance;\n",
+                 "  call_instance = Mock.First_CallInstance;\n" +
                  "  Uno_First" +
                  "  Dos_First" +
+                 "  call_instance = Mock.Second_CallInstance;\n" +
                  "  Uno_Second" +
                  "  Dos_Second",
                  "}\n\n"
