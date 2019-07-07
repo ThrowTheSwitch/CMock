@@ -100,7 +100,13 @@ class CMockGeneratorUtils
   def code_call_argument_loader(function)
     if (function[:args_string] != "void")
       args = function[:args].map do |m|
-        (@arrays and m[:ptr?]) ? "#{m[:name]}, 1" : m[:name]
+        if (@arrays and m[:ptr?] and not m[:array_data?])
+          "#{m[:name]}, 1"
+        elsif (@arrays and m[:array_size?])
+          "#{m[:name]}, #{m[:name]}"
+        else
+          m[:name]
+        end
       end
       "  CMockExpectParameters_#{function[:name]}(cmock_call_instance, #{args.join(', ')});\n"
     else
