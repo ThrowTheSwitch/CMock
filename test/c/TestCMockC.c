@@ -25,8 +25,18 @@ void test_MemNewWillReturnNullIfGivenIllegalSizes(void)
   TEST_ASSERT_NULL( CMock_Guts_GetAddressFor(CMOCK_GUTS_NONE) );
 
   //verify we're cleared still
-  TEST_ASSERT_EQUAL(0, CMock_Guts_MemBytesUsed());
-  TEST_ASSERT_EQUAL(CMOCK_MEM_SIZE, CMock_Guts_MemBytesFree());
+  TEST_ASSERT_LESS_OR_EQUAL_UINT32(CMOCK_MEM_SIZE, CMock_Guts_MemBytesCapacity());
+  TEST_ASSERT_EQUAL_UINT32(0, CMock_Guts_MemBytesUsed());
+  TEST_ASSERT_LESS_OR_EQUAL_UINT32(CMOCK_MEM_SIZE, CMock_Guts_MemBytesFree());
+}
+
+void test_MemShouldProtectAgainstMemoryOverflow(void)
+{
+  (void)CMock_Guts_MemNew(CMOCK_MEM_SIZE - TEST_MEM_INDEX_SIZE);
+
+  //verify we've used all the memory
+  TEST_ASSERT_LESS_OR_EQUAL_UINT32(TEST_MEM_INDEX_SIZE, CMock_Guts_MemBytesFree());
+  TEST_ASSERT_GREATER_OR_EQUAL_UINT32(CMOCK_MEM_SIZE, CMock_Guts_MemBytesUsed());
 }
 
 void test_MemChainWillReturnNullAndDoNothingIfGivenIllegalInformation(void)
@@ -258,11 +268,11 @@ void test_ThatWeCanAskForAllSortsOfSizes(void)
   }
 
   //show that we can't ask for too much memory
-  TEST_ASSERT_EQUAL_HEX(CMOCK_GUTS_NONE, CMock_Guts_MemNew(12));
-  TEST_ASSERT_EQUAL_HEX(CMOCK_GUTS_NONE, CMock_Guts_MemNew(5));
+  TEST_ASSERT_EQUAL_HEX(CMOCK_GUTS_NONE, CMock_Guts_MemNew(CMOCK_MEM_SIZE - sum + 8));
+  TEST_ASSERT_EQUAL_HEX(CMOCK_GUTS_NONE, CMock_Guts_MemNew(CMOCK_MEM_SIZE - sum + 1));
 
   //but we CAN ask for something that will still fit
-  next = CMock_Guts_MemNew(4);
+  next = CMock_Guts_MemNew(CMOCK_MEM_SIZE - sum - 4);
   TEST_ASSERT_MESSAGE(next != CMOCK_GUTS_NONE, "Should Not Have Returned CMOCK_GUTS_NONE");
 
   first = CMock_Guts_MemChain(first, next);

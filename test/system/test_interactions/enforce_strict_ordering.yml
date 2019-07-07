@@ -100,7 +100,7 @@
 
     - :pass: FALSE
       :should: 'fail because bar() is called twice but is expected once'
-      :verify_error: 'Called less times than expected'
+      :verify_error: 'Called fewer times than expected'
       :code: |
         test()
         {

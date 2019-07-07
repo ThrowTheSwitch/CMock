@@ -153,7 +153,7 @@ only needs to be called once per test. It will then ignore any further calls to 
 particular mock. The IgnoreAndReturn works similarly, except that it has the added
 benefit of knowing what to return when that call happens. If the mock is called more
 times than IgnoreAndReturn was called, it will keep returning the last value without
-complaint. If it's called less times, it will also ignore that. You SAID you didn't
+complaint. If it's called fewer times, it will also ignore that. You SAID you didn't
 care how many times it was called, right?
 
 * `void func(void)` => `void func_Ignore(void)`
@@ -586,7 +586,7 @@ based on other settings, particularly Unity's settings.
 * `CMOCK_MEM_SIZE`
   In static mode this is the total amount of memory you are allocating
   to Cmock. In Dynamic mode this is the size of each chunk allocated
-  at once (larger numbers grab more memory but require less mallocs).
+  at once (larger numbers grab more memory but require fewer mallocs).
 
 * `CMOCK_MEM_ALIGN`
   The way to align your data to. Not everything is as flexible as

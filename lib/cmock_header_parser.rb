@@ -18,6 +18,8 @@ class CMockHeaderParser
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
     @declaration_parse_matcher = /([\d\w\s\*\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]+-]*)\)$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
+    @array_size_name = cfg.array_size_name
+    @array_size_type = (['int', 'size_t'] + cfg.array_size_type).uniq
     @when_no_prototypes = cfg.when_no_prototypes
     @local_as_void = @treat_as_void
     @verbosity = cfg.verbosity
@@ -196,6 +198,18 @@ class CMockHeaderParser
 
       args << arg_info
     end
+
+    # Try to find array pair in parameters following this pattern : <type> * <name>, <@array_size_type> <@array_size_name>
+    args.each_with_index {|val, index|
+      next_index = index + 1
+      if (args.length > next_index)
+        if (val[:ptr?] == true and args[next_index][:name].match(@array_size_name) and @array_size_type.include?(args[next_index][:type]))
+          val[:array_data?] = true
+          args[next_index][:array_size?] = true
+        end
+      end
+    }
+
     return args
   end
 

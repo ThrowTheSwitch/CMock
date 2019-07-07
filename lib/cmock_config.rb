@@ -37,6 +37,8 @@ class CMockConfig
     :includes_c_pre_header       => nil,
     :includes_c_post_header      => nil,
     :orig_header_include_fmt     => "#include \"%s\"",
+    :array_size_type             => [],
+    :array_size_name             => 'size|len',
   }
 
   def initialize(options=nil)

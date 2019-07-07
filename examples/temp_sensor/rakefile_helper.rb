@@ -151,7 +151,7 @@ module RakefileHelpers
     report command_string
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
-    unless $?.exitstatus.zero? || ok_to_fail
+    unless (!$?.nil? && $?.exitstatus.zero?) || ok_to_fail
       raise "Command failed. (Returned #{$?.exitstatus})"
     end
     return output

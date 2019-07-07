@@ -75,7 +75,7 @@ class CMockGeneratorUtils
     else
       assert_expr = "sizeof(#{arg[:name]}) == sizeof(#{arg[:type]}) ? 1 : -1"
       comment = "/* add #{arg[:type]} to :treat_as_array if this causes an error */"
-      "  memcpy(&#{dest}, &#{arg[:name]},\n" +
+      "  memcpy((void*)(&#{dest}), (void*)(&#{arg[:name]}),\n" +
       "         sizeof(#{arg[:type]}[#{assert_expr}])); #{comment}\n"
     end
   end
@@ -103,7 +103,13 @@ class CMockGeneratorUtils
   def code_call_argument_loader(function)
     if (function[:args_string] != "void")
       args = function[:args].map do |m|
-        (@arrays and m[:ptr?]) ? "#{m[:name]}, 1" : m[:name]
+        if (@arrays and m[:ptr?] and not m[:array_data?])
+          "#{m[:name]}, 1"
+        elsif (@arrays and m[:array_size?])
+          "#{m[:name]}, #{m[:name]}"
+        else
+          m[:name]
+        end
       end
       "  CMockExpectParameters_#{function[:name]}(cmock_call_instance, #{args.join(', ')});\n"
     else
