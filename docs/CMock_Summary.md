@@ -479,6 +479,18 @@ from the defaults. We've tried to specify what the defaults are below.
     * 'float': 'FLOAT'
     * 'double': 'FLOAT'
 
+* `:treat_as_array`:
+  A specialized sort of `:treat_as` to be used when you've created a
+  typedef of an array type, such as `typedef int TenIntegers[10];`.  This
+  is a hash of typedef name to element type.  For example:
+
+        { "TenIntegers" => "int",
+          "ArrayOfFloat" => "float" }
+
+  Telling CMock about these typedefs allows it to be more intelligent
+  about parameters of such types, so that you can use features like
+  ExpectWithArray and ReturnArrayThruPtr with them.
+
 * `:treat_as_void`:
   We've seen "fun" legacy systems typedef 'void' with a custom type,
   like MY_VOID. Add any instances of those to this list to help CMock

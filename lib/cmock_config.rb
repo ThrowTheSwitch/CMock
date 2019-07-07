@@ -22,6 +22,7 @@ class CMockConfig
     :fail_on_unexpected_calls    => true,
     :unity_helper_path           => false,
     :treat_as                    => {},
+    :treat_as_array              => {},
     :treat_as_void               => [],
     :memcmp_if_unknown           => true,
     :when_no_prototypes          => :warn,           #the options being :ignore, :warn, or :error

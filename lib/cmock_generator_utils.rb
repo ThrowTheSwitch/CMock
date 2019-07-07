@@ -73,7 +73,10 @@ class CMockGeneratorUtils
     if (arg[:ptr?] or @treat_as.include?(arg[:type]))
       "  #{dest} = #{arg[:name]};\n"
     else
-      "  memcpy((void*)(&#{dest}), (void*)(&#{arg[:name]}), sizeof(#{arg[:type]}));\n"
+      assert_expr = "sizeof(#{arg[:name]}) == sizeof(#{arg[:type]}) ? 1 : -1"
+      comment = "/* add #{arg[:type]} to :treat_as_array if this causes an error */"
+      "  memcpy((void*)(&#{dest}), (void*)(&#{arg[:name]}),\n" +
+      "         sizeof(#{arg[:type]}[#{assert_expr}])); #{comment}\n"
     end
   end
 
