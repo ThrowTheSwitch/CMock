@@ -34,9 +34,9 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
   # Define make variables
   mkfile.puts "CC ?= gcc"
-  mkfile.puts "BUILD_DIR ?= ./build"
-  mkfile.puts "SRC_DIR ?= ./src"
-  mkfile.puts "TEST_DIR ?= ./test"
+  mkfile.puts "BUILD_DIR = #{BUILD_DIR}"
+  mkfile.puts "SRC_DIR = #{SRC_DIR}"
+  mkfile.puts "TEST_DIR = #{TEST_DIR}"
   mkfile.puts "TEST_CFLAGS ?= -DTEST"
   mkfile.puts "CMOCK_DIR ?= #{CMOCK_DIR}"
   mkfile.puts "UNITY_DIR ?= #{UNITY_DIR}"
@@ -60,8 +60,8 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   test_targets = []
   generator = UnityTestRunnerGenerator.new
 
-  # headers that begin with prefix or end with suffix are not included 
-  all_headers = Dir["#{SRC_DIR}/**/*.h"]  
+  # headers that begin with prefix or end with suffix are not included
+  all_headers = Dir["#{SRC_DIR}/**/*.h"]
 
   def reject_mock_files(file)
     extn = File.extname file
@@ -73,7 +73,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   end
 
   all_headers = all_headers.reject { |f| reject_mock_files(f) }
-  
+
   makefile_targets = []
 
   test_sources.each do |test|
@@ -96,7 +96,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     if not makefile_targets.include? module_obj
         makefile_targets.push(module_obj)
         mkfile.puts "#{module_obj}: #{module_src}"
-        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} ${INCLUDE_PATH}"
+        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I ${SRC_DIR} ${INCLUDE_PATH}"
         mkfile.puts ""
     end
 
@@ -112,7 +112,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
         if not makefile_targets.include? linkonlymodule_obj
             makefile_targets.push(linkonlymodule_obj)
             mkfile.puts "#{linkonlymodule_obj}: #{linkonlymodule_src}"
-            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} ${INCLUDE_PATH}"
+            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I ${SRC_DIR} ${INCLUDE_PATH}"
             mkfile.puts ""
         end
     end
