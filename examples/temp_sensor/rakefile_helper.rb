@@ -185,7 +185,7 @@ module RakefileHelpers
       obj_list = []
 
       # Detect dependencies and build required required modules
-      header_list = extract_headers(test) + ['cmock.h'] + [ cfg[:cmock][:unity_helper_path] ]
+      header_list = extract_headers(test) + ['cmock.h'] + [ $cfg[:cmock][:unity_helper_path] ]
       header_list.compact.uniq.each do |header|
 
         #create mocks if needed
