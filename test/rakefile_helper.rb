@@ -50,6 +50,7 @@ module RakefileHelpers
         includes << m[1]
       end
     end
+    includes << File.basename(filename,".c").slice(5,256) + "_unity_helper.h"
     return includes
   end
 

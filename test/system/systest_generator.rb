@@ -104,7 +104,6 @@ class SystemTestGenerator
     return if tests.nil?
 
     includes = [UNITY_H, CMOCK_H]
-    includes << (namix + UNITY_HELPER_H) if not yaml_hash[:systest][:unity_helper].nil?
     includes << [MOCK_PREFIX + namix + MOCKABLE_H]
     includes << [name + H_EXTENSION]
 

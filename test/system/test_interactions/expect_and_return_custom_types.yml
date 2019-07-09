@@ -3,6 +3,7 @@
   :plugins:
   - # none
   :memcmp_if_unknown: false
+  :unity_helper_path: expect_and_return_custom_types_unity_helper.h
 
 :systest:
   :types: |
@@ -35,7 +36,6 @@
 
   :tests:
     :common: |
-      #include "expect_and_return_custom_types_unity_helper.h"
       void setUp(void) {}
       void tearDown(void) {}
 

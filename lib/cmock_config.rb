@@ -64,6 +64,7 @@ class CMockConfig
     end
     options[:unity_helper_path] ||= options[:unity_helper]
     options[:unity_helper_path] = [options[:unity_helper_path]] if options[:unity_helper_path].is_a? String
+    options[:includes_c_post_header] = ((options[:includes_c_post_header] || []) + (options[:unity_gelper_path] || [])).uniq
     options[:plugins].compact!
     options[:plugins].map! {|p| p.to_sym}
     @options = options
