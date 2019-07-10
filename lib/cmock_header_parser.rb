@@ -90,6 +90,9 @@ class CMockHeaderParser
     source.gsub!(/\)(\w)/, ') \1')                                                         # add space between parenthese and alphanumeric
     source.gsub!(/(^|\W+)(?:#{@c_strippables.join('|')})(?=$|\W+)/,'\1') unless @c_strippables.empty? # remove known attributes slated to be stripped
 
+    #scan standalone function pointers and remove them, because they can just be ignored
+    source.gsub!(/\w+\s*\(\s*\*\s*\w+\s*\)\s*\([^)]*\)\s*;/,';')
+
     #scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
       functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"

@@ -50,3 +50,14 @@ extern unsigned long int incredible_descriptors(register const unsigned short a)
 int32_t example_c99_type(int32_t param1);
 
 void I2CIntRegister(uint32_t ui32Base, void (*pfnHandler)(void));
+
+/* these are function pointers, not function declarations USING a function pointer, and so should NOT get mocked */
+int (* func_pointer)(void);
+extern int (*another_func_pointer)(unsigned int argument);
+struct struct_to_be_ignored {
+  union {
+    int i32;
+    void *p;
+  } variant;
+  void (*a_function_pointer_in_a_struct)(void *);
+};
