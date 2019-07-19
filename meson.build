@@ -15,7 +15,6 @@ project('cmock', 'c',
     version         : '2.4.6',
     license         : 'MIT',
     meson_version   : '>=0.50.0',
-    subproject_dir  : 'vendor',
     default_options : 
     [ 
         'werror=true',
