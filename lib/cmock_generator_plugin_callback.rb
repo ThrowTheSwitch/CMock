@@ -39,36 +39,28 @@ class CMockGeneratorPluginCallback
     "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\nvoid #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback);\n"
   end
 
+  def generate_call(function)
+    args = function[:args].map { |m| m[:name] }
+    args << "Mock.#{function[:name]}_CallbackCalls++" if @include_count
+    "Mock.#{function[:name]}_CallbackFunctionPointer(#{args.join(', ')})"
+  end
+
   def mock_implementation_for_callbacks_after_arg_check(function)
-    func_name   = function[:name]
-    style  = (@include_count ? 1 : 0) | (function[:args].empty? ? 0 : 2) | (function[:return][:void?] ? 0 : 4)
-    "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n  {\n" +
-    case(style)
-      when 0 then "    Mock.#{func_name}_CallbackFunctionPointer();\n  }\n"
-      when 1 then "    Mock.#{func_name}_CallbackFunctionPointer(Mock.#{func_name}_CallbackCalls++);\n  }\n"
-      when 2 then "    Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')});\n  }\n"
-      when 3 then "    Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')}, Mock.#{func_name}_CallbackCalls++);\n  }\n"
-      when 4 then "    cmock_call_instance->ReturnVal = Mock.#{func_name}_CallbackFunctionPointer();\n  }\n"
-      when 5 then "    cmock_call_instance->ReturnVal = Mock.#{func_name}_CallbackFunctionPointer(Mock.#{func_name}_CallbackCalls++);\n  }\n"
-      when 6 then "    cmock_call_instance->ReturnVal = Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')});\n  }\n"
-      when 7 then "    cmock_call_instance->ReturnVal = Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')}, Mock.#{func_name}_CallbackCalls++);\n  }\n"
-    end
+    "  if (Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
+      if function[:return][:void?]
+        "    #{generate_call(function)};\n  }\n"
+      else
+        "    cmock_call_instance->ReturnVal = #{generate_call(function)};\n  }\n"
+      end
   end
 
   def mock_implementation_for_callbacks_without_arg_check(function)
-    func_name   = function[:name]
-    style  = (@include_count ? 1 : 0) | (function[:args].empty? ? 0 : 2) | (function[:return][:void?] ? 0 : 4)
-    "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n  {\n" +
-    case(style)
-      when 0 then "    Mock.#{func_name}_CallbackFunctionPointer();\n    return;\n  }\n"
-      when 1 then "    Mock.#{func_name}_CallbackFunctionPointer(Mock.#{func_name}_CallbackCalls++);\n    return;\n  }\n"
-      when 2 then "    Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')});\n    return;\n  }\n"
-      when 3 then "    Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')}, Mock.#{func_name}_CallbackCalls++);\n    return;\n  }\n"
-      when 4 then "    return Mock.#{func_name}_CallbackFunctionPointer();\n  }\n"
-      when 5 then "    return Mock.#{func_name}_CallbackFunctionPointer(Mock.#{func_name}_CallbackCalls++);\n  }\n"
-      when 6 then "    return Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')});\n  }\n"
-      when 7 then "    return Mock.#{func_name}_CallbackFunctionPointer(#{function[:args].map{|m| m[:name]}.join(', ')}, Mock.#{func_name}_CallbackCalls++);\n  }\n"
-    end
+    "  if (Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
+      if function[:return][:void?]
+        "    #{generate_call(function)};\n    return;\n  }\n"
+      else
+        "    return #{generate_call(function)};\n  }\n"
+      end
   end
 
   def nothing(function)
