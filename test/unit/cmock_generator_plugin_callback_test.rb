@@ -165,6 +165,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
                 "    Mock.Apple_CallbackFunctionPointer();\n",
+                "    UNITY_CLR_DETAILS();\n",
                 "    return;\n",
                 "  }\n"
                ].join
@@ -177,7 +178,9 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     function = {:name => "Apple", :args => [], :args_string => "void", :return => test_return[:int]}
     expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
-                "    return Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
+                "    int ret = Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
+                "    UNITY_CLR_DETAILS();\n",
+                "    return ret;\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_without_arg_check(function)
@@ -193,6 +196,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
                 "    Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
+                "    UNITY_CLR_DETAILS();\n",
                 "    return;\n",
                 "  }\n"
                ].join
@@ -209,6 +213,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
                 "    Mock.Apple_CallbackFunctionPointer(steak, flag);\n",
+                "    UNITY_CLR_DETAILS();\n",
                 "    return;\n",
                 "  }\n"
                ].join
@@ -225,7 +230,9 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 :return => test_return[:int]}
     expected = ["  if (Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
-                "    return Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
+                "    int ret = Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
+                "    UNITY_CLR_DETAILS();\n",
+                "    return ret;\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation_for_callbacks_without_arg_check(function)

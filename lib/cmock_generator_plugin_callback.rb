@@ -57,9 +57,13 @@ class CMockGeneratorPluginCallback
   def mock_implementation_for_callbacks_without_arg_check(function)
     "  if (Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
       if function[:return][:void?]
-        "    #{generate_call(function)};\n    return;\n  }\n"
+        "    #{generate_call(function)};\n" \
+        "    UNITY_CLR_DETAILS();\n" \
+        "    return;\n  }\n"
       else
-        "    return #{generate_call(function)};\n  }\n"
+        "    #{function[:return][:type]} ret = #{generate_call(function)};\n" \
+        "    UNITY_CLR_DETAILS();\n" \
+        "    return ret;\n  }\n"
       end
   end
 
