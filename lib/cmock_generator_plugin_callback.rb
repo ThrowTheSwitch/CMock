@@ -16,27 +16,25 @@ class CMockGeneratorPluginCallback
     @priority = 6
 
     @include_count = @config.callback_include_count
-    if (@config.callback_after_arg_check)
-      alias :mock_implementation          :mock_implementation_for_callbacks_after_arg_check
-      alias :mock_implementation_precheck :nothing
-    else
-      alias :mock_implementation_precheck :mock_implementation_for_callbacks_without_arg_check
-      alias :mock_implementation          :nothing
-    end
   end
 
   def instance_structure(function)
     func_name = function[:name]
-    "  CMOCK_#{func_name}_CALLBACK #{func_name}_CallbackFunctionPointer;\n" +
+    "  int #{func_name}_IgnoreWithCallbackBool;\n" \
+    "  CMOCK_#{func_name}_CALLBACK #{func_name}_CallbackFunctionPointer;\n" \
     "  int #{func_name}_CallbackCalls;\n"
   end
 
   def mock_function_declarations(function)
     func_name = function[:name]
     return_type = function[:return][:type]
+    action = @config.callback_after_arg_check ? 'Check' : 'Ignore'
     style  = (@include_count ? 1 : 0) | (function[:args].empty? ? 0 : 2)
     styles = [ "void", "int cmock_num_calls", function[:args_string], "#{function[:args_string]}, int cmock_num_calls" ]
-    "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\nvoid #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback);\n"
+    "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\n" \
+    "void #{func_name}_CheckWithCallback(CMOCK_#{func_name}_CALLBACK Callback);\n" \
+    "void #{func_name}_IgnoreWithCallback(CMOCK_#{func_name}_CALLBACK Callback);\n" \
+    "#define #{func_name}_StubWithCallback #{func_name}_#{action}WithCallback\n"
   end
 
   def generate_call(function)
@@ -45,7 +43,7 @@ class CMockGeneratorPluginCallback
     "Mock.#{function[:name]}_CallbackFunctionPointer(#{args.join(', ')})"
   end
 
-  def mock_implementation_for_callbacks_after_arg_check(function)
+  def mock_implementation(function)
     "  if (Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
       if function[:return][:void?]
         "    #{generate_call(function)};\n  }\n"
@@ -54,8 +52,9 @@ class CMockGeneratorPluginCallback
       end
   end
 
-  def mock_implementation_for_callbacks_without_arg_check(function)
-    "  if (Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
+  def mock_implementation_precheck(function)
+    "  if (Mock.#{function[:name]}_IgnoreWithCallbackBool &&\n" \
+    "      Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
       if function[:return][:void?]
         "    #{generate_call(function)};\n" \
         "    UNITY_CLR_DETAILS();\n" \
@@ -67,17 +66,17 @@ class CMockGeneratorPluginCallback
       end
   end
 
-  def nothing(function)
-    return ""
-  end
-
   def mock_interfaces(function)
     func_name = function[:name]
+    has_ignore = @config.plugins.include? :ignore
     lines = ""
-    lines << "void #{func_name}_StubWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
-    if @config.plugins.include? :ignore
-      lines << "  Mock.#{func_name}_IgnoreBool = (int)0;\n"
-    end
+    lines << "void #{func_name}_CheckWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
+    lines << "  Mock.#{func_name}_IgnoreBool = (int)0;\n" if has_ignore
+    lines << "  Mock.#{func_name}_IgnoreWithCallbackBool = (int)0;\n"
+    lines << "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
+    lines << "void #{func_name}_IgnoreWithCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
+    lines << "  Mock.#{func_name}_IgnoreBool = (int)0;\n" if has_ignore
+    lines << "  Mock.#{func_name}_IgnoreWithCallbackBool = (int)1;\n"
     lines << "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
   end
 
