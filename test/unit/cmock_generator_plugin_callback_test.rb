@@ -248,12 +248,4 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     returned = @cmock_generator_plugin_callback.mock_interfaces(function)
     assert_equal(expected, returned)
   end
-
-  it "add mock destroy for functions" do
-    function = {:name => "Peach", :args => [], :return => test_return[:void] }
-    expected = "  Mock.Peach_CallbackFunctionPointer = NULL;\n" +
-               "  Mock.Peach_CallbackCalls = 0;\n"
-    returned = @cmock_generator_plugin_callback.mock_destroy(function)
-    assert_equal(expected, returned)
-  end
 end

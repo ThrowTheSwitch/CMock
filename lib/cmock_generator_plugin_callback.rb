@@ -85,11 +85,6 @@ class CMockGeneratorPluginCallback
     lines << "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
   end
 
-  def mock_destroy(function)
-    "  Mock.#{function[:name]}_CallbackFunctionPointer = NULL;\n" +
-    "  Mock.#{function[:name]}_CallbackCalls = 0;\n"
-  end
-
   def mock_verify(function)
     func_name = function[:name]
     "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n    call_instance = CMOCK_GUTS_NONE;\n"
