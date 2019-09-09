@@ -168,9 +168,11 @@ Ignore Arg:
 Maybe you overall want to use Expect and its similar variations, but you don't care
 what is passed to a particular argument. This is particularly useful when that argument
 is a pointer to a value that is supposed to be filled in by the function. You don't want
-to use ExpectAnyArgs, because you still care about the other arguments. Instead, before
-any of your Expect calls are made, you can call this function. It tells CMock to ignore
-a particular argument for the rest of this test, for this mock function.
+to use ExpectAnyArgs, because you still care about the other arguments. Instead, after
+an Expect call is made, you can call this function. It tells CMock to ignore
+a particular argument for the rest of this test, for this mock function. You may call
+multiple instances of this to ignore multiple arguments after each expectation if
+desired.
 
 * `void func(params)` => `void func_IgnoreArg_paramName(void)`
 
