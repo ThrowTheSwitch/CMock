@@ -209,14 +209,16 @@ where `CMOCK_func_CALLBACK` looks like: `retval func(params, int NumCalls)`
 
 You can choose from two options:
 
-* `func_CheckWithCallback` tells the mock to check its arguments and calling
+* `func_AddCallback` tells the mock to check its arguments and calling
 order (based on any Expects you've set up) before calling the callback.
-* `func_IgnoreWithCallback` tells the mock to skip all the normal checks (just
-like Ignore) and jump directly to the callback instead.
+* `func_Stub` tells the mock to skip all the normal checks and jump directly
+to the callback instead. In this case, you are replacing the normal mock calls
+with your own custom stub function.
 
 There is also an older name, `func_StubWithCallback`, which is just an alias for
 either `func_CheckWithCallback` or `func_IgnoreWithCallback` depending on
-setting of the `:callback_after_arg_check` toggle.
+setting of the `:callback_after_arg_check` toggle. This is deprecated and we
+recommend using the two options above.
 
 
 Cexception:
