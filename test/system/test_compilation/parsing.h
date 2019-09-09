@@ -61,3 +61,15 @@ struct struct_to_be_ignored {
   } variant;
   void (*a_function_pointer_in_a_struct)(void *);
 };
+
+typedef struct
+{
+  uint32_t a;
+  struct
+  {
+    uint32_t bb;
+    float bc;
+    float bd;
+  } b;
+  int (*another_function_pointer_in_a_struct) (void);
+} another_thing_that_should_get_ignored;
