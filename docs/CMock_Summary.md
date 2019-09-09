@@ -196,18 +196,27 @@ Callback:
 
 If all those other options don't work, and you really need to do something custom, you
 still have a choice. As soon as you stub a callback in a test, it will call the callback
-whenever the mock is encountered and return the retval returned from the callback (if any)
-instead of performing the usual expect checks. It can be configured to check the arguments
-first (like expects) or just jump directly to the callback.
+whenever the mock is encountered and return the retval returned from the callback (if any).
 
-* `void func(void)` => `void func_StubWithCallback(CMOCK_func_CALLBACK callback)`
+* `void func(void)` => `void func_[Check,Ignore]WithCallback(CMOCK_func_CALLBACK callback)`
 where `CMOCK_func_CALLBACK` looks like: `void func(int NumCalls)`
-* `void func(params)` => `void func_StubWithCallback(CMOCK_func_CALLBACK callback)`
+* `void func(params)` => `void func_[Check,Ignore]WithCallback(CMOCK_func_CALLBACK callback)`
 where `CMOCK_func_CALLBACK` looks like: `void func(params, int NumCalls)`
-* `retval func(void)` => `void func_StubWithCallback(CMOCK_func_CALLBACK callback)`
+* `retval func(void)` => `void func_[Check,Ignore]WithCallback(CMOCK_func_CALLBACK callback)`
 where `CMOCK_func_CALLBACK` looks like: `retval func(int NumCalls)`
-* `retval func(params)` => `void func_StubWithCallback(CMOCK_func_CALLBACK callback)`
+* `retval func(params)` => `void func_[Check,Ignore]WithCallback(CMOCK_func_CALLBACK callback)`
 where `CMOCK_func_CALLBACK` looks like: `retval func(params, int NumCalls)`
+
+You can choose from two options:
+
+* `func_CheckWithCallback` tells the mock to check its arguments and calling
+order (based on any Expects you've set up) before calling the callback.
+* `func_IgnoreWithCallback` tells the mock to skip all the normal checks (just
+like Ignore) and jump directly to the callback instead.
+
+There is also an older name, `func_StubWithCallback`, which is just an alias for
+either `func_CheckWithCallback` or `func_IgnoreWithCallback` depending on
+setting of the `:callback_after_arg_check` toggle.
 
 
 Cexception:
