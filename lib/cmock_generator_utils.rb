@@ -57,7 +57,7 @@ class CMockGeneratorUtils
     lines << "  cmock_call_instance->LineNumber = cmock_line;\n"
     lines << "  cmock_call_instance->CallOrder = ++GlobalExpectCount;\n" if (@ordered and global_ordering_supported)
     lines << "  cmock_call_instance->ExceptionToThrow = CEXCEPTION_NONE;\n" if (@cexception)
-    lines << "  cmock_call_instance->IgnoreMode = CMOCK_ARG_ALL;\n" if (@expect_any)
+    lines << "  cmock_call_instance->ExpectAnyArgsBool = (int)0;\n" if (@expect_any)
     lines
   end
 
