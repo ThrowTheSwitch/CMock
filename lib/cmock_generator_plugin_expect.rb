@@ -64,7 +64,7 @@ class CMockGeneratorPluginExpect
 
   def mock_implementation_might_check_args(function)
     return "" if (function[:args].empty?)
-    lines = "  if (cmock_call_instance->IgnoreMode != CMOCK_ARG_NONE)\n  {\n"
+    lines = "  if (!cmock_call_instance->ExpectAnyArgsBool)\n  {\n"
     function[:args].each do |arg|
       lines << @utils.code_verify_an_arg_expectation(function, arg)
     end

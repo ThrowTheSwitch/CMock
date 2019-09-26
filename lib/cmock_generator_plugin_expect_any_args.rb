@@ -15,16 +15,8 @@ class CMockGeneratorPluginExpectAnyArgs
     @priority = 3
   end
 
-  def instance_structure(function)
-    if (function[:return][:void?]) || (@config.plugins.include? :ignore)
-      ""
-    else
-      "  #{function[:return][:type]} #{function[:name]}_FinalReturn;\n"
-    end
-  end
-
   def instance_typedefs(function)
-    "  CMOCK_ARG_MODE IgnoreMode;\n"
+    "  int ExpectAnyArgsBool;\n"
   end
 
   def mock_function_declarations(function)
@@ -48,7 +40,7 @@ class CMockGeneratorPluginExpectAnyArgs
     unless (function[:return][:void?])
       lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n"
     end
-    lines << "  cmock_call_instance->IgnoreMode = CMOCK_ARG_NONE;\n"
+    lines << "  cmock_call_instance->ExpectAnyArgsBool = (int)1;\n"
     lines << "}\n\n"
   end
 end

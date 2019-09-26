@@ -98,7 +98,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
 
     @utils.expect :code_verify_an_arg_expectation, "mocked_retval_1\n", [function, function[:args][0]]
     @utils.expect :code_verify_an_arg_expectation, "mocked_retval_2\n", [function, function[:args][1]]
-    expected = "  if (cmock_call_instance->IgnoreMode != CMOCK_ARG_NONE)\n" +
+    expected = "  if (!cmock_call_instance->ExpectAnyArgsBool)\n" +
                "  {\n" +
                "mocked_retval_1\n" +
                "mocked_retval_2\n" +
@@ -118,7 +118,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
   it "add mock function implementation for functions of style 'void func(int worm)' and strict ordering" do
     function = {:name => "Apple", :args => [{ :type => "int", :name => "worm" }], :return => test_return[:void]}
     @utils.expect :code_verify_an_arg_expectation, "mocked_retval_0\n", [function, function[:args][0]]
-    expected = "  if (cmock_call_instance->IgnoreMode != CMOCK_ARG_NONE)\n" +
+    expected = "  if (!cmock_call_instance->ExpectAnyArgsBool)\n" +
                "  {\n" +
                "mocked_retval_0\n" +
                "  }\n"
