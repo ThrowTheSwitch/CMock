@@ -15,6 +15,7 @@ TEST_BUILD_DIR = ENV.fetch('TEST_BUILD_DIR', File.join(BUILD_DIR, 'test'))
 OBJ_DIR = File.join(TEST_BUILD_DIR, 'obj')
 UNITY_OBJ = File.join(OBJ_DIR, 'unity.o')
 CMOCK_OBJ = File.join(OBJ_DIR, 'cmock.o')
+CMOCK_CONFIG = ENV.fetch('CMOCK_CONFIG', '')
 RUNNERS_DIR = File.join(TEST_BUILD_DIR, 'runners')
 MOCKS_DIR = File.join(TEST_BUILD_DIR, 'mocks')
 TEST_BIN_DIR = TEST_BUILD_DIR
@@ -40,6 +41,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts "TEST_DIR = #{TEST_DIR}"
   mkfile.puts "TEST_CFLAGS ?= -DTEST"
   mkfile.puts "CMOCK_DIR ?= #{CMOCK_DIR}"
+  mkfile.puts "CMOCK_CONFIG ?= #{CMOCK_CONFIG}"
   mkfile.puts "UNITY_DIR ?= #{UNITY_DIR}"
   mkfile.puts "TEST_BUILD_DIR ?= ${BUILD_DIR}/test"
   mkfile.puts "MOCKS_DIR ?= ${TEST_BUILD_DIR}/mocks"
@@ -185,7 +187,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     mock_obj = File.join(MOCKS_DIR, File.join(src_hdr_directory, mock_name + '.o'))
 
     mkfile.puts "#{mock_src}: #{hdr}"
-    mkfile.puts "\t@CMOCK_DIR=${CMOCK_DIR} MOCKS_DIR=${MOCKS_DIR} ruby ${CMOCK_DIR}/scripts/create_mock.rb #{hdr}"
+    mkfile.puts "\t@CMOCK_DIR=${CMOCK_DIR} CMOCK_CONFIG=${CMOCK_CONFIG} MOCKS_DIR=${MOCKS_DIR} ruby ${CMOCK_DIR}/scripts/create_mock.rb #{hdr}"
     mkfile.puts ""
 
     mkfile.puts "#{mock_obj}: #{mock_src} #{mock_header}"
