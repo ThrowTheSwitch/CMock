@@ -39,7 +39,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts "BUILD_DIR = #{BUILD_DIR}"
   mkfile.puts "SRC_DIR = #{SRC_DIR}"
   mkfile.puts "TEST_DIR = #{TEST_DIR}"
-  mkfile.puts "TEST_CFLAGS ?= -DTEST"
+  mkfile.puts "TEST_CFLAGS ?= ${CFLAGS} -DTEST"
   mkfile.puts "CMOCK_DIR ?= #{CMOCK_DIR}"
   mkfile.puts "CMOCK_CONFIG ?= #{CMOCK_CONFIG}"
   mkfile.puts "UNITY_DIR ?= #{UNITY_DIR}"
@@ -52,12 +52,12 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
   # Build Unity
   mkfile.puts "#{UNITY_OBJ}: #{UNITY_SRC}/unity.c"
-  mkfile.puts "\t${CC} -o $@ -c $< -I #{UNITY_SRC}"
+  mkfile.puts "\t${CC} -o $@ -c $< -I #{UNITY_SRC} ${CFLAGS}"
   mkfile.puts ""
 
   # Build CMock
   mkfile.puts "#{CMOCK_OBJ}: #{CMOCK_SRC}/cmock.c"
-  mkfile.puts "\t${CC} -o $@ -c $< -I #{UNITY_SRC} -I #{CMOCK_SRC}"
+  mkfile.puts "\t${CC} -o $@ -c $< -I #{UNITY_SRC} -I #{CMOCK_SRC} ${CFLAGS}"
   mkfile.puts ""
 
   test_sources = Dir["#{TEST_DIR}/**/test_*.c"]
