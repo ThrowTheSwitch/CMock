@@ -4,6 +4,8 @@
 #   [Released under MIT License. Please refer to license.txt for details]
 # ==========================================
 
+require "pathname"
+
 class CMockGenerator
 
   attr_accessor :config, :file_writer, :module_name, :clean_mock_name, :mock_name, :utils, :plugins, :weak, :ordered
@@ -18,9 +20,11 @@ class CMockGenerator
     @weak        = @config.weak
     @ordered     = @config.enforce_strict_ordering
     @framework   = @config.framework.to_s
+    @silent      = (@config.verbosity < 2)
     @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
 
     @subdir      = @config.subdir
+    @srcdir      = @config.srcdir
 
     @includes_h_pre_orig_header  = (@config.includes || @config.includes_h_pre_orig_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
     @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
@@ -45,10 +49,20 @@ class CMockGenerator
 
   end
 
-  def create_mock(module_name, parsed_stuff)
+  def create_mock(src, parsed_stuff)
+    module_name = File.basename(src, '.h')
+    puts "Creating mock for #{module_name}..." unless @silent
+
     @module_name = module_name
     @mock_name   = @prefix + @module_name + @suffix
     @clean_mock_name = TypeSanitizer.sanitize_c_identifier(@mock_name)
+
+    unless @srcdir.nil?
+      src_build = Pathname.new(File.dirname(src)).relative_path_from(Pathname.new(@srcdir)).to_s
+    end
+  
+    @subdir = @subdir.nil? ? src_build : File.join(@subdir, src_build)
+    
     create_mock_subdir()
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)

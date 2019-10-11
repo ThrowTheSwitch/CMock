@@ -14,6 +14,7 @@ class CMockConfig
     :mock_suffix                 => '',
     :weak                        => '',
     :subdir                      => nil,
+    :srcdir                      => nil,
     :plugins                     => [],
     :strippables                 => ['(?:__attribute__\s*\(+.*?\)+)'],
     :attributes                  => ['__ramfunc', '__irq', '__fiq', 'register', 'extern'],

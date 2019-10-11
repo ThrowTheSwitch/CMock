@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'pathname'
 ABS_ROOT = FileUtils.pwd
 CMOCK_DIR = File.expand_path(ENV.fetch('CMOCK_DIR', File.join(ABS_ROOT, '..', '..')))
 require "#{CMOCK_DIR}/lib/cmock"
@@ -80,7 +81,8 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   test_sources.each do |test|
     module_name = File.basename(test, '.c')
     src_module_name = module_name.sub(/^test_/, '')
-    test_obj = File.join(OBJ_DIR, "#{module_name}.o")
+    src_module_directory = Pathname.new(File.dirname(test)).relative_path_from(Pathname.new(TEST_DIR))
+    test_obj = File.join(OBJ_DIR, File.join(src_module_directory, "#{module_name}.o"))
     runner_source = File.join(RUNNERS_DIR, "runner_#{module_name}.c")
     runner_obj = File.join(OBJ_DIR, "runner_#{module_name}.o")
     test_bin = File.join(TEST_BIN_DIR, module_name)
@@ -92,8 +94,8 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     }
 
     # Build main project modules, with TEST defined
-    module_src = File.join(SRC_DIR, "#{src_module_name}.c")
-    module_obj = File.join(OBJ_DIR, "#{src_module_name}.o")
+    module_src = File.join(SRC_DIR, File.join(src_module_directory, "#{src_module_name}.c"))
+    module_obj = File.join(OBJ_DIR, File.join(src_module_directory, "#{src_module_name}.o"))
     if not makefile_targets.include? module_obj
         makefile_targets.push(module_obj)
         mkfile.puts "#{module_obj}: #{module_src}"
@@ -150,7 +152,8 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     all_headers_to_mock += headers_to_mock
     mock_objs = headers_to_mock.map do |hdr|
       mock_name = MOCK_PREFIX + File.basename(hdr, '.h')
-      File.join(MOCKS_DIR, mock_name + '.o')
+      src_hdr_directory = Pathname.new(File.dirname(hdr)).relative_path_from(Pathname.new(SRC_DIR)).to_s
+      File.join(MOCKS_DIR, File.join(src_hdr_directory, mock_name + '.o'))
     end
     all_headers_to_mock.uniq!
 
@@ -176,9 +179,10 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   # Generate and build mocks
   all_headers_to_mock.each do |hdr|
     mock_name = MOCK_PREFIX + File.basename(hdr, '.h')
-    mock_header = File.join(MOCKS_DIR, mock_name + '.h')
-    mock_src = File.join(MOCKS_DIR, mock_name + '.c')
-    mock_obj = File.join(MOCKS_DIR, mock_name + '.o')
+    src_hdr_directory = Pathname.new(File.dirname(hdr)).relative_path_from(Pathname.new(SRC_DIR))
+    mock_header = File.join(MOCKS_DIR, File.join(src_hdr_directory, mock_name + '.h'))
+    mock_src = File.join(MOCKS_DIR, File.join(src_hdr_directory, mock_name + '.c'))
+    mock_obj = File.join(MOCKS_DIR, File.join(src_hdr_directory, mock_name + '.o'))
 
     mkfile.puts "#{mock_src}: #{hdr}"
     mkfile.puts "\t@CMOCK_DIR=${CMOCK_DIR} MOCKS_DIR=${MOCKS_DIR} ruby ${CMOCK_DIR}/scripts/create_mock.rb #{hdr}"
