@@ -41,6 +41,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts "CMOCK_DIR ?= #{CMOCK_DIR}"
   mkfile.puts "UNITY_DIR ?= #{UNITY_DIR}"
   mkfile.puts "TEST_BUILD_DIR ?= ${BUILD_DIR}/test"
+  mkfile.puts "MOCKS_DIR ?= ${TEST_BUILD_DIR}/mocks"
   mkfile.puts "TEST_MAKEFILE = ${TEST_BUILD_DIR}/MakefileTestSupport"
   mkfile.puts "OBJ ?= ${BUILD_DIR}/obj"
   mkfile.puts "OBJ_DIR = ${OBJ}"
@@ -180,7 +181,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     mock_obj = File.join(MOCKS_DIR, mock_name + '.o')
 
     mkfile.puts "#{mock_src}: #{hdr}"
-    mkfile.puts "\t@CMOCK_DIR=${CMOCK_DIR} ruby ${CMOCK_DIR}/scripts/create_mock.rb #{hdr}"
+    mkfile.puts "\t@CMOCK_DIR=${CMOCK_DIR} MOCKS_DIR=${MOCKS_DIR} ruby ${CMOCK_DIR}/scripts/create_mock.rb #{hdr}"
     mkfile.puts ""
 
     mkfile.puts "#{mock_obj}: #{mock_src} #{mock_header}"
