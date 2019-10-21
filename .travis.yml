@@ -5,7 +5,7 @@ os:
   - linux
 
 rvm:
-  - "2.3"
+  - "2.4"
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install --assume-yes --quiet gcc-multilib; fi
