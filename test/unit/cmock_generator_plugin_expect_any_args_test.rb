@@ -26,15 +26,22 @@ describe CMockGeneratorPluginExpectAnyArgs, "Verify CMockGeneratorPluginExpectAn
     assert(!@cmock_generator_plugin_expect_any_args.respond_to?(:include_files))
   end
 
+  it "ignore functions without arguments" do
+    function = {:name => "Mold", :args_string => "void", :args => [], :return => test_return[:void]}
+    expected = ""
+    returned = @cmock_generator_plugin_expect_any_args.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+
   it "handle function declarations for functions without return values" do
-    function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
+    function = {:name => "Mold", :args_string => "int meh", :args => [ :stuff ], :return => test_return[:void]}
     expected = "#define Mold_ExpectAnyArgs() Mold_CMockExpectAnyArgs(__LINE__)\nvoid Mold_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line);\n"
     returned = @cmock_generator_plugin_expect_any_args.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
 
   it "handle function declarations for functions that returns something" do
-    function = {:name => "Fungus", :args_string => "void", :return => test_return[:string]}
+    function = {:name => "Fungus", :args_string => "int meh", :args => [ :stuff ], :return => test_return[:string]}
     expected = "#define Fungus_ExpectAnyArgsAndReturn(cmock_retval) Fungus_CMockExpectAnyArgsAndReturn(__LINE__, cmock_retval)\n"+
                "void Fungus_CMockExpectAnyArgsAndReturn(UNITY_LINE_TYPE cmock_line, const char* cmock_to_return);\n"
     returned = @cmock_generator_plugin_expect_any_args.mock_function_declarations(function)
@@ -46,7 +53,7 @@ describe CMockGeneratorPluginExpectAnyArgs, "Verify CMockGeneratorPluginExpectAn
   end
 
   it "add a new mock interface for ignoring when function had no return value" do
-    function = {:name => "Slime", :args => [], :args_string => "void", :return => test_return[:void]}
+    function = {:name => "Slime",  :args_string => "int meh", :args => [ :stuff ], :return => test_return[:void]}
     expected = ["void Slime_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line)\n",
                 "{\n",
                 "mock_return_1",

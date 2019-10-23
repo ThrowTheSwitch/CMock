@@ -117,11 +117,11 @@ ExpectAnyArgs:
 This behaves just like the Expects calls, except that it doesn't really
 care what the arguments are that the mock gets called with. It still counts
 the number of times the mock is called and it still handles return values
-if there are some.
+if there are some. Note that an ExpectAnyArgs call is not generated for
+functions that have no arguments, because it would act exactly like the existing
+Expect and ExpectAndReturn calls.
 
-* `void func(void)` => `void func_ExpectAnyArgs(void)`
 * `void func(params)` => `void func_ExpectAnyArgs(void)`
-* `retval func(void)` => `void func_ExpectAnyArgsAndReturn(retval_to_return)`
 * `retval func(params)` => `void func_ExpectAnyArgsAndReturn(retval_to_return)`
 
 
