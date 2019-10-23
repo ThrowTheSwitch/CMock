@@ -21,8 +21,17 @@ describe CMockPluginManager, "Verify CMockPluginManager Module" do
       :ignore => :args_and_calls
     )
 
-    eval "class << @config\ndef plugins\n@plugins||[]\nend\ndef plugins=(val)\n@plugins=val\nend\nend\n"
+    def @config.plugins
+      if instance_variable_defined?(:@plugins)
+        @plugins || []
+      else
+        []
+      end
+    end
 
+    def @config.plugins=(val)
+      @plugins = val
+    end
   end
 
   after do

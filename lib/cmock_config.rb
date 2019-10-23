@@ -73,7 +73,11 @@ class CMockConfig
     treat_as_map.merge!(@options[:treat_as])
     @options[:treat_as] = treat_as_map
 
-    @options.each_key { |key| eval("def #{key.to_s}() return @options[:#{key.to_s}] end") }
+    @options.each_key do |key| 
+      unless methods.include?(key)
+        eval("def #{key.to_s}() return @options[:#{key.to_s}] end")
+      end
+    end
   end
 
   def load_config_file_from_yaml yaml_filename

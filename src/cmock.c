@@ -46,7 +46,7 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemNew(CMOCK_MEM_INDEX_TYPE size)
   size = size + CMOCK_MEM_INDEX_SIZE;
   if (size & CMOCK_MEM_ALIGN_MASK)
     size = (size + CMOCK_MEM_ALIGN_MASK) & ~CMOCK_MEM_ALIGN_MASK;
-  if ((CMock_Guts_BufferSize - CMock_Guts_FreePtr) < size)
+  if ((CMock_Guts_BufferSize - CMock_Guts_FreePtr) <= size)
   {
 #ifndef CMOCK_MEM_DYNAMIC
     return CMOCK_GUTS_NONE; // nothing we can do; our static buffer is out of memory
