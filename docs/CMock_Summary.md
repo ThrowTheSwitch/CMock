@@ -617,6 +617,20 @@ based on other settings, particularly Unity's settings.
   This needs to be something big enough to point anywhere in Cmock's
   memory space... usually it's an unsigned int.
 
+Other Tips
+==========
+
+resetTest
+---------
+
+While this isn't strictly a CMock feature, often users of CMock are using
+either the test runnger generator scripts in Unity or using Ceedling. In
+either case, there is a handy function called `resetTest` which gets
+generated with your runner. You can then use this handy function in your tests
+themselves. Call it during a test to have CMock validate everything to this point
+and start over clean. This is really useful when wanting to test a function in
+an iterative manner with different arguments.
+
 Examples
 ========
 
