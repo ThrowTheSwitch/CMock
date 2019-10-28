@@ -12,7 +12,7 @@
     void bar(void);
 
   :source: 
-    :header: |    
+    :header: |
       UINT32 function_a(int a);
       void function_b(void);
 
