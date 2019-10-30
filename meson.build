@@ -12,7 +12,7 @@
 
 project('cmock', 'c',
     license         : 'MIT',
-    meson_version   : '>=0.50.0',
+    meson_version   : '>=0.52.0',
     subproject_dir : 'vendor',
     default_options: [
         'buildtype=minsize',
@@ -63,6 +63,7 @@ if cc.get_id() == 'msvc'
             ]
         ), language: lang)
 endif
+
 
 unity_dep = dependency('unity', fallback: ['unity', 'unity_dep'])
 
