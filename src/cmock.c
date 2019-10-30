@@ -4,7 +4,6 @@
     [Released under MIT License. Please refer to license.txt for details]
 ========================================== */
 
-#include "unity.h"
 #include "cmock.h"
 
 //public constants to be used by mocks
