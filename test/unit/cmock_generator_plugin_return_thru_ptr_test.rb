@@ -89,7 +89,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
 
     expected =
       "#define Pine_ReturnThruPtr_tofu(tofu)" +
-      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, sizeof(*tofu))\n" +
+      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, sizeof(int))\n" +
       "#define Pine_ReturnArrayThruPtr_tofu(tofu, cmock_len)" +
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, (int)(cmock_len * (int)sizeof(*tofu)))\n" +
       "#define Pine_ReturnMemThruPtr_tofu(tofu, cmock_size)" +
