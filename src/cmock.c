@@ -4,7 +4,6 @@
     [Released under MIT License. Please refer to license.txt for details]
 ========================================== */
 
-#include "unity.h"
 #include "cmock.h"
 
 //public constants to be used by mocks
@@ -24,11 +23,11 @@ const char* CMockStringMismatch    = "Function called with unexpected argument v
 #ifdef CMOCK_MEM_DYNAMIC
 static unsigned char*         CMock_Guts_Buffer = NULL;
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_ALIGN_SIZE;
-static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr;
+static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #else
 static unsigned char          CMock_Guts_Buffer[CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE];
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE;
-static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr;
+static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #endif
 
 //-------------------------------------------------------
@@ -46,7 +45,7 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemNew(CMOCK_MEM_INDEX_TYPE size)
   size = size + CMOCK_MEM_INDEX_SIZE;
   if (size & CMOCK_MEM_ALIGN_MASK)
     size = (size + CMOCK_MEM_ALIGN_MASK) & ~CMOCK_MEM_ALIGN_MASK;
-  if ((CMock_Guts_BufferSize - CMock_Guts_FreePtr) <= size)
+  if ((CMock_Guts_BufferSize - CMock_Guts_FreePtr) < size)
   {
 #ifndef CMOCK_MEM_DYNAMIC
     return CMOCK_GUTS_NONE; // nothing we can do; our static buffer is out of memory
