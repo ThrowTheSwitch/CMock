@@ -198,13 +198,13 @@ If all those other options don't work, and you really need to do something custo
 still have a choice. As soon as you stub a callback in a test, it will call the callback
 whenever the mock is encountered and return the retval returned from the callback (if any).
 
-* `void func(void)` => `void func_[Check,Ignore]WithCallback(CMOCK_func_CALLBACK callback)`
+* `void func(void)` => `void func_[AddCallback,Stub](CMOCK_func_CALLBACK callback)`
 where `CMOCK_func_CALLBACK` looks like: `void func(int NumCalls)`
-* `void func(params)` => `void func_[Check,Ignore]WithCallback(CMOCK_func_CALLBACK callback)`
+* `void func(params)` => `void func_[AddCallback,Stub](CMOCK_func_CALLBACK callback)`
 where `CMOCK_func_CALLBACK` looks like: `void func(params, int NumCalls)`
-* `retval func(void)` => `void func_[Check,Ignore]WithCallback(CMOCK_func_CALLBACK callback)`
+* `retval func(void)` => `void func_[AddCallback,Stub](CMOCK_func_CALLBACK callback)`
 where `CMOCK_func_CALLBACK` looks like: `retval func(int NumCalls)`
-* `retval func(params)` => `void func_[Check,Ignore]WithCallback(CMOCK_func_CALLBACK callback)`
+* `retval func(params)` => `void func_[AddCallback,Stub](CMOCK_func_CALLBACK callback)`
 where `CMOCK_func_CALLBACK` looks like: `retval func(params, int NumCalls)`
 
 You can choose from two options:
@@ -215,10 +215,10 @@ order (based on any Expects you've set up) before calling the callback.
 to the callback instead. In this case, you are replacing the normal mock calls
 with your own custom stub function.
 
-There is also an older name, `func_StubWithCallback`, which is just an alias for
-either `func_CheckWithCallback` or `func_IgnoreWithCallback` depending on
-setting of the `:callback_after_arg_check` toggle. This is deprecated and we
-recommend using the two options above.
+There is also an older name, `func_StubWithCallback`, which is just an alias
+for either `func_AddCallback` or `func_Stub` depending on setting of the
+`:callback_after_arg_check` toggle. This is deprecated and we recommend using
+the two options above.
 
 
 Cexception:
@@ -624,7 +624,7 @@ resetTest
 ---------
 
 While this isn't strictly a CMock feature, often users of CMock are using
-either the test runnger generator scripts in Unity or using Ceedling. In
+either the test runner generator scripts in Unity or using Ceedling. In
 either case, there is a handy function called `resetTest` which gets
 generated with your runner. You can then use this handy function in your tests
 themselves. Call it during a test to have CMock validate everything to this point
