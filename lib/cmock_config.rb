@@ -64,7 +64,7 @@ class CMockConfig
     end
     options[:unity_helper_path] ||= options[:unity_helper]
     options[:unity_helper_path] = [options[:unity_helper_path]] if options[:unity_helper_path].is_a? String
-    options[:includes_c_post_header] = ((options[:includes_c_post_header] || []) + (options[:unity_gelper_path] || [])).uniq
+    options[:includes_c_post_header] = ((options[:includes_c_post_header] || []) + (options[:unity_helper_path] || [])).uniq
     options[:plugins].compact!
     options[:plugins].map! {|p| p.to_sym}
     @options = options
@@ -73,7 +73,7 @@ class CMockConfig
     treat_as_map.merge!(@options[:treat_as])
     @options[:treat_as] = treat_as_map
 
-    @options.each_key do |key| 
+    @options.each_key do |key|
       unless methods.include?(key)
         eval("def #{key.to_s}() return @options[:#{key.to_s}] end")
       end
