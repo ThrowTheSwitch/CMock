@@ -566,6 +566,53 @@ from the defaults. We've tried to specify what the defaults are below.
 
   * default: :smart
 
+* `:array_size_type`:
+* `:array_size_name`:
+  When the `:array` plugin is disabled, these options do nothing.
+
+  When the `:array` plugin is enabled, these options allow CMock to recognize
+  functions with parameters that might refer to an array, like the following,
+  and treat them more intelligently:
+
+  * `void GoBananas(Banana * bananas, int num_bananas)`
+  * `int write_data(int fd, const uint8_t * data, uint32_t size)`
+
+  To recognize functions like these, CMock looks for a parameter list
+  containing a pointer (which could be an array) followed by something that
+  could be an array size.  "Something", by default, means an `int` or `size_t`
+  parameter with a name containing "size" or "len".
+
+  `:array_size_type` is a list of additional types (besides `int` and `size_t`)
+  that could be used for an array size parameter.  For example, to get CMock to
+  recognize that `uint32_t size` is an array size, you'd need to say:
+
+        cfg[:array_size_type] = ['uint32_t']
+
+  `:array_size_name` is a regular expression used to match an array size
+  parameter by name.  By default, it's 'size|len'.  To get CMock to recognize a
+  name like `num_bananas`, you could tell it to also accept names containing
+  'num_' like this:
+
+        cfg[:array_size_name] = 'size|len|num_'
+
+  Parameters must match *both* `:array_size_type` and `:array_size_name` (and
+  must come right after a pointer parameter) to be treated as an array size.
+
+  Once you've told it how to recognize your arrays, CMock will give you _Expect
+  calls that work more like _ExpectWithArray, and compare an array of objects
+  rather than just a single object.
+
+  For example, if you write the following, CMock will check that GoBananas is
+  called and passed an array containing a green banana followed by a yellow
+  banana:
+
+        Banana b[2] = {GreenBanana, YellowBanana};
+        GoBananas_Expect(b, 2);
+
+  In other words, `GoBananas_Expect(b, 2)` now works just the same as:
+
+        GoBananas_ExpectWithArray(b, 2, 2);
+
 * `:fail_on_unexpected_calls`:
   By default, CMock will fail a test if a mock is called without _Expect and _Ignore
   called first. While this forces test writers to be more explicit in their expectations,
