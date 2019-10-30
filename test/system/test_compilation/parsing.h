@@ -73,3 +73,17 @@ typedef struct
   } b;
   int (*another_function_pointer_in_a_struct) (void);
 } another_thing_that_should_get_ignored;
+
+inline int stuff(int num)
+{
+    int reg = 0x12;
+    if (num > 0)
+    {
+      reg |= (0x0Eu);
+    }
+    else
+    {
+      reg |= (0x07u);
+    }
+    return reg;
+}
