@@ -23,11 +23,11 @@ const char* CMockStringMismatch    = "Function called with unexpected argument v
 #ifdef CMOCK_MEM_DYNAMIC
 static unsigned char*         CMock_Guts_Buffer = NULL;
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_ALIGN_SIZE;
-static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr;
+static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #else
 static unsigned char          CMock_Guts_Buffer[CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE];
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE;
-static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr;
+static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #endif
 
 //-------------------------------------------------------
