@@ -191,9 +191,9 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = ["  if (!Mock.Apple_CallbackBool &&\n",
                 "      Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
-                "    int ret = Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
+                "    int cmock_cb_ret = Mock.Apple_CallbackFunctionPointer(Mock.Apple_CallbackCalls++);\n",
                 "    UNITY_CLR_DETAILS();\n",
-                "    return ret;\n",
+                "    return cmock_cb_ret;\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
@@ -246,9 +246,9 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = ["  if (!Mock.Apple_CallbackBool &&\n",
                 "      Mock.Apple_CallbackFunctionPointer != NULL)\n",
                 "  {\n",
-                "    int ret = Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
+                "    int cmock_cb_ret = Mock.Apple_CallbackFunctionPointer(steak, flag, Mock.Apple_CallbackCalls++);\n",
                 "    UNITY_CLR_DETAILS();\n",
-                "    return ret;\n",
+                "    return cmock_cb_ret;\n",
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)

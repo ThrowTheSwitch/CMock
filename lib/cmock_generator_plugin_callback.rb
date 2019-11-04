@@ -60,9 +60,9 @@ class CMockGeneratorPluginCallback
         "    UNITY_CLR_DETAILS();\n" \
         "    return;\n  }\n"
       else
-        "    #{function[:return][:type]} ret = #{generate_call(function)};\n" \
+        "    #{function[:return][:type]} cmock_cb_ret = #{generate_call(function)};\n" \
         "    UNITY_CLR_DETAILS();\n" \
-        "    return ret;\n  }\n"
+        "    return cmock_cb_ret;\n  }\n"
       end
   end
 
