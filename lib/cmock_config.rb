@@ -64,7 +64,16 @@ class CMockConfig
     end
     options[:unity_helper_path] ||= options[:unity_helper]
     options[:unity_helper_path] = [options[:unity_helper_path]] if options[:unity_helper_path].is_a? String
-    options[:includes_c_post_header] = ((options[:includes_c_post_header] || []) + (options[:unity_helper_path] || [])).uniq
+
+    if options[:unity_helper_path]
+      require 'pathname'
+      includes1 = options[:includes_c_post_header] || []
+      includes2 = options[:unity_helper_path].map do |path|
+        Pathname(path).relative_path_from(Pathname(options[:mock_path])).to_s
+      end
+      options[:includes_c_post_header] = (includes1 + includes2).uniq
+    end
+
     options[:plugins].compact!
     options[:plugins].map! {|p| p.to_sym}
     @options = options
