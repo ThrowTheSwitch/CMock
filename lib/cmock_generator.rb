@@ -62,21 +62,14 @@ class CMockGenerator
   end
 
   def create_mock_header_file(parsed_stuff)
+    if @include_inline
+      @file_writer.create_file(@module_name + ".h", @subdir) do |file, filename|
+        file << parsed_stuff[:normalized_source]
+      end
+    end
+
     @file_writer.create_file(@mock_name + ".h", @subdir) do |file, filename|
       create_mock_header_header(file, filename)
-
-      unless @include_inline
-        file << @config.orig_header_include_fmt.gsub(/%s/, "#{orig_filename}") + "\n"
-      else
-        file << "\n"
-        file << "/* BEGIN OF ORIGINAL HEADER */"
-        file << "\n"
-        file << parsed_stuff[:normalized_source]
-        file << "\n"
-        file << "/* END OF ORIGINAL HEADER */"
-        file << "\n"
-      end
-
       create_mock_header_service_call_declarations(file)
       create_typedefs(file, parsed_stuff[:typedefs])
       parsed_stuff[:functions].each do |function|
@@ -109,7 +102,7 @@ class CMockGenerator
     file << "#define _#{define_name}_H\n\n"
     file << "#include \"#{@framework}.h\"\n"
     @includes_h_pre_orig_header.each {|inc| file << "#include #{inc}\n"}
-    # file << @config.orig_header_include_fmt.gsub(/%s/, "#{orig_filename}") + "\n"
+    file << @config.orig_header_include_fmt.gsub(/%s/, "#{orig_filename}") + "\n"
     @includes_h_post_orig_header.each {|inc| file << "#include #{inc}\n"}
     plugin_includes = @plugins.run(:include_files)
     file << plugin_includes if (!plugin_includes.empty?)
