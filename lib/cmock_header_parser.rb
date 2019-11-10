@@ -46,13 +46,13 @@ class CMockHeaderParser
     { :includes  => nil,
       :functions => @funcs,
       :typedefs  => @typedefs,
-      :normalized_source    => normalize_source(source),
+      :normalized_source    => transform_inline_functions(source),
     }
   end
 
   private if $ThisIsOnlyATest.nil? ################
 
-  def normalize_source(source)
+  def transform_inline_functions(source)
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 

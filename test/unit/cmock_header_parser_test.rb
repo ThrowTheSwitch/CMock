@@ -1780,7 +1780,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     end
   end
 
-  it "Normalize source doesn't change a header with no inlines" do
+  it "Transform inline functions doesn't change a header with no inlines" do
     source =
       "#ifndef _NOINCLUDES\n" +
       "#define _NOINCLUDES\n" +
@@ -1811,10 +1811,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "\n"
       "#endif _NOINCLUDES\n"
 
-    assert_equal(source, @parser.normalize_source(source))
+    assert_equal(source, @parser.transform_inline_functions(source))
   end
 
-  it "Normalize source changes inline functions to function declarations" do
+  it "Transform inline functions changes inline functions to function declarations" do
     source =
       "#ifndef _NOINCLUDES\n" +
       "#define _NOINCLUDES\n" +
@@ -1879,7 +1879,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "\n"
       "#endif _NOINCLUDES\n"
 
-    assert_equal(expected, @parser.normalize_source(source))
+    assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
 end
