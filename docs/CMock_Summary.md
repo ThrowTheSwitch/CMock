@@ -518,7 +518,7 @@ from the defaults. We've tried to specify what the defaults are below.
   * `:include` will mock externed functions
   * `:exclude` will ignore externed functions (default).
 
-* `:treat_inline`:
+* `:treat_inlines`:
   This specifies how you want CMock to handle functions that have been
   marked as inline in the header file. Should it mock them?
 

@@ -6,7 +6,7 @@
 
 class CMockHeaderParser
 
-  attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inline
+  attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines
 
   def initialize(cfg)
     @funcs = []
@@ -24,9 +24,9 @@ class CMockHeaderParser
     @local_as_void = @treat_as_void
     @verbosity = cfg.verbosity
     @treat_externs = cfg.treat_externs
-    @treat_inline = cfg.treat_inline
+    @treat_inlines = cfg.treat_inlines
     @c_strippables += ['extern'] if (@treat_externs == :include) #we'll need to remove the attribute if we're allowing externs
-    @c_strippables += ['inline'] if (@treat_inline == :include) #we'll need to remove the attribute if we're allowing externs
+    @c_strippables += ['inline'] if (@treat_inlines == :include) #we'll need to remove the attribute if we're allowing inlines
   end
 
   def parse(name, source)
@@ -151,7 +151,7 @@ class CMockHeaderParser
       end
     end
 
-    if (@treat_inline == :include)
+    if (@treat_inlines == :include)
       # Functions having "{ }" at this point are/were inline functions,
       # User wants them in so 'disguise' them as normal functions with the ";"
       source.gsub!("{ }", ";")
@@ -177,7 +177,7 @@ class CMockHeaderParser
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern)\s+/).nil?} # remove extern functions
     end
 
-    if (@treat_inline == :include)
+    if (@treat_inlines == :include)
       src_lines.each {
         |src_line|
         src_line.gsub!(/^inline/, "") # Remove "inline" so that they are 'normal' functions

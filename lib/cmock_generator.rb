@@ -16,7 +16,7 @@ class CMockGenerator
     @prefix      = @config.mock_prefix
     @suffix      = @config.mock_suffix
     @weak        = @config.weak
-    @include_inline        = @config.treat_inline
+    @include_inline        = @config.treat_inlines
     @ordered     = @config.enforce_strict_ordering
     @framework   = @config.framework.to_s
     @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
@@ -62,7 +62,7 @@ class CMockGenerator
   end
 
   def create_mock_header_file(parsed_stuff)
-    if @include_inline
+    if @include_inline == :include
       @file_writer.create_file(@module_name + ".h", @subdir) do |file, filename|
         file << parsed_stuff[:normalized_source]
       end

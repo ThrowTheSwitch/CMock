@@ -2,5 +2,5 @@
   :plugins:
     - 'soda'
     - 'pizza'
-  :treat_externs: :include
-  :treat_inline:  :include
+  :treat_externs:  :include
+  :treat_inlines:  :include

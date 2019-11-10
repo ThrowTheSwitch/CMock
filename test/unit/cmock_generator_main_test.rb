@@ -43,7 +43,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
     #no strict handling
     @config.expect :mock_prefix, "Mock"
-    @config.expect :treat_inline, false
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
     @config.expect :enforce_strict_ordering, nil
@@ -55,6 +54,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :includes_c_post_header, nil
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
+    @config.expect :treat_inlines, :exclude
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator.module_name = @module_name
     @cmock_generator.mock_name = "Mock#{@module_name}"
@@ -62,7 +62,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
     #strict handling
     @config.expect :mock_prefix, "Mock"
-    @config.expect :treat_inline, false
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
     @config.expect :enforce_strict_ordering, true
@@ -74,6 +73,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :includes_c_post_header, nil
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
+    @config.expect :treat_inlines, :exclude
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator_strict.module_name = @module_name
     @cmock_generator_strict.mock_name = "Mock#{@module_name}"
@@ -126,7 +126,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     #no strict handling
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
-    @config.expect :treat_inline, ":exclude"
     @config.expect :weak, ""
     @config.expect :enforce_strict_ordering, nil
     @config.expect :framework, :unity
@@ -136,6 +135,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :includes_c_post_header, nil
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
+    @config.expect :treat_inlines, :exclude
     @cmock_generator2 = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator2.module_name = "Pout-Pout Fish"
     @cmock_generator2.mock_name = "MockPout-Pout Fish"
