@@ -80,11 +80,16 @@ class CMockHeaderParser
       # Disguise them as normal functions with the ";"
       m.gsub!(/\s*\{\s\}/, ";")
 
-      # TODO: fix these cleanup actions...
-      m.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
-      m.gsub!(/\s+/, ' ')          # remove remaining extra white space
-      m.gsub!(";",";\n")
-      m.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
+      # Cleanup the function declarations
+      # Not strictly necessary compile-wise, but it can help debugging
+      m_lines = m.split(/\s*;\s*/).uniq
+      m_lines.each {
+        |m_line|
+        m_line.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
+        m_line.gsub!(/\s+/, ' ')          # remove remaining extra white space
+      }
+
+      m_lines.join(";\n") + ";" # Join the lines and add the last semicolon manually
     end
 
     source.gsub!(/\s+$/, '')          # remove extra white space from end of line
