@@ -56,14 +56,6 @@ class CMockHeaderParser
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
-    # # smush multiline macros into single line (checking for continuation character at end of line '\')
-    source.gsub!(/\s*\\\s*/m, ' ')
-
-    # #remove comments (block and line, in three steps to ensure correct precedence)
-    source.gsub!(/\/\/(?:.+\/\*|\*(?:$|[^\/])).*$/, '')  # remove line comments that comment out the start of blocks
-    source.gsub!(/\/\*.*?\*\//m, '')                     # remove block comments
-    source.gsub!(/\/\/.*$/, '')                          # remove line comments (all that remain)
-
     source.gsub!(/(static|inline)+.*\{.*\w*\}/m) do |m|
       m.gsub!(/(static|inline)/, '') # remove static and inline
       # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
@@ -81,18 +73,19 @@ class CMockHeaderParser
       m.gsub!(/\s*\{\s\}/, ";")
 
       # Cleanup the function declarations
-      # Not strictly necessary compile-wise, but it can help debugging
+      # Not strictly necessary, it will compile just fine, but it can help during debugging
       m_lines = m.split(/\s*;\s*/).uniq
       m_lines.each {
         |m_line|
-        m_line.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
-        m_line.gsub!(/\s+/, ' ')          # remove remaining extra white space
+        m_line.gsub!(/^\s+/, '')         # remove extra white space from beginning of line
+        m_line.gsub(/\s+/, ' ')          # remove remaining extra white space
+        m_line.gsub(/\n/, '')            # remove newlines
       }
 
       m_lines.join(";\n") + ";" # Join the lines and add the last semicolon manually
     end
 
-    source.gsub!(/\s+$/, '')          # remove extra white space from end of line
+    return source
   end
 
   def import_source(source)

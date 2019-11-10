@@ -1780,4 +1780,106 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     end
   end
 
+  it "Normalize source doesn't change a header with no inlines" do
+    source =
+      "#ifndef _NOINCLUDES\n" +
+      "#define _NOINCLUDES\n" +
+      "#include \"unity.h\"\n" +
+      "#include \"cmock.h\"\n" +
+      "#include \"YetAnotherHeader.h\"\n" +
+      "\n" +
+      "/* Ignore the following warnings since we are copying code */\n" +
+      "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
+      "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
+      "#pragma GCC diagnostic push\n" +
+      "#endif\n" +
+      "#if !defined(__clang__)\n" +
+      "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
+      "#endif\n" +
+      "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
+      "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
+      "#endif\n" +
+      "\n" +
+      "struct my_struct {\n" +
+      "int a;\n" +
+      "int b;\n" +
+      "int b;\n" +
+      "char c;\n" +
+      "};\n" +
+      "int my_function(int a);\n" +
+      "int my_better_function(struct my_struct *s);\n" +
+      "\n"
+      "#endif _NOINCLUDES\n"
+
+    assert_equal(source, @parser.normalize_source(source))
+  end
+
+  it "Normalize source changes inline functions to function declarations" do
+    source =
+      "#ifndef _NOINCLUDES\n" +
+      "#define _NOINCLUDES\n" +
+      "#include \"unity.h\"\n" +
+      "#include \"cmock.h\"\n" +
+      "#include \"YetAnotherHeader.h\"\n" +
+      "\n" +
+      "/* Ignore the following warnings since we are copying code */\n" +
+      "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
+      "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
+      "#pragma GCC diagnostic push\n" +
+      "#endif\n" +
+      "#if !defined(__clang__)\n" +
+      "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
+      "#endif\n" +
+      "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
+      "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
+      "#endif\n" +
+      "\n" +
+      "struct my_struct {\n" +
+      "int a;\n" +
+      "int b;\n" +
+      "int b;\n" +
+      "char c;\n" +
+      "};\n" +
+      "int my_function(int a);\n" +
+      "int my_better_function(struct my_struct *s);\n" +
+      "static inline int get_member_a(struct my_struct *s)\n" +
+      "{\n" +
+      "    return s->a;\n" +
+      "}\n"
+      "#endif _NOINCLUDES\n"
+
+    expected =
+      "#ifndef _NOINCLUDES\n" +
+      "#define _NOINCLUDES\n" +
+      "#include \"unity.h\"\n" +
+      "#include \"cmock.h\"\n" +
+      "#include \"YetAnotherHeader.h\"\n" +
+      "\n" +
+      "/* Ignore the following warnings since we are copying code */\n" +
+      "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
+      "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
+      "#pragma GCC diagnostic push\n" +
+      "#endif\n" +
+      "#if !defined(__clang__)\n" +
+      "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
+      "#endif\n" +
+      "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
+      "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
+      "#endif\n" +
+      "\n" +
+      "struct my_struct {\n" +
+      "int a;\n" +
+      "int b;\n" +
+      "int b;\n" +
+      "char c;\n" +
+      "};\n" +
+      "int my_function(int a);\n" +
+      "int my_better_function(struct my_struct *s);\n" +
+      "int get_member_a(struct my_struct *s);\n"
+      "\n"
+      "#endif _NOINCLUDES\n"
+
+    assert_equal(expected, @parser.normalize_source(source))
+  end
+
 end
