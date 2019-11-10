@@ -52,21 +52,27 @@ class CMockHeaderParser
 
   private if $ThisIsOnlyATest.nil? ################
 
+  def remove_nested_pairs_of_braces(source)
+    # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
+    if (RUBY_VERSION.split('.')[0].to_i > 1)
+      #we assign a string first because (no joke) if Ruby 1.9.3 sees this line as a regex, it will crash.
+      r = "\\{([^\\{\\}]*|\\g<0>)*\\}"
+      source.gsub!(/#{r}/m, '{ }')
+    else
+      while source.gsub!(/\{[^\{\}]*\{[^\{\}]*\}[^\{\}]*\}/m, '{ }')
+      end
+    end
+
+    return source
+  end
+
   def transform_inline_functions(source)
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
     source.gsub!(/(static|inline)+.*\{.*\w*\}/m) do |m|
-      m.gsub!(/(static|inline)/, '') # remove static and inline
-      # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
-      if (RUBY_VERSION.split('.')[0].to_i > 1)
-        #we assign a string first because (no joke) if Ruby 1.9.3 sees this line as a regex, it will crash.
-        r = "\\{([^\\{\\}]*|\\g<0>)*\\}"
-        m.gsub!(/#{r}/m, '{ }')
-      else
-        while m.gsub!(/\{[^\{\}]*\{[^\{\}]*\}[^\{\}]*\}/m, '{ }')
-        end
-      end
+      m.gsub!(/(static|inline)/, '') # remove static and inline keywords
+      m = remove_nested_pairs_of_braces(m)
 
       # Functions having "{ }" at this point are/were inline functions,
       # Disguise them as normal functions with the ";"
@@ -139,15 +145,7 @@ class CMockHeaderParser
       "#{functype} #{$2.strip}(#{$3});"
     end
 
-    # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
-    if (RUBY_VERSION.split('.')[0].to_i > 1)
-      #we assign a string first because (no joke) if Ruby 1.9.3 sees this line as a regex, it will crash.
-      r = "\\{([^\\{\\}]*|\\g<0>)*\\}"
-      source.gsub!(/#{r}/m, '{ }')
-    else
-      while source.gsub!(/\{[^\{\}]*\{[^\{\}]*\}[^\{\}]*\}/m, '{ }')
-      end
-    end
+    source = remove_nested_pairs_of_braces(source)
 
     if (@treat_inlines == :include)
       # Functions having "{ }" at this point are/were inline functions,
