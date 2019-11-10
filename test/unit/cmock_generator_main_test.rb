@@ -43,6 +43,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
     #no strict handling
     @config.expect :mock_prefix, "Mock"
+    @config.expect :treat_inline, false
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
     @config.expect :enforce_strict_ordering, nil
@@ -61,6 +62,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
     #strict handling
     @config.expect :mock_prefix, "Mock"
+    @config.expect :treat_inline, false
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
     @config.expect :enforce_strict_ordering, true
@@ -124,6 +126,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     #no strict handling
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
+    @config.expect :treat_inline, ":exclude"
     @config.expect :weak, ""
     @config.expect :enforce_strict_ordering, nil
     @config.expect :framework, :unity

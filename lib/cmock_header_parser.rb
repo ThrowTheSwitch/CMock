@@ -45,11 +45,50 @@ class CMockHeaderParser
 
     { :includes  => nil,
       :functions => @funcs,
-      :typedefs  => @typedefs
+      :typedefs  => @typedefs,
+      :normalized_source    => normalize_source(source),
     }
   end
 
   private if $ThisIsOnlyATest.nil? ################
+
+  def normalize_source(source)
+    # let's clean up the encoding in case they've done anything weird with the characters we might find
+    source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
+
+    # # smush multiline macros into single line (checking for continuation character at end of line '\')
+    source.gsub!(/\s*\\\s*/m, ' ')
+
+    # #remove comments (block and line, in three steps to ensure correct precedence)
+    source.gsub!(/\/\/(?:.+\/\*|\*(?:$|[^\/])).*$/, '')  # remove line comments that comment out the start of blocks
+    source.gsub!(/\/\*.*?\*\//m, '')                     # remove block comments
+    source.gsub!(/\/\/.*$/, '')                          # remove line comments (all that remain)
+
+    source.gsub!(/(static|inline)+.*\{.*\w*\}/m) do |m|
+      m.gsub!(/(static|inline)/, '') # remove static and inline
+      # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
+      if (RUBY_VERSION.split('.')[0].to_i > 1)
+        #we assign a string first because (no joke) if Ruby 1.9.3 sees this line as a regex, it will crash.
+        r = "\\{([^\\{\\}]*|\\g<0>)*\\}"
+        m.gsub!(/#{r}/m, '{ }')
+      else
+        while m.gsub!(/\{[^\{\}]*\{[^\{\}]*\}[^\{\}]*\}/m, '{ }')
+        end
+      end
+
+      # Functions having "{ }" at this point are/were inline functions,
+      # Disguise them as normal functions with the ";"
+      m.gsub!(/\s*\{\s\}/, ";")
+
+      # TODO: fix these cleanup actions...
+      m.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
+      m.gsub!(/\s+/, ' ')          # remove remaining extra white space
+      m.gsub!(";",";\n")
+      m.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
+    end
+
+    source.gsub!(/\s+$/, '')          # remove extra white space from end of line
+  end
 
   def import_source(source)
 
