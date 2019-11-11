@@ -33,6 +33,7 @@ class CMockHeaderParser
     @module_name = name.gsub(/\W/,'')
     @typedefs = []
     @funcs = []
+    @normalized_source = nil
     function_names = []
 
     parse_functions( import_source(source) ).map do |decl|
@@ -43,10 +44,14 @@ class CMockHeaderParser
       end
     end
 
+    if @treat_inlines == :include
+      @normalized_source = transform_inline_functions(source)
+    end
+
     { :includes  => nil,
       :functions => @funcs,
       :typedefs  => @typedefs,
-      :normalized_source    => transform_inline_functions(source),
+      :normalized_source    => @normalized_source
     }
   end
 
