@@ -86,12 +86,11 @@ class CMockHeaderParser
       # Cleanup the function declarations
       # Not strictly necessary, it will compile just fine, but it can help during debugging
       m_lines = m.split(/\s*;\s*/).uniq
-      m_lines.each {
-        |m_line|
+      m_lines.each do |m_line|
         m_line.gsub!(/^\s+/, '')         # remove extra white space from beginning of line
-        m_line.gsub(/\s+/, ' ')          # remove remaining extra white space
-        m_line.gsub(/\n/, '')            # remove newlines
-      }
+        m_line.gsub!(/\s+/, ' ')          # remove remaining extra white space
+        m_line.gsub!(/\n/, '')            # remove newlines
+      end
 
       m_lines.join(";\n") + ";" # Join the lines and add the last semicolon manually
     end
