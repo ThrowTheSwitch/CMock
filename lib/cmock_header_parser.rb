@@ -44,9 +44,11 @@ class CMockHeaderParser
       end
     end
 
-    if @treat_inlines == :include
-      @normalized_source = transform_inline_functions(source)
-    end
+    @normalized_source = if (@treat_inlines == :include)
+                           transform_inline_functions(source)
+                         else
+                           ''
+                         end
 
     { :includes  => nil,
       :functions => @funcs,
