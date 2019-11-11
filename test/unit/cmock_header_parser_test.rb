@@ -1808,7 +1808,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "};\n" +
       "int my_function(int a);\n" +
       "int my_better_function(struct my_struct *s);\n" +
-      "\n"
+      "\n" +
       "#endif _NOINCLUDES\n"
 
     assert_equal(source, @parser.transform_inline_functions(source))
@@ -1845,7 +1845,15 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "static inline int get_member_a(struct my_struct *s)\n" +
       "{\n" +
       "    return s->a;\n" +
-      "}\n"
+      "}\n" +
+      "inline static int my_func_0(int a)\n" +
+      "{\n" +
+      "    return a + 42;\n" +
+      "}\n" +
+      "inline int my_func_1(struct my_struct *s)\n" +
+      "{\n" +
+      "    return get_member_a(s) + 42;\n" +
+      "}\n" +
       "#endif _NOINCLUDES\n"
 
     expected =
@@ -1875,8 +1883,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "};\n" +
       "int my_function(int a);\n" +
       "int my_better_function(struct my_struct *s);\n" +
-      "int get_member_a(struct my_struct *s);\n"
-      "\n"
+      "int get_member_a(struct my_struct *s);\n" +
+      "int my_func_0(int a);\n" +
+      "int my_func_1(struct my_struct *s);\n" +
       "#endif _NOINCLUDES\n"
 
     assert_equal(expected, @parser.transform_inline_functions(source))
