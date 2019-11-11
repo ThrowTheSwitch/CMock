@@ -23,6 +23,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @config.expect :when_no_prototypes, :error
     @config.expect :verbosity, 1
     @config.expect :treat_externs, :exclude
+    @config.expect :treat_inlines, :exclude
     @config.expect :array_size_type, ['int', 'size_t']
     @config.expect :array_size_name, 'size|len'
 
@@ -453,6 +454,60 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 
+  it "leave inline functions if inline to be included" do
+    source =
+      "extern uint32 foobar(unsigned int);\n" +
+      "uint32 extern_name_func(unsigned int);\n" +
+      "uint32 funcinline(unsigned int);\n" +
+      "inline void inlineBar(unsigned int);\n" +
+      "extern int extern_bar(void);\n" +
+      "static inline void staticinlineBar(unsigned int);\n" +
+      "static inline void bar(unsigned int);\n" +
+      "static inline void bar(unsigned int)\n" +
+      "{\n" +
+      " // NOP\n" +
+      "}\n"
+
+    expected =
+    [ "uint32 extern_name_func(unsigned int)",
+      "uint32 funcinline(unsigned int)",
+      "void inlineBar(unsigned int)",
+      "void staticinlineBar(unsigned int)",
+      "void bar(unsigned int)"
+    ]
+
+    @parser.treat_inlines = :include
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
+
+  it "leave inline and extern functions if inline and extern to be included" do
+    source =
+      "extern uint32 foobar(unsigned int);\n" +
+      "uint32 extern_name_func(unsigned int);\n" +
+      "uint32 funcinline(unsigned int);\n" +
+      "inline void inlineBar(unsigned int);\n" +
+      "extern int extern_bar(void);\n" +
+      "static inline void staticinlineBar(unsigned int);\n" +
+      "static inline void bar(unsigned int);\n" +
+      "static inline void bar(unsigned int)\n" +
+      "{\n" +
+      " // NOP\n" +
+      "}\n"
+
+    expected =
+    [ "extern uint32 foobar(unsigned int)",
+      "uint32 extern_name_func(unsigned int)",
+      "uint32 funcinline(unsigned int)",
+      "void inlineBar(unsigned int)",
+      "extern int extern_bar(void)",
+      "void staticinlineBar(unsigned int)",
+      "void bar(unsigned int)"
+    ]
+
+    @parser.treat_externs = :include
+    @parser.treat_inlines = :include
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
 
   it "remove defines" do
     source =
@@ -1723,6 +1778,117 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     truth_table.each do |entry|
       assert_equal(@parser.divine_ptr(entry[0]), entry[1])
     end
+  end
+
+  it "Transform inline functions doesn't change a header with no inlines" do
+    source =
+      "#ifndef _NOINCLUDES\n" +
+      "#define _NOINCLUDES\n" +
+      "#include \"unity.h\"\n" +
+      "#include \"cmock.h\"\n" +
+      "#include \"YetAnotherHeader.h\"\n" +
+      "\n" +
+      "/* Ignore the following warnings since we are copying code */\n" +
+      "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
+      "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
+      "#pragma GCC diagnostic push\n" +
+      "#endif\n" +
+      "#if !defined(__clang__)\n" +
+      "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
+      "#endif\n" +
+      "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
+      "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
+      "#endif\n" +
+      "\n" +
+      "struct my_struct {\n" +
+      "int a;\n" +
+      "int b;\n" +
+      "int b;\n" +
+      "char c;\n" +
+      "};\n" +
+      "int my_function(int a);\n" +
+      "int my_better_function(struct my_struct *s);\n" +
+      "\n" +
+      "#endif _NOINCLUDES\n"
+
+    assert_equal(source, @parser.transform_inline_functions(source))
+  end
+
+  it "Transform inline functions changes inline functions to function declarations" do
+    source =
+      "#ifndef _NOINCLUDES\n" +
+      "#define _NOINCLUDES\n" +
+      "#include \"unity.h\"\n" +
+      "#include \"cmock.h\"\n" +
+      "#include \"YetAnotherHeader.h\"\n" +
+      "\n" +
+      "/* Ignore the following warnings since we are copying code */\n" +
+      "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
+      "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
+      "#pragma GCC diagnostic push\n" +
+      "#endif\n" +
+      "#if !defined(__clang__)\n" +
+      "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
+      "#endif\n" +
+      "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
+      "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
+      "#endif\n" +
+      "\n" +
+      "struct my_struct {\n" +
+      "int a;\n" +
+      "int b;\n" +
+      "int b;\n" +
+      "char c;\n" +
+      "};\n" +
+      "int my_function(int a);\n" +
+      "int my_better_function(struct my_struct *s);\n" +
+      "static inline int get_member_a(struct my_struct *s)\n" +
+      "{\n" +
+      "    return s->a;\n" +
+      "}\n" +
+      "inline static int my_func_0(int a)\n" +
+      "{\n" +
+      "    return a + 42;\n" +
+      "}\n" +
+      "inline int my_func_1(struct my_struct *s)\n" +
+      "{\n" +
+      "    return get_member_a(s) + 42;\n" +
+      "}\n" +
+      "#endif _NOINCLUDES\n"
+
+    expected =
+      "#ifndef _NOINCLUDES\n" +
+      "#define _NOINCLUDES\n" +
+      "#include \"unity.h\"\n" +
+      "#include \"cmock.h\"\n" +
+      "#include \"YetAnotherHeader.h\"\n" +
+      "\n" +
+      "/* Ignore the following warnings since we are copying code */\n" +
+      "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
+      "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
+      "#pragma GCC diagnostic push\n" +
+      "#endif\n" +
+      "#if !defined(__clang__)\n" +
+      "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
+      "#endif\n" +
+      "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
+      "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
+      "#endif\n" +
+      "\n" +
+      "struct my_struct {\n" +
+      "int a;\n" +
+      "int b;\n" +
+      "int b;\n" +
+      "char c;\n" +
+      "};\n" +
+      "int my_function(int a);\n" +
+      "int my_better_function(struct my_struct *s);\n" +
+      "int get_member_a(struct my_struct *s);\n" +
+      "int my_func_0(int a);\n" +
+      "int my_func_1(struct my_struct *s);\n" +
+      "#endif _NOINCLUDES\n"
+
+    assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
 end

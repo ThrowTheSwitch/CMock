@@ -518,6 +518,14 @@ from the defaults. We've tried to specify what the defaults are below.
   * `:include` will mock externed functions
   * `:exclude` will ignore externed functions (default).
 
+* `:treat_inlines`:
+  This specifies how you want CMock to handle functions that have been
+  marked as inline in the header file. Should it mock them?
+
+  * `:include` will mock inlined functions
+  * `:exclude` will ignore inlined functions (default).
+
+
 * `:unity_helper_path`:
   If you have created a header with your own extensions to unity to
   handle your own types, you can set this argument to that path. CMock
@@ -686,4 +694,3 @@ you might tool CMock into your build process. You may also want to consider
 using [Ceedling](https://throwtheswitch.org/ceedling). Please note that
 these examples are meant to show how the build process works. They have
 failing tests ON PURPOSE to show what that would look like. Don't be alarmed. ;)
-

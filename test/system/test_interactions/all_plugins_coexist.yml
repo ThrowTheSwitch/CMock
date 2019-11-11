@@ -12,6 +12,7 @@
   :callback_after_arg_check: true
   :callback_include_count: false
   :treat_externs: :include
+  :treat_inlines: :include
 
 :systest:
   :types: |
