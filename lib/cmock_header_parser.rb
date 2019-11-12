@@ -73,6 +73,34 @@ class CMockHeaderParser
     return source
   end
 
+  # Return the number of pairs of braces/square brackets in the function provided by the user
+  # +source+:: String containing the function to be processed
+  def count_number_of_pairs_of_braces_in_function(source)
+    is_function_start_found = false
+    curr_level = 0
+    total_levels = 0
+
+    source.each_char do |c|
+      if ("{" == c)
+        curr_level += 1
+        total_levels  +=1
+        is_function_start_found = true
+      elsif ("}" == c)
+        curr_level -=1
+      end
+
+      break if is_function_start_found && curr_level == 0    # We reached the end of the inline function body
+    end
+
+    if 0 != curr_level
+      total_levels = 0          # Something is fishy about this source, not enough closing braces?
+    end
+
+    return total_levels
+  end
+
+  # Transform inline functions to regular functions in the source by the user
+  # +source+:: String containing the source to be processed
   def transform_inline_functions(source)
     # Format to look for inline functions.
     # This is a combination of "static" and "inline" keywords ("static inline", "inline static", "inline", "static")
@@ -85,6 +113,7 @@ class CMockHeaderParser
       /(static\s+inline|inline\s+static)\s*/,        # Last part (\s*) is just to remove whitespaces (only to prettify the output)
       /(\bstatic\b|\binline\b)\s*/,                  # Last part (\s*) is just to remove whitespaces (only to prettify the output)
     ]
+    square_bracket_pair_regex_format = /\{[^\{\}]*\}/ # Regex to match one whole block enclosed by two square brackets
 
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
@@ -103,32 +132,17 @@ class CMockHeaderParser
     inline_function_regex_formats.each do |format|
       loop do
         inline_function_match = source.match(/#{format}/) # Search for inline function declaration
-        break if nil == inline_function_match
+        break if nil == inline_function_match             # No inline functions so nothing to do
 
-        # Get number of square brackets in function, we already now there is atleast 1 pair (main function body)
-        curr = 0
-        started = false
-        total = 0
+        total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
-        inline_function_match.post_match.each_char do |c|
-          if ("{" == c)
-            curr += 1
-            total  +=1
-            started = true
-          elsif ("}" == c)
-            curr -=1
-          end
-
-          break if started && curr == 0    # We reached the end of the inline function body
-        end
+        break if 0 == total_pairs_to_remove # Bad source?
 
         inline_function_stripped = inline_function_match.post_match
-        until total == 1
-          inline_function_stripped.sub!(/\{[^\{\}]*\}/, "") # Remove code in between square brackets
-          total -= 1
+        until total_pairs_to_remove == 0
+          inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ";") # Remove inline implementation
+          total_pairs_to_remove -= 1
         end
-
-        inline_function_stripped.sub!(/(\s*\{[^\{\}]*|[^\{\}]*\})+/, ";") # Remove inline implementation
 
         source = inline_function_match.pre_match + inline_function_stripped # Make new source with the inline function removed and move on to the next
       end

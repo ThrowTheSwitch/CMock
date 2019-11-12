@@ -1944,4 +1944,53 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
+  it "Count number of pairs of braces in function succesfully" do
+    source =
+      "int foo(struct my_struct *s)\n" +
+      "{\n" +
+      "    return get_member_a(s) + 42;\n" +
+      "}\n"
+    complex_source =
+      "int bar(struct my_struct *s)\n" +
+      "{\n" +
+      "\tint a = 6;\n" +
+      "\tint res = foo(&(struct my_struct){.nr = a});\n" +
+      "\t{\n" +
+      "\t\tint a = 5;\n" +
+      "\t\tint res = foo(&(struct my_struct){.nr = a});\n" +
+      "\t\t{\n" +
+      "\t\t\tstruct my_struct a = {.nr = 1};\n" +
+      "\t\t}\n" +
+      "\t}\n" +
+      "\treturn 42;\n" +
+      "}\n"
+
+    assert_equal(1, @parser.count_number_of_pairs_of_braces_in_function(source))
+    assert_equal(6, @parser.count_number_of_pairs_of_braces_in_function(complex_source))
+  end
+
+  it "Count number of pairs of braces returns 0 if bad source is supplied" do
+    bad_source_0 =
+      "int foo(struct my_struct *s)\n" +
+      "{\n" +
+      "    return get_member_a(s) + 42;\n" +
+      "\n"                      # Missing closing brace
+    bad_source_1 =
+      "int bar(struct my_struct *s)\n" +
+      "{\n" +
+      "\tint a = 6;\n" +
+      "\tint res = foo(&(struct my_struct){.nr = a});\n" +
+      "\t{\n" +
+      "\t\tint a = 5;\n" +
+      "\t\tint res = foo(&(struct my_struct){.nr = a});\n" +
+      "\t\t{\n" +
+      "\t\t\n" +                # Missing closing brace
+      "\t}\n" +
+      "\treturn 42;\n" +
+      "}\n"
+
+    assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_0))
+    assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_1))
+  end
+
 end
