@@ -139,9 +139,9 @@ class CMockHeaderParser
         break if 0 == total_pairs_to_remove # Bad source?
 
         inline_function_stripped = inline_function_match.post_match
-        until total_pairs_to_remove == 0
+
+        total_pairs_to_remove.times do
           inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ";") # Remove inline implementation (+ some whitespace because it's prettier)
-          total_pairs_to_remove -= 1
         end
 
         source = inline_function_match.pre_match + inline_function_stripped # Make new source with the inline function removed and move on to the next
