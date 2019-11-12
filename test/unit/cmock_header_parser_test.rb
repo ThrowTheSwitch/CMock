@@ -1988,9 +1988,13 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "\t}\n" +
       "\treturn 42;\n" +
       "}\n"
+    bad_source_2 =
+      "int foo(struct my_struct *s)\n" +
+      "\n"                      # No braces in source
 
     assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_0))
     assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_1))
+    assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_2))
   end
 
 end
