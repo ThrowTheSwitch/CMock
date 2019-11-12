@@ -78,12 +78,12 @@ class CMockHeaderParser
   def count_number_of_pairs_of_braces_in_function(source)
     is_function_start_found = false
     curr_level = 0
-    total_levels = 0
+    total_pairs = 0
 
     source.each_char do |c|
       if ("{" == c)
         curr_level += 1
-        total_levels  +=1
+        total_pairs  +=1
         is_function_start_found = true
       elsif ("}" == c)
         curr_level -=1
@@ -93,10 +93,10 @@ class CMockHeaderParser
     end
 
     if 0 != curr_level
-      total_levels = 0          # Something is fishy about this source, not enough closing braces?
+      total_pairs = 0          # Something is fishy about this source, not enough closing braces?
     end
 
-    return total_levels
+    return total_pairs
   end
 
   # Transform inline functions to regular functions in the source by the user
