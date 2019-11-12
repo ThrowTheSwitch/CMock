@@ -108,7 +108,7 @@ class CMockHeaderParser
     # - sometimes they appear together, sometimes individually,
     # - The keywords can appear before or after the return type (this is a compiler warning but people do weird stuff),
     #   so we check for word boundaries when searching for them
-    # - We first remove "static inline" combinations and boil down to
+    # - We first remove "static inline" combinations and boil down to single inline or static statements
     inline_function_regex_formats = [
       /(static\s+inline|inline\s+static)\s*/,        # Last part (\s*) is just to remove whitespaces (only to prettify the output)
       /(\bstatic\b|\binline\b)\s*/,                  # Last part (\s*) is just to remove whitespaces (only to prettify the output)
@@ -140,7 +140,7 @@ class CMockHeaderParser
 
         inline_function_stripped = inline_function_match.post_match
         until total_pairs_to_remove == 0
-          inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ";") # Remove inline implementation
+          inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ";") # Remove inline implementation (+ some whitespace because it's prettier)
           total_pairs_to_remove -= 1
         end
 
