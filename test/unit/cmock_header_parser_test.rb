@@ -1842,18 +1842,59 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "};\n" +
       "int my_function(int a);\n" +
       "int my_better_function(struct my_struct *s);\n" +
-      "static inline int get_member_a(struct my_struct *s)\n" +
+      "static inline int staticinlinebar(struct my_struct *s)\n" + # This is a function with a lot of indentation levels, we should be able to handle it
+      "{\n" +
+      "\t{\n" +
+      "\t\t{\n" +
+      "\t\t\treturn s->a;\n" +
+      "\t\t}\n" +
+      "\t}\n" +
+      "}\n" +
+      "static inline int staticinlinefunc(struct my_struct *s)\n" +
       "{\n" +
       "    return s->a;\n" +
       "}\n" +
-      "inline static int my_func_0(int a)\n" +
-      "{\n" +
+      "int bar(struct my_struct *s);\n" + # A normal function to screw with our parser
+      "inline static int inlinestaticfunc(int a) {\n" +
       "    return a + 42;\n" +
       "}\n" +
-      "inline int my_func_1(struct my_struct *s)\n" +
+      "inline int StaticInlineFunc(struct my_struct *s)\n" +
       "{\n" +
       "    return get_member_a(s) + 42;\n" +
       "}\n" +
+      "int inline StaticInlineBar(struct my_struct *s)\n" +
+      "{\n" +
+      "    return get_member_a(s) + 42;\n" +
+      "}\n" +
+      "struct staticinlinestruct {\n" + # Add a structure declaration between the inline functions, just to make sure we don't touch it!
+      "int a;\n" +
+      "};\n" +
+      "\n" +
+      "struct staticinlinestruct fubarstruct(struct my_struct *s);\n" + # Another normal function to screw with our parser
+      "static inline struct staticinlinestruct inlinefubarfunction(struct my_struct *s)\n" +
+      "{\n" +
+      "    return (struct staticinlinestruct)*s;\n" +
+      "}\n" +
+      "int fubar(struct my_struct *s);\n" + # Another normal function to screw with our parser
+      "inline int stuff(int num)" +
+      "{" +
+      "    int reg = 0x12;" +
+      "    if (num > 0)" +
+      "    {" +
+      "      reg |= (0x0Eu);" +
+      "    }" +
+      "    else" +
+      "    {" +
+      "      reg |= (0x07u);" +
+      "    }" +
+      "    return reg;" +
+      "}" +
+      "\n" +
+      "int inline static dummy_func_2(int a, char b, float c) {" + # This is a sneaky one, inline static is placed AFTER the return value
+      "	c += 3.14;" +
+      "	b -= 32;" +
+      "	return a + (int)(b) + (int)c;" +
+      "}" +
       "#endif _NOINCLUDES\n"
 
     expected =
@@ -1883,12 +1924,77 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "};\n" +
       "int my_function(int a);\n" +
       "int my_better_function(struct my_struct *s);\n" +
-      "int get_member_a(struct my_struct *s);\n" +
-      "int my_func_0(int a);\n" +
-      "int my_func_1(struct my_struct *s);\n" +
+      "int staticinlinebar(struct my_struct *s);\n" +
+      "int staticinlinefunc(struct my_struct *s);\n" +
+      "int bar(struct my_struct *s);\n" +
+      "int inlinestaticfunc(int a);\n" +
+      "int StaticInlineFunc(struct my_struct *s);\n" +
+      "int StaticInlineBar(struct my_struct *s);\n" +
+      "struct staticinlinestruct {\n" +
+      "int a;\n" +
+      "};\n" +
+      "\n" +
+      "struct staticinlinestruct fubarstruct(struct my_struct *s);\n" +
+      "struct staticinlinestruct inlinefubarfunction(struct my_struct *s);\n" +
+      "int fubar(struct my_struct *s);\n" +
+      "int stuff(int num);\n" +
+      "int dummy_func_2(int a, char b, float c);" +
       "#endif _NOINCLUDES\n"
 
     assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
+  it "Count number of pairs of braces in function succesfully" do
+    source =
+      "int foo(struct my_struct *s)\n" +
+      "{\n" +
+      "    return get_member_a(s) + 42;\n" +
+      "}\n"
+    complex_source =
+      "int bar(struct my_struct *s)\n" +
+      "{\n" +
+      "\tint a = 6;\n" +
+      "\tint res = foo(&(struct my_struct){.nr = a});\n" +
+      "\t{\n" +
+      "\t\tint a = 5;\n" +
+      "\t\tint res = foo(&(struct my_struct){.nr = a});\n" +
+      "\t\t{\n" +
+      "\t\t\tstruct my_struct a = {.nr = 1};\n" +
+      "\t\t}\n" +
+      "\t}\n" +
+      "\treturn 42;\n" +
+      "}\n"
+
+    assert_equal(1, @parser.count_number_of_pairs_of_braces_in_function(source))
+    assert_equal(6, @parser.count_number_of_pairs_of_braces_in_function(complex_source))
+  end
+
+  it "Count number of pairs of braces returns 0 if bad source is supplied" do
+    bad_source_0 =
+      "int foo(struct my_struct *s)\n" +
+      "{\n" +
+      "    return get_member_a(s) + 42;\n" +
+      "\n"                      # Missing closing brace
+    bad_source_1 =
+      "int bar(struct my_struct *s)\n" +
+      "{\n" +
+      "\tint a = 6;\n" +
+      "\tint res = foo(&(struct my_struct){.nr = a});\n" +
+      "\t{\n" +
+      "\t\tint a = 5;\n" +
+      "\t\tint res = foo(&(struct my_struct){.nr = a});\n" +
+      "\t\t{\n" +
+      "\t\t\n" +                # Missing closing brace
+      "\t}\n" +
+      "\treturn 42;\n" +
+      "}\n"
+    bad_source_2 =
+      "int foo(struct my_struct *s)\n" +
+      "\n"                      # No braces in source
+
+    assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_0))
+    assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_1))
+    assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_2))
   end
 
 end

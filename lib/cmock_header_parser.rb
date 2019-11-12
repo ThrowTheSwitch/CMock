@@ -73,28 +73,79 @@ class CMockHeaderParser
     return source
   end
 
+  # Return the number of pairs of braces/square brackets in the function provided by the user
+  # +source+:: String containing the function to be processed
+  def count_number_of_pairs_of_braces_in_function(source)
+    is_function_start_found = false
+    curr_level = 0
+    total_pairs = 0
+
+    source.each_char do |c|
+      if ("{" == c)
+        curr_level += 1
+        total_pairs  +=1
+        is_function_start_found = true
+      elsif ("}" == c)
+        curr_level -=1
+      end
+
+      break if is_function_start_found && curr_level == 0    # We reached the end of the inline function body
+    end
+
+    if 0 != curr_level
+      total_pairs = 0          # Something is fishy about this source, not enough closing braces?
+    end
+
+    return total_pairs
+  end
+
+  # Transform inline functions to regular functions in the source by the user
+  # +source+:: String containing the source to be processed
   def transform_inline_functions(source)
+    # Format to look for inline functions.
+    # This is a combination of "static" and "inline" keywords ("static inline", "inline static", "inline", "static")
+    # There are several possibilities:
+    # - sometimes they appear together, sometimes individually,
+    # - The keywords can appear before or after the return type (this is a compiler warning but people do weird stuff),
+    #   so we check for word boundaries when searching for them
+    # - We first remove "static inline" combinations and boil down to single inline or static statements
+    inline_function_regex_formats = [
+      /(static\s+inline|inline\s+static)\s*/,        # Last part (\s*) is just to remove whitespaces (only to prettify the output)
+      /(\bstatic\b|\binline\b)\s*/,                  # Last part (\s*) is just to remove whitespaces (only to prettify the output)
+    ]
+    square_bracket_pair_regex_format = /\{[^\{\}]*\}/ # Regex to match one whole block enclosed by two square brackets
+
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
-    source.gsub!(/(static|inline)+.*\{.*\w*\}/m) do |m|
-      m.gsub!(/(static|inline)/, '') # remove static and inline keywords
-      m = remove_nested_pairs_of_braces(m)
+    # - Just looking for static|inline in the gsub is a bit too aggressive (functions that are named like this, ...), so we try to be a bit smarter
+    #   Instead, look for "static inline" and parse it:
+    #   - Everything before the match should just be copied, we don't want
+    #     to touch anything but the inline functions.
+    #   - Remove the implementation of the inline function (this is enclosed
+    #     in square brackets) and replace it with ";" to complete the
+    #     transformation to normal/non-inline function.
+    #     To ensure proper removal of the function body, we count the number of square-bracket pairs
+    #     and remove the pairs one-by-one.
+    #   - Copy everything after the inline function implementation and start the parsing of the next inline function
 
-      # Functions having "{ }" at this point are/were inline functions,
-      # Disguise them as normal functions with the ";"
-      m.gsub!(/\s*\{\s\}/, ";")
+    inline_function_regex_formats.each do |format|
+      loop do
+        inline_function_match = source.match(/#{format}/) # Search for inline function declaration
+        break if nil == inline_function_match             # No inline functions so nothing to do
 
-      # Cleanup the function declarations
-      # Not strictly necessary, it will compile just fine, but it can help during debugging
-      m_lines = m.split(/\s*;\s*/).uniq
-      m_lines.each do |m_line|
-        m_line.gsub!(/^\s+/, '')         # remove extra white space from beginning of line
-        m_line.gsub!(/\s+/, ' ')          # remove remaining extra white space
-        m_line.gsub!(/\n/, '')            # remove newlines
+        total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
+
+        break if 0 == total_pairs_to_remove # Bad source?
+
+        inline_function_stripped = inline_function_match.post_match
+
+        total_pairs_to_remove.times do
+          inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ";") # Remove inline implementation (+ some whitespace because it's prettier)
+        end
+
+        source = inline_function_match.pre_match + inline_function_stripped # Make new source with the inline function removed and move on to the next
       end
-
-      m_lines.join(";\n") + ";" # Join the lines and add the last semicolon manually
     end
 
     return source
