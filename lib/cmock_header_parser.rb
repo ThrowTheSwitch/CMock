@@ -74,27 +74,64 @@ class CMockHeaderParser
   end
 
   def transform_inline_functions(source)
+    # Format to look for inline functions.
+    # This is a combination of "static" and "inline" keywords ("static inline", "inline static", "inline", "static")
+    # There are several possibilities:
+    # - sometimes they appear together, sometimes individually,
+    # - The keywords can appear before or after the return type (this is a compiler warning but people do weird stuff),
+    #   so we check for word boundaries when searching for them
+    # - We first remove "static inline" combinations and boil down to
+    inline_function_regex_formats = [
+      /(static\s+inline|inline\s+static)\s*/,        # Last part (\s*) is just to remove whitespaces (only to prettify the output)
+      /(\bstatic\b|\binline\b)\s*/,                  # Last part (\s*) is just to remove whitespaces (only to prettify the output)
+    ]
+
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
-    source.gsub!(/(static|inline)+.*\{.*\w*\}/m) do |m|
-      m.gsub!(/(static|inline)/, '') # remove static and inline keywords
-      m = remove_nested_pairs_of_braces(m)
+    # - Just looking for static|inline in the gsub is a bit too aggressive (functions that are named like this, ...), so we try to be a bit smarter
+    #   Instead, look for "static inline" and parse it:
+    #   - Everything before the match should just be copied, we don't want
+    #     to touch anything but the inline functions.
+    #   - Remove the implementation of the inline function (this is enclosed
+    #     in square brackets) and replace it with ";" to complete the
+    #     transformation to normal/non-inline function.
+    #     To ensure proper removal of the function body, we count the number of square-bracket pairs
+    #     and remove the pairs one-by-one.
+    #   - Copy everything after the inline function implementation and start the parsing of the next inline function
 
-      # Functions having "{ }" at this point are/were inline functions,
-      # Disguise them as normal functions with the ";"
-      m.gsub!(/\s*\{\s\}/, ";")
+    inline_function_regex_formats.each do |format|
+      loop do
+        inline_function_match = source.match(/#{format}/) # Search for inline function declaration
+        break if nil == inline_function_match
 
-      # Cleanup the function declarations
-      # Not strictly necessary, it will compile just fine, but it can help during debugging
-      m_lines = m.split(/\s*;\s*/).uniq
-      m_lines.each do |m_line|
-        m_line.gsub!(/^\s+/, '')         # remove extra white space from beginning of line
-        m_line.gsub!(/\s+/, ' ')          # remove remaining extra white space
-        m_line.gsub!(/\n/, '')            # remove newlines
+        # Get number of square brackets in function, we already now there is atleast 1 pair (main function body)
+        curr = 0
+        started = false
+        total = 0
+
+        inline_function_match.post_match.each_char do |c|
+          if ("{" == c)
+            curr += 1
+            total  +=1
+            started = true
+          elsif ("}" == c)
+            curr -=1
+          end
+
+          break if started && curr == 0    # We reached the end of the inline function body
+        end
+
+        inline_function_stripped = inline_function_match.post_match
+        until total == 1
+          inline_function_stripped.sub!(/\{[^\{\}]*\}/, "") # Remove code in between square brackets
+          total -= 1
+        end
+
+        inline_function_stripped.sub!(/(\s*\{[^\{\}]*|[^\{\}]*\})+/, ";") # Remove inline implementation
+
+        source = inline_function_match.pre_match + inline_function_stripped # Make new source with the inline function removed and move on to the next
       end
-
-      m_lines.join(";\n") + ";" # Join the lines and add the last semicolon manually
     end
 
     return source
