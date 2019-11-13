@@ -103,28 +103,15 @@ class CMockHeaderParser
   # Transform inline functions to regular functions in the source by the user
   # +source+:: String containing the source to be processed
   def transform_inline_functions(source)
-    # Format to look for inline functions.
-    # This is a combination of "static" and "inline" keywords ("static inline", "inline static", "inline", "static")
-    # There are several possibilities:
-    # - sometimes they appear together, sometimes individually,
-    # - The keywords can appear before or after the return type (this is a compiler warning but people do weird stuff),
-    #   so we check for word boundaries when searching for them
-    # - We first remove "static inline" combinations and boil down to single inline or static statements
-    inline_function_regex_formats = [
-      /(static\s+inline|inline\s+static)\s*/,        # Last part (\s*) is just to remove whitespaces (only to prettify the output)
-      /(\bstatic\b|\binline\b)\s*/,                  # Last part (\s*) is just to remove whitespaces (only to prettify the output)
-    ]
-    user_regex_formats = []
+    inline_function_regex_formats = []
     square_bracket_pair_regex_format = /\{[^\{\}]*\}/ # Regex to match one whole block enclosed by two square brackets
 
-    @inline_function_patterns.each { |user_format_string|
-      user_regex = Regexp.new(Regexp.quote(user_format_string))
+    # Convert user provided string patterns to regex
+    @inline_function_patterns.each do |user_format_string|
+      user_regex = Regexp.new(user_format_string)
       cleanup_spaces_after_user_regex = /\s*/
-      user_regex_formats << Regexp.new((user_regex.source) + cleanup_spaces_after_user_regex.source) # Convert user provided string to regex pattern
-    }
-
-    # We first parse the user regex to avoid removing basic inline keywords that the user regex depends upon
-    inline_function_regex_formats = user_regex_formats + inline_function_regex_formats
+      inline_function_regex_formats << Regexp.new(user_regex.source + cleanup_spaces_after_user_regex.source)
+    end
 
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
