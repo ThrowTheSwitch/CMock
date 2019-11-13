@@ -534,6 +534,31 @@ from the defaults. We've tried to specify what the defaults are below.
   We go from specific to general to avoid wrongfully parsing the header.
   You can override these patterns, check out :inline_function_patterns.
 
+  Enabling this feature does require a change in the build system that
+  is using CMock.  To understand why, we need to give some more info
+  on how we are handling inline functions internally.
+  Let's say we want to mock a header called example.h.  example.h
+  contains inline functions, we cannot include this header in the
+  mocks or test code if we want to mock the inline functions simply
+  because the inline functions contain an implementation that we want
+  to override in our mocks!
+  So, to circumvent this, we generate a new header, also named
+  example.h, in the same directory as mock_example.h/c .  This newly
+  generated header should/is exactly the same as the original header,
+  only difference is the inline functions are transformed to 'normal'
+  functions declarations.  Placing the new header in the same
+  directory as mock_example.h/c ensures that they will include the new
+  header and not the old one.
+  However, CMock has no control in how the build system is configured
+  and which include paths the test code is compiled with.  In order
+  for the test code to also see the newly generated header ,and not
+  the old header with inline functions, the build system has to add
+  the mock folder to the include paths.
+  Furthermore, we need to keep the order of include paths in mind. We
+  have to set the mock folder before the other includes to avoid the
+  test code including the original header instead of the newly
+  generated header (without inline functions).
+
 * `:unity_helper_path`:
   If you have created a header with your own extensions to unity to
   handle your own types, you can set this argument to that path. CMock
