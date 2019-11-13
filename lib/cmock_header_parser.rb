@@ -114,7 +114,17 @@ class CMockHeaderParser
       /(static\s+inline|inline\s+static)\s*/,        # Last part (\s*) is just to remove whitespaces (only to prettify the output)
       /(\bstatic\b|\binline\b)\s*/,                  # Last part (\s*) is just to remove whitespaces (only to prettify the output)
     ]
+    user_regex_formats = []
     square_bracket_pair_regex_format = /\{[^\{\}]*\}/ # Regex to match one whole block enclosed by two square brackets
+
+    @inline_function_patterns.each { |user_format_string|
+      user_regex = Regexp.new(Regexp.quote(user_format_string))
+      cleanup_spaces_after_user_regex = /\s*/
+      user_regex_formats << Regexp.new((user_regex.source) + cleanup_spaces_after_user_regex.source) # Convert user provided string to regex pattern
+    }
+
+    # We first parse the user regex to avoid removing basic inline keywords that the user regex depends upon
+    inline_function_regex_formats = user_regex_formats + inline_function_regex_formats
 
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
