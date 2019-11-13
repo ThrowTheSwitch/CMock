@@ -55,6 +55,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
     @config.expect :treat_inlines, :exclude
+    @config.expect :inline_function_patterns, []
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator.module_name = @module_name
     @cmock_generator.mock_name = "Mock#{@module_name}"
@@ -74,6 +75,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
     @config.expect :treat_inlines, :exclude
+    @config.expect :inline_function_patterns, []
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator_strict.module_name = @module_name
     @cmock_generator_strict.mock_name = "Mock#{@module_name}"
@@ -136,6 +138,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
     @config.expect :treat_inlines, :exclude
+    @config.expect :inline_function_patterns, []
     @cmock_generator2 = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator2.module_name = "Pout-Pout Fish"
     @cmock_generator2.mock_name = "MockPout-Pout Fish"
