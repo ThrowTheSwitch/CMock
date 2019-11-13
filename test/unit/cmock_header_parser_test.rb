@@ -24,6 +24,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @config.expect :verbosity, 1
     @config.expect :treat_externs, :exclude
     @config.expect :treat_inlines, :exclude
+    @config.expect :inline_function_patterns, ['static __inline__ __attribute__ ((always_inline))', 'static __inline__']
     @config.expect :array_size_type, ['int', 'size_t']
     @config.expect :array_size_name, 'size|len'
 

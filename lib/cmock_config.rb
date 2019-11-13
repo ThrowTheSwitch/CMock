@@ -40,6 +40,7 @@ class CMockConfig
     :orig_header_include_fmt     => "#include \"%s\"",
     :array_size_type             => [],
     :array_size_name             => 'size|len',
+    :inline_function_patterns    => [],
   }
 
   def initialize(options=nil)
