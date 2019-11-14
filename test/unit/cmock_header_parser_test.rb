@@ -24,7 +24,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @config.expect :verbosity, 1
     @config.expect :treat_externs, :exclude
     @config.expect :treat_inlines, :exclude
-    @config.expect :inline_function_patterns, ['static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__', '(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*']
+    @config.expect :inline_function_patterns, ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*']
     @config.expect :array_size_type, ['int', 'size_t']
     @config.expect :array_size_name, 'size|len'
 
@@ -2020,6 +2020,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "uint16_t attributealwaysinlinefuncname(void);\n" +
       "\n"
 
+    @parser.treat_inlines = :include
+    @parser.inline_function_patterns = ['static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__', 'static inline']
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
