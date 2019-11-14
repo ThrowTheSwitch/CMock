@@ -236,13 +236,8 @@ class CMockHeaderParser
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern)\s+/).nil?} # remove extern functions
     end
 
-    if (@treat_inlines == :include)
-      src_lines.each {
-        |src_line|
-        src_line.gsub!(/^inline/, "") # Remove "inline" so that they are 'normal' functions
-      }
-    else
-      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?}        # remove inline functions
+    unless (@treat_inlines == :include)
+      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?} # remove inline functions
     end
 
     src_lines.delete_if {|line| line.empty? } #drop empty lines
