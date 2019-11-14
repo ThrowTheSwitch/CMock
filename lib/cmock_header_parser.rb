@@ -162,6 +162,14 @@ class CMockHeaderParser
       @local_as_void += void_types.flatten.uniq.compact
     end
 
+    # If user wants to mock inline functions,
+    # remove the (user specific) inline keywords before removing anything else to avoid missing an inline function
+    if (@treat_inlines == :include)
+      @inline_function_patterns.each { |user_format_string|
+        source.gsub!(/#{user_format_string}/, '') # remove user defined inline function patterns
+      }
+    end
+
     # smush multiline macros into single line (checking for continuation character at end of line '\')
     source.gsub!(/\s*\\\s*/m, ' ')
 
