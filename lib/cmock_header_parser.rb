@@ -113,6 +113,10 @@ class CMockHeaderParser
       inline_function_regex_formats << Regexp.new(user_regex.source + cleanup_spaces_after_user_regex.source)
     end
 
+    puts "INLINE REGEXS"
+    puts inline_function_regex_formats
+    puts
+
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
@@ -132,6 +136,24 @@ class CMockHeaderParser
         inline_function_match = source.match(/#{format}/) # Search for inline function declaration
         break if nil == inline_function_match             # No inline functions so nothing to do
 
+
+        puts "--------------------"
+        puts "FORMAT USED"
+        puts format
+        puts
+
+        puts "PRE MATCH"
+        puts inline_function_match.pre_match
+        puts
+
+        puts "MATCH"
+        puts inline_function_match.to_s
+        puts
+
+        puts "POST MATCH"
+        puts inline_function_match.post_match
+        puts
+
         total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
         break if 0 == total_pairs_to_remove # Bad source?
@@ -141,6 +163,12 @@ class CMockHeaderParser
         total_pairs_to_remove.times do
           inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ";") # Remove inline implementation (+ some whitespace because it's prettier)
         end
+
+        puts "STRIPPED INLINE"
+        puts total_pairs_to_remove
+        puts inline_function_stripped
+        puts "--------------------"
+
 
         source = inline_function_match.pre_match + inline_function_stripped # Make new source with the inline function removed and move on to the next
       end
