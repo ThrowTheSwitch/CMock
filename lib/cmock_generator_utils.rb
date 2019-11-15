@@ -181,7 +181,6 @@ class CMockGeneratorUtils
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
     lines << "    UNITY_SET_DETAILS(CMockString_#{function[:name]},CMockString_#{arg_name});\n"
-    lines << "    if (#{pre}#{expected} != #{pre}#{arg_name}) {\n"
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
@@ -207,7 +206,7 @@ class CMockGeneratorUtils
       else
         lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
     end
-    lines << "      }\n  }\n"
+    lines << "  }\n"
     lines
   end
 
@@ -218,7 +217,6 @@ class CMockGeneratorUtils
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
     lines << "    UNITY_SET_DETAILS(CMockString_#{function[:name]},CMockString_#{arg_name});\n"
-    lines << "    if (#{pre}#{expected} != #{pre}#{arg_name}) {\n"
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
@@ -246,7 +244,7 @@ class CMockGeneratorUtils
       else
         lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
     end
-    lines << "    }\n  }\n"
+    lines << "  }\n"
     lines
   end
 
