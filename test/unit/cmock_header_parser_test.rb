@@ -24,6 +24,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @config.expect :verbosity, 1
     @config.expect :treat_externs, :exclude
     @config.expect :treat_inlines, :exclude
+    @config.expect :inline_function_patterns, ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*']
     @config.expect :array_size_type, ['int', 'size_t']
     @config.expect :array_size_name, 'size|len'
 
@@ -506,6 +507,37 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     @parser.treat_externs = :include
     @parser.treat_inlines = :include
+    assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
+  end
+
+  it "Include inline functions that contain user defined inline function formats" do
+    source =
+      "uint32 foo(unsigned int);\n" +
+      "uint32 bar(unsigned int);\n" +
+      "inline void inlineBar(void)\n" +
+      "{\n" +
+      "    return 43;\n" +
+      "}\n" +
+      "static __inline__ __attribute__ ((always_inline)) int alwaysinlinefunc(int a)\n" +
+      "{\n" +
+      "    return a + inlineBar();\n" +
+      "}\n" +
+      "static __inline__ void inlinebar(unsigned int)\n" +
+      "{\n" +
+      " int a = alwaysinlinefunc()\n" +
+      "}\n"
+
+    expected =
+      [
+      "uint32 foo(unsigned int)",
+      "uint32 bar(unsigned int)",
+      "void inlineBar(void)",
+      "int alwaysinlinefunc(int a)",
+      "void inlinebar(unsigned int)"
+      ]
+
+    @parser.treat_inlines = :include
+    @parser.inline_function_patterns = ['static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__', '\binline\b']
     assert_equal(expected, @parser.import_source(source).map!{|s|s.strip})
   end
 

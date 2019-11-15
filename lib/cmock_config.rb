@@ -40,6 +40,15 @@ class CMockConfig
     :orig_header_include_fmt     => "#include \"%s\"",
     :array_size_type             => [],
     :array_size_name             => 'size|len',
+
+    # Format to look for inline functions.
+    # This is a combination of "static" and "inline" keywords ("static inline", "inline static", "inline", "static")
+    # There are several possibilities:
+    # - sometimes they appear together, sometimes individually,
+    # - The keywords can appear before or after the return type (this is a compiler warning but people do weird stuff),
+    #   so we check for word boundaries when searching for them
+    # - We first remove "static inline" combinations and boil down to single inline or static statements
+    :inline_function_patterns    => ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*'], # Last part (\s*) is just to remove whitespaces (only to prettify the output)
   }
 
   def initialize(options=nil)

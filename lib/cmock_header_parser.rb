@@ -6,7 +6,7 @@
 
 class CMockHeaderParser
 
-  attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines
+  attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns
 
   def initialize(cfg)
     @funcs = []
@@ -25,6 +25,7 @@ class CMockHeaderParser
     @verbosity = cfg.verbosity
     @treat_externs = cfg.treat_externs
     @treat_inlines = cfg.treat_inlines
+    @inline_function_patterns = cfg.inline_function_patterns
     @c_strippables += ['extern'] if (@treat_externs == :include) #we'll need to remove the attribute if we're allowing externs
     @c_strippables += ['inline'] if (@treat_inlines == :include) #we'll need to remove the attribute if we're allowing inlines
   end
@@ -102,18 +103,15 @@ class CMockHeaderParser
   # Transform inline functions to regular functions in the source by the user
   # +source+:: String containing the source to be processed
   def transform_inline_functions(source)
-    # Format to look for inline functions.
-    # This is a combination of "static" and "inline" keywords ("static inline", "inline static", "inline", "static")
-    # There are several possibilities:
-    # - sometimes they appear together, sometimes individually,
-    # - The keywords can appear before or after the return type (this is a compiler warning but people do weird stuff),
-    #   so we check for word boundaries when searching for them
-    # - We first remove "static inline" combinations and boil down to single inline or static statements
-    inline_function_regex_formats = [
-      /(static\s+inline|inline\s+static)\s*/,        # Last part (\s*) is just to remove whitespaces (only to prettify the output)
-      /(\bstatic\b|\binline\b)\s*/,                  # Last part (\s*) is just to remove whitespaces (only to prettify the output)
-    ]
+    inline_function_regex_formats = []
     square_bracket_pair_regex_format = /\{[^\{\}]*\}/ # Regex to match one whole block enclosed by two square brackets
+
+    # Convert user provided string patterns to regex
+    @inline_function_patterns.each do |user_format_string|
+      user_regex = Regexp.new(user_format_string)
+      cleanup_spaces_after_user_regex = /\s*/
+      inline_function_regex_formats << Regexp.new(user_regex.source + cleanup_spaces_after_user_regex.source)
+    end
 
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
@@ -162,6 +160,14 @@ class CMockHeaderParser
     void_types = source.scan(/typedef\s+(?:\(\s*)?void(?:\s*\))?\s+([\w]+)\s*;/)
     if void_types
       @local_as_void += void_types.flatten.uniq.compact
+    end
+
+    # If user wants to mock inline functions,
+    # remove the (user specific) inline keywords before removing anything else to avoid missing an inline function
+    if (@treat_inlines == :include)
+      @inline_function_patterns.each { |user_format_string|
+        source.gsub!(/#{user_format_string}/, '') # remove user defined inline function patterns
+      }
     end
 
     # smush multiline macros into single line (checking for continuation character at end of line '\')
@@ -230,13 +236,8 @@ class CMockHeaderParser
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern)\s+/).nil?} # remove extern functions
     end
 
-    if (@treat_inlines == :include)
-      src_lines.each {
-        |src_line|
-        src_line.gsub!(/^inline/, "") # Remove "inline" so that they are 'normal' functions
-      }
-    else
-      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?}        # remove inline functions
+    unless (@treat_inlines == :include)
+      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?} # remove inline functions
     end
 
     src_lines.delete_if {|line| line.empty? } #drop empty lines

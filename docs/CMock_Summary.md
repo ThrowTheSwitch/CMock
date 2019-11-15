@@ -525,6 +525,37 @@ from the defaults. We've tried to specify what the defaults are below.
   * `:include` will mock inlined functions
   * `:exclude` will ignore inlined functions (default).
 
+  CMock will look for the following default patterns (simplified from the actual regex):
+  - "static inline"
+  - "inline static"
+  - "inline"
+  - "static"
+  You can override these patterns, check out :inline_function_patterns.
+
+  Enabling this feature does require a change in the build system that
+  is using CMock.  To understand why, we need to give some more info
+  on how we are handling inline functions internally.
+  Let's say we want to mock a header called example.h.  example.h
+  contains inline functions, we cannot include this header in the
+  mocks or test code if we want to mock the inline functions simply
+  because the inline functions contain an implementation that we want
+  to override in our mocks!
+  So, to circumvent this, we generate a new header, also named
+  example.h, in the same directory as mock_example.h/c .  This newly
+  generated header should/is exactly the same as the original header,
+  only difference is the inline functions are transformed to 'normal'
+  functions declarations.  Placing the new header in the same
+  directory as mock_example.h/c ensures that they will include the new
+  header and not the old one.
+  However, CMock has no control in how the build system is configured
+  and which include paths the test code is compiled with.  In order
+  for the test code to also see the newly generated header ,and not
+  the old header with inline functions, the build system has to add
+  the mock folder to the include paths.
+  Furthermore, we need to keep the order of include paths in mind. We
+  have to set the mock folder before the other includes to avoid the
+  test code including the original header instead of the newly
+  generated header (without inline functions).
 
 * `:unity_helper_path`:
   If you have created a header with your own extensions to unity to
@@ -635,6 +666,21 @@ from the defaults. We've tried to specify what the defaults are below.
   * **note:**
     If this option is disabled, the mocked functions will return
     a default value (0) when called (and only if they have to return something of course).
+
+* `:inline_function_patterns`:
+  An array containing a list of strings to detect inline functions.
+  This option is only taken into account if you enable :treat_inlines.
+  These strings are interpreted as regex patterns so be sure to escape
+  certain characters. For example, use `:inline_function_patterns: ['static inline __attribute__ \(\(always_inline\)\)']`
+  to recognize `static inline __attribute__ ((always_inline)) int my_func(void)`
+  as an inline function.
+  The default patterns are are:
+
+  * default: ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*']
+  * **note:**
+    The order of patterns is important here!
+    We go from specific patterns ('static inline') to general patterns ('inline'),
+    otherwise we would miss functions that use 'static inline' iso 'inline'.
 
 
 Compiled Options:
