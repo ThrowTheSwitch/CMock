@@ -530,8 +530,6 @@ from the defaults. We've tried to specify what the defaults are below.
   - "inline static"
   - "inline"
   - "static"
-  Note that the order is important here!
-  We go from specific to general to avoid wrongfully parsing the header.
   You can override these patterns, check out :inline_function_patterns.
 
   Enabling this feature does require a change in the build system that
@@ -679,6 +677,10 @@ from the defaults. We've tried to specify what the defaults are below.
   The default patterns are are:
 
   * default: ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*']
+  * **note:**
+    The order of patterns is important here!
+    We go from specific patterns ('static inline') to general patterns ('inline'),
+    otherwise we would miss functions that use 'static inline' iso 'inline'.
 
 
 Compiled Options:
