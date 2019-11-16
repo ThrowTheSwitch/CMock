@@ -133,14 +133,16 @@ class CMockHeaderParser
 
     inline_function_regex_formats.each do |format|
       loop do
-        inline_function_match = source.match(/#{format}/) # Search for inline function declaration
-        break if nil == inline_function_match             # No inline functions so nothing to do
-
-
         puts "--------------------"
         puts "FORMAT USED"
         puts format
         puts
+
+        inline_function_match = source.match(/#{format}/) # Search for inline function declaration
+        if nil == inline_function_match             # No inline functions so nothing to do
+          puts "NO INLNE MATCH FOUND, GOING TO NEXT"
+          break
+        end
 
         puts "PRE MATCH"
         puts inline_function_match.pre_match
@@ -156,7 +158,10 @@ class CMockHeaderParser
 
         total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
-        break if 0 == total_pairs_to_remove # Bad source?
+        if 0 == total_pairs_to_remove # Bad source?
+          puts "NO PAIRS/FUNCTION BODY FOUND TO REMOVE, GOING TO NEXT"
+          break
+        end
 
         inline_function_stripped = inline_function_match.post_match
 
