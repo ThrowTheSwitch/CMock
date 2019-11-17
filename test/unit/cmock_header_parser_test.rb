@@ -1290,7 +1290,17 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
   end
 
   it "handle arrays and treat them as pointers or strings" do
-    source = "void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], char thing3 [][2 ][ 3], int* thing4[4])"
+    source = 'void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], ' \
+             'char thing3 [][2 ][ 3], int* thing4[4], u8 thing5[((u8)5)])'
+    expected_args = [
+      { type: 'CUSTOM_TYPE*', name: 'thing1', ptr?: true,  const?: false, const_ptr?: false },
+      { type: 'int*',         name: 'thing2', ptr?: true,  const?: false, const_ptr?: false },
+      # this one will likely change in the future when we improve multidimensional array support
+      { type: 'char*',        name: 'thing3', ptr?: false, const?: false, const_ptr?: false },
+      # this one will likely change in the future when we improve multidimensional array support
+      { type: 'int**',        name: 'thing4', ptr?: true,  const?: false, const_ptr?: false },
+      { type: 'u8*',          name: 'thing5', ptr?: true,  const?: false, const_ptr?: false }
+    ]
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
@@ -1303,13 +1313,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :name=>"KeyOperated",
                  :modifier=>"",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"CUSTOM_TYPE*", :name=>"thing1", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"int*", :name=>"thing2", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"char*", :name=>"thing3", :ptr? => false, :const? => false, :const_ptr? => false},  #THIS one will likely change in the future when we improve multidimensional array support
-                          {:type=>"int**", :name=>"thing4", :ptr? => true, :const? => false, :const_ptr? => false}    #THIS one will likely change in the future when we improve multidimensional array support
-                        ],
-                 :args_string=>"CUSTOM_TYPE* thing1, int* thing2, char* thing3, int** thing4",
-                 :args_call=>"thing1, thing2, thing3, thing4" }]
+                 :args => expected_args,
+                 :args_string => 'CUSTOM_TYPE* thing1, int* thing2, ' \
+                                 'char* thing3, int** thing4, u8* thing5',
+                 :args_call => 'thing1, thing2, thing3, thing4, thing5' }]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
