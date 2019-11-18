@@ -42,10 +42,13 @@ task :config, :config_file do |t, args|
   configure_toolchain(args[:config_file])
 end
 
-desc "Run all unit, c, and system tests"
+# Still support testing everything with just 'test' but switch default to ceedling-like test:all
 task :test => [:clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
 
 namespace :test do
+  desc "Run all unit, c, and system tests"
+  task :all => [:clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
+
   desc "Run Unit Tests"
   Rake::TestTask.new('units') do |t|
     t.pattern = 'unit/*_test.rb'

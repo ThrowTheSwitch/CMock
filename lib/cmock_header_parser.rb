@@ -382,6 +382,23 @@ class CMockHeaderParser
         "#{functype} #{funconst}#{funcname}"
       end
 
+      #scan argument list for function pointers with shorthand notation and replace them with custom types
+      arg_list.gsub!(/([\w\s\*]+)+\s+(\w+)\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |m|
+
+        functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
+        funcret  = $1.strip
+        funcname = $2.strip
+        funcargs = $3.strip
+        funconst = ''
+        if (funcname.include? 'const')
+          funcname.gsub!('const','').strip!
+          funconst = 'const '
+        end
+        @typedefs << "typedef #{funcret}(*#{functype})(#{funcargs});"
+        funcname = "cmock_arg#{c+=1}" if (funcname.empty?)
+        "#{functype} #{funconst}#{funcname}"
+      end
+
       #automatically name unnamed arguments (those that only had a type)
       arg_list.split(/\s*,\s*/).map { |arg|
         parts = (arg.split - ['struct', 'union', 'enum', 'const', 'const*'])

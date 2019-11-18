@@ -12,6 +12,7 @@
   :mockable: |
     void takes_function_type( FUNCTION_T myfunc );
     void takes_function_ptr( unsigned int (*func_ptr)(int, char) );
+    void takes_function_ptr_shorthand( unsigned int func_ptr(int, char*) );
     void takes_const_function_ptr( unsigned int (* const)(int, char) );
     unsigned short (*returns_function_ptr( const char op_code ))( int, long int );
 

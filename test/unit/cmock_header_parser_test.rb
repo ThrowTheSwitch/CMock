@@ -1369,6 +1369,30 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(typedefs, result[:typedefs])
   end
 
+  it "extract functions using a function pointer with shorthand notation" do
+    source = "void FunkyTurkey(unsigned int func_ptr(int, char))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
+                            :ptr?   => false,
+                            :const? => false,
+                            :const_ptr? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"FunkyTurkey",
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                        ],
+                 :args_string=>"cmock_module_func_ptr1 func_ptr",
+                 :args_call=>"func_ptr" }]
+    typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+
   it "extract functions containing a function pointer with a void" do
     source = "void FunkyTurkey(void (*func_ptr)(void))"
     expected = [{ :var_arg=>nil,
