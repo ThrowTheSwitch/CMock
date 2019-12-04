@@ -12,7 +12,7 @@
 
 project('cmock', 'c',
     license         : 'MIT',
-    meson_version   : '>=0.52.0',
+    meson_version   : '>=0.50.0',
     subproject_dir : 'vendor',
     default_options: ['warning_level=3', 'werror=true', 'c_std=c11']
 )
