@@ -95,9 +95,10 @@ class CMockGeneratorPluginExpect
   end
 
   def mock_verify(function)
-    "  UNITY_SET_DETAIL(CMockString_#{function[:name]});\n" +
-    "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == call_instance, cmock_line, CMockStringCalledLess);\n" +
-    "  UNITY_CLR_DETAILS();\n"
+    "  if (CMOCK_GUTS_NONE != call_instance)\n" \
+    "  {\n" \
+    "    UNITY_SET_DETAIL(CMockString_#{function[:name]});\n" \
+    "    UNITY_TEST_FAIL(cmock_line, CMockStringCalledLess);\n" \
+    "  }\n"
   end
-
 end
