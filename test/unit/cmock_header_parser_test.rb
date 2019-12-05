@@ -2060,4 +2060,27 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(0, @parser.count_number_of_pairs_of_braces_in_function(bad_source_2))
   end
 
+  it "handles parsing multiline functions" do
+    source = "int\nLaverneAndShirley(int Lenny,\n                   int Squiggy);\n"
+    expected = [{ :var_arg=>nil,
+                  :return=> { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                  :name=>"LaverneAndShirley",
+                  :modifier=>"",
+                  :contains_ptr? => false,
+                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
+                           {:type=>"int", :name=>"Squiggy", :ptr? => false, :const? => false, :const_ptr? => false}
+                         ],
+                  :args_string=>"int Lenny, int Squiggy",
+                  :args_call=>"Lenny, Squiggy"
+               }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
 end
