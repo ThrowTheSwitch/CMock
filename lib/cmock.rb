@@ -35,8 +35,7 @@ class CMock
   private ###############################
 
   def generate_mock(src)
-#    name = File.basename(src, '.h')
-    name = File.basename(src, '.*')
+    name = File.basename(src, '.*') # assume extension matches .h*
     puts "Creating mock for #{name}..." unless @silent
     @cm_generator.create_mock(name, @cm_parser.parse(name, File.read(src)), File.extname(src))
   end

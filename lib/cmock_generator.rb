@@ -80,7 +80,7 @@ class CMockGenerator
   end
 
   def create_using_statement(file, function)
-    if function[:namespace].length > 0	# TODO verify redundant ok
+    if function[:namespace].length > 0
       file << "using namespace #{function[:namespace].join('::')};\n"
     end
   end
@@ -194,7 +194,6 @@ class CMockGenerator
 
   def create_instance_structure(file, functions)
     functions.each do |function|
-      #create_using_statement(file, function)
       file << "typedef struct _CMOCK_#{function[:scoped_name]}_CALL_INSTANCE\n{\n"
       file << "  UNITY_LINE_TYPE LineNumber;\n"
       file << @plugins.run(:instance_typedefs, function)
@@ -243,7 +242,7 @@ class CMockGenerator
   def create_mock_destroy_function(file, functions)
     file << "void #{@clean_mock_name}_Destroy(void)\n{\n"
     file << "  CMock_Guts_MemFreeAll();\n"
-    #file << "  memset(&Mock, 0, sizeof(Mock));\n"
+    # NOTE: zeroing an object may result in crashes so we muct be selective when erasing this structure
     functions.each do |function|
       file << "  memset(&Mock.#{function[:scoped_name]}_CallInstance, 0, sizeof(Mock.#{function[:scoped_name]}_CallInstance));\n"
     end

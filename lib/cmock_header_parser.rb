@@ -4,9 +4,6 @@
 #   [Released under MIT License. Please refer to license.txt for details]
 # ==========================================
 
-require 'rbgccxml'
-require 'tempfile'
-
 class CMockHeaderParser
 
   attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns
@@ -371,15 +368,6 @@ class CMockHeaderParser
         end
       end
     end
-=begin
-    file = Tempfile.new("header")
-    file.write(source)
-    file.close
-    RbGCCXML.parse(file.path)
-
-    file.unlink
-=end
-
     return funcs
   end
 
