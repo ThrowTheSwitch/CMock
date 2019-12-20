@@ -175,7 +175,9 @@ class CMockGenerator
     file << "#include <string.h>\n"
     file << "#include <stdlib.h>\n"
     file << "#include <setjmp.h>\n"
+    file << "#ifdef __cplusplus\n"
     file << "#include <functional>\n"
+    file << "#endif\n"
     file << "#include \"cmock.h\"\n"
     @includes_c_pre_header.each {|inc| file << "#include #{inc}\n"}
     file << "#include \"#{header_file}\"\n"
