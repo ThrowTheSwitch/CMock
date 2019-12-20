@@ -26,7 +26,12 @@ class CMockGeneratorPluginExpect
 
   def instance_typedefs(function)
     lines = ""
-    lines << "  #{function[:return][:type]} ReturnVal;\n"  unless (function[:return][:void?])
+    if function[:return][:type].end_with?('&')
+      lines << "  #{function[:return][:type].chomp('&')} ReturnRefVal;\n"
+      lines << "  std::reference_wrapper<#{function[:return][:type].chomp('&')}> ReturnVal = ReturnRefVal;\n"
+    else
+      lines << "  #{function[:return][:type]} ReturnVal;\n"  unless (function[:return][:void?])
+    end
     lines << "  int CallOrder;\n"                          if (@ordered)
     function[:args].each do |arg|
       lines << "  #{arg[:type]} Expected_#{arg[:name]};\n"
@@ -37,19 +42,19 @@ class CMockGeneratorPluginExpect
   def mock_function_declarations(function)
     if (function[:args].empty?)
       if (function[:return][:void?])
-        return "#define #{function[:name]}_Expect() #{function[:name]}_CMockExpect(__LINE__)\n" +
-               "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line);\n"
+        return "#define #{function[:scoped_name]}_Expect() #{function[:scoped_name]}_CMockExpect(__LINE__)\n" +
+               "void #{function[:scoped_name]}_CMockExpect(UNITY_LINE_TYPE cmock_line);\n"
       else
-        return "#define #{function[:name]}_ExpectAndReturn(cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, cmock_retval)\n" +
-               "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
+        return "#define #{function[:scoped_name]}_ExpectAndReturn(cmock_retval) #{function[:scoped_name]}_CMockExpectAndReturn(__LINE__, cmock_retval)\n" +
+               "void #{function[:scoped_name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
       end
     else
       if (function[:return][:void?])
-        return "#define #{function[:name]}_Expect(#{function[:args_call]}) #{function[:name]}_CMockExpect(__LINE__, #{function[:args_call]})\n" +
-               "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n"
+        return "#define #{function[:scoped_name]}_Expect(#{function[:args_call]}) #{function[:scoped_name]}_CMockExpect(__LINE__, #{function[:args_call]})\n" +
+               "void #{function[:scoped_name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n"
       else
-        return "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, #{function[:args_call]}, cmock_retval)\n" +
-               "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]});\n"
+        return "#define #{function[:scoped_name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) #{function[:scoped_name]}_CMockExpectAndReturn(__LINE__, #{function[:args_call]}, cmock_retval)\n" +
+               "void #{function[:scoped_name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]});\n"
       end
     end
   end
@@ -74,7 +79,7 @@ class CMockGeneratorPluginExpect
 
   def mock_interfaces(function)
     lines = ""
-    func_name = function[:name]
+    func_name = function[:scoped_name]
     if (function[:return][:void?])
       if (function[:args_string] == "void")
         lines << "void #{func_name}_CMockExpect(UNITY_LINE_TYPE cmock_line)\n{\n"
@@ -95,7 +100,7 @@ class CMockGeneratorPluginExpect
   end
 
   def mock_verify(function)
-    "  UNITY_SET_DETAIL(CMockString_#{function[:name]});\n" +
+    "  UNITY_SET_DETAIL(CMockString_#{function[:scoped_name]});\n" +
     "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == call_instance, cmock_line, CMockStringCalledLess);\n" +
     "  UNITY_CLR_DETAILS();\n"
   end

@@ -577,6 +577,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = "MY_FUNKY_VOID FunkyVoidReturned(int a)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidReturned",
+                 :namespace=>[],
+                 :class=>nil,
                  :return=>{ :type   => "void",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
@@ -597,6 +599,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = "int FunkyVoidAsArg(MY_FUNKY_VOID)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidAsArg",
+                 :namespace=>[],
+                 :class=>nil,
                  :return=>{ :type   => "int",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
@@ -617,6 +621,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = "char FunkyVoidPointer(MY_FUNKY_VOID* bluh)"
     expected = { :var_arg=>nil,
                  :name=>"FunkyVoidPointer",
+                 :namespace=>[],
+                 :class=>nil,
                  :return=>{ :type   => "char",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
@@ -716,6 +722,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = "int Foo(int a, unsigned int b)"
     expected = { :var_arg=>nil,
                  :name=>"Foo",
+                 :namespace=>[],
+                 :class=>nil,
                  :return=>{ :type   => "int",
                             :name   => 'cmock_to_return',
                             :ptr?   => false,
@@ -747,6 +755,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"FunkyChicken",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"uint", :name=>"la", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -771,6 +781,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"tat",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ ],
@@ -792,6 +804,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => false
                           },
                  :name=>"TheMatrix",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"const",
                  :contains_ptr? => true,
                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -815,6 +829,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => false
                           },
                  :name=>"TheMatrix",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"const",
                  :c_calling_convention=>"__stdcall",
                  :contains_ptr? => true,
@@ -841,6 +857,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"TheMatrix",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"const",
                   :contains_ptr? => true,
                   :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -858,6 +876,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"Morpheus",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => true,
                   :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -876,6 +896,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected = [{ :var_arg=>nil,
                   :name=>"TheMatrix",
+                  :namespace=>[],
+                  :class=>nil,
                   :return=> { :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
@@ -904,6 +926,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected = [{ :var_arg => nil,
                   :name    => "PorkRoast",
+                  :namespace=>[],
+                  :class=>nil,
                   :return  => { :type       => "const int*",
                                 :name       => 'cmock_to_return',
                                 :ptr?       => true,
@@ -933,6 +957,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected = [{ :var_arg => nil,
                   :name    => "PorkRoast",
+                  :namespace=>[],
+                  :class=>nil,
                   :return  => { :type       => "int const*",
                                 :name       => 'cmock_to_return',
                                 :ptr?       => true,
@@ -959,6 +985,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected = [{ :var_arg=>nil,
                   :name=>"PorkRoast",
+                  :namespace=>[],
+                  :class=>nil,
                   :return=> { :type   => "int*",
                               :name   => 'cmock_to_return',
                               :ptr?   => true,
@@ -981,6 +1009,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = "void foo(int const*, int*const, const int*, const int*const, int const*const, int*, int, const int);\n"
 
     expected = [{ :name => "foo",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier => "",
                   :return => { :type       => "void",
                                :name       => "cmock_to_return",
@@ -1013,6 +1043,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
              "         int const*const param5, int*param6, int param7, const int param8);\n"
 
     expected = [{ :name => "bar",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier => "",
                   :return => { :type       => "void",
                                :name       => "cmock_to_return",
@@ -1044,6 +1076,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = "Book AddToBook(Book book, const IntArray values);\n"
 
     expected = [{ :name => "AddToBook",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :return  => { :type       => "Book",
                                 :name       => "cmock_to_return",
@@ -1074,6 +1108,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected = [{ :var_arg=>nil,
                   :name=>"DrHorrible",
+                  :namespace=>[],
+                  :class=>nil,
                   :return  => { :type   => "void",
                                 :name   => 'cmock_to_return',
                                 :ptr?   => false,
@@ -1098,6 +1134,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"CaptainHammer",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ ],
@@ -1123,6 +1161,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"DrHorrible",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ {:type=>"struct SingAlong", :name=>"Blog", :ptr? => false, :const? => false, :const_ptr? => false} ],
@@ -1139,6 +1179,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => true
                             },
                   :name=>"Penny",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => true,
                   :args=>[ {:type=>"struct const _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :const? => true, :const_ptr? => true} ],
@@ -1155,6 +1197,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"CaptainHammer",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ ],
@@ -1176,6 +1220,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"OrangePeel",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
                  :args=>[ {:type=>"union STARS_AND_STRIPES*", :name=>"a", :ptr? => true, :const? => false, :const_ptr? => false},
@@ -1199,6 +1245,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"ApplePeel",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
                  :args=>[ {:type=> "unsigned int", :name=>"const_param", :ptr? => false, :const? => true, :const_ptr? => false},
@@ -1225,6 +1273,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"LemonPeel",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
                  :args=>[ {:type=>"integer", :name=>"param", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -1251,6 +1301,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"CoinOperated",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"signed char", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -1276,6 +1328,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"CardOperated",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
                  :args=>[ {:type=>"CUSTOM_TYPE", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -1311,6 +1365,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"KeyOperated",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
                  :args => expected_args,
@@ -1333,6 +1389,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"Cheese",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"unsigned CUSTOM_TYPE", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -1357,6 +1415,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"FunkyTurkey",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
@@ -1381,6 +1441,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"FunkyTurkey",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
@@ -1405,6 +1467,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"FunkyTurkey",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
@@ -1429,6 +1493,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"FunkyTurkey",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
@@ -1453,6 +1519,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"FunkyChicken",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => true, :const_ptr? => false}
@@ -1477,6 +1545,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             # :void?  => true
                           # },
                  # :name=>"FunkyParrot",
+                 # :namespace=>[],
+                 # :class=>nil,
                  # :modifier=>"",
                  # :contains_ptr? => false,
                  # :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
@@ -1501,6 +1571,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"FunkyBudgie",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -1526,6 +1598,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => false
                           },
                  :name=>"FunkyRobin",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"uint16_t", :name=>"num1", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -1552,6 +1626,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => true
                           },
                  :name=>"FunkyFowl",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => true, :const_ptr? => false}
@@ -1576,6 +1652,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => false
                           },
                  :name=>"FunkyPidgeon",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[ {:type=>"char", :name=>"op_code", :ptr? => false, :const? => true, :const_ptr? => false}
@@ -1600,6 +1678,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => false
                           },
                  :name=>"FunkyTweetie",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[],
@@ -1623,6 +1703,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => false
                           },
                  :name=>"FunkySeaGull",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
                  :args=>[],
@@ -1646,6 +1728,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             :void?  => false
                           },
                  :name=>"FunkyMacaw",
+                 :namespace=>[],
+                 :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
                  :args=>[ {:type=>"double*", :name=>"foo", :ptr? => true, :const? => false, :const_ptr? => false},
@@ -1671,6 +1755,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                              :void?  => false
                            },
                    :name=>"sqlite3_bind_text",
+                  :namespace=>[],
+                  :class=>nil,
                    :modifier=>"SQLITE_API",
                    :contains_ptr? => true,
                    :args=>[ {:type=>"sqlite3_stmt*", :name=>"cmock_arg2", :ptr? => true, :const? => false, :const_ptr? => false},
@@ -1699,6 +1785,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"XFiles",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -1722,6 +1810,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"MoreSillySongs",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => true,
                   :args=>[ {:type=>"void*", :name=>"stuff", :ptr? => true, :const? => false, :const_ptr? => false}
@@ -1744,6 +1834,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"LaverneAndShirley",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
@@ -1767,6 +1859,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"TheCosbyShow",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ {:type=>"int", :name=>"Cliff", :ptr? => false, :const? => false, :const_ptr? => false},

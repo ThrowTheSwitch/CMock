@@ -25,6 +25,12 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
   after do
   end
 
+  def scoped_func(function)
+    # TODO derive (if needed)
+    function[:scoped_name] = function[:name]
+    function
+  end
+
   it "have set up internal priority on init" do
     assert_nil(@cmock_generator_plugin_expect.unity_helper)
     assert_equal(5, @cmock_generator_plugin_expect.priority)
@@ -37,28 +43,28 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
   it "add to typedef structure mock needs of functions of style 'void func(void)' and global ordering" do
     function = {:name => "Oak", :args => [], :return => test_return[:void]}
     expected = "  int CallOrder;\n"
-    returned = @cmock_generator_plugin_expect.instance_typedefs(function)
+    returned = @cmock_generator_plugin_expect.instance_typedefs(scoped_func(function))
     assert_equal(expected, returned)
   end
 
   it "add to typedef structure mock needs of functions of style 'int func(void)'" do
     function = {:name => "Elm", :args => [], :return => test_return[:int]}
     expected = "  int ReturnVal;\n  int CallOrder;\n"
-    returned = @cmock_generator_plugin_expect.instance_typedefs(function)
+    returned = @cmock_generator_plugin_expect.instance_typedefs(scoped_func(function))
     assert_equal(expected, returned)
   end
 
   it "add to typedef structure mock needs of functions of style 'void func(int chicken, char* pork)'" do
     function = {:name => "Cedar", :args => [{ :name => "chicken", :type => "int"}, { :name => "pork", :type => "char*"}], :return => test_return[:void]}
     expected = "  int CallOrder;\n  int Expected_chicken;\n  char* Expected_pork;\n"
-    returned = @cmock_generator_plugin_expect.instance_typedefs(function)
+    returned = @cmock_generator_plugin_expect.instance_typedefs(scoped_func(function))
     assert_equal(expected, returned)
   end
 
   it "add to typedef structure mock needs of functions of style 'int func(float beef)'" do
     function = {:name => "Birch", :args => [{ :name => "beef", :type => "float"}], :return => test_return[:int]}
     expected = "  int ReturnVal;\n  int CallOrder;\n  float Expected_beef;\n"
-    returned = @cmock_generator_plugin_expect.instance_typedefs(function)
+    returned = @cmock_generator_plugin_expect.instance_typedefs(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -66,7 +72,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
     function = {:name => "Maple", :args => [], :return => test_return[:void]}
     expected = "#define Maple_Expect() Maple_CMockExpect(__LINE__)\n" +
                "void Maple_CMockExpect(UNITY_LINE_TYPE cmock_line);\n"
-    returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
+    returned = @cmock_generator_plugin_expect.mock_function_declarations(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -74,7 +80,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
     function = {:name => "Spruce", :args => [], :return => test_return[:int]}
     expected = "#define Spruce_ExpectAndReturn(cmock_retval) Spruce_CMockExpectAndReturn(__LINE__, cmock_retval)\n" +
                "void Spruce_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, int cmock_to_return);\n"
-    returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
+    returned = @cmock_generator_plugin_expect.mock_function_declarations(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -82,14 +88,14 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
     function = {:name => "Pine", :args => ["int tofu"], :args_string => "int tofu", :args_call => 'tofu', :return => test_return[:string]}
     expected = "#define Pine_ExpectAndReturn(tofu, cmock_retval) Pine_CMockExpectAndReturn(__LINE__, tofu, cmock_retval)\n" +
                "void Pine_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, int tofu, const char* cmock_to_return);\n"
-    returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
+    returned = @cmock_generator_plugin_expect.mock_function_declarations(scoped_func(function))
     assert_equal(expected, returned)
   end
 
   it "add mock function implementation for functions of style 'void func(void)'" do
     function = {:name => "Apple", :args => [], :return => test_return[:void]}
     expected = ""
-    returned = @cmock_generator_plugin_expect.mock_implementation(function)
+    returned = @cmock_generator_plugin_expect.mock_implementation(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -103,7 +109,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
                "mocked_retval_1\n" +
                "mocked_retval_2\n" +
                "  }\n"
-    returned = @cmock_generator_plugin_expect.mock_implementation(function)
+    returned = @cmock_generator_plugin_expect.mock_implementation(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -111,7 +117,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
     function = {:name => "Apple", :args => [], :return => test_return[:void]}
     expected = ""
     @cmock_generator_plugin_expect.ordered = true
-    returned = @cmock_generator_plugin_expect.mock_implementation(function)
+    returned = @cmock_generator_plugin_expect.mock_implementation(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -123,7 +129,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
                "mocked_retval_0\n" +
                "  }\n"
     @cmock_generator_plugin_expect.ordered = true
-    returned = @cmock_generator_plugin_expect.mock_implementation(function)
+    returned = @cmock_generator_plugin_expect.mock_implementation(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -137,7 +143,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
                 "mock_retval_1\n",
                 "}\n\n"
                ].join
-    returned = @cmock_generator_plugin_expect.mock_interfaces(function)
+    returned = @cmock_generator_plugin_expect.mock_interfaces(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -153,7 +159,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
                 "mock_retval_2\n",
                 "}\n\n"
                ].join
-    returned = @cmock_generator_plugin_expect.mock_interfaces(function)
+    returned = @cmock_generator_plugin_expect.mock_interfaces(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -169,7 +175,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
                 "mock_retval_2\n",
                 "}\n\n"
                ].join
-    returned = @cmock_generator_plugin_expect.mock_interfaces(function)
+    returned = @cmock_generator_plugin_expect.mock_interfaces(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -184,7 +190,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
                 "}\n\n"
                ].join
     @cmock_generator_plugin_expect.ordered = true
-    returned = @cmock_generator_plugin_expect.mock_interfaces(function)
+    returned = @cmock_generator_plugin_expect.mock_interfaces(scoped_func(function))
     assert_equal(expected, returned)
   end
 
@@ -193,7 +199,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
     expected = "  UNITY_SET_DETAIL(CMockString_Banana);\n" +
                "  UNITY_TEST_ASSERT(CMOCK_GUTS_NONE == call_instance, cmock_line, CMockStringCalledLess);\n" +
                "  UNITY_CLR_DETAILS();\n"
-    returned = @cmock_generator_plugin_expect.mock_verify(function)
+    returned = @cmock_generator_plugin_expect.mock_verify(scoped_func(function))
     assert_equal(expected, returned)
   end
 
