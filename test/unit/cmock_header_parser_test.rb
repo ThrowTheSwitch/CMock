@@ -2166,6 +2166,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :void?  => false
                             },
                   :name=>"LaverneAndShirley",
+                  :namespace=>[],
+                  :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
                   :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
