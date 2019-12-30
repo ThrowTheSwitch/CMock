@@ -359,8 +359,8 @@ class CMockHeaderParser
       pub = false if line =~ /private:/ or line =~ /protected:/
 
       if pub
-        if line =~ /^\s*static\s+/
-          line.sub!('static', '')
+        if line =~ /\bstatic\b/
+          line.sub!(/^.*static/, '')
           if (line =~ @declaration_parse_matcher)
             # TODO add support for nested classes and functions in a namespace but not a class
             funcs << [line.strip.gsub(/\s+/, ' '), ns.dup, cls]
