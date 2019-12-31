@@ -22,11 +22,11 @@ class CMockGeneratorPluginExpectAnyArgs
   def mock_function_declarations(function)
     unless (function[:args].empty?)
       if (function[:return][:void?])
-        return "#define #{function[:name]}_ExpectAnyArgs() #{function[:name]}_CMockExpectAnyArgs(__LINE__)\n" +
-               "void #{function[:name]}_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line);\n"
+        return "#define #{function[:scoped_name]}_ExpectAnyArgs() #{function[:scoped_name]}_CMockExpectAnyArgs(__LINE__)\n" +
+               "void #{function[:scoped_name]}_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line);\n"
       else
-        return "#define #{function[:name]}_ExpectAnyArgsAndReturn(cmock_retval) #{function[:name]}_CMockExpectAnyArgsAndReturn(__LINE__, cmock_retval)\n" +
-               "void #{function[:name]}_CMockExpectAnyArgsAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
+        return "#define #{function[:scoped_name]}_ExpectAnyArgsAndReturn(cmock_retval) #{function[:scoped_name]}_CMockExpectAnyArgsAndReturn(__LINE__, cmock_retval)\n" +
+               "void #{function[:scoped_name]}_CMockExpectAnyArgsAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
       end
     else
       ""
@@ -37,11 +37,11 @@ class CMockGeneratorPluginExpectAnyArgs
     lines = ""
     unless (function[:args].empty?)
       if (function[:return][:void?])
-        lines << "void #{function[:name]}_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line)\n{\n"
+        lines << "void #{function[:scoped_name]}_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line)\n{\n"
       else
-        lines << "void #{function[:name]}_CMockExpectAnyArgsAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
+        lines << "void #{function[:scoped_name]}_CMockExpectAnyArgsAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
       end
-      lines << @utils.code_add_base_expectation(function[:name], true)
+      lines << @utils.code_add_base_expectation(function[:scoped_name], true)
       unless (function[:return][:void?])
         lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n"
       end
