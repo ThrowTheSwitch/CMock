@@ -18,16 +18,16 @@ class CMockGeneratorPluginIgnoreArg
   def mock_function_declarations(function)
     lines = ""
     function[:args].each do |arg|
-      lines << "#define #{function[:name]}_IgnoreArg_#{arg[:name]}()"
-      lines << " #{function[:name]}_CMockIgnoreArg_#{arg[:name]}(__LINE__)\n"
-      lines << "void #{function[:name]}_CMockIgnoreArg_#{arg[:name]}(UNITY_LINE_TYPE cmock_line);\n"
+      lines << "#define #{function[:scoped_name]}_IgnoreArg_#{arg[:name]}()"
+      lines << " #{function[:scoped_name]}_CMockIgnoreArg_#{arg[:name]}(__LINE__)\n"
+      lines << "void #{function[:scoped_name]}_CMockIgnoreArg_#{arg[:name]}(UNITY_LINE_TYPE cmock_line);\n"
     end
     lines
   end
 
   def mock_interfaces(function)
     lines = []
-    func_name = function[:name]
+    func_name = function[:scoped_name]
     function[:args].each do |arg|
       lines << "void #{func_name}_CMockIgnoreArg_#{arg[:name]}(UNITY_LINE_TYPE cmock_line)\n"
       lines << "{\n"

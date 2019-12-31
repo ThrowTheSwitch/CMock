@@ -13,10 +13,11 @@ describe CMockGeneratorPluginIgnoreArg, "Verify CMockGeneratorPluginIgnoreArg Mo
     create_mocks :config, :utils
 
     # int *Oak(void)"
-    @void_func = {:name => "Oak", :args => [], :return => test_return[:int_ptr]}
+    @void_func = {:name => "Oak", :scoped_name => "Oak", :args => [], :return => test_return[:int_ptr]}
 
     # void Pine(int chicken, const int beef, int *tofu)
     @complex_func = {:name => "Pine",
+                     :scoped_name => "Pine",
                      :args => [{ :type => "int",
                                  :name => "chicken",
                                  :ptr? => false,
