@@ -31,18 +31,18 @@ class CMockGeneratorPluginArray
       m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
     end.join(', ')
     if (function[:return][:void?])
-      return "#define #{function[:name]}_ExpectWithArray(#{args_call}) #{function[:name]}_CMockExpectWithArray(__LINE__, #{args_call})\n" +
-             "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string});\n"
+      return "#define #{function[:scoped_name]}_ExpectWithArray(#{args_call}) #{function[:scoped_name]}_CMockExpectWithArray(__LINE__, #{args_call})\n" +
+             "void #{function[:scoped_name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string});\n"
     else
-      return "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call}, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call}, cmock_retval)\n" +
-             "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]});\n"
+      return "#define #{function[:scoped_name]}_ExpectWithArrayAndReturn(#{args_call}, cmock_retval) #{function[:scoped_name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call}, cmock_retval)\n" +
+             "void #{function[:scoped_name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]});\n"
     end
   end
 
   def mock_interfaces(function)
     return nil unless function[:contains_ptr?]
     lines = []
-    func_name = function[:name]
+    func_name = function[:scoped_name]
     args_string = function[:args].map do |m|
       type = @utils.arg_type_with_const(m)
       m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
