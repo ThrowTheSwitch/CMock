@@ -18,12 +18,6 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
   after do
   end
 
-  def scoped_func(function)
-    # TODO derive (if needed)
-    function[:scoped_name] = function[:name]
-    function
-  end
-
   it "have set up internal priority" do
     assert_equal(2, @cmock_generator_plugin_ignore.priority)
   end
@@ -35,14 +29,14 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
   it "add a required variable to the instance structure" do
     function = {:name => "Grass", :args => [], :return => test_return[:void]}
     expected = "  int Grass_IgnoreBool;\n"
-    returned = @cmock_generator_plugin_ignore.instance_structure(scoped_func(function))
+    returned = @cmock_generator_plugin_ignore.instance_structure(function)
     assert_equal(expected, returned)
   end
 
   it "handle function declarations for functions without return values" do
     function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
     expected = "#define Mold_Ignore() Mold_CMockIgnore()\nvoid Mold_CMockIgnore(void);\n"
-    returned = @cmock_generator_plugin_ignore.mock_function_declarations(scoped_func(function))
+    returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
 
@@ -50,7 +44,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
     function = {:name => "Fungus", :args_string => "void", :return => test_return[:string]}
     expected = "#define Fungus_IgnoreAndReturn(cmock_retval) Fungus_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n"+
                "void Fungus_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, const char* cmock_to_return);\n"
-    returned = @cmock_generator_plugin_ignore.mock_function_declarations(scoped_func(function))
+    returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
 
@@ -62,7 +56,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
                 "    return;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(scoped_func(function))
+    returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(function)
     assert_equal(expected, returned)
   end
 
@@ -79,7 +73,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
                 "    return cmock_call_instance->ReturnVal;\n",
                 "  }\n"
                ].join
-    returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(scoped_func(function))
+    returned = @cmock_generator_plugin_ignore.mock_implementation_precheck(function)
     assert_equal(expected, returned)
   end
 
@@ -90,7 +84,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
                 "  Mock.Slime_IgnoreBool = (int)1;\n",
                 "}\n\n"
                ].join
-    returned = @cmock_generator_plugin_ignore.mock_interfaces(scoped_func(function))
+    returned = @cmock_generator_plugin_ignore.mock_interfaces(function)
     assert_equal(expected, returned)
   end
 
@@ -104,7 +98,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
                 "  Mock.Slime_IgnoreBool = (int)1;\n",
                 "}\n\n"
                ].join
-    returned = @cmock_generator_plugin_ignore.mock_interfaces(scoped_func(function))
+    returned = @cmock_generator_plugin_ignore.mock_interfaces(function)
     assert_equal(expected, returned)
   end
 

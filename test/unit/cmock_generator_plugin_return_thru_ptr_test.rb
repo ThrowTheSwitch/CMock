@@ -17,14 +17,12 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
 
     # char *Maple(int blah)
     @simple_func = {:name => "Maple",
-                    :scoped_name => "Maple",
                     :args => [{:name => "blah", :type => "int", :ptr? => false}],
                     :return  => test_return[:string],
                     :contains_ptr? => false}
 
     # void Pine(int chicken, const int beef, int *tofu)
     @complex_func = {:name => "Pine",
-                     :scoped_name => "Pine",
                      :args => [{ :type => "int",
                                  :name => "chicken",
                                  :ptr? => false,

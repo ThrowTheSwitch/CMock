@@ -52,7 +52,7 @@ class CMockGenerator
     @mock_name   = @prefix + @module_name + @suffix
     @clean_mock_name = TypeSanitizer.sanitize_c_identifier(@mock_name)
     create_mock_subdir()
-    parsed_stuff[:functions].map! { |func| tmp_scoped_function(func) }
+    parsed_stuff[:functions].map! { |func| rename_func_with_scope!(func) }
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
@@ -63,7 +63,7 @@ class CMockGenerator
     @file_writer.create_subdir(@subdir)
   end
 
-  def tmp_scoped_function(function)
+  def rename_func_with_scope!(function)
     scope = ''
     if function.include?(:namespace) and function[:namespace].length > 0
       scope = function[:namespace].join('_')
@@ -74,9 +74,9 @@ class CMockGenerator
     if scope.length > 0
       scope << '_'
     end
-    tmp = function.clone
-    tmp[:scoped_name] = scope + tmp[:name]
-    tmp
+    function[:orig_name] = function[:name]
+    function[:name] = scope + function[:name]
+    function
   end
 
   def create_using_statement(file, function)
@@ -98,7 +98,7 @@ class CMockGenerator
       create_typedefs(file, parsed_stuff[:typedefs])
       parsed_stuff[:functions].each do |function|
         create_using_statement(file, function)
-        file << @plugins.run(:mock_function_declarations, tmp_scoped_function(function))
+        file << @plugins.run(:mock_function_declarations, function)
       end
       create_mock_header_footer(file)
     end
@@ -114,7 +114,7 @@ class CMockGenerator
       create_mock_destroy_function(file, parsed_stuff[:functions])
       parsed_stuff[:functions].each do |function|
         create_mock_implementation(file, function)
-        create_mock_interfaces(file, tmp_scoped_function(function))
+        create_mock_interfaces(file, function)
       end
     end
   end
@@ -185,7 +185,7 @@ class CMockGenerator
     file << "\n"
     strs = []
     functions.each do |func|
-      strs << func[:scoped_name]
+      strs << func[:name]
       func[:args].each {|arg| strs << arg[:name] }
     end
     strs.uniq.sort.each do |str|
@@ -196,10 +196,10 @@ class CMockGenerator
 
   def create_instance_structure(file, functions)
     functions.each do |function|
-      file << "typedef struct _CMOCK_#{function[:scoped_name]}_CALL_INSTANCE\n{\n"
+      file << "typedef struct _CMOCK_#{function[:name]}_CALL_INSTANCE\n{\n"
       file << "  UNITY_LINE_TYPE LineNumber;\n"
       file << @plugins.run(:instance_typedefs, function)
-      file << "\n} CMOCK_#{function[:scoped_name]}_CALL_INSTANCE;\n\n"
+      file << "\n} CMOCK_#{function[:name]}_CALL_INSTANCE;\n\n"
     end
     file << "static struct #{@clean_mock_name}Instance\n{\n"
     if (functions.size == 0)
@@ -207,7 +207,7 @@ class CMockGenerator
     end
     functions.each do |function|
       file << @plugins.run(:instance_structure, function)
-      file << "  CMOCK_MEM_INDEX_TYPE #{function[:scoped_name]}_CallInstance;\n"
+      file << "  CMOCK_MEM_INDEX_TYPE #{function[:name]}_CallInstance;\n"
     end
     file << "} Mock;\n\n"
   end
@@ -225,7 +225,7 @@ class CMockGenerator
     file << "void #{@clean_mock_name}_Verify(void)\n{\n"
     verifications = functions.collect do |function|
       v = @plugins.run(:mock_verify, function)
-      v.empty? ? v : ["  call_instance = Mock.#{function[:scoped_name]}_CallInstance;\n", v]
+      v.empty? ? v : ["  call_instance = Mock.#{function[:name]}_CallInstance;\n", v]
     end.join
     unless verifications.empty?
       file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
@@ -246,7 +246,7 @@ class CMockGenerator
     file << "  CMock_Guts_MemFreeAll();\n"
     # NOTE: zeroing an object may result in crashes so we muct be selective when erasing this structure
     functions.each do |function|
-      file << "  memset(&Mock.#{function[:scoped_name]}_CallInstance, 0, sizeof(Mock.#{function[:scoped_name]}_CallInstance));\n"
+      file << "  memset(&Mock.#{function[:name]}_CallInstance, 0, sizeof(Mock.#{function[:name]}_CallInstance));\n"
     end
     file << functions.collect {|function| @plugins.run(:mock_destroy, function)}.join
 
@@ -282,18 +282,18 @@ class CMockGenerator
     # Create mock function
     if (not @weak.empty?)
         file << "#if defined (__IAR_SYSTEMS_ICC__)\n"
-        file << "#pragma weak #{function[:name]}\n"
+        file << "#pragma weak #{function[:orig_name]}\n"
         file << "#else\n"
-        file << "#{function_mod_and_rettype} #{cls_pre}#{function[:name]}(#{args_string}) #{weak};\n"
+        file << "#{function_mod_and_rettype} #{cls_pre}#{function[:orig_name]}(#{args_string}) #{weak};\n"
         file << "#endif\n\n"
     end
-    file << "#{function_mod_and_rettype} #{cls_pre}#{function[:name]}(#{args_string})\n"
+    file << "#{function_mod_and_rettype} #{cls_pre}#{function[:orig_name]}(#{args_string})\n"
     file << "{\n"
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
-    file << "  CMOCK_#{function[:scoped_name]}_CALL_INSTANCE* cmock_call_instance;\n"
-    file << "  UNITY_SET_DETAIL(CMockString_#{function[:scoped_name]});\n"
-    file << "  cmock_call_instance = (CMOCK_#{function[:scoped_name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:scoped_name]}_CallInstance);\n"
-    file << "  Mock.#{function[:scoped_name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:scoped_name]}_CallInstance);\n"
+    file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance;\n"
+    file << "  UNITY_SET_DETAIL(CMockString_#{function[:name]});\n"
+    file << "  cmock_call_instance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:name]}_CallInstance);\n"
+    file << "  Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
     file << @plugins.run(:mock_implementation_precheck, function)
     file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n"
     file << "  cmock_line = cmock_call_instance->LineNumber;\n"

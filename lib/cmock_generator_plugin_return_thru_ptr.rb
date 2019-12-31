@@ -23,19 +23,19 @@ class CMockGeneratorPluginReturnThruPtr
     lines = ""
     function[:args].each do |arg|
       if (@utils.ptr_or_str?(arg[:type]) and not arg[:const?])
-        lines << "#define #{function[:scoped_name]}_ReturnThruPtr_#{arg[:name]}(#{arg[:name]})"
+        lines << "#define #{function[:name]}_ReturnThruPtr_#{arg[:name]}(#{arg[:name]})"
         # If the pointer type actually contains an asterisk, we can do sizeof the type (super safe), otherwise
         # we need to do a sizeof the dereferenced pointer (which could be a problem if give the wrong size
         if (arg[:type][-1] == '*')
-          lines << " #{function[:scoped_name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, sizeof(#{arg[:type][0..-2]}))\n"
+          lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, sizeof(#{arg[:type][0..-2]}))\n"
         else
-          lines << " #{function[:scoped_name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, sizeof(*#{arg[:name]}))\n"
+          lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, sizeof(*#{arg[:name]}))\n"
         end
-        lines << "#define #{function[:scoped_name]}_ReturnArrayThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_len)"
-        lines << " #{function[:scoped_name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, (int)(cmock_len * (int)sizeof(*#{arg[:name]})))\n"
-        lines << "#define #{function[:scoped_name]}_ReturnMemThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_size)"
-        lines << " #{function[:scoped_name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, cmock_size)\n"
-        lines << "void #{function[:scoped_name]}_CMockReturnMemThruPtr_#{arg[:name]}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg[:name]}, int cmock_size);\n"
+        lines << "#define #{function[:name]}_ReturnArrayThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_len)"
+        lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, (int)(cmock_len * (int)sizeof(*#{arg[:name]})))\n"
+        lines << "#define #{function[:name]}_ReturnMemThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_size)"
+        lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, cmock_size)\n"
+        lines << "void #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg[:name]}, int cmock_size);\n"
       end
     end
     lines
@@ -43,7 +43,7 @@ class CMockGeneratorPluginReturnThruPtr
 
   def mock_interfaces(function)
     lines = []
-    func_name = function[:scoped_name]
+    func_name = function[:name]
     function[:args].each do |arg|
       arg_name = arg[:name]
       if (@utils.ptr_or_str?(arg[:type]) and not arg[:const?])

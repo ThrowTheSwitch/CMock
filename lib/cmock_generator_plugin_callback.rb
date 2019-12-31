@@ -19,14 +19,14 @@ class CMockGeneratorPluginCallback
   end
 
   def instance_structure(function)
-    func_name = function[:scoped_name]
+    func_name = function[:name]
     "  int #{func_name}_CallbackBool;\n" \
     "  CMOCK_#{func_name}_CALLBACK #{func_name}_CallbackFunctionPointer;\n" \
     "  int #{func_name}_CallbackCalls;\n"
   end
 
   def mock_function_declarations(function)
-    func_name = function[:scoped_name]
+    func_name = function[:name]
     return_type = function[:return][:type]
     action = @config.callback_after_arg_check ? 'AddCallback' : 'Stub'
     style  = (@include_count ? 1 : 0) | (function[:args].empty? ? 0 : 2)
@@ -39,12 +39,12 @@ class CMockGeneratorPluginCallback
 
   def generate_call(function)
     args = function[:args].map { |m| m[:name] }
-    args << "Mock.#{function[:scoped_name]}_CallbackCalls++" if @include_count
-    "Mock.#{function[:scoped_name]}_CallbackFunctionPointer(#{args.join(', ')})"
+    args << "Mock.#{function[:name]}_CallbackCalls++" if @include_count
+    "Mock.#{function[:name]}_CallbackFunctionPointer(#{args.join(', ')})"
   end
 
   def mock_implementation(function)
-    "  if (Mock.#{function[:scoped_name]}_CallbackFunctionPointer != NULL)\n  {\n" +
+    "  if (Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
       if function[:return][:void?]
         "    #{generate_call(function)};\n  }\n"
       else
@@ -53,8 +53,8 @@ class CMockGeneratorPluginCallback
   end
 
   def mock_implementation_precheck(function)
-    "  if (!Mock.#{function[:scoped_name]}_CallbackBool &&\n" \
-    "      Mock.#{function[:scoped_name]}_CallbackFunctionPointer != NULL)\n  {\n" +
+    "  if (!Mock.#{function[:name]}_CallbackBool &&\n" \
+    "      Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
       if function[:return][:void?]
         "    #{generate_call(function)};\n" \
         "    UNITY_CLR_DETAILS();\n" \
@@ -67,7 +67,7 @@ class CMockGeneratorPluginCallback
   end
 
   def mock_interfaces(function)
-    func_name = function[:scoped_name]
+    func_name = function[:name]
     has_ignore = @config.plugins.include? :ignore
     lines = ""
     lines << "void #{func_name}_AddCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
@@ -81,12 +81,12 @@ class CMockGeneratorPluginCallback
   end
 
   def mock_verify(function)
-    func_name = function[:scoped_name]
+    func_name = function[:name]
     "  if (Mock.#{func_name}_CallbackFunctionPointer != NULL)\n    call_instance = CMOCK_GUTS_NONE;\n"
   end
 
   def mock_destroy(function)
-    func_name = function[:scoped_name]
+    func_name = function[:name]
     "  Mock.#{func_name}_CallbackBool = 0;\n" \
     "  Mock.#{func_name}_CallbackFunctionPointer = NULL;\n" \
     "  Mock.#{func_name}_CallbackCalls = 0;\n"

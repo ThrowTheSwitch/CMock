@@ -87,13 +87,13 @@ class CMockGeneratorUtils
           type = arg_type_with_const(m)
           m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
         end.join(', ')
-        "void CMockExpectParameters_#{function[:scoped_name]}(CMOCK_#{function[:scoped_name]}_CALL_INSTANCE* cmock_call_instance, #{args_string});\n" +
-        "void CMockExpectParameters_#{function[:scoped_name]}(CMOCK_#{function[:scoped_name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" +
+        "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string});\n" +
+        "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" +
         function[:args].inject("") { |all, arg| all + code_add_an_arg_expectation(arg, (arg[:ptr?] ? "#{arg[:name]}_Depth" : 1) ) } +
         "}\n\n"
       else
-        "void CMockExpectParameters_#{function[:scoped_name]}(CMOCK_#{function[:scoped_name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]});\n" +
-        "void CMockExpectParameters_#{function[:scoped_name]}(CMOCK_#{function[:scoped_name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]})\n{\n" +
+        "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]});\n" +
+        "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]})\n{\n" +
         function[:args].inject("") { |all, arg| all + code_add_an_arg_expectation(arg) } +
         "}\n\n"
       end
@@ -113,7 +113,7 @@ class CMockGeneratorUtils
           m[:name]
         end
       end
-      "  CMockExpectParameters_#{function[:scoped_name]}(cmock_call_instance, #{args.join(', ')});\n"
+      "  CMockExpectParameters_#{function[:name]}(cmock_call_instance, #{args.join(', ')});\n"
     else
       ""
     end
@@ -144,7 +144,7 @@ class CMockGeneratorUtils
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
-    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:scoped_name]},CMockString_#{arg_name});\n"
+    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:name]},CMockString_#{arg_name});\n"
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
@@ -180,7 +180,7 @@ class CMockGeneratorUtils
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
-    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:scoped_name]},CMockString_#{arg_name});\n"
+    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:name]},CMockString_#{arg_name});\n"
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')
@@ -216,7 +216,7 @@ class CMockGeneratorUtils
     lines = ""
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
-    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:scoped_name]},CMockString_#{arg_name});\n"
+    lines << "    UNITY_SET_DETAILS(CMockString_#{function[:name]},CMockString_#{arg_name});\n"
     case(unity_func)
       when "UNITY_TEST_ASSERT_EQUAL_MEMORY"
         c_type_local = c_type.gsub(/\*$/,'')

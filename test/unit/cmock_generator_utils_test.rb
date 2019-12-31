@@ -38,12 +38,6 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   after do
   end
 
-  def scoped_func(function)
-    # TODO derive (if needed)
-    function[:scoped_name] = function[:name]
-    function
-  end
-
   it "have set up internal accessors correctly on init" do
     assert_equal(false,   @cmock_generator_utils_simple.arrays)
     assert_equal(false,   @cmock_generator_utils_simple.cexception)
@@ -149,16 +143,16 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'not have an argument loader when the function has no arguments' do
-    function = scoped_func({ :name => "Melon", :args_string => "void" })
+    function = { :name => "Melon", :args_string => "void" }
 
     assert_equal("", @cmock_generator_utils_complex.code_add_argument_loader(function))
   end
 
   it 'create an argument loader when the function has arguments' do
-    function = scoped_func({ :name => "Melon",
+    function = { :name => "Melon",
                  :args_string => "stuff",
                  :args => [test_arg[:int_ptr], test_arg[:mytype], test_arg[:string]]
-    })
+    }
     expected = "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, stuff);\n" +
                "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, stuff)\n{\n" +
                "  cmock_call_instance->Expected_MyIntPtr = MyIntPtr;\n" +
@@ -170,10 +164,10 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'create an argument loader when the function has arguments supporting arrays' do
-    function = scoped_func({ :name => "Melon",
+    function = { :name => "Melon",
                  :args_string => "stuff",
                  :args => [test_arg[:int_ptr], test_arg[:mytype], test_arg[:string]]
-    })
+    }
     expected = "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, int* MyIntPtr, int MyIntPtr_Depth, const MY_TYPE MyMyType, const char* MyStr);\n" +
                "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, int* MyIntPtr, int MyIntPtr_Depth, const MY_TYPE MyMyType, const char* MyStr)\n{\n" +
                "  cmock_call_instance->Expected_MyIntPtr = MyIntPtr;\n" +
@@ -190,10 +184,10 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'create an argument loader when the function has pointer arguments supporting arrays' do
-    function = scoped_func({ :name => "Melon",
+    function = { :name => "Melon",
                  :args_string => "stuff",
                  :args => [test_arg[:const_ptr], test_arg[:double_ptr]]
-    })
+    }
     expected = "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, int* const MyConstPtr, int MyConstPtr_Depth, int const** MyDoublePtr, int MyDoublePtr_Depth);\n" +
                "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, int* const MyConstPtr, int MyConstPtr_Depth, int const** MyDoublePtr, int MyDoublePtr_Depth)\n{\n" +
                "  cmock_call_instance->Expected_MyConstPtr = MyConstPtr;\n" +
@@ -208,31 +202,31 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it "not call argument loader if there are no arguments to actually use for this function" do
-    function = scoped_func({ :name => "Pineapple", :args_string => "void" })
+    function = { :name => "Pineapple", :args_string => "void" }
 
     assert_equal("", @cmock_generator_utils_complex.code_call_argument_loader(function))
   end
 
   it 'call an argument loader when the function has arguments' do
-    function = scoped_func({ :name => "Pineapple",
+    function = { :name => "Pineapple",
                  :args_string => "stuff",
                  :args => [test_arg[:int_ptr], test_arg[:mytype], test_arg[:string]]
-    })
+    }
     expected = "  CMockExpectParameters_Pineapple(cmock_call_instance, MyIntPtr, MyMyType, MyStr);\n"
     assert_equal(expected, @cmock_generator_utils_simple.code_call_argument_loader(function))
   end
 
   it 'call an argument loader when the function has arguments with arrays' do
-    function = scoped_func({ :name => "Pineapple",
+    function = { :name => "Pineapple",
                  :args_string => "stuff",
                  :args => [test_arg[:int_ptr], test_arg[:mytype], test_arg[:string]]
-    })
+    }
     expected = "  CMockExpectParameters_Pineapple(cmock_call_instance, MyIntPtr, 1, MyMyType, MyStr);\n"
     assert_equal(expected, @cmock_generator_utils_complex.code_call_argument_loader(function))
   end
 
   it 'handle a simple assert when requested' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:int]
     expected = "  {\n" +
                "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyInt);\n" +
@@ -244,7 +238,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle a pointer comparison when configured to do so' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:int_ptr]
     expected = "  {\n" +
                "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyIntPtr);\n" +
@@ -254,7 +248,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle const char as string compares ' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:string]
     expected = "  {\n" +
                "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyStr);\n" +
@@ -266,7 +260,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle custom types as memory compares when we have no better way to do it' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  {\n" +
                "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
@@ -278,7 +272,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle custom types with custom handlers when available, even if they do not support the extra message' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  {\n" +
                "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
@@ -290,7 +284,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle pointers to custom types with array handlers, even if the array extension is turned off' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  {\n" +
                "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
@@ -302,7 +296,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle a simple assert when requested with array plugin enabled' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:int]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyInt)\n" +
                "  {\n" +
@@ -315,7 +309,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle an array comparison with array plugin enabled' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:int_ptr]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyIntPtr)\n" +
                "  {\n" +
@@ -333,7 +327,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle const char as string compares with array plugin enabled' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:string]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyStr)\n" +
                "  {\n" +
@@ -346,7 +340,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle custom types as memory compares when we have no better way to do it with array plugin enabled' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n" +
                "  {\n" +
@@ -362,7 +356,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle custom types with custom handlers when available, even if they do not support the extra message with array plugin enabled' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n" +
                "  {\n" +
@@ -375,7 +369,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle custom types with array handlers when array plugin is enabled' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:mytype_ptr]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyMyTypePtr)\n" +
                "  {\n" +
@@ -393,7 +387,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
   end
 
   it 'handle custom types with array handlers when array plugin is enabled for non-array types' do
-    function = scoped_func({ :name => 'Pear' })
+    function = { :name => 'Pear' }
     arg      = test_arg[:mytype]
     expected = "  if (!cmock_call_instance->IgnoreArg_MyMyType)\n" +
                "  {\n" +

@@ -36,12 +36,6 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
   after do
   end
 
-  def scoped_func(function)
-    # TODO derive (if needed)
-    function[:scoped_name] = function[:name]
-    function
-  end
-
   it "have set up internal priority" do
     assert_nil(@cmock_generator_plugin_array.unity_helper)
     assert_equal(8, @cmock_generator_plugin_array.priority)
@@ -52,32 +46,32 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
   end
 
   it "not add to typedef structure for functions of style 'int* func(void)'" do
-    function = scoped_func({:name => "Oak", :args => [], :return => test_return[:int_ptr]})
+    function = {:name => "Oak", :args => [], :return => test_return[:int_ptr]}
     returned = @cmock_generator_plugin_array.instance_typedefs(function)
     assert_equal("", returned)
   end
 
   it "add to tyepdef structure mock needs of functions of style 'void func(int chicken, int* pork)'" do
-    function = scoped_func({:name => "Cedar", :args => [{ :name => "chicken", :type => "int", :ptr? => false}, { :name => "pork", :type => "int*", :ptr? => true}], :return => test_return[:void]})
+    function = {:name => "Cedar", :args => [{ :name => "chicken", :type => "int", :ptr? => false}, { :name => "pork", :type => "int*", :ptr? => true}], :return => test_return[:void]}
     expected = "  int Expected_pork_Depth;\n"
     returned = @cmock_generator_plugin_array.instance_typedefs(function)
     assert_equal(expected, returned)
   end
 
   it "not add an additional mock interface for functions not containing pointers" do
-    function = scoped_func({:name => "Maple", :args_string => "int blah", :return  => test_return[:string], :contains_ptr? => false})
+    function = {:name => "Maple", :args_string => "int blah", :return  => test_return[:string], :contains_ptr? => false}
     returned = @cmock_generator_plugin_array.mock_function_declarations(function)
     assert_nil(returned)
   end
 
   it "add another mock function declaration for functions of style 'void func(int* tofu)'" do
-    function = scoped_func({:name => "Pine",
+    function = {:name => "Pine",
                 :args => [{ :type => "int*",
                            :name => "tofu",
                            :ptr? => true,
                          }],
                 :return => test_return[:void],
-                :contains_ptr? => true })
+                :contains_ptr? => true }
 
     expected = "#define #{function[:name]}_ExpectWithArray(tofu, tofu_Depth) #{function[:name]}_CMockExpectWithArray(__LINE__, tofu, tofu_Depth)\n" +
                "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, int* tofu, int tofu_Depth);\n"
@@ -86,13 +80,13 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
   end
 
   it "add another mock function declaration for functions of style 'const char* func(int* tofu)'" do
-    function = scoped_func({:name => "Pine",
+    function = {:name => "Pine",
                 :args => [{ :type => "int*",
                            :name => "tofu",
                            :ptr? => true,
                          }],
                 :return => test_return[:string],
-                :contains_ptr? => true })
+                :contains_ptr? => true }
 
     expected = "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, tofu, tofu_Depth, cmock_retval)\n" +
                "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, int* tofu, int tofu_Depth, const char* cmock_to_return);\n"
@@ -101,14 +95,14 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
   end
 
   it "add another mock function declaration for functions of style 'const char* func(const int* tofu)'" do
-    function = scoped_func(scoped_func({:name => "Pine",
+    function = {:name => "Pine",
                 :args => [{ :type   => "const int*",
                             :name   => "tofu",
                             :ptr?   => true,
                             :const? => true,
                          }],
                 :return => test_return[:string],
-                :contains_ptr? => true }))
+                :contains_ptr? => true }
 
     expected = "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, tofu, tofu_Depth, cmock_retval)\n" +
                "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, const int* tofu, int tofu_Depth, const char* cmock_to_return);\n"
@@ -121,17 +115,17 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
   end
 
   it "not have a mock interfaces for functions of style 'int* func(void)'" do
-    function = scoped_func({:name => "Pear", :args => [], :args_string => "void", :return => test_return[:int_ptr]})
+    function = {:name => "Pear", :args => [], :args_string => "void", :return => test_return[:int_ptr]}
     returned = @cmock_generator_plugin_array.mock_interfaces(function)
     assert_nil(returned)
   end
 
   it "add mock interfaces for functions of style 'int* func(int* pescado, int pes)'" do
-    function = scoped_func({:name => "Lemon",
+    function = {:name => "Lemon",
                 :args => [{ :type => "int*", :name => "pescado", :ptr? => true}, { :type => "int", :name => "pes", :ptr? => false}],
                 :args_string => "int* pescado, int pes",
                 :return  => test_return[:int_ptr],
-                :contains_ptr? => true })
+                :contains_ptr? => true }
 
     expected = ["void Lemon_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, int* pescado, int pescado_Depth, int pes, int* cmock_to_return)\n",
                 "{\n",
