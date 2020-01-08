@@ -2083,13 +2083,20 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  it "Transform inline functions does not touch inline function declarations" do
+  it "Transform inline functions can handle inline function declarations" do
     source =
-      "static inline int dummy_func_decl(int a, char b, float c);\n" + # First declaration user pattern
+      "static inline int dummy_func_decl(int a, char b, float c);\n" + # First declaration
+      "static inline int dummy_func_decl2(int a, char b, float c)\n\n\n\n\n\n;\n" + # Second declaration with a lot of newlines before the semicolon to mess with the parser
       "static inline int staticinlinefunc(struct my_struct *s)\n" + # 'normal' inline pattern
       "{\n" +
       "    return dummy_func_decl(1, 1, 1);\n" +
       "}\n" +
+      "struct my_struct_with_inline_in_it\n" # struct definition in between to mess with the parser
+      "{\n" +
+      "    int a;\n" +
+      "    char b;\n" +
+      "    float inlineb;\n" +
+      "};\n" +
       "static inline int dummy_func_decl(int a, char b, float c) {\n" + # Second user pattern
       "	return 42;\n" +
       "}\n" +
@@ -2097,7 +2104,14 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected =
       "int dummy_func_decl(int a, char b, float c);\n" +
+      "int dummy_func_decl2(int a, char b, float c)\n\n\n\n\n\n;\n" + # Second declaration with a lot of newlines until the semicolon to mess with the parser
       "int staticinlinefunc(struct my_struct *s);\n" +
+      "struct my_struct_with_inline_in_it\n"
+      "{\n" +
+      "    int a;\n" +
+      "    char b;\n" +
+      "    float inlineb;\n" +
+      "};\n" +
       "int dummy_func_decl(int a, char b, float c);\n" +
       "\n"
 
