@@ -156,6 +156,16 @@ class CMockHeaderParser
         puts inline_function_match.post_match
         puts
 
+        # Determine if we are dealing with a declaration or a function definition
+        first_open_bracket = inline_function_match.post_match.index("{")
+        first_semicolon    = inline_function_match.post_match.index(";")
+
+        if first_semicolon < first_open_bracket
+          puts "DECLARATION, IGNORE"
+          source = inline_function_match.pre_match + inline_function_match.post_match
+          next
+        end
+
         total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
         if 0 == total_pairs_to_remove # Bad source?

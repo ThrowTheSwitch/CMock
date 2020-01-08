@@ -2083,30 +2083,25 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  it "Transform inline functions takes user provided patterns into account" do
+  it "Transform inline functions does not touch inline function declarations" do
     source =
+      "static inline int dummy_func_decl(int a, char b, float c);\n" + # First declaration user pattern
       "static inline int staticinlinefunc(struct my_struct *s)\n" + # 'normal' inline pattern
       "{\n" +
-      "    return s->a;\n" +
+      "    return dummy_func_decl(1, 1, 1);\n" +
       "}\n" +
-      "static __inline__ int dummy_func_2(int a, char b, float c) {\n" + # First user pattern
-      "	c += 3.14;\n" +
-      "	b -= 32;\n" +
-      "	return a + (int)(b) + (int)c;\n" +
-      "}\n" +
-      "static __inline__ __attribute__ ((always_inline)) uint16_t attributealwaysinlinefuncname(void) {\n" + # Second user pattern
-      "	return (uint16_t)(42);\n" +
+      "static inline int dummy_func_decl(int a, char b, float c) {\n" + # Second user pattern
+      "	return 42;\n" +
       "}\n" +
       "\n"
 
     expected =
+      "int dummy_func_decl(int a, char b, float c);\n" +
       "int staticinlinefunc(struct my_struct *s);\n" +
-      "int dummy_func_2(int a, char b, float c);\n" +
-      "uint16_t attributealwaysinlinefuncname(void);\n" +
+      "int dummy_func_decl(int a, char b, float c);\n" +
       "\n"
 
     @parser.treat_inlines = :include
-    @parser.inline_function_patterns = ['static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__', 'static inline']
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
