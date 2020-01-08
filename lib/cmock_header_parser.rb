@@ -160,7 +160,7 @@ class CMockHeaderParser
         first_open_bracket = inline_function_match.post_match.index("{")
         first_semicolon    = inline_function_match.post_match.index(";")
 
-        if first_semicolon < first_open_bracket
+        if first_open_bracket.nil? or first_semicolon < first_open_bracket
           puts "DECLARATION, IGNORE"
           source = inline_function_match.pre_match + inline_function_match.post_match
           next

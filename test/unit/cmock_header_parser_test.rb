@@ -2119,6 +2119,19 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
+  it "Transform inline functions can handle header with only inline function declarations" do
+    source =
+      "static inline int dummy_func_decl(int a, char b, float c);\n" +
+      "\n"
+
+    expected =
+      "int dummy_func_decl(int a, char b, float c);\n" +
+      "\n"
+
+    @parser.treat_inlines = :include
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
   it "Transform inline functions takes user provided patterns into account" do
     source =
       "static __inline__ __attribute__ ((always_inline)) uint16_t _somefunc (uint32_t a)\n" +
