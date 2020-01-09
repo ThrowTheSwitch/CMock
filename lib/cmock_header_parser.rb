@@ -120,6 +120,10 @@ class CMockHeaderParser
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
+    # smush multiline macros into single line (checking for continuation character at end of line '\')
+    # If the user uses a define to declare an inline function, it's easier to remove later
+    source.gsub!(/\s*\\\s*/m, ' ')
+
     # - Just looking for static|inline in the gsub is a bit too aggressive (functions that are named like this, ...), so we try to be a bit smarter
     #   Instead, look for "static inline" and parse it:
     #   - Everything before the match should just be copied, we don't want
@@ -155,6 +159,16 @@ class CMockHeaderParser
         puts "POST MATCH"
         puts inline_function_match.post_match
         puts
+
+        # Determine if we are dealing with a user defined macro to declare inline functions
+        if /(#define\s*)\z/ === inline_function_match.pre_match
+          puts "DEFINE, REMOVE"
+          stripped_pre_match = inline_function_match.pre_match.sub(/(#define\s*)\z/,'')
+          stripped_post_match = inline_function_match.post_match.sub(/\A(.*[\n]?)/,'')
+          source = stripped_pre_match + stripped_post_match
+          puts source
+          next
+        end
 
         # Determine if we are dealing with a declaration or a function definition
         first_open_bracket = inline_function_match.post_match.index("{")

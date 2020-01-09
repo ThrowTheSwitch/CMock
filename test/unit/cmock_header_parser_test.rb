@@ -2154,4 +2154,37 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
+  it "Transform inline functions TODO" do
+    source =
+      "#define INLINE static __inline__ __attribute__ ((always_inline))\n" +
+      "#define INLINE_TWO \\\nstatic\\\ninline\n" +
+      "INLINE uint16_t _somefunc (uint32_t a)\n" +
+      "{\n" +
+      "    return _someotherfunc (a);\n" +
+      "}\n" +
+      "static __inline__ uint16_t _somefunc_0  (uint32_t a)\n" +
+      "{\n" +
+      "    return (uint16_t) a;\n" +
+      "}\n" +
+      "static __inline__ __attribute__ \(\(always_inline\)\) uint16_t _somefunc_1  (uint32_t a)\n" +
+      "{\n" +
+      "    return (uint16_t) a;\n" +
+      "}\n" +
+      "INLINE_TWO uint16_t _somefunc_2(uint32_t a)\n" +
+      "{\n" +
+      "    return (uint16_t) a;\n" +
+      "}\n" +
+      "#define INLINE_THREE \\\nstatic\\\ninline"
+
+    expected =
+      "uint16_t _somefunc (uint32_t a);\n" +
+      "uint16_t _somefunc_0  (uint32_t a);\n" +
+      "uint16_t _somefunc_1  (uint32_t a);\n" +
+      "uint16_t _somefunc_2(uint32_t a);\n"
+
+    @parser.treat_inlines = :include
+    @parser.inline_function_patterns = ['INLINE_THREE', 'INLINE_TWO', 'INLINE', 'static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__']
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
 end
