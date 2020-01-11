@@ -2154,8 +2154,13 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
-  it "Transform inline functions TODO" do
+  it "Transform inline functions limits deleting user macro to actual line/word" do
     source =
+      "#if defined (FORCE_INLINE)\n" +
+      "#define MY_LIBRARY_INLINE static __inline__ __attribute__ ((always_inline))\n" +
+      "#else\n" +
+      "#define MY_LIBRARY_INLINE\n" +
+      "#endif\n" +
       "#define INLINE static __inline__ __attribute__ ((always_inline))\n" +
       "#define INLINE_TWO \\\nstatic\\\ninline\n" +
       "INLINE uint16_t _somefunc (uint32_t a)\n" +
@@ -2177,13 +2182,16 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "#define INLINE_THREE \\\nstatic\\\ninline"
 
     expected =
+      "#if defined (FORCE_INLINE)\n" +
+      "#else\n" +
+      "#endif\n" +
       "uint16_t _somefunc (uint32_t a);\n" +
       "uint16_t _somefunc_0  (uint32_t a);\n" +
       "uint16_t _somefunc_1  (uint32_t a);\n" +
       "uint16_t _somefunc_2(uint32_t a);\n"
 
     @parser.treat_inlines = :include
-    @parser.inline_function_patterns = ['INLINE_THREE', 'INLINE_TWO', 'INLINE', 'static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__']
+    @parser.inline_function_patterns = ['MY_LIBRARY_INLINE', 'INLINE_THREE', 'INLINE_TWO', 'INLINE', 'static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__']
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 

@@ -107,10 +107,12 @@ class CMockHeaderParser
     square_bracket_pair_regex_format = /\{[^\{\}]*\}/ # Regex to match one whole block enclosed by two square brackets
 
     # Convert user provided string patterns to regex
+    # Use word bounderies before and after the user regex to limit matching to actual word iso part of a word
     @inline_function_patterns.each do |user_format_string|
       user_regex = Regexp.new(user_format_string)
-      cleanup_spaces_after_user_regex = /\s*/
-      inline_function_regex_formats << Regexp.new(user_regex.source + cleanup_spaces_after_user_regex.source)
+      word_boundary_before_user_regex = /\b/
+      cleanup_spaces_after_user_regex = /[ ]*\b/
+      inline_function_regex_formats << Regexp.new(word_boundary_before_user_regex.source + user_regex.source + cleanup_spaces_after_user_regex.source)
     end
 
     puts "INLINE REGEXS"
