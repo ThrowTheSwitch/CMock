@@ -115,10 +115,6 @@ class CMockHeaderParser
       inline_function_regex_formats << Regexp.new(word_boundary_before_user_regex.source + user_regex.source + cleanup_spaces_after_user_regex.source)
     end
 
-    puts "INLINE REGEXS"
-    puts inline_function_regex_formats
-    puts
-
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
@@ -142,38 +138,18 @@ class CMockHeaderParser
     # There are ofcourse some special cases (inline macro declarations, inline function declarations, ...) which are handled and explained below
     inline_function_regex_formats.each do |format|
       loop do
-        puts "--------------------"
-        puts "FORMAT USED"
-        puts format
-        puts
-
         inline_function_match = source.match(/#{format}/) # Search for inline function declaration
-        if nil == inline_function_match             # No inline functions so nothing to do
-          puts "NO INLNE MATCH FOUND, GOING TO NEXT"
-          break
-        end
 
-        puts "PRE MATCH"
-        puts inline_function_match.pre_match
-        puts
+        break if nil == inline_function_match             # No inline functions so nothing to do
 
-        puts "MATCH"
-        puts inline_function_match.to_s
-        puts
-
-        puts "POST MATCH"
-        puts inline_function_match.post_match
-        puts
         # 1. Determine if we are dealing with a user defined macro to declare inline functions
         # If the end of the pre-match string is a macro-declaration-like string,
         # we are dealing with a user defined macro to declare inline functions
         if /(#define\s*)\z/ === inline_function_match.pre_match
-          puts "DEFINE, REMOVE"
           # Remove the macro from the source
           stripped_pre_match = inline_function_match.pre_match.sub(/(#define\s*)\z/,'')
           stripped_post_match = inline_function_match.post_match.sub(/\A(.*[\n]?)/,'')
           source = stripped_pre_match + stripped_post_match
-          puts source
           next
         end
 
@@ -190,22 +166,13 @@ class CMockHeaderParser
         #    Remove the function body to transform it into a 'normal' function.
         total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
-        if 0 == total_pairs_to_remove # Bad source?
-          puts "NO PAIRS/FUNCTION BODY FOUND TO REMOVE, GOING TO NEXT"
-          break
-        end
+        break if 0 == total_pairs_to_remove # Bad source?
 
         inline_function_stripped = inline_function_match.post_match
 
         total_pairs_to_remove.times do
           inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ";") # Remove inline implementation (+ some whitespace because it's prettier)
         end
-
-        puts "STRIPPED INLINE"
-        puts total_pairs_to_remove
-        puts inline_function_stripped
-        puts "--------------------"
-
 
         source = inline_function_match.pre_match + inline_function_stripped # Make new source with the inline function removed and move on to the next
       end
