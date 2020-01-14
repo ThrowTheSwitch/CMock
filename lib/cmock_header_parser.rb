@@ -172,12 +172,8 @@ class CMockHeaderParser
           next
         end
 
-        # Determine if we are dealing with a declaration or a function definition
-        first_open_bracket = inline_function_match.post_match.index("{")
-        first_semicolon    = inline_function_match.post_match.index(";")
-
-        if first_open_bracket.nil? or (!first_semicolon.nil? and first_semicolon < first_open_bracket)
-          puts "DECLARATION, IGNORE"
+        if /\A.*\b\([^\)]*\)\s*;/ === inline_function_match.post_match
+          # Only remove the inline part from the function declaration, leaving the function declaration won't do any harm
           source = inline_function_match.pre_match + inline_function_match.post_match
           next
         end
