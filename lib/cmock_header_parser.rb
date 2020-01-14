@@ -123,20 +123,23 @@ class CMockHeaderParser
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
     # smush multiline macros into single line (checking for continuation character at end of line '\')
-    # If the user uses a define to declare an inline function, it's easier to remove later
+    # If the user uses a macro to declare an inline function,
+    # smushing the macros makes it easier to recognize them as a macro and if required,
+    # remove them later on in this function
     source.gsub!(/\s*\\\s*/m, ' ')
 
-    # - Just looking for static|inline in the gsub is a bit too aggressive (functions that are named like this, ...), so we try to be a bit smarter
-    #   Instead, look for "static inline" and parse it:
-    #   - Everything before the match should just be copied, we don't want
-    #     to touch anything but the inline functions.
-    #   - Remove the implementation of the inline function (this is enclosed
-    #     in square brackets) and replace it with ";" to complete the
-    #     transformation to normal/non-inline function.
-    #     To ensure proper removal of the function body, we count the number of square-bracket pairs
-    #     and remove the pairs one-by-one.
-    #   - Copy everything after the inline function implementation and start the parsing of the next inline function
-
+    # Just looking for static|inline in the gsub is a bit too aggressive (functions that are named like this, ...), so we try to be a bit smarter
+    # Instead, look for an inline pattern (f.e. "static inline") and parse it.
+    # Below is a small explanation on how the general mechanism works:
+    #  - Everything before the match should just be copied, we don't want
+    #    to touch anything but the inline functions.
+    #  - Remove the implementation of the inline function (this is enclosed
+    #    in square brackets) and replace it with ";" to complete the
+    #    transformation to normal/non-inline function.
+    #    To ensure proper removal of the function body, we count the number of square-bracket pairs
+    #    and remove the pairs one-by-one.
+    #  - Copy everything after the inline function implementation and start the parsing of the next inline function
+    # There are ofcourse some special cases (inline macro declarations, inline function declarations, ...) which are handled and explained below
     inline_function_regex_formats.each do |format|
       loop do
         puts "--------------------"
@@ -161,10 +164,12 @@ class CMockHeaderParser
         puts "POST MATCH"
         puts inline_function_match.post_match
         puts
-
-        # Determine if we are dealing with a user defined macro to declare inline functions
+        # 1. Determine if we are dealing with a user defined macro to declare inline functions
+        # If the end of the pre-match string is a macro-declaration-like string,
+        # we are dealing with a user defined macro to declare inline functions
         if /(#define\s*)\z/ === inline_function_match.pre_match
           puts "DEFINE, REMOVE"
+          # Remove the macro from the source
           stripped_pre_match = inline_function_match.pre_match.sub(/(#define\s*)\z/,'')
           stripped_post_match = inline_function_match.post_match.sub(/\A(.*[\n]?)/,'')
           source = stripped_pre_match + stripped_post_match
@@ -172,12 +177,17 @@ class CMockHeaderParser
           next
         end
 
+        # 2. Determine if we are dealing with an inline function declaration iso function definition
+        # If the start of the post-match string is a function-declaration-like string (something ending with semicolon after the function arguments),
+        # we are dealing with a inline function declaration
         if /\A.*\b\([^\)]*\)\s*;/ === inline_function_match.post_match
           # Only remove the inline part from the function declaration, leaving the function declaration won't do any harm
           source = inline_function_match.pre_match + inline_function_match.post_match
           next
         end
 
+        # 3. If we get here, we found an inline function declaration AND inline function body.
+        #    Remove the function body to transform it into a 'normal' function.
         total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
         if 0 == total_pairs_to_remove # Bad source?
