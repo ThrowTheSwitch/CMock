@@ -40,7 +40,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
   before do
     create_mocks :config, :file_writer, :utils, :plugins
     @module_name = "PoutPoutFish"
-    @module_ext = '.h'
 
     #no strict handling
     @config.expect :mock_prefix, "Mock"
@@ -58,7 +57,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :treat_inlines, :exclude
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator.module_name = @module_name
-    @cmock_generator.module_ext = @module_ext
     @cmock_generator.mock_name = "Mock#{@module_name}"
     @cmock_generator.clean_mock_name = "Mock#{@module_name}"
 
@@ -78,7 +76,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :treat_inlines, :exclude
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator_strict.module_name = @module_name
-    @cmock_generator_strict.module_ext = @module_ext
     @cmock_generator_strict.mock_name = "Mock#{@module_name}"
     @cmock_generator_strict.clean_mock_name = "Mock#{@module_name}"
   end
@@ -86,11 +83,12 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
   after do
   end
 
-  it "create the top of a header file with optional include files from config and include file from plugin" do
+  def helper_create_header_top_with_opt_includes_from_config_and_plugin(ext)
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "PoutPoutFish.h"
+    @cmock_generator.module_ext = ext
+    orig_filename = "PoutPoutFish#{ext}"
     define_name = "MOCKPOUTPOUTFISH_H"
     output = []
     expected = [
@@ -120,12 +118,18 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
   end
 
-  it "handle dashes and spaces in the module name" do
+  it "create the top of a header file with optional include files from config and include file from plugin" do
+    ['.h', '.hh'].each do |ext|
+      helper_create_header_top_with_opt_includes_from_config_and_plugin(ext)
+    end
+  end
+
+  def helper_handle_dashes_and_spaces_in_module_name(ext)
     #no strict handling
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
@@ -141,14 +145,14 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :treat_inlines, :exclude
     @cmock_generator2 = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator2.module_name = "Pout-Pout Fish"
-    @cmock_generator2.module_ext = @module_ext
     @cmock_generator2.mock_name = "MockPout-Pout Fish"
     @cmock_generator2.clean_mock_name = "MockPout_Pout_Fish"
 
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "Pout-Pout Fish.h"
+    @cmock_generator2.module_ext = ext
+    orig_filename = "Pout-Pout Fish#{ext}"
     define_name = "MOCKPOUT_POUT_FISH_H"
     output = []
     expected = [
@@ -178,16 +182,23 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator2.create_mock_header_header(output, "MockPout-Pout Fish.h")
+    @cmock_generator2.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
   end
 
-  it "create the top of a header file with optional include files from config" do
+  it "handle dashes and spaces in the module name" do
+    ['.h', '.hpp'].each do |ext|
+      helper_handle_dashes_and_spaces_in_module_name(ext)
+    end
+  end
+
+  def helper_create_header_top_with_opt_include_from_config(ext)
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "PoutPoutFish.h"
+    @cmock_generator.module_ext = ext
+    orig_filename = "PoutPoutFish#{ext}"
     define_name = "MOCKPOUTPOUTFISH_H"
     output = []
     expected = [
@@ -216,16 +227,23 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run,  '', [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
   end
 
-  it "create the top of a header file with include file from plugin" do
+  it "create the top of a header file with optional include files from config" do
+    ['.h', '.hxx'].each do |ext|
+      helper_create_header_top_with_opt_include_from_config(ext)
+    end
+  end
+
+  def helper_create_header_top_with_include_from_plugin(ext)
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "PoutPoutFish.h"
+    @cmock_generator.module_ext = ext
+    orig_filename = "PoutPoutFish#{ext}"
     define_name = "MOCKPOUTPOUTFISH_H"
     output = []
     expected = [
@@ -255,9 +273,15 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
+  end
+
+  it "create the top of a header file with include file from plugin" do
+    ['.h', '.h++'].each do |ext|
+      helper_create_header_top_with_include_from_plugin(ext)
+    end
   end
 
   it "write typedefs" do
@@ -309,7 +333,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     assert_equal(expected, output)
   end
 
-  it "create a proper heading for a source file" do
+  def helper_create_proper_heading_for_source_file(ext)
+    @cmock_generator.module_ext = ext
     output = []
     functions = [ { :name => "uno", :args => [ { :name => "arg1" }, { :name => "arg2" } ] },
                   { :name => "dos", :args => [ { :name => "arg3" }, { :name => "arg2" } ] },
@@ -323,7 +348,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "#include <functional>\n",
                  "#endif\n",
                  "#include \"cmock.h\"\n",
-                 "#include \"MockPoutPoutFish.h\"\n",
+                 "#include \"MockPoutPoutFish#{ext}\"\n",
                  "\n",
                  "static const char* CMockString_arg1 = \"arg1\";\n",
                  "static const char* CMockString_arg2 = \"arg2\";\n",
@@ -337,6 +362,12 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @cmock_generator.create_source_header_section(output, "MockPoutPoutFish.c", functions)
 
     assert_equal(expected, output)
+  end
+
+  it "create a proper heading for a source file" do
+    ['.h', '.H'].each do |ext|
+      helper_create_proper_heading_for_source_file(ext)
+    end
   end
 
   it "create the instance structure where it is needed when no functions" do
@@ -457,7 +488,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
                  "  CMock_Guts_MemFreeAll();\n",
-                 #"  memset(&Mock, 0, sizeof(Mock));\n",  # TODO
                  "}\n\n"
                ]
 
@@ -473,7 +503,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
                  "  CMock_Guts_MemFreeAll();\n",
-                 #"  memset(&Mock, 0, sizeof(Mock));\n",  # TODO
                  "  memset(&Mock.First_CallInstance, 0, sizeof(Mock.First_CallInstance));\n",
                  "  memset(&Mock.Second_CallInstance, 0, sizeof(Mock.Second_CallInstance));\n",
                  "  uno",
