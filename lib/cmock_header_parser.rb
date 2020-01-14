@@ -16,7 +16,8 @@ class CMockHeaderParser
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_array = cfg.treat_as_array
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
-    @declaration_parse_matcher = /([\w\s\*\(\),\[\]]+??)\(([\w\s\*\(\),\.\[\]+-]*)\)$/m
+    @function_declaration_parse_base_match = '([\w\s\*\(\),\[\]]+??)\(([\w\s\*\(\),\.\[\]+-]*)\)'
+    @declaration_parse_matcher = /#{@function_declaration_parse_base_match}$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
     @array_size_name = cfg.array_size_name
     @array_size_type = (['int', 'size_t'] + cfg.array_size_type).uniq
@@ -156,7 +157,7 @@ class CMockHeaderParser
         # 2. Determine if we are dealing with an inline function declaration iso function definition
         # If the start of the post-match string is a function-declaration-like string (something ending with semicolon after the function arguments),
         # we are dealing with a inline function declaration
-        if /\A.*\b\([^\)]*\)\s*;/ === inline_function_match.post_match
+        if /\A#{@function_declaration_parse_base_match}\s*;/m === inline_function_match.post_match
           # Only remove the inline part from the function declaration, leaving the function declaration won't do any harm
           source = inline_function_match.pre_match + inline_function_match.post_match
           next
