@@ -83,11 +83,12 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
   after do
   end
 
-  it "create the top of a header file with optional include files from config and include file from plugin" do
+  def helper_create_header_top_with_opt_includes_from_config_and_plugin(ext)
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "PoutPoutFish.h"
+    @cmock_generator.module_ext = ext
+    orig_filename = "PoutPoutFish#{ext}"
     define_name = "MOCKPOUTPOUTFISH_H"
     output = []
     expected = [
@@ -117,12 +118,18 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
   end
 
-  it "handle dashes and spaces in the module name" do
+  it "create the top of a header file with optional include files from config and include file from plugin" do
+    ['.h', '.hh'].each do |ext|
+      helper_create_header_top_with_opt_includes_from_config_and_plugin(ext)
+    end
+  end
+
+  def helper_handle_dashes_and_spaces_in_module_name(ext)
     #no strict handling
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
@@ -144,7 +151,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "Pout-Pout Fish.h"
+    @cmock_generator2.module_ext = ext
+    orig_filename = "Pout-Pout Fish#{ext}"
     define_name = "MOCKPOUT_POUT_FISH_H"
     output = []
     expected = [
@@ -174,16 +182,23 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator2.create_mock_header_header(output, "MockPout-Pout Fish.h")
+    @cmock_generator2.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
   end
 
-  it "create the top of a header file with optional include files from config" do
+  it "handle dashes and spaces in the module name" do
+    ['.h', '.hpp'].each do |ext|
+      helper_handle_dashes_and_spaces_in_module_name(ext)
+    end
+  end
+
+  def helper_create_header_top_with_opt_include_from_config(ext)
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "PoutPoutFish.h"
+    @cmock_generator.module_ext = ext
+    orig_filename = "PoutPoutFish#{ext}"
     define_name = "MOCKPOUTPOUTFISH_H"
     output = []
     expected = [
@@ -212,16 +227,23 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run,  '', [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
   end
 
-  it "create the top of a header file with include file from plugin" do
+  it "create the top of a header file with optional include files from config" do
+    ['.h', '.hxx'].each do |ext|
+      helper_create_header_top_with_opt_include_from_config(ext)
+    end
+  end
+
+  def helper_create_header_top_with_include_from_plugin(ext)
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "PoutPoutFish.h"
+    @cmock_generator.module_ext = ext
+    orig_filename = "PoutPoutFish#{ext}"
     define_name = "MOCKPOUTPOUTFISH_H"
     output = []
     expected = [
@@ -251,9 +273,15 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
+  end
+
+  it "create the top of a header file with include file from plugin" do
+    ['.h', '.h++'].each do |ext|
+      helper_create_header_top_with_include_from_plugin(ext)
+    end
   end
 
   it "write typedefs" do
@@ -305,7 +333,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     assert_equal(expected, output)
   end
 
-  it "create a proper heading for a source file" do
+  def helper_create_proper_heading_for_source_file(ext)
+    @cmock_generator.module_ext = ext
     output = []
     functions = [ { :name => "uno", :args => [ { :name => "arg1" }, { :name => "arg2" } ] },
                   { :name => "dos", :args => [ { :name => "arg3" }, { :name => "arg2" } ] },
@@ -316,7 +345,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "#include <stdlib.h>\n",
                  "#include <setjmp.h>\n",
                  "#include \"cmock.h\"\n",
-                 "#include \"MockPoutPoutFish.h\"\n",
+                 "#include \"MockPoutPoutFish#{ext}\"\n",
                  "\n",
                  "static const char* CMockString_arg1 = \"arg1\";\n",
                  "static const char* CMockString_arg2 = \"arg2\";\n",
@@ -330,6 +359,12 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @cmock_generator.create_source_header_section(output, "MockPoutPoutFish.c", functions)
 
     assert_equal(expected, output)
+  end
+
+  it "create a proper heading for a source file" do
+    ['.h', '.H'].each do |ext|
+      helper_create_proper_heading_for_source_file(ext)
+    end
   end
 
   it "create the instance structure where it is needed when no functions" do
