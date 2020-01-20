@@ -142,7 +142,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
           break
         end
       end
-      raise "Module header '#{name}' not found to mock! #{all_headers} #{SRC_DIR}" unless header_to_mock
+      raise "Module header '#{name}' not found to mock!" unless header_to_mock
       headers_to_mock << header_to_mock
     end
 
