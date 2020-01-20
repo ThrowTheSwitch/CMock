@@ -16,7 +16,7 @@ class CMockHeaderParser
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_array = cfg.treat_as_array
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
-    @declaration_parse_matcher = /([\d\w\s\*&\(\),\[\]]+??)\(([\d\w\s\*&\(\),\.\[\]+-]*)\)$/m
+    @declaration_parse_matcher = /([\d\w\s\*&\(\),\[\]]+??)\(([\d\w\s\*\(\),\.\[\]+-]*)\)$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
     @array_size_name = cfg.array_size_name
     @array_size_type = (['int', 'size_t'] + cfg.array_size_type).uniq
@@ -390,13 +390,13 @@ class CMockHeaderParser
     # to remove 'const' only when it applies to the pointer itself, not when it
     # applies to the type pointed to.  For non-pointer types, remove any
     # occurrence of 'const'.
-    arg.gsub!(/(\w)(\*|&)/,'\1 \2') # pull asterisks away from preceding word
-    arg.gsub!(/(\*|&)(\w)/,'\1 \2') # pull asterisks away from following word
+    arg.gsub!(/(\w)\*/,'\1 *') # pull asterisks away from preceding word
+    arg.gsub!(/\*(\w)/,'* \1') # pull asterisks away from following word
     arg_array = arg.split
     arg_info = divine_ptr_and_const(arg)
     arg_info[:name] = arg_array[-1]
 
-    attributes = (arg.include?('*') or arg.include?('&')) ? @c_attr_noconst : @c_attributes
+    attributes = arg.include?('*') ? @c_attr_noconst : @c_attributes
     attr_array = []
     type_array = []
 
@@ -416,7 +416,7 @@ class CMockHeaderParser
     end
 
     arg_info[:modifier] = attr_array.join(' ')
-    arg_info[:type] = type_array.join(' ').gsub(/\s+\*/,'*').gsub(/\s+&/,'&') # remove space before asterisks
+    arg_info[:type] = type_array.join(' ').gsub(/\s+\*/,'*') # remove space before asterisks
     return arg_info
   end
 
