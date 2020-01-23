@@ -282,6 +282,7 @@ class CMockHeaderParser
     source.gsub!(/(\W)(?:register|auto|static|restrict)(\W)/, '\1\2')                      # remove problem keywords
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
 =end
+
     source.gsub!(/^(?:[\w\s]*\W)?typedef\W[^;]*/m, '')                                     # remove typedef statements
     source.gsub!(/\)(\w)/, ') \1')                                                         # add space between parenthese and alphanumeric
     source.gsub!(/(^|\W+)(?:#{@c_strippables.join('|')})(?=$|\W+)/,'\1') unless @c_strippables.empty? # remove known attributes slated to be stripped
@@ -318,7 +319,7 @@ class CMockHeaderParser
     source.gsub!(/\s+/, ' ')          # remove remaining extra white space
 
     #split lines on semicolons and remove things that are obviously not what we are looking for
-    src_lines = source.split(/\s*;\s*/).uniq
+    src_lines = source.split(/\s*;\s*/)#.uniq
     src_lines.delete_if {|line| line.strip.length == 0}                            # remove blank lines
     src_lines.delete_if {|line| !(line =~ /[\w\s\*]+\(+\s*\*[\*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s\*]*,?)*\s*\)/).nil?}     #remove function pointer arrays
     if (@treat_externs == :include)
@@ -332,40 +333,45 @@ class CMockHeaderParser
   def parse_cpp_functions(source)
     funcs = []
 
-    # simple parse, does not handle comments (and probably many other potential issues)
-    braces = 0
+    # simple parse, does not handle all situations
     ns = []
-    cls = ''
     pub = false
     source.each do |line|
-
-      # TODO add support for nested classes and functions in a namespace but not a class
-      name_or_class = line.scan(/(?:\s*(?:namespace|class)\s+(\S+)\s+{)/)
-      line.scan(/(?:\s*(?:namespace)\s+(\S+)\s+{)/).each{ |item| ns << item[0] }
-      line.scan(/(?:\s*(?:class)\s+(\S+)\s+{)/).each{ |item| cls = item[0] }
-
-      braces += line.scan('{').length - name_or_class.length
-      close = line.scan('}').length
-      if close > 0
-        if close > braces
-          ns.pop(close - braces)
-          braces = 0
+      # Search for namespace, class, opening and closing braces
+      line.scan(/(?:(?:\b(?:namespace|class)\s+(?:\S+)\s*)?{)|}/).each do |item|
+        if '}' == item
+          ns.pop
         else
-          braces -= close
+          token = item.strip.sub(/\s+/, ' ')
+          ns << token
+
+          pub = false if token.start_with? 'class'
+          pub = true if token.start_with? 'namespace' #TODO: is this correct?
         end
       end
 
       pub = true if line =~ /public:/
       pub = false if line =~ /private:/ or line =~ /protected:/
 
-      if pub
-        if line =~ /\bstatic\b/
-          line.sub!(/^.*static/, '')
-          if (line =~ @declaration_parse_matcher)
-            # TODO add support for nested classes and functions in a namespace but not a class
-            funcs << [line.strip.gsub(/\s+/, ' '), ns.dup, cls]
-          end
+      # ignore non-public and non-static
+      next unless pub
+      next unless line =~ /\bstatic\b/
+
+      line.sub!(/^.*static/, '')
+      if (line =~ @declaration_parse_matcher)
+        tmp = ns.reject{ |item| item == '{'} # TODO: is this necessary?
+
+        # Identify class name, if any
+        cls = nil
+        if tmp[-1].start_with? "class "
+          cls = tmp.pop.sub(/class (\S+) {/, '\1')
         end
+
+        # TODO: Add support for nested classes (not the same as a namespace)
+        # Assemble list of namespaces
+        tmp.each{ |item| item.sub!(/(?:namespace|class) (\S+) {/, '\1') }
+
+        funcs << [line.strip.gsub(/\s+/, ' '), tmp, cls]
       end
     end
     return funcs
