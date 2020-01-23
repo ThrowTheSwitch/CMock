@@ -38,7 +38,7 @@ class CMockHeaderParser
     function_names = []
 
     tmp_funcs = parse_functions( import_source(source) ).map do |item| [item, []] end
-    tmp_funcs += parse_cpp_functions( import_cpp_source(source) )
+    tmp_funcs += parse_cpp_functions( import_source(source, cpp=true) )
     tmp_funcs.map do |decl|
       func = parse_declaration(decl[0], decl.length > 1 ? decl[1] : [], decl.length > 2 ? decl[2] : nil)
       unless (function_names.include? func[:name])
@@ -151,7 +151,7 @@ class CMockHeaderParser
     return source
   end
 
-  def import_source(source)
+  def import_source(source, cpp=false)
 
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
@@ -194,7 +194,10 @@ class CMockHeaderParser
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
     source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                                      # remove forward declared structs
     source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s]*\{[^\}]+\}[\w\s\*\,]*;/m, '')  # remove struct, union, and enum definitions and typedefs with braces
-    source.gsub!(/(\W)(?:register|auto|static|restrict)(\W)/, '\1\2')                      # remove problem keywords
+    source.gsub!(/(\W)(?:register|auto|restrict)(\W)/, '\1\2')                      # remove problem keywords
+    unless cpp
+      source.gsub!(/(\W)(?:static)(\W)/, '\1\2')                      # remove problem keywords
+    end
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
     source.gsub!(/^(?:[\w\s]*\W)?typedef\W[^;]*/m, '')                                     # remove typedef statements
     source.gsub!(/\)(\w)/, ') \1')                                                         # add space between parenthese and alphanumeric
@@ -206,11 +209,15 @@ class CMockHeaderParser
     #scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
       functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
-      @typedefs << "typedef #{$1.strip}(*#{functype})(#{$4});"
+      unless cpp # only need once and already collected on non-C++ run
+        @typedefs << "typedef #{$1.strip}(*#{functype})(#{$4});"
+      end
       "#{functype} #{$2.strip}(#{$3});"
     end
 
-    source = remove_nested_pairs_of_braces(source)
+    unless cpp
+      source = remove_nested_pairs_of_braces(source)
+    end
 
     if (@treat_inlines == :include)
       # Functions having "{ }" at this point are/were inline functions,
@@ -230,7 +237,10 @@ class CMockHeaderParser
     source.gsub!(/\s+/, ' ')          # remove remaining extra white space
 
     #split lines on semicolons and remove things that are obviously not what we are looking for
-    src_lines = source.split(/\s*;\s*/).uniq
+    src_lines = source.split(/\s*;\s*/)
+    unless cpp # need to retain closing braces for class/namespace
+      src_lines = src_lines.uniq
+    end
     src_lines.delete_if {|line| line.strip.length == 0}                            # remove blank lines
     src_lines.delete_if {|line| !(line =~ /[\w\s\*]+\(+\s*\*[\*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s\*]*,?)*\s*\)/).nil?}     #remove function pointer arrays
 
@@ -242,91 +252,6 @@ class CMockHeaderParser
       src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?} # remove inline functions
     end
 
-    src_lines.delete_if {|line| line.empty? } #drop empty lines
-  end
-
-  def import_cpp_source(source)
-    # let's clean up the encoding in case they've done anything weird with the characters we might find
-    source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
-
-    # void must be void for cmock _ExpectAndReturn calls to process properly, not some weird typedef which equates to void
-    # to a certain extent, this action assumes we're chewing on pre-processed header files, otherwise we'll most likely just get stuff from @treat_as_void
-    @local_as_void = @treat_as_void
-    void_types = source.scan(/typedef\s+(?:\(\s*)?void(?:\s*\))?\s+([\w\d]+)\s*;/)
-    if void_types
-      @local_as_void += void_types.flatten.uniq.compact
-    end
-
-    # smush multiline macros into single line (checking for continuation character at end of line '\')
-    source.gsub!(/\s*\\\s*/m, ' ')
-
-    #remove comments (block and line, in three steps to ensure correct precedence)
-    source.gsub!(/(?<!\*)\/\/(?:.+\/\*|\*(?:$|[^\/])).*$/, '')  # remove line comments that comment out the start of blocks
-    source.gsub!(/\/\*.*?\*\//m, '')                            # remove block comments
-    source.gsub!(/\/\/.*$/, '')                                 # remove line comments (all that remain)
-
-    # remove assembler pragma sections
-    source.gsub!(/^\s*#\s*pragma\s+asm\s+.*?#\s*pragma\s+endasm/m, '')
-
-    # remove gcc's __attribute__ tags
-    source.gsub!(/__attribute(?:__)?\s*\(\(+.*\)\)+/, '')
-
-    # remove preprocessor statements and extern "C"
-    source.gsub!(/^\s*#.*/, '')
-    source.gsub!(/extern\s+\"C\"\s*\{/, '')
-=begin
-    # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
-    # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
-    source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                                      # remove forward declared structs
-    source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s]*\{[^\}]+\}[\w\s\*\,]*;/m, '')  # remove struct, union, and enum definitions and typedefs with braces
-    source.gsub!(/(\W)(?:register|auto|static|restrict)(\W)/, '\1\2')                      # remove problem keywords
-    source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
-=end
-
-    source.gsub!(/^(?:[\w\s]*\W)?typedef\W[^;]*/m, '')                                     # remove typedef statements
-    source.gsub!(/\)(\w)/, ') \1')                                                         # add space between parenthese and alphanumeric
-    source.gsub!(/(^|\W+)(?:#{@c_strippables.join('|')})(?=$|\W+)/,'\1') unless @c_strippables.empty? # remove known attributes slated to be stripped
-
-    #scan standalone function pointers and remove them, because they can just be ignored
-    source.gsub!(/\w+\s*\(\s*\*\s*\w+\s*\)\s*\([^)]*\)\s*;/,';')
-
-    #scan for functions which return function pointers, because they are a pain
-    source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
-      functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
-      # already done when parsing C functions
-      #@typedefs << "typedef #{$1.strip}(*#{functype})(#{$4});"
-      "#{functype} #{$2.strip}(#{$3});"
-    end
-=begin
-    # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
-    if (RUBY_VERSION.split('.')[0].to_i > 1)
-      #we assign a string first because (no joke) if Ruby 1.9.3 sees this line as a regex, it will crash.
-      r = "\\{([^\\{\\}]*|\\g<0>)*\\}"
-      source.gsub!(/#{r}/m, '{ }')
-    else
-      while source.gsub!(/\{[^\{\}]*\{[^\{\}]*\}[^\{\}]*\}/m, '{ }')
-      end
-    end
-=end
-    # remove function definitions by stripping off the arguments right now
-    source.gsub!(/\([^\)]*\)\s*\{[^\}]*\}/m, ";")
-
-    #drop extra white space to make the rest go faster
-    source.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
-    source.gsub!(/\s+$/, '')          # remove extra white space from end of line
-    source.gsub!(/\s*\(\s*/, '(')     # remove extra white space from before left parens
-    source.gsub!(/\s*\)\s*/, ')')     # remove extra white space from before right parens
-    source.gsub!(/\s+/, ' ')          # remove remaining extra white space
-
-    #split lines on semicolons and remove things that are obviously not what we are looking for
-    src_lines = source.split(/\s*;\s*/)#.uniq
-    src_lines.delete_if {|line| line.strip.length == 0}                            # remove blank lines
-    src_lines.delete_if {|line| !(line =~ /[\w\s\*]+\(+\s*\*[\*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s\*]*,?)*\s*\)/).nil?}     #remove function pointer arrays
-    if (@treat_externs == :include)
-      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:inline)\s+/).nil?}        # remove inline functions
-    else
-      src_lines.delete_if {|line| !(line =~ /(?:^|\s+)(?:extern|inline)\s+/).nil?} # remove inline and extern functions
-    end
     src_lines.delete_if {|line| line.empty? } #drop empty lines
   end
 
