@@ -27,6 +27,7 @@ class CMockGeneratorPluginExpect
   def instance_typedefs(function)
     lines = ""
     if function[:return][:type].end_with?('&')
+      # Handle C++ reference return type differently
       lines << "  #{function[:return][:type].chomp('&')} ReturnRefVal;\n"
       lines << "  std::reference_wrapper<#{function[:return][:type].chomp('&')}> ReturnVal = ReturnRefVal;\n"
     else

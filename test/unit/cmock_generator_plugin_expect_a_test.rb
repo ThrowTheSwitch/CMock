@@ -62,6 +62,15 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module W
     assert_equal(expected, returned)
   end
 
+  it "add to typedef structure mock needs of functions of with C++ reference return type " do
+    function = {:name => "Elm", :args => [], :return => test_return[:int_ref]}
+    expected = ["  int ReturnRefVal;\n",
+                "  std::reference_wrapper<int> ReturnVal = ReturnRefVal;\n"
+               ].join
+    returned = @cmock_generator_plugin_expect.instance_typedefs(function)
+    assert_equal(expected, returned)
+  end
+
   it "add mock function declaration for functions of style 'void func(void)'" do
     function = {:name => "Maple", :args => [], :return => test_return[:void]}
     expected = "#define Maple_Expect() Maple_CMockExpect(__LINE__)\n" +
