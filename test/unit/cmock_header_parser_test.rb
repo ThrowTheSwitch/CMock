@@ -842,6 +842,31 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse_declaration(source))
   end
 
+  it "extract and return function declarations inside namespace and class" do
+
+    source = "int Foo(int a, unsigned int b)"
+    expected = { :var_arg=>nil,
+                 :name=>"Foo",
+                 :class=>"Bar",
+                 :namespace=>["ns1", "ns2"],
+                 :return=>{ :type   => "int",
+                            :name   => 'cmock_to_return',
+                            :ptr?   => false,
+                            :const? => false,
+                            :const_ptr? => false,
+                            :str    => "int cmock_to_return",
+                            :void?  => false
+                          },
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"unsigned int", :name=>"b", :ptr? => false, :const? => false, :const_ptr? => false}
+                        ],
+                 :args_string=>"int a, unsigned int b",
+                 :args_call=>"a, b" }
+    assert_equal(expected, @parser.parse_declaration(source, ["ns1", "ns2"], "Bar"))
+  end
+
   it "fully parse multiple prototypes" do
 
     source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" +
@@ -2179,4 +2204,46 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "parses C++ differently when asked" do
+    source =
+    [
+      "namespace ns1 {\n",
+      "  namespace ns2 {\n",
+      "\n",
+      "    class cls1 {\n",
+      "      public:\n",
+      "        int f_header_impl(int a, int b){\n",
+      "          return a + b;\n",
+      "        }\n",
+      "\n",
+      "        static void f_void();\n",
+      "        static int f_ret_simple();\n",
+      "        static int& f_ret_ref();\n",
+      "\n",
+      "      protected:\n",
+      "        static void protected_f_void();\n",
+      "\n",
+      "      public:\n",
+      "      private:\n",
+      "        static void private_f_void();\n",
+      "    }; // cls1\n",
+      "  } // ns2\n",
+      "} // ns1\n"
+    ].join
+
+    expected =
+    [
+      "namespace ns1 { namespace ns2 { class cls1 { public: int f_header_impl",
+      "static void f_void()",
+      "static int f_ret_simple()",
+      "static int& f_ret_ref()",
+      "protected: static void protected_f_void()",
+      "public: private: static void private_f_void()",
+      "}",
+      "} }"
+    ]
+
+    assert_equal(expected, @parser.import_source(source, cpp=true))
+    refute_equal(expected, @parser.import_source(source))
+  end
 end

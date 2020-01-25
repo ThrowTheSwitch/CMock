@@ -63,19 +63,24 @@ class CMockGenerator
     @file_writer.create_subdir(@subdir)
   end
 
+
+  # Copy function name (without namespace/class scope) into :orig_name and
+  # modify :name to include namespace(s) and class so that multiple classes with
+  # the same interface (function names) can be mocked within the same test
+  # without name collisions
   def rename_func_with_scope!(function)
-    scope = ''
-    if function.include?(:namespace) and function[:namespace].length > 0
-      scope = function[:namespace].join('_')
-    end
-    if function.include?(:class) and not function[:class].nil?
-      scope << "_#{function[:class]}"
-    end
-    if scope.length > 0
-      scope << '_'
-    end
     function[:orig_name] = function[:name]
-    function[:name] = scope + function[:name]
+
+    scope = function[:namespace].join('_')
+    unless function[:class].nil?
+      scope << "_" unless scope.length == 0
+      scope << "#{function[:class]}"
+    end
+
+    unless scope.length == 0
+      function[:name] = scope + '_' + function[:name]
+    end
+
     function
   end
 
@@ -269,11 +274,12 @@ class CMockGenerator
     args_string = function[:args_string]
     args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
 
-    if function.include?(:namespace)
-      function[:namespace].each do |ns|
-        file << "namespace #{ns} {\n"
-      end
+    # Encapsulate in namespace(s) if applicable
+    function[:namespace].each do |ns|
+      file << "namespace #{ns} {\n"
     end
+
+    # Determine class prefix (if any)
     cls_pre = ""
     unless function[:class].nil?
       cls_pre = "#{function[:class]}::"
@@ -306,13 +312,14 @@ class CMockGenerator
     file << @plugins.run(:mock_implementation, function)
     file << "  UNITY_CLR_DETAILS();\n"
     file << "  return cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?])
-    file << "}\n\n"
+    file << "}\n"
 
-    if function.include?(:namespace)
-      function[:namespace].each do |ns|
-        file << "}\n"
-      end
+    # Close any namespace(s) opened above
+    function[:namespace].each do |ns|
+      file << "}\n"
     end
+
+    file << "\n"
   end
 
   def create_mock_interfaces(file, function)

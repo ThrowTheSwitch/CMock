@@ -526,6 +526,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  :var_arg => nil,
                  :name => "SupaFunction",
                  :orig_name => "SupaFunction",
+                 :namespace => [],
+                 :class => nil,
                  :attributes => "__inline"
                }
     output = []
@@ -562,6 +564,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  :var_arg => "corn ...",
                  :name => "SupaFunction",
                  :orig_name => "SupaFunction",
+                 :namespace => [],
+                 :class => nil,
                  :attributes => nil
                }
     output = []
@@ -587,5 +591,189 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @cmock_generator.create_mock_implementation(output, function)
 
     assert_equal(expected.join, output.join)
+  end
+
+  it "create mock implementation function in source file for C++ static member" do
+    function = { :modifier => "static",
+                 :return => test_return[:int],
+                 :args_string => "uint32 sandwiches, const char* named",
+                 :args => ["uint32 sandwiches", "const char* named"],
+                 :var_arg => nil,
+                 :orig_name => "SupaFunction",
+                 :namespace => ["ns1", "ns2"],
+                 :class => "SupaClass",
+                 :name => "ns1_ns2_SupaClass_SupaFunction",
+                 :attributes => nil
+               }
+    output = []
+    expected = [ "namespace ns1 {\n",
+                 "namespace ns2 {\n",
+                 "static int SupaClass::SupaFunction(uint32 sandwiches, const char* named)\n",
+                 "{\n",
+                 "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
+                 "  CMOCK_ns1_ns2_SupaClass_SupaFunction_CALL_INSTANCE* cmock_call_instance;\n",
+                 "  UNITY_SET_DETAIL(CMockString_ns1_ns2_SupaClass_SupaFunction);\n",
+                 "  cmock_call_instance = (CMOCK_ns1_ns2_SupaClass_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.ns1_ns2_SupaClass_SupaFunction_CallInstance);\n",
+                 "  Mock.ns1_ns2_SupaClass_SupaFunction_CallInstance = CMock_Guts_MemNext(Mock.ns1_ns2_SupaClass_SupaFunction_CallInstance);\n",
+                 "  uno",
+                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n",
+                 "  cmock_line = cmock_call_instance->LineNumber;\n",
+                 "  dos",
+                 "  tres",
+                 "  UNITY_CLR_DETAILS();\n",
+                 "  return cmock_call_instance->ReturnVal;\n",
+                 "}\n",
+                 "}\n",
+                 "}\n\n",
+               ]
+    @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
+    @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
+
+    @cmock_generator.create_mock_implementation(output, function)
+
+    assert_equal(expected.join, output.join)
+  end
+
+  it "create mock implementation functions in source file with different options" do
+    function = { :modifier => "",
+                 :c_calling_convention => "__stdcall",
+                 :return => test_return[:int],
+                 :args_string => "uint32 sandwiches",
+                 :args => ["uint32 sandwiches"],
+                 :var_arg => "corn ...",
+                 :name => "SupaFunction",
+                 :orig_name => "SupaFunction",
+                 :namespace => [],
+                 :class => nil,
+                 :attributes => nil
+               }
+    output = []
+    expected = [ "int __stdcall SupaFunction(uint32 sandwiches, corn ...)\n",
+                 "{\n",
+                 "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n",
+                 "  CMOCK_SupaFunction_CALL_INSTANCE* cmock_call_instance;\n",
+                 "  UNITY_SET_DETAIL(CMockString_SupaFunction);\n",
+                 "  cmock_call_instance = (CMOCK_SupaFunction_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.SupaFunction_CallInstance);\n",
+                 "  Mock.SupaFunction_CallInstance = CMock_Guts_MemNext(Mock.SupaFunction_CallInstance);\n",
+                 "  uno",
+                 "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n",
+                 "  cmock_line = cmock_call_instance->LineNumber;\n",
+                 "  dos",
+                 "  tres",
+                 "  UNITY_CLR_DETAILS();\n",
+                 "  return cmock_call_instance->ReturnVal;\n",
+                 "}\n\n"
+               ]
+    @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
+    @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
+
+    @cmock_generator.create_mock_implementation(output, function)
+
+    assert_equal(expected.join, output.join)
+  end
+
+  it "creates using statements for C++ static member in namespace" do
+    function = { :modifier => "static",
+                 :return => test_return[:int],
+                 :args_string => "uint32 sandwiches",
+                 :args => ["uint32 sandwiches"],
+                 :var_arg => nil,
+                 :orig_name => "SupaFunction",
+                 :namespace => ["ns1"],
+                 :class => "SupaClass",
+                 :name => "ns1_SupaClass_SupaFunction",
+                 :attributes => nil
+               }
+    output = []
+    expected = "using namespace ns1;\n"
+
+    @cmock_generator.create_using_statement(output, function)
+
+    assert_equal(expected, output.join)
+  end
+
+  it "creates using statements for C++ static member in nested namespace" do
+    function = { :modifier => "static",
+                 :return => test_return[:int],
+                 :args_string => "uint32 sandwiches",
+                 :args => ["uint32 sandwiches"],
+                 :var_arg => nil,
+                 :orig_name => "SupaFunction",
+                 :namespace => ["ns1", "ns2"],
+                 :class => "SupaClass",
+                 :name => "ns1_ns2_SupaClass_SupaFunction",
+                 :attributes => nil
+               }
+    output = []
+    expected = "using namespace ns1::ns2;\n"
+
+    @cmock_generator.create_using_statement(output, function)
+
+    assert_equal(expected, output.join)
+  end
+
+  it "rename has minimal impact on function outside of any namespace or class" do
+    function = { :modifier => "static",
+                 :return => test_return[:int],
+                 :args_string => "uint32 sandwiches",
+                 :args => ["uint32 sandwiches"],
+                 :var_arg => nil,
+                 :name => "SupaFunction",
+                 :class => nil,
+                 :namespace => [],
+                 :attributes => nil
+               }
+    expected = function.dup
+    expected[:orig_name] = "SupaFunction"
+
+    result = @cmock_generator.rename_func_with_scope!(function)
+
+    assert_equal(expected, result)
+    assert_equal(expected, function)
+  end
+
+  it "rename incorporates class" do
+    function = { :name => "SupaFunction",
+                 :class => "SupaClass",
+                 :namespace => []
+               }
+    expected = function.dup
+    expected[:orig_name] = "SupaFunction"
+    expected[:name] = "SupaClass_SupaFunction"
+
+    result = @cmock_generator.rename_func_with_scope!(function)
+
+    assert_equal(expected, result)
+    assert_equal(expected, function)
+  end
+
+  it "rename incorporates namespace" do
+    function = { :name => "SupaFunction",
+                 :class => nil,
+                 :namespace => ["ns1"]
+               }
+    expected = function.dup
+    expected[:orig_name] = "SupaFunction"
+    expected[:name] = "ns1_SupaFunction"
+
+    result = @cmock_generator.rename_func_with_scope!(function)
+
+    assert_equal(expected, result)
+    assert_equal(expected, function)
+  end
+
+  it "rename incorporates nested namespaces and class together" do
+    function = { :name => "SupaFunction",
+                 :class => "SupaClass",
+                 :namespace => ["ns1", "ns2"]
+               }
+    expected = function.dup
+    expected[:orig_name] = "SupaFunction"
+    expected[:name] = "ns1_ns2_SupaClass_SupaFunction"
+
+    result = @cmock_generator.rename_func_with_scope!(function)
+
+    assert_equal(expected, result)
+    assert_equal(expected, function)
   end
 end
