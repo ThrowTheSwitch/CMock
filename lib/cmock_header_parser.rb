@@ -16,7 +16,7 @@ class CMockHeaderParser
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_array = cfg.treat_as_array
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
-    @declaration_parse_matcher = /([\w\s\*\(\),\[\]]+??)\(([\w\s\*\(\),\.\[\]+-]*)\)$/m
+    @declaration_parse_matcher = /([\w\s\*\(\),\[\]]+??)\(([\w\s\*\(\),\.\[\]+\-\/]*)\)$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
     @array_size_name = cfg.array_size_name
     @array_size_type = (['int', 'size_t'] + cfg.array_size_type).uniq
@@ -359,7 +359,7 @@ class CMockHeaderParser
     else
       c = 0
       # magically turn brackets into asterisks, also match for parentheses that come from macros
-      arg_list.gsub!(/(\w+)(?:\s*\[[\s\w\(\)+-]*\])+/, '*\1')
+      arg_list.gsub!(/(\w+)(?:\s*\[[^\[\]]*\])+/, '*\1')
       # remove space to place asterisks with type (where they belong)
       arg_list.gsub!(/\s+\*/, '*')
       # pull asterisks away from arg to place asterisks with type (where they belong)
