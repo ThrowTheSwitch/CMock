@@ -52,7 +52,6 @@ class CMockGenerator
     @mock_name   = @prefix + @module_name + @suffix
     @clean_mock_name = TypeSanitizer.sanitize_c_identifier(@mock_name)
     create_mock_subdir()
-    parsed_stuff[:functions].map! { |func| rename_func_with_scope!(func) }
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
@@ -61,27 +60,6 @@ class CMockGenerator
 
   def create_mock_subdir()
     @file_writer.create_subdir(@subdir)
-  end
-
-
-  # Copy function name (without namespace/class scope) into :orig_name and
-  # modify :name to include namespace(s) and class so that multiple classes with
-  # the same interface (function names) can be mocked within the same test
-  # without name collisions
-  def rename_func_with_scope!(function)
-    function[:orig_name] = function[:name]
-
-    scope = function[:namespace].join('_')
-    unless function[:class].nil?
-      scope << "_" unless scope.length == 0
-      scope << "#{function[:class]}"
-    end
-
-    unless scope.length == 0
-      function[:name] = scope + '_' + function[:name]
-    end
-
-    function
   end
 
   def create_using_statement(file, function)

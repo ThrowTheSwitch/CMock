@@ -484,7 +484,19 @@ class CMockHeaderParser
     #process function attributes, return type, and name
     parsed = parse_type_and_name(regex_match[1])
 
-    decl[:name] = parsed[:name]
+    # Record original name without scope prefix
+    decl[:orig_name] = parsed[:name]
+
+    # Prefix name with namespace scope (if any) and then class
+    decl[:name] = namespace.join('_')
+    unless classname.nil?
+      decl[:name] << "_" unless decl[:name].length == 0
+      decl[:name] << classname
+    end
+    # Add original name to complete fully scoped name
+    decl[:name] << "_" unless decl[:name].length == 0
+    decl[:name] << decl[:orig_name]
+
     decl[:modifier] = parsed[:modifier]
     unless parsed[:c_calling_convention].nil?
       decl[:c_calling_convention] = parsed[:c_calling_convention]
