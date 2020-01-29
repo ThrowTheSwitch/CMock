@@ -2204,7 +2204,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
-  it "parses C++ differently when asked" do
+  it "imports C++ differently when asked" do
     source =
     [
       "namespace ns1 {\n",
@@ -2245,5 +2245,327 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     assert_equal(expected, @parser.import_source(source, cpp=true))
     refute_equal(expected, @parser.import_source(source))
+  end
+
+  # only so parse_functions does not raise an error
+  def dummy_source
+    "void dummy(void);"
+  end
+
+  # Expected result of above
+  def dummy_func
+    { :name => "dummy",
+      :class => nil,
+      :namespace => [],
+      :var_arg => nil,
+      :args_string => "void",
+      :args => [],
+      :args_call => "",
+      :contains_ptr? => false,
+      :modifier => "",
+      :return => {
+        :type => "void",
+        :name => "cmock_to_return",
+        :str => "void cmock_to_return",
+        :void? => true,
+        :ptr? => false,
+        :const? => false,
+        :const_ptr? => false}}
+  end
+
+  # Commonly used example function
+  def voidvoid_func(namespace=[])
+    { :name => "functional",
+      :class => "Classic",
+      :namespace => namespace,
+      :var_arg => nil,
+      :args_string => "void",
+      :args => [],
+      :args_call => "",
+      :contains_ptr? => false,
+      :modifier => "",
+      :return => {
+        :type=>"void",
+        :name=>"cmock_to_return",
+        :str=>"void cmock_to_return",
+        :void? => true,
+        :ptr? => false,
+        :const? => false,
+        :const_ptr? => false}}
+  end
+
+  it "parses public C++ functions" do
+    source = dummy_source + <<~SOURCE
+      class Classic {
+        public:
+          static void functional(void);
+      };
+    SOURCE
+
+    expected = [dummy_func, voidvoid_func]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "handles a namespace" do
+    source = dummy_source + <<~SOURCE
+      namespace ns1 {
+        class Classic {
+          public:
+            static void functional(void);
+        };
+      } // ns1
+    SOURCE
+
+    expected = [dummy_func, voidvoid_func(namespace=["ns1"])]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "handles nested namespaces" do
+    source = dummy_source + <<~SOURCE
+      namespace ns1 {
+        namespace ns2 {
+          class Classic {
+            public:
+              static void functional(void);
+          };
+        } // ns1
+      } // ns1
+    SOURCE
+
+    expected = [dummy_func, voidvoid_func(namespace=["ns1", "ns2"])]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "ignores non-static C++ functions" do
+    source = dummy_source + <<~SOURCE
+      class Classic {
+        public:
+          void functional(void);
+      };
+    SOURCE
+
+    expected = [dummy_func]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "ignores private functions" do
+    source = dummy_source + <<~SOURCE
+      class Classic {
+        private:
+          static void functional(void);
+      };
+    SOURCE
+
+    expected = [dummy_func]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "parses public C++ functions after private functions" do
+    source = dummy_source + <<~SOURCE
+      class Classic {
+        private:
+          static void ignoreme(void);
+        public:
+          static void functional(void);
+      };
+    SOURCE
+
+    expected = [dummy_func, voidvoid_func]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "ignores protected functions" do
+    source = dummy_source + <<~SOURCE
+      class Classic {
+        protected:
+          static void functional(void);
+      };
+    SOURCE
+
+    expected = [dummy_func]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "parses public C++ functions after protected functions" do
+    source = dummy_source + <<~SOURCE
+      class Classic {
+        protected:
+          static void ignoreme(void);
+        public:
+          static void functional(void);
+      };
+    SOURCE
+
+    expected = [dummy_func, voidvoid_func]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "parses functions with a reference return type" do
+    source = <<~SOURCE
+      int& dummy(void);
+
+      class Classic {
+        public:
+          static int& functional(void);
+      };
+    SOURCE
+
+    # Verify both classic C and C++ examples
+    expected = [
+      { :name => "dummy",
+        :class => nil,
+        :namespace => [],
+        :var_arg => nil,
+        :args_string => "void",
+        :args => [],
+        :args_call => "",
+        :contains_ptr? => false,
+        :modifier => "",
+        :return => {
+          :type=>"int&",
+          :name=>"cmock_to_return",
+          :str=>"int& cmock_to_return",
+          :void? => false,
+          :ptr? => false,
+          :const? => false,
+          :const_ptr? => false}},
+      { :name => "functional",
+        :class => "Classic",
+        :namespace => [],
+        :var_arg => nil,
+        :args_string => "void",
+        :args => [],
+        :args_call => "",
+        :contains_ptr? => false,
+        :modifier => "",
+        :return => {
+          :type=>"int&",
+          :name=>"cmock_to_return",
+          :str=>"int& cmock_to_return",
+          :void? => false,
+          :ptr? => false,
+          :const? => false,
+          :const_ptr? => false}}]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  # Known limitation - would be great to overcome in future
+  it "cannot handle reference type args" do
+    source = dummy_source + <<~SOURCE
+      class Classic {
+        public:
+          static void functional(int& a);
+      };
+    SOURCE
+
+    expected = [dummy_func]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "parses multiple classes in same file with uniquely named functions" do
+    source = dummy_source + <<~SOURCE
+      namespace ns1 {
+        class Classic {
+          public:
+            static void functional(void);
+        };
+
+        class Classical {
+          public:
+            static int functionality(int a);
+        };
+      } // ns1
+
+      class Classy {
+        public:
+          static int* func(int* a);
+      };
+    SOURCE
+
+    expected = [dummy_func, voidvoid_func(["ns1"]),
+      { :name => "functionality",
+        :class => "Classical",
+        :namespace => ["ns1"],
+        :var_arg => nil,
+        :args_string => "int a",
+        :args => [
+          { :ptr? => false,
+            :const? => false,
+            :const_ptr? => false,
+            :name => "a",
+            :type => "int"}],
+        :args_call => "a",
+        :contains_ptr? => false,
+        :modifier => "",
+        :return => {
+          :type=>"int",
+          :name=>"cmock_to_return",
+          :str=>"int cmock_to_return",
+          :void? => false,
+          :ptr? => false,
+          :const? => false,
+          :const_ptr? => false}},
+      { :name => "func",
+        :class => "Classy",
+        :namespace => [],
+        :var_arg => nil,
+        :args_string => "int* a",
+        :args => [
+          { :ptr? => true,
+            :const? => false,
+            :const_ptr? => false,
+            :name => "a",
+            :type => "int*"}],
+        :args_call => "a",
+        :contains_ptr? => true,
+        :modifier => "",
+        :return => {
+          :type=>"int*",
+          :name=>"cmock_to_return",
+          :str=>"int* cmock_to_return",
+          :void? => false,
+          :ptr? => true,
+          :const? => false,
+          :const_ptr? => false}}]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  # Known limitation - would be great to overcome in future
+  it "cannot handle re-used function name in different classes in same fil" do
+    source = dummy_source + <<~SOURCE
+      namespace ns1 {
+        class Classic {
+          public:
+            static void functional(void);
+        };
+
+        class Classical {
+          public:
+            static int functional(int a);
+        };
+      } // ns1
+
+      class Classy {
+        public:
+          static int* functional(int* a);
+      };
+    SOURCE
+
+    # Only parses first use of function name; others ignored due to name collision
+    # TODO: May be able to address by relocating rename_func_with_scope!() from CMockGenerator to this module
+    expected = [dummy_func, voidvoid_func(["ns1"])]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 end
