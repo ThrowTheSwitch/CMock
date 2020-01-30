@@ -37,10 +37,10 @@ class CMockHeaderParser
     @normalized_source = nil
     function_names = []
 
-    tmp_funcs = parse_functions( import_source(source) ).map do |item| [item, []] end
-    tmp_funcs += parse_cpp_functions( import_source(source, cpp=true) )
-    tmp_funcs.map do |decl|
-      func = parse_declaration(decl[0], decl.length > 1 ? decl[1] : [], decl.length > 2 ? decl[2] : nil)
+    all_funcs = parse_functions( import_source(source) ).map {|item| [item]}
+    all_funcs += parse_cpp_functions( import_source(source, cpp=true) )
+    all_funcs.map do |decl|
+      func = parse_declaration(*decl)
       unless (function_names.include? func[:name])
         @funcs << func
         function_names << func[:name]
@@ -194,10 +194,10 @@ class CMockHeaderParser
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
     source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                                      # remove forward declared structs
     source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s]*\{[^\}]+\}[\w\s\*\,]*;/m, '')  # remove struct, union, and enum definitions and typedefs with braces
-    source.gsub!(/(\W)(?:register|auto|restrict)(\W)/, '\1\2')                      # remove problem keywords
-    unless cpp
-      source.gsub!(/(\W)(?:static)(\W)/, '\1\2')                      # remove problem keywords
-    end
+    # remove problem keywords
+    source.gsub!(/(\W)(?:register|auto|restrict)(\W)/, '\1\2')
+    source.gsub!(/(\W)(?:static)(\W)/, '\1\2') unless cpp
+
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
     source.gsub!(/^(?:[\w\s]*\W)?typedef\W[^;]*/m, '')                                     # remove typedef statements
     source.gsub!(/\)(\w)/, ') \1')                                                         # add space between parenthese and alphanumeric
@@ -209,15 +209,11 @@ class CMockHeaderParser
     #scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |m|
       functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
-      unless cpp # only need once and already collected on non-C++ run
-        @typedefs << "typedef #{$1.strip}(*#{functype})(#{$4});"
-      end
+      @typedefs << "typedef #{$1.strip}(*#{functype})(#{$4});" unless cpp # only collect once
       "#{functype} #{$2.strip}(#{$3});"
     end
 
-    unless cpp
-      source = remove_nested_pairs_of_braces(source)
-    end
+    source = remove_nested_pairs_of_braces(source) unless cpp
 
     if (@treat_inlines == :include)
       # Functions having "{ }" at this point are/were inline functions,
@@ -238,9 +234,7 @@ class CMockHeaderParser
 
     #split lines on semicolons and remove things that are obviously not what we are looking for
     src_lines = source.split(/\s*;\s*/)
-    unless cpp # need to retain closing braces for class/namespace
-      src_lines = src_lines.uniq
-    end
+    src_lines = src_lines.uniq unless cpp # must retain closing braces for class/namespace
     src_lines.delete_if {|line| line.strip.length == 0}                            # remove blank lines
     src_lines.delete_if {|line| !(line =~ /[\w\s\*]+\(+\s*\*[\*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s\*]*,?)*\s*\)/).nil?}     #remove function pointer arrays
 
@@ -255,10 +249,13 @@ class CMockHeaderParser
     src_lines.delete_if {|line| line.empty? } #drop empty lines
   end
 
+  # Rudimentary C++ parser - does not handle all situations - e.g.:
+  #  * A namespace function appears after a class with private members (should be parsed)
+  #  * Anonymous namespace (shouldn't parse anything - no matter how nested - within it)
+  #  * A class nested within another class
   def parse_cpp_functions(source)
     funcs = []
 
-    # simple parse, does not handle all situations
     ns = []
     pub = false
     source.each do |line|
@@ -271,7 +268,7 @@ class CMockHeaderParser
           ns << token
 
           pub = false if token.start_with? 'class'
-          pub = true if token.start_with? 'namespace' #TODO: is this correct?
+          pub = true if token.start_with? 'namespace'
         end
       end
 
@@ -284,7 +281,7 @@ class CMockHeaderParser
 
       line.sub!(/^.*static/, '')
       if (line =~ @declaration_parse_matcher)
-        tmp = ns.reject{ |item| item == '{'} # TODO: is this necessary?
+        tmp = ns.reject{ |item| item == '{'}
 
         # Identify class name, if any
         cls = nil
@@ -292,7 +289,6 @@ class CMockHeaderParser
           cls = tmp.pop.sub(/class (\S+) {/, '\1')
         end
 
-        # TODO: Add support for nested classes (not the same as a namespace)
         # Assemble list of namespaces
         tmp.each{ |item| item.sub!(/(?:namespace|class) (\S+) {/, '\1') }
 
