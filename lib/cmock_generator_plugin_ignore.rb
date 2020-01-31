@@ -18,6 +18,8 @@ class CMockGeneratorPluginIgnore
   def instance_structure(function)
     if (function[:return][:void?])
       "  int #{function[:name]}_IgnoreBool;\n"
+    elsif function[:return][:type].end_with?('&') # C++ reference
+      "  int #{function[:name]}_IgnoreBool;\n  #{function[:return][:type].chomp('&')} #{function[:name]}_FinalRefReturn;\n  std::reference_wrapper<#{function[:return][:type].chomp('&')}> #{function[:name]}_FinalReturn = #{function[:name]}_FinalRefReturn;\n"
     else
       "  int #{function[:name]}_IgnoreBool;\n  #{function[:return][:type]} #{function[:name]}_FinalReturn;\n"
     end

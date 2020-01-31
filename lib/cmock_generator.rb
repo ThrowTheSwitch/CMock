@@ -61,6 +61,12 @@ class CMockGenerator
     @file_writer.create_subdir(@subdir)
   end
 
+  def create_using_statement(file, function)
+    if function[:namespace].length > 0
+      file << "using namespace #{function[:namespace].join('::')};\n"
+    end
+  end
+
   def create_mock_header_file(parsed_stuff)
     if @include_inline == :include
       @file_writer.create_file(@module_name + ".h", @subdir) do |file, filename|
@@ -73,6 +79,7 @@ class CMockGenerator
       create_mock_header_service_call_declarations(file)
       create_typedefs(file, parsed_stuff[:typedefs])
       parsed_stuff[:functions].each do |function|
+        create_using_statement(file, function)
         file << @plugins.run(:mock_function_declarations, function)
       end
       create_mock_header_footer(file)
@@ -216,7 +223,10 @@ class CMockGenerator
   def create_mock_destroy_function(file, functions)
     file << "void #{@clean_mock_name}_Destroy(void)\n{\n"
     file << "  CMock_Guts_MemFreeAll();\n"
-    file << "  memset(&Mock, 0, sizeof(Mock));\n"
+    # NOTE: zeroing an object may result in crashes so we muct be selective when erasing this structure
+    functions.each do |function|
+      file << "  memset(&Mock.#{function[:name]}_CallInstance, 0, sizeof(Mock.#{function[:name]}_CallInstance));\n"
+    end
     file << functions.collect {|function| @plugins.run(:mock_destroy, function)}.join
 
     unless (@fail_on_unexpected_calls)
@@ -238,15 +248,26 @@ class CMockGenerator
     args_string = function[:args_string]
     args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
 
+    # Encapsulate in namespace(s) if applicable
+    function[:namespace].each do |ns|
+      file << "namespace #{ns} {\n"
+    end
+
+    # Determine class prefix (if any)
+    cls_pre = ""
+    unless function[:class].nil?
+      cls_pre = "#{function[:class]}::"
+    end
+
     # Create mock function
     if (not @weak.empty?)
         file << "#if defined (__IAR_SYSTEMS_ICC__)\n"
-        file << "#pragma weak #{function[:name]}\n"
+        file << "#pragma weak #{function[:orig_name]}\n"
         file << "#else\n"
-        file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string}) #{weak};\n"
+        file << "#{function_mod_and_rettype} #{cls_pre}#{function[:orig_name]}(#{args_string}) #{weak};\n"
         file << "#endif\n\n"
     end
-    file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
+    file << "#{function_mod_and_rettype} #{cls_pre}#{function[:orig_name]}(#{args_string})\n"
     file << "{\n"
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
     file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance;\n"
@@ -265,7 +286,14 @@ class CMockGenerator
     file << @plugins.run(:mock_implementation, function)
     file << "  UNITY_CLR_DETAILS();\n"
     file << "  return cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?])
-    file << "}\n\n"
+    file << "}\n"
+
+    # Close any namespace(s) opened above
+    function[:namespace].each do |ns|
+      file << "}\n"
+    end
+
+    file << "\n"
   end
 
   def create_mock_interfaces(file, function)

@@ -70,7 +70,7 @@ class CMockGeneratorUtils
   end
 
   def code_assign_argument_quickly(dest, arg)
-    if (arg[:ptr?] or @treat_as.include?(arg[:type]))
+    if (arg[:ptr?] or @treat_as.include?(arg[:type]) or arg[:type].end_with?('&'))
       "  #{dest} = #{arg[:name]};\n"
     else
       assert_expr = "sizeof(#{arg[:name]}) == sizeof(#{arg[:type]}) ? 1 : -1"
