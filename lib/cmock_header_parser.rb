@@ -16,7 +16,8 @@ class CMockHeaderParser
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_array = cfg.treat_as_array
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
-    @declaration_parse_matcher = /([\w\s\*\(\),\[\]]+??)\(([\w\s\*\(\),\.\[\]+-]*)\)$/m
+    @function_declaration_parse_base_match = '([\w\s\*\(\),\[\]]+??)\(([\w\s\*\(\),\.\[\]+-]*)\)'
+    @declaration_parse_matcher = /#{@function_declaration_parse_base_match}$/m
     @standards = (['int','short','char','long','unsigned','signed'] + cfg.treat_as.keys).uniq
     @array_size_name = cfg.array_size_name
     @array_size_type = (['int', 'size_t'] + cfg.array_size_type).uniq
@@ -107,31 +108,63 @@ class CMockHeaderParser
     square_bracket_pair_regex_format = /\{[^\{\}]*\}/ # Regex to match one whole block enclosed by two square brackets
 
     # Convert user provided string patterns to regex
+    # Use word bounderies before and after the user regex to limit matching to actual word iso part of a word
     @inline_function_patterns.each do |user_format_string|
       user_regex = Regexp.new(user_format_string)
-      cleanup_spaces_after_user_regex = /\s*/
-      inline_function_regex_formats << Regexp.new(user_regex.source + cleanup_spaces_after_user_regex.source)
+      word_boundary_before_user_regex = /\b/
+      cleanup_spaces_after_user_regex = /[ ]*\b/
+      inline_function_regex_formats << Regexp.new(word_boundary_before_user_regex.source + user_regex.source + cleanup_spaces_after_user_regex.source)
     end
 
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding("ISO-8859-1").encode("utf-8", :replace => nil)
 
-    # - Just looking for static|inline in the gsub is a bit too aggressive (functions that are named like this, ...), so we try to be a bit smarter
-    #   Instead, look for "static inline" and parse it:
-    #   - Everything before the match should just be copied, we don't want
-    #     to touch anything but the inline functions.
-    #   - Remove the implementation of the inline function (this is enclosed
-    #     in square brackets) and replace it with ";" to complete the
-    #     transformation to normal/non-inline function.
-    #     To ensure proper removal of the function body, we count the number of square-bracket pairs
-    #     and remove the pairs one-by-one.
-    #   - Copy everything after the inline function implementation and start the parsing of the next inline function
+    # smush multiline macros into single line (checking for continuation character at end of line '\')
+    # If the user uses a macro to declare an inline function,
+    # smushing the macros makes it easier to recognize them as a macro and if required,
+    # remove them later on in this function
+    source.gsub!(/\s*\\\s*/m, ' ')
 
+    # Just looking for static|inline in the gsub is a bit too aggressive (functions that are named like this, ...), so we try to be a bit smarter
+    # Instead, look for an inline pattern (f.e. "static inline") and parse it.
+    # Below is a small explanation on how the general mechanism works:
+    #  - Everything before the match should just be copied, we don't want
+    #    to touch anything but the inline functions.
+    #  - Remove the implementation of the inline function (this is enclosed
+    #    in square brackets) and replace it with ";" to complete the
+    #    transformation to normal/non-inline function.
+    #    To ensure proper removal of the function body, we count the number of square-bracket pairs
+    #    and remove the pairs one-by-one.
+    #  - Copy everything after the inline function implementation and start the parsing of the next inline function
+    # There are ofcourse some special cases (inline macro declarations, inline function declarations, ...) which are handled and explained below
     inline_function_regex_formats.each do |format|
       loop do
         inline_function_match = source.match(/#{format}/) # Search for inline function declaration
+
         break if nil == inline_function_match             # No inline functions so nothing to do
 
+        # 1. Determine if we are dealing with a user defined macro to declare inline functions
+        # If the end of the pre-match string is a macro-declaration-like string,
+        # we are dealing with a user defined macro to declare inline functions
+        if /(#define\s*)\z/ === inline_function_match.pre_match
+          # Remove the macro from the source
+          stripped_pre_match = inline_function_match.pre_match.sub(/(#define\s*)\z/,'')
+          stripped_post_match = inline_function_match.post_match.sub(/\A(.*[\n]?)/,'')
+          source = stripped_pre_match + stripped_post_match
+          next
+        end
+
+        # 2. Determine if we are dealing with an inline function declaration iso function definition
+        # If the start of the post-match string is a function-declaration-like string (something ending with semicolon after the function arguments),
+        # we are dealing with a inline function declaration
+        if /\A#{@function_declaration_parse_base_match}\s*;/m === inline_function_match.post_match
+          # Only remove the inline part from the function declaration, leaving the function declaration won't do any harm
+          source = inline_function_match.pre_match + inline_function_match.post_match
+          next
+        end
+
+        # 3. If we get here, we found an inline function declaration AND inline function body.
+        #    Remove the function body to transform it into a 'normal' function.
         total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
         break if 0 == total_pairs_to_remove # Bad source?

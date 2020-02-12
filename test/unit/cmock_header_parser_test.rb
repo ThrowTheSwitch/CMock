@@ -2083,4 +2083,116 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "Transform inline functions can handle inline function declarations" do
+    source =
+      "static inline int dummy_func_decl(int a, char b, float c);\n" + # First declaration
+      "static inline int dummy_func_decl2(int a, char b, float c)\n\n\n\n\n\n;\n" + # Second declaration with a lot of newlines before the semicolon to mess with the parser
+      "static inline int staticinlinefunc(struct my_struct *s)\n" + # 'normal' inline pattern
+      "{\n" +
+      "    return dummy_func_decl(1, 1, 1);\n" +
+      "}\n" +
+      "struct my_struct_with_inline_in_it\n" # struct definition in between to mess with the parser
+      "{\n" +
+      "    int a;\n" +
+      "    char b;\n" +
+      "    float inlineb;\n" +
+      "};\n" +
+      "static inline int dummy_func_decl(int a, char b, float c) {\n" + # Second user pattern
+      "	return 42;\n" +
+      "}\n" +
+      "\n"
+
+    expected =
+      "int dummy_func_decl(int a, char b, float c);\n" +
+      "int dummy_func_decl2(int a, char b, float c)\n\n\n\n\n\n;\n" + # Second declaration with a lot of newlines until the semicolon to mess with the parser
+      "int staticinlinefunc(struct my_struct *s);\n" +
+      "struct my_struct_with_inline_in_it\n"
+      "{\n" +
+      "    int a;\n" +
+      "    char b;\n" +
+      "    float inlineb;\n" +
+      "};\n" +
+      "int dummy_func_decl(int a, char b, float c);\n" +
+      "\n"
+
+    @parser.treat_inlines = :include
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
+  it "Transform inline functions can handle header with only inline function declarations" do
+    source =
+      "static inline int dummy_func_decl(int a, char b, float c);\n" +
+      "\n"
+
+    expected =
+      "int dummy_func_decl(int a, char b, float c);\n" +
+      "\n"
+
+    @parser.treat_inlines = :include
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
+  it "Transform inline functions takes user provided patterns into account" do
+    source =
+      "static __inline__ __attribute__ ((always_inline)) uint16_t _somefunc (uint32_t a)\n" +
+      "{\n" +
+      "    return _someotherfunc (a);\n" +
+      "}\n" +
+      "static __inline__ uint16_t _somefunc_0  (uint32_t a)\n" +
+      "{\n" +
+      "    return (uint16_t) a;\n" +
+      "}\n" +
+      "\n"
+
+    expected =
+      "uint16_t _somefunc (uint32_t a);\n" +
+      "uint16_t _somefunc_0  (uint32_t a);\n" +
+      "\n"
+
+    @parser.treat_inlines = :include
+    @parser.inline_function_patterns = ['static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__']
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
+  it "Transform inline functions limits deleting user macro to actual line/word" do
+    source =
+      "#if defined (FORCE_INLINE)\n" +
+      "#define MY_LIBRARY_INLINE static __inline__ __attribute__ ((always_inline))\n" +
+      "#else\n" +
+      "#define MY_LIBRARY_INLINE\n" +
+      "#endif\n" +
+      "#define INLINE static __inline__ __attribute__ ((always_inline))\n" +
+      "#define INLINE_TWO \\\nstatic\\\ninline\n" +
+      "INLINE uint16_t _somefunc (uint32_t a)\n" +
+      "{\n" +
+      "    return _someotherfunc (a);\n" +
+      "}\n" +
+      "static __inline__ uint16_t _somefunc_0  (uint32_t a)\n" +
+      "{\n" +
+      "    return (uint16_t) a;\n" +
+      "}\n" +
+      "static __inline__ __attribute__ \(\(always_inline\)\) uint16_t _somefunc_1  (uint32_t a)\n" +
+      "{\n" +
+      "    return (uint16_t) a;\n" +
+      "}\n" +
+      "INLINE_TWO uint16_t _somefunc_2(uint32_t a)\n" +
+      "{\n" +
+      "    return (uint16_t) a;\n" +
+      "}\n" +
+      "#define INLINE_THREE \\\nstatic\\\ninline"
+
+    expected =
+      "#if defined (FORCE_INLINE)\n" +
+      "#else\n" +
+      "#endif\n" +
+      "uint16_t _somefunc (uint32_t a);\n" +
+      "uint16_t _somefunc_0  (uint32_t a);\n" +
+      "uint16_t _somefunc_1  (uint32_t a);\n" +
+      "uint16_t _somefunc_2(uint32_t a);\n"
+
+    @parser.treat_inlines = :include
+    @parser.inline_function_patterns = ['MY_LIBRARY_INLINE', 'INLINE_THREE', 'INLINE_TWO', 'INLINE', 'static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__']
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
 end
