@@ -32,12 +32,24 @@ class CMock
     end
   end
 
+  def setup_skeletons(files)
+    [files].flatten.each do |src|
+      generate_skeleton src
+    end
+  end
+
   private ###############################
 
   def generate_mock(src)
     name = File.basename(src, '.h')
     puts "Creating mock for #{name}..." unless @silent
     @cm_generator.create_mock(name, @cm_parser.parse(name, File.read(src)))
+  end
+
+  def generate_skeleton(src)
+    name = File.basename(src, '.h')
+    puts "Creating skeleton for #{name}..." unless @silent
+    @cm_generator.create_skeleton(name, @cm_parser.parse(name, File.read(src)))
   end
 end
 
@@ -75,6 +87,8 @@ if ($0 == __FILE__)
   ARGV.each do |arg|
     if (arg =~ /^-o\"?([a-zA-Z0-9._\\\/:\s]+)\"?/)
       options.merge! CMockConfig.load_config_file_from_yaml( arg.gsub(/^-o/,'') )
+    elsif (arg == "--skeleton")
+      options[:skeleton] = true
     elsif (arg =~ /^--([a-zA-Z0-9._\\\/:\s]+)=\"?([a-zA-Z0-9._\-\\\/:\s\;]+)\"?/)
       options = option_maker(options, $1, $2)
     else
@@ -82,5 +96,9 @@ if ($0 == __FILE__)
     end
   end
 
-  CMock.new(options).setup_mocks(filelist)
+  if (options[:skeleton])
+    CMock.new(options).setup_skeletons(filelist)
+  else
+    CMock.new(options).setup_mocks(filelist)
+  end
 end

@@ -92,7 +92,7 @@ namespace :test do
   #individual system tests
   FileList['system/test_interactions/*.yml'].each do |test|
     basename = File.basename(test,'.*')
-    desc "Run system test #{basename}"
+    #desc "Run system test #{basename}"
     task basename do
       run_system_test_interactions([test])
     end

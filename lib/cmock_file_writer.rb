@@ -33,6 +33,14 @@ class CMockFileWriter
     update_file(full_file_name_done, full_file_name_temp)
   end
 
+  def append_file(filename, subdir)
+    raise "Where's the block of data to create?" unless block_given?
+    full_file_name = "#{@config.mock_path}/#{subdir+'/' if subdir}#{filename}"
+    File.open(full_file_name, 'a') do |file|
+      yield(file, filename)
+    end
+  end
+
   private ###################################
 
   def update_file(dest, src)

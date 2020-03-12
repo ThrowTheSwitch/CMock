@@ -282,6 +282,22 @@ You may specify the options explicitly:
 
     cmock = Cmock.new(:plugins => [:cexception, :ignore], :mock_path => 'my/mocks/')
 
+Creating Skeletons:
+-------------------
+
+Not only is CMock able to generate mock files from a header file, but it is also able
+to generate (and update) skeleton C files from headers. It does this by creating a
+(mostly) empty implementation for every function that is declared in the header. If you later
+add to that header list, just run this feature again and it will add prototypes for the missing
+functions!
+
+Like the normal usecase for CMock, this feature can be used from the command line
+or from within its ruby API. For example, from the command line, add `--skeleton` to
+generate a skeleton instead:
+
+```
+ruby cmock.rb --skeleton ../create/c/for/this.h
+```
 
 Config Options:
 ---------------
@@ -394,14 +410,14 @@ from the defaults. We've tried to specify what the defaults are below.
   * default: mocks
 
 * `:mock_prefix`:
-  The prefix to prepend to your mock files. For example, if it's “Mock”, a file
+  The prefix to prepend to your mock files. For example, if it's `Mock`, a file
   “USART.h” will get a mock called “MockUSART.c”. This CAN be used with a suffix
   at the same time.
 
   * default: Mock
 
 * `:mock_suffix`:
-  The suffix to append to your mock files. For example, it it's "_Mock", a file
+  The suffix to append to your mock files. For example, it it's `_Mock`, a file
   "USART.h" will get a mock called "USART_Mock.h". This CAN be used with a prefix
   at the same time.
 
@@ -637,8 +653,8 @@ from the defaults. We've tried to specify what the defaults are below.
   Parameters must match *both* `:array_size_type` and `:array_size_name` (and
   must come right after a pointer parameter) to be treated as an array size.
 
-  Once you've told it how to recognize your arrays, CMock will give you _Expect
-  calls that work more like _ExpectWithArray, and compare an array of objects
+  Once you've told it how to recognize your arrays, CMock will give you `_Expect`
+  calls that work more like `_ExpectWithArray`, and compare an array of objects
   rather than just a single object.
 
   For example, if you write the following, CMock will check that GoBananas is
@@ -653,14 +669,14 @@ from the defaults. We've tried to specify what the defaults are below.
         GoBananas_ExpectWithArray(b, 2, 2);
 
 * `:fail_on_unexpected_calls`:
-  By default, CMock will fail a test if a mock is called without _Expect and _Ignore
+  By default, CMock will fail a test if a mock is called without `_Expect` and `_Ignore`
   called first. While this forces test writers to be more explicit in their expectations,
-  it can clutter tests with _Expect or _Ignore calls for functions which are not the focus
+  it can clutter tests with `_Expect` or `_Ignore` calls for functions which are not the focus
   of the test. While this is a good indicator that this module should be refactored, some
   users are not fans of the additional noise.
 
   Therefore, :fail_on_unexpected_calls can be set to false to force all mocks to start with
-  the assumption that they are operating as _Ignore unless otherwise specified.
+  the assumption that they are operating as `_Ignore` unless otherwise specified.
 
   * default: true
   * **note:**
