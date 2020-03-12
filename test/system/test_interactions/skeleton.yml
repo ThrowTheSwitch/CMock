@@ -2,6 +2,7 @@
 :cmock:
   :plugins:
   - # none
+  :skeleton_path: system/generated
 
 :systest:
   :types: |

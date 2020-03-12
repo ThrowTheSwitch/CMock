@@ -12,6 +12,7 @@ class CMockConfig
     :mock_path                   => 'mocks',
     :mock_prefix                 => 'Mock',
     :mock_suffix                 => '',
+    :skeleton_path               => '',
     :weak                        => '',
     :subdir                      => nil,
     :plugins                     => [],

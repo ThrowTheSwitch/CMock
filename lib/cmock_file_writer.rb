@@ -35,7 +35,7 @@ class CMockFileWriter
 
   def append_file(filename, subdir)
     raise "Where's the block of data to create?" unless block_given?
-    full_file_name = "#{@config.mock_path}/#{subdir+'/' if subdir}#{filename}"
+    full_file_name = "#{@config.skeleton_path}/#{subdir+'/' if subdir}#{filename}"
     File.open(full_file_name, 'a') do |file|
       yield(file, filename)
     end
