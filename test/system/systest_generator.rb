@@ -66,6 +66,7 @@ class SystemTestGenerator
 
     generate_test_file(yaml_hash, namix, name)
     generate_source_file(yaml_hash, namix, name)
+    generate_skeleton_file(yaml_hash, namix, name)
   end
 
   def generate_types_file(yaml_hash, namix)
@@ -136,9 +137,20 @@ class SystemTestGenerator
     includes << (namix + MOCKABLE_H) if not yaml_hash[:systest][:mockable].nil?
     includes << header_file
 
-    write_source_file(GENERATED_PATH + name + C_EXTENSION, includes.flatten) do |out|
-      out.puts(source[:code])
+    unless (source[:code].nil?)
+      write_source_file(GENERATED_PATH + name + C_EXTENSION, includes.flatten) do |out|
+        out.puts(source[:code])
+      end
     end
+  end
+
+  def generate_skeleton_file(yaml_hash, namix, name)
+    source = yaml_hash[:systest][:skeleton]
+    return if source.nil?
+
+    require 'cmock.rb'
+    cmock = CMock.new(GENERATED_PATH + namix + 'cmock' + YAML_EXTENSION)
+    cmock.setup_skeletons("#{$cfg['compiler']['source_path']}#{name}.h")
   end
 
   def write_header_file(filename, upcase_name, include_list=[])

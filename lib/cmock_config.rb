@@ -12,6 +12,7 @@ class CMockConfig
     :mock_path                   => 'mocks',
     :mock_prefix                 => 'Mock',
     :mock_suffix                 => '',
+    :skeleton_path               => '',
     :weak                        => '',
     :subdir                      => nil,
     :plugins                     => [],
@@ -40,6 +41,7 @@ class CMockConfig
     :orig_header_include_fmt     => "#include \"%s\"",
     :array_size_type             => [],
     :array_size_name             => 'size|len',
+    :skeleton                    => false,
 
     # Format to look for inline functions.
     # This is a combination of "static" and "inline" keywords ("static inline", "inline static", "inline", "static")
