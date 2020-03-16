@@ -86,5 +86,4 @@ class CMockGeneratorPluginCallback
     "    call_instance = CMOCK_GUTS_NONE;\n" \
     "    (void)call_instance;\n  }\n"
   end
-
 end
