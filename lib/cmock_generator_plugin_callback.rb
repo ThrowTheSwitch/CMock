@@ -5,7 +5,6 @@
 # ==========================================
 
 class CMockGeneratorPluginCallback
-
   attr_accessor :include_count
   attr_reader :priority
   attr_reader :config, :utils
@@ -30,7 +29,7 @@ class CMockGeneratorPluginCallback
     return_type = function[:return][:type]
     action = @config.callback_after_arg_check ? 'AddCallback' : 'Stub'
     style  = (@include_count ? 1 : 0) | (function[:args].empty? ? 0 : 2)
-    styles = [ "void", "int cmock_num_calls", function[:args_string], "#{function[:args_string]}, int cmock_num_calls" ]
+    styles = ['void', 'int cmock_num_calls', function[:args_string], "#{function[:args_string]}, int cmock_num_calls"]
     "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\n" \
     "void #{func_name}_AddCallback(CMOCK_#{func_name}_CALLBACK Callback);\n" \
     "void #{func_name}_Stub(CMOCK_#{func_name}_CALLBACK Callback);\n" \
@@ -69,7 +68,7 @@ class CMockGeneratorPluginCallback
   def mock_interfaces(function)
     func_name = function[:name]
     has_ignore = @config.plugins.include? :ignore
-    lines = ""
+    lines = ''
     lines << "void #{func_name}_AddCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
     lines << "  Mock.#{func_name}_IgnoreBool = (int)0;\n" if has_ignore
     lines << "  Mock.#{func_name}_CallbackBool = (int)1;\n"

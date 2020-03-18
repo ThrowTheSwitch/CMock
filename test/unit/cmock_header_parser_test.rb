@@ -1035,7 +1035,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             { :type=>"int",        :name => "param8", :ptr? => false, :const? => true,  :const_ptr? => false }],
                   :args_call => "param1, param2, param3, param4, param5, param6, param7, param8",
                   :contains_ptr? => true
-                }]
+                }].freeze
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 

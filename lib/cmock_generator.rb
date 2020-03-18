@@ -5,7 +5,6 @@
 # ==========================================
 
 class CMockGenerator
-
   attr_accessor :config, :file_writer, :module_name, :module_ext, :clean_mock_name, :mock_name, :utils, :plugins, :weak, :ordered
 
   def initialize(config, file_writer, utils, plugins)
@@ -16,34 +15,33 @@ class CMockGenerator
     @prefix      = @config.mock_prefix
     @suffix      = @config.mock_suffix
     @weak        = @config.weak
-    @include_inline        = @config.treat_inlines
-    @ordered     = @config.enforce_strict_ordering
-    @framework   = @config.framework.to_s
+    @include_inline = @config.treat_inlines
+    @ordered = @config.enforce_strict_ordering
+    @framework = @config.framework.to_s
     @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
 
-    @subdir      = @config.subdir
+    @subdir = @config.subdir
 
-    @includes_h_pre_orig_header  = (@config.includes || @config.includes_h_pre_orig_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
-    @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
-    @includes_c_pre_header       = (@config.includes_c_pre_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
-    @includes_c_post_header      = (@config.includes_c_post_header || []).map{|h| h =~ /</ ? h : "\"#{h}\""}
+    @includes_h_pre_orig_header  = (@config.includes || @config.includes_h_pre_orig_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
+    @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
+    @includes_c_pre_header       = (@config.includes_c_pre_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
+    @includes_c_post_header      = (@config.includes_c_post_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
 
     here = File.dirname __FILE__
     unity_path_in_ceedling = "#{here}/../../unity" # path to Unity from within Ceedling
     unity_path_in_cmock = "#{here}/../vendor/unity" # path to Unity from within CMock
     # path to Unity as specified by env var
-    unity_path_in_env = ENV.has_key?("UNITY_DIR") ? File.expand_path(ENV.fetch("UNITY_DIR")) : nil
+    unity_path_in_env = ENV.key?('UNITY_DIR') ? File.expand_path(ENV.fetch('UNITY_DIR')) : nil
 
-    if unity_path_in_env and File.exist? unity_path_in_env
+    if unity_path_in_env && File.exist?(unity_path_in_env)
       require "#{unity_path_in_env}/auto/type_sanitizer"
     elsif File.exist? unity_path_in_ceedling
       require "#{unity_path_in_ceedling}/auto/type_sanitizer"
     elsif File.exist? unity_path_in_cmock
       require "#{unity_path_in_cmock}/auto/type_sanitizer"
     else
-      raise "Failed to find an instance of Unity to pull in type_sanitizer module!"
+      raise 'Failed to find an instance of Unity to pull in type_sanitizer module!'
     end
-
   end
 
   def create_mock(module_name, parsed_stuff, module_ext = nil)
@@ -51,7 +49,7 @@ class CMockGenerator
     @module_ext  = module_ext || '.h'
     @mock_name   = @prefix + @module_name + @suffix
     @clean_mock_name = TypeSanitizer.sanitize_c_identifier(@mock_name)
-    create_mock_subdir()
+    create_mock_subdir
     create_mock_header_file(parsed_stuff)
     create_mock_source_file(parsed_stuff)
   end
@@ -63,13 +61,13 @@ class CMockGenerator
 
   private if $ThisIsOnlyATest.nil? ##############################
 
-  def create_mock_subdir()
+  def create_mock_subdir
     @file_writer.create_subdir(@subdir)
   end
 
   def create_mock_header_file(parsed_stuff)
     if @include_inline == :include
-      @file_writer.create_file(@module_name + (@module_ext || '.h'), @subdir) do |file, filename|
+      @file_writer.create_file(@module_name + (@module_ext || '.h'), @subdir) do |file, _filename|
         file << parsed_stuff[:normalized_source]
       end
     end
@@ -86,7 +84,7 @@ class CMockGenerator
   end
 
   def create_mock_source_file(parsed_stuff)
-    @file_writer.create_file(@mock_name + ".c", @subdir) do |file, filename|
+    @file_writer.create_file(@mock_name + '.c', @subdir) do |file, filename|
       create_source_header_section(file, filename, parsed_stuff[:functions])
       create_instance_structure(file, parsed_stuff[:functions])
       create_extern_declarations(file)
@@ -101,9 +99,9 @@ class CMockGenerator
   end
 
   def create_skeleton_source_file(parsed_stuff)
-    filename = "#{@config.mock_path}/#{@subdir+'/' if @subdir}#{module_name}.c"
-    existing = File.exists?(filename) ? File.read(filename) : ""
-    @file_writer.append_file(@module_name + ".c", @subdir) do |file, fullname|
+    filename = "#{@config.mock_path}/#{@subdir + '/' if @subdir}#{module_name}.c"
+    existing = File.exist?(filename) ? File.read(filename) : ''
+    @file_writer.append_file(@module_name + '.c', @subdir) do |file, fullname|
       create_source_header_section(file, fullname, []) if existing.empty?
       parsed_stuff[:functions].each do |function|
         create_function_skeleton(file, function, existing)
@@ -111,18 +109,18 @@ class CMockGenerator
     end
   end
 
-  def create_mock_header_header(file, filename)
+  def create_mock_header_header(file, _filename)
     define_name   = @clean_mock_name.upcase
-    orig_filename = (@subdir ? @subdir + "/" : "") + @module_name + (@module_ext || '.h')
+    orig_filename = (@subdir ? @subdir + '/' : '') + @module_name + (@module_ext || '.h')
     file << "/* AUTOGENERATED FILE. DO NOT EDIT. */\n"
     file << "#ifndef _#{define_name}_H\n"
     file << "#define _#{define_name}_H\n\n"
     file << "#include \"#{@framework}.h\"\n"
-    @includes_h_pre_orig_header.each {|inc| file << "#include #{inc}\n"}
-    file << @config.orig_header_include_fmt.gsub(/%s/, "#{orig_filename}") + "\n"
-    @includes_h_post_orig_header.each {|inc| file << "#include #{inc}\n"}
+    @includes_h_pre_orig_header.each { |inc| file << "#include #{inc}\n" }
+    file << @config.orig_header_include_fmt.gsub(/%s/, orig_filename.to_s) + "\n"
+    @includes_h_post_orig_header.each { |inc| file << "#include #{inc}\n" }
     plugin_includes = @plugins.run(:include_files)
-    file << plugin_includes if (!plugin_includes.empty?)
+    file << plugin_includes unless plugin_includes.empty?
     file << "\n"
     file << "/* Ignore the following warnings, since we are copying code */\n"
     file << "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n"
@@ -140,7 +138,7 @@ class CMockGenerator
 
   def create_typedefs(file, typedefs)
     file << "\n"
-    typedefs.each {|typedef| file << "#{typedef}\n" }
+    typedefs.each { |typedef| file << "#{typedef}\n" }
     file << "\n\n"
   end
 
@@ -162,20 +160,20 @@ class CMockGenerator
   end
 
   def create_source_header_section(file, filename, functions)
-    header_file = (@subdir ? @subdir + '/' : '') + filename.gsub(".c",(@module_ext || '.h'))
+    header_file = (@subdir ? @subdir + '/' : '') + filename.gsub('.c', (@module_ext || '.h'))
     file << "/* AUTOGENERATED FILE. DO NOT EDIT. */\n" unless functions.empty?
     file << "#include <string.h>\n"
     file << "#include <stdlib.h>\n"
     file << "#include <setjmp.h>\n"
     file << "#include \"cmock.h\"\n"
-    @includes_c_pre_header.each {|inc| file << "#include #{inc}\n"}
+    @includes_c_pre_header.each { |inc| file << "#include #{inc}\n" }
     file << "#include \"#{header_file}\"\n"
-    @includes_c_post_header.each {|inc| file << "#include #{inc}\n"}
+    @includes_c_post_header.each { |inc| file << "#include #{inc}\n" }
     file << "\n"
     strs = []
     functions.each do |func|
       strs << func[:name]
-      func[:args].each {|arg| strs << arg[:name] }
+      func[:args].each { |arg| strs << arg[:name] }
     end
     strs.uniq.sort.each do |str|
       file << "static const char* CMockString_#{str} = \"#{str}\";\n"
@@ -191,7 +189,7 @@ class CMockGenerator
       file << "\n} CMOCK_#{function[:name]}_CALL_INSTANCE;\n\n"
     end
     file << "static struct #{@clean_mock_name}Instance\n{\n"
-    if (functions.size == 0)
+    if functions.empty?
       file << "  unsigned char placeHolder;\n"
     end
     functions.each do |function|
@@ -203,7 +201,7 @@ class CMockGenerator
 
   def create_extern_declarations(file)
     file << "extern jmp_buf AbortFrame;\n"
-    if (@ordered)
+    if @ordered
       file << "extern int GlobalExpectCount;\n"
       file << "extern int GlobalVerifyOrder;\n"
     end
@@ -234,13 +232,13 @@ class CMockGenerator
     file << "void #{@clean_mock_name}_Destroy(void)\n{\n"
     file << "  CMock_Guts_MemFreeAll();\n"
     file << "  memset(&Mock, 0, sizeof(Mock));\n"
-    file << functions.collect {|function| @plugins.run(:mock_destroy, function)}.join
+    file << functions.collect { |function| @plugins.run(:mock_destroy, function) }.join
 
-    unless (@fail_on_unexpected_calls)
-      file << functions.collect {|function| @plugins.run(:mock_ignore, function)}.join
+    unless @fail_on_unexpected_calls
+      file << functions.collect { |function| @plugins.run(:mock_ignore, function) }.join
     end
 
-    if (@ordered)
+    if @ordered
       file << "  GlobalExpectCount = 0;\n"
       file << "  GlobalVerifyOrder = 0;\n"
     end
@@ -253,15 +251,15 @@ class CMockGenerator
                                (function[:return][:type]) +
                                (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
     args_string = function[:args_string]
-    args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
+    args_string += (', ' + function[:var_arg]) unless function[:var_arg].nil?
 
     # Create mock function
-    if (not @weak.empty?)
-        file << "#if defined (__IAR_SYSTEMS_ICC__)\n"
-        file << "#pragma weak #{function[:name]}\n"
-        file << "#else\n"
-        file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string}) #{weak};\n"
-        file << "#endif\n\n"
+    unless @weak.empty?
+      file << "#if defined (__IAR_SYSTEMS_ICC__)\n"
+      file << "#pragma weak #{function[:name]}\n"
+      file << "#else\n"
+      file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string}) #{weak};\n"
+      file << "#endif\n\n"
     end
     file << "#{function_mod_and_rettype} #{function[:name]}(#{args_string})\n"
     file << "{\n"
@@ -273,7 +271,7 @@ class CMockGenerator
     file << @plugins.run(:mock_implementation_precheck, function)
     file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n"
     file << "  cmock_line = cmock_call_instance->LineNumber;\n"
-    if (@ordered)
+    if @ordered
       file << "  if (cmock_call_instance->CallOrder > ++GlobalVerifyOrder)\n"
       file << "    UNITY_TEST_FAIL(cmock_line, CMockStringCalledEarly);\n"
       file << "  if (cmock_call_instance->CallOrder < GlobalVerifyOrder)\n"
@@ -281,7 +279,7 @@ class CMockGenerator
     end
     file << @plugins.run(:mock_implementation, function)
     file << "  UNITY_CLR_DETAILS();\n"
-    file << "  return cmock_call_instance->ReturnVal;\n" unless (function[:return][:void?])
+    file << "  return cmock_call_instance->ReturnVal;\n" unless function[:return][:void?]
     file << "}\n\n"
   end
 
@@ -296,16 +294,16 @@ class CMockGenerator
                                (function[:return][:type]) +
                                (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
     args_string = function[:args_string]
-    args_string += (", " + function[:var_arg]) unless (function[:var_arg].nil?)
+    args_string += (', ' + function[:var_arg]) unless function[:var_arg].nil?
 
     decl = "#{function_mod_and_rettype} #{function[:name]}(#{args_string})"
 
-    unless (existing.include?(decl))
+    unless existing.include?(decl)
       file << "#{decl}\n"
       file << "{\n"
       file << "  //TODO: Implement Me!\n"
-      function[:args].each {|arg| file << "  (void)#{arg[:name]};\n"}
-      file << "  return (#{(function[:return][:type])})0;\n" unless (function[:return][:void?])
+      function[:args].each { |arg| file << "  (void)#{arg[:name]};\n" }
+      file << "  return (#{(function[:return][:type])})0;\n" unless function[:return][:void?]
       file << "}\n\n"
     end
   end

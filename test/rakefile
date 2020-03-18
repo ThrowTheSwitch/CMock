@@ -107,3 +107,36 @@ end
 task :no_color do
   $colour_output = false
 end
+
+################### CODING STYLE VALIDATION
+namespace :style do
+  desc "Check style"
+  task :check do
+    report "\nVERIFYING RUBY STYLE"
+    report execute("rubocop ../lib ../examples ../config ../scripts --config ../vendor/unity/test/.rubocop.yml", true)
+    report "Styling Ruby:PASS"
+  end
+
+  desc "Fix Style of all C Code"
+  task :c do
+    run_astyle("../src/*.* ../extras/fixture/src/*.*")
+  end
+
+  desc "Attempt to Autocorrect style"
+  task :auto  => ['style:clean'] do
+    report execute("rubocop ../lib ../examples ../config ../scripts --auto-correct --config ../vendor/unity/test/.rubocop.yml", true)
+    report "Autocorrected What We Could."
+  end
+
+  desc "Update style todo list"
+  task :todo  => ['style:clean'] do
+    report execute("rubocop ../lib ../examples ../config ../scripts --auto-gen-config --config ../vendor/unity/test/.rubocop.yml", true)
+    report "Updated Style TODO List."
+  end
+
+  task :clean do
+    File.delete(".rubocop_todo.yml") if File.exists?(".rubocop_todo.yml")
+  end
+end
+
+task :style => ['style:check']
