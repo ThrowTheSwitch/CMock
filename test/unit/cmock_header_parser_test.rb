@@ -1291,7 +1291,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "handle arrays and treat them as pointers or strings" do
     source = 'void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], ' \
-             'char thing3 [][2 ][ 3], int* thing4[4], u8 thing5[((u8)5)])'
+             'char thing3 [][2 ][ 3], int* thing4[4], u8 thing5[((u8)((5 + 5*2)/3))])'
     expected_args = [
       { type: 'CUSTOM_TYPE*', name: 'thing1', ptr?: true,  const?: false, const_ptr?: false },
       { type: 'int*',         name: 'thing2', ptr?: true,  const?: false, const_ptr?: false },
