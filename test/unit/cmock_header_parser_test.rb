@@ -2091,7 +2091,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "{\n" +
       "    return dummy_func_decl(1, 1, 1);\n" +
       "}\n" +
-      "struct my_struct_with_inline_in_it\n" # struct definition in between to mess with the parser
+      "struct my_struct_with_inline_in_it\n" + # struct definition in between to mess with the parser
       "{\n" +
       "    int a;\n" +
       "    char b;\n" +
@@ -2106,7 +2106,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "int dummy_func_decl(int a, char b, float c);\n" +
       "int dummy_func_decl2(int a, char b, float c)\n\n\n\n\n\n;\n" + # Second declaration with a lot of newlines until the semicolon to mess with the parser
       "int staticinlinefunc(struct my_struct *s);\n" +
-      "struct my_struct_with_inline_in_it\n"
+      "struct my_struct_with_inline_in_it\n" +
       "{\n" +
       "    int a;\n" +
       "    char b;\n" +
