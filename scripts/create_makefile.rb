@@ -132,7 +132,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     raise "Mocking of system headers is not yet supported!" if !system_mocks.empty?
     local_mocks = cfg[:includes][:local].select{|name| name =~ MOCK_MATCHER}
 
-    module_names_to_mock = local_mocks.map{|name| "#{name.sub(/#{MOCK_PREFIX}/,'')}.h"}
+    module_names_to_mock = local_mocks.map{|name| "#{name.sub(/#{MOCK_PREFIX}/,'')}"}
     headers_to_mock = []
     module_names_to_mock.each do |name|
       header_to_mock = nil
@@ -148,7 +148,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     all_headers_to_mock += headers_to_mock
     mock_objs = headers_to_mock.map do |hdr|
-      mock_name = MOCK_PREFIX + File.basename(hdr, '.h')
+      mock_name = MOCK_PREFIX + File.basename(hdr, '.*')
       File.join(MOCKS_DIR, mock_name + '.o')
     end
     all_headers_to_mock.uniq!
@@ -174,7 +174,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
   # Generate and build mocks
   all_headers_to_mock.each do |hdr|
-    mock_name = MOCK_PREFIX + File.basename(hdr, '.h')
+    mock_name = MOCK_PREFIX + File.basename(hdr, '.*')
     mock_header = File.join(MOCKS_DIR, mock_name + '.h')
     mock_src = File.join(MOCKS_DIR, mock_name + '.c')
     mock_obj = File.join(MOCKS_DIR, mock_name + '.o')
