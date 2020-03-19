@@ -13,34 +13,34 @@ describe CMockConfig, "Verify CMockConfig Module" do
 
   it "use default settings when no parameters are specified" do
     config = CMockConfig.new
-    assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],             config.mock_path)
-    assert_nil(CMockConfig::CMockDefaultOptions[:includes])
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:mock_path],             config.mock_path)
+    assert_nil(CMockConfig::CMOCK_DEFAULT_OPTIONS[:includes])
     assert_nil(config.includes)
-    assert_equal(CMockConfig::CMockDefaultOptions[:attributes],            config.attributes)
-    assert_equal(CMockConfig::CMockDefaultOptions[:plugins],               config.plugins)
-    assert_equal(CMockConfig::CMockDefaultOptions[:treat_externs],         config.treat_externs)
-    assert_equal(CMockConfig::CMockDefaultOptions[:treat_inlines],         config.treat_inlines)
-    assert_equal(CMockConfig::CMockDefaultOptions[:inline_function_patterns],   config.inline_function_patterns)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:attributes],            config.attributes)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:plugins],               config.plugins)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:treat_externs],         config.treat_externs)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:treat_inlines],         config.treat_inlines)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:inline_function_patterns],   config.inline_function_patterns)
   end
 
   it "replace only options specified in a hash" do
     test_includes = ['hello']
     test_attributes = ['blah', 'bleh']
     config = CMockConfig.new(:includes => test_includes, :attributes => test_attributes)
-    assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],              config.mock_path)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:mock_path],              config.mock_path)
     assert_equal(test_includes,                                             config.includes)
     assert_equal(test_attributes,                                           config.attributes)
-    assert_equal(CMockConfig::CMockDefaultOptions[:plugins],                config.plugins)
-    assert_equal(CMockConfig::CMockDefaultOptions[:treat_externs],          config.treat_externs)
-    assert_equal(CMockConfig::CMockDefaultOptions[:treat_inlines],          config.treat_inlines)
-    assert_equal(CMockConfig::CMockDefaultOptions[:inline_function_patterns],   config.inline_function_patterns)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:plugins],                config.plugins)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:treat_externs],          config.treat_externs)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:treat_inlines],          config.treat_inlines)
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:inline_function_patterns],   config.inline_function_patterns)
   end
 
   it "replace only options specified in a yaml file" do
     test_plugins = [:soda, :pizza]
     config = CMockConfig.new("#{File.expand_path(File.dirname(__FILE__))}/cmock_config_test.yml")
-    assert_equal(CMockConfig::CMockDefaultOptions[:mock_path],              config.mock_path)
-    assert_nil(CMockConfig::CMockDefaultOptions[:includes])
+    assert_equal(CMockConfig::CMOCK_DEFAULT_OPTIONS[:mock_path],              config.mock_path)
+    assert_nil(CMockConfig::CMOCK_DEFAULT_OPTIONS[:includes])
     assert_nil(config.includes)
     assert_equal(test_plugins,                                              config.plugins)
     assert_equal(:include,                                                  config.treat_externs)

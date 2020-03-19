@@ -161,6 +161,18 @@ module RakefileHelpers
     end
   end
 
+  def run_astyle(style_what)
+    report "Styling C Code..."
+    command = "AStyle " \
+              "--style=allman --indent=spaces=4 --indent-switches --indent-preproc-define --indent-preproc-block " \
+              "--pad-oper --pad-comma --unpad-paren --pad-header " \
+              "--align-pointer=type --align-reference=name " \
+              "--add-brackets --mode=c --suffix=none " \
+              "#{style_what}"
+    execute(command, false)
+    report "Styling C:PASS"
+  end
+
   def report_summary
     summary = UnityTestSummary.new
     summary.root = File.expand_path(File.dirname(__FILE__)) + '/'
@@ -371,6 +383,15 @@ module RakefileHelpers
             $cfg['linker']['bin_files']['extension'] + ' ' +
             $cfg['simulator']['post_support'].map{|o| tackit(o)}.join(' ') )
       end
+    end
+  end
+
+  def run_examples()
+    [ "cd #{File.join("..","examples","make_example")} && make clean && make setup && make test",
+      "cd #{File.join("..","examples","temp_sensor")} && rake ci"
+    ].each do |cmd|
+      report "Testing '#{cmd}'"
+      execute(cmd, false)
     end
   end
 
