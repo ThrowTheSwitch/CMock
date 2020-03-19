@@ -27,7 +27,7 @@ module RakefileHelpers
 
   def unit_test_files
     path = $cfg['compiler']['unit_tests_path'] + 'Test*' + C_EXTENSION
-    path.gsub!(/\\/, '/')
+    path.tr!('\\', '/')
     FileList.new(path)
   end
 
@@ -162,7 +162,7 @@ module RakefileHelpers
     summary = UnityTestSummary.new
     summary.root = HERE
     results_glob = "#{$cfg['compiler']['build_path']}*.test*"
-    results_glob.gsub!(/\\/, '/')
+    results_glob.tr!('\\', '/')
     results = Dir[results_glob]
     summary.targets = results
     report summary.run

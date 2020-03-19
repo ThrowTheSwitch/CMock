@@ -386,6 +386,15 @@ module RakefileHelpers
     end
   end
 
+  def run_examples()
+    [ "cd #{File.join("..","examples","make_example")} && make clean && make setup && make test",
+      "cd #{File.join("..","examples","temp_sensor")} && rake ci"
+    ].each do |cmd|
+      report "Testing '#{cmd}'"
+      execute(cmd, false)
+    end
+  end
+
   def fail_out(msg)
     puts msg
     exit(-1)

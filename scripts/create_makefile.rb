@@ -28,7 +28,7 @@ end
 
 all_headers_to_mock = []
 
-suppress_error = !ARGV.nil? && !ARGV.empty? && (ARGV[0].upcase == '--SILENT')
+suppress_error = !ARGV.nil? && !ARGV.empty? && (ARGV[0].casecmp('--SILENT') == 0)
 
 File.open(TEST_MAKEFILE, 'w') do |mkfile|
   # Define make variables

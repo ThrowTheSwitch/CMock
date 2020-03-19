@@ -37,7 +37,7 @@ class CMockUnityHelperParser
     @config.treat_as.each_pair do |ctype, expecttype|
       c_type = ctype.gsub(/\s+/, '_')
       if expecttype =~ /\*/
-        c_types[c_type] = "UNITY_TEST_ASSERT_EQUAL_#{expecttype.gsub(/\*/, '')}_ARRAY"
+        c_types[c_type] = "UNITY_TEST_ASSERT_EQUAL_#{expecttype.delete('*')}_ARRAY"
       else
         c_types[c_type] = "UNITY_TEST_ASSERT_EQUAL_#{expecttype}"
         c_types[c_type + '*'] ||= "UNITY_TEST_ASSERT_EQUAL_#{expecttype}_ARRAY"

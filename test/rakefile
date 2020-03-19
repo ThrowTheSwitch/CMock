@@ -32,7 +32,7 @@ configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
 task :default => [:test]
-task :ci      => [:no_color, :default, 'style:check', 'style:c']
+task :ci      => [:no_color, :default, 'test:examples', 'style:check', 'style:c']
 task :cruise  => :ci
 
 desc "Load configuration"
@@ -87,6 +87,11 @@ namespace :test do
     raise "System tests failed." if (tests_failed > 0)
 
     run_system_test_compilations(compile_tests_to_run)
+  end
+
+  desc "Test cmock examples"
+  task :examples => [:prep_system_tests] do
+    run_examples()
   end
 
   #individual system tests
