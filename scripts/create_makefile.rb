@@ -20,7 +20,7 @@ TEST_BIN_DIR = TEST_BUILD_DIR
 MOCK_PREFIX = ENV.fetch('TEST_MOCK_PREFIX', 'mock_')
 MOCK_SUFFIX = ENV.fetch('TEST_MOCK_SUFFIX', '')
 TEST_MAKEFILE = ENV.fetch('TEST_MAKEFILE', File.join(TEST_BUILD_DIR, 'MakefileTestSupport'))
-MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-\.]+#{MOCK_SUFFIX}/.freeze
+MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-\.]+#{MOCK_SUFFIX}/
 
 [TEST_BUILD_DIR, OBJ_DIR, RUNNERS_DIR, MOCKS_DIR, TEST_BIN_DIR].each do |dir|
   FileUtils.mkdir_p dir
