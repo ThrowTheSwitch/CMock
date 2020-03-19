@@ -5,7 +5,7 @@
 # ==========================================
 
 class CMockConfig
-  CMockDefaultOptions =
+  CMOCK_DEFAULT_OPTIONS =
     {
       :framework                   => :unity,
       :mock_path                   => 'mocks',
@@ -50,13 +50,13 @@ class CMockConfig
       #   so we check for word boundaries when searching for them
       # - We first remove "static inline" combinations and boil down to single inline or static statements
       :inline_function_patterns    => ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*'] # Last part (\s*) is just to remove whitespaces (only to prettify the output)
-    }
+    }.freeze
 
   def initialize(options = nil)
     case options
-    when NilClass then options = CMockDefaultOptions.clone
-    when String   then options = CMockDefaultOptions.clone.merge(load_config_file_from_yaml(options))
-    when Hash     then options = CMockDefaultOptions.clone.merge(options)
+    when NilClass then options = CMOCK_DEFAULT_OPTIONS.dup
+    when String   then options = CMOCK_DEFAULT_OPTIONS.dup.merge(load_config_file_from_yaml(options))
+    when Hash     then options = CMOCK_DEFAULT_OPTIONS.dup.merge(options)
     else raise 'If you specify arguments, it should be a filename or a hash of options'
     end
 
@@ -110,8 +110,8 @@ class CMockConfig
     YAML.load_file(yaml_filename)[:cmock]
   end
 
-  def set_path(path)
-    @src_path = path
+  def path(new_path)
+    @src_path = new_path
   end
 
   def load_unity_helper

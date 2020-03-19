@@ -12,14 +12,9 @@ class CMockFileWriter
   end
 
   def create_subdir(subdir)
-    unless Dir.exist?("#{@config.mock_path}/")
-      require 'fileutils'
-      FileUtils.mkdir_p "#{@config.mock_path}/"
-    end
-    if subdir && !Dir.exist?("#{@config.mock_path}/#{subdir + '/' if subdir}")
-      require 'fileutils'
-      FileUtils.mkdir_p "#{@config.mock_path}/#{subdir + '/' if subdir}"
-    end
+    require 'fileutils'
+    FileUtils.mkdir_p "#{@config.mock_path}/" unless Dir.exist?("#{@config.mock_path}/")
+    FileUtils.mkdir_p "#{@config.mock_path}/#{subdir + '/' if subdir}" if subdir && !Dir.exist?("#{@config.mock_path}/#{subdir + '/' if subdir}")
   end
 
   def create_file(filename, subdir)

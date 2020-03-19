@@ -10,7 +10,7 @@ class CMockUnityHelperParser
   def initialize(config)
     @config = config
     @fallback = @config.plugins.include?(:array) ? 'UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY' : 'UNITY_TEST_ASSERT_EQUAL_MEMORY'
-    @c_types = map_C_types.merge(import_source)
+    @c_types = map_c_types.merge(import_source)
   end
 
   def get_helper(ctype)
@@ -32,7 +32,7 @@ class CMockUnityHelperParser
 
   private ###########################
 
-  def map_C_types
+  def map_c_types
     c_types = {}
     @config.treat_as.each_pair do |ctype, expecttype|
       c_type = ctype.gsub(/\s+/, '_')

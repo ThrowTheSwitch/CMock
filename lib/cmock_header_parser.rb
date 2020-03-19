@@ -144,7 +144,7 @@ class CMockHeaderParser
         # 1. Determine if we are dealing with a user defined macro to declare inline functions
         # If the end of the pre-match string is a macro-declaration-like string,
         # we are dealing with a user defined macro to declare inline functions
-        if /(#define\s*)\z/ === inline_function_match.pre_match
+        if /(#define\s*)\z/ =~ inline_function_match.pre_match
           # Remove the macro from the source
           stripped_pre_match = inline_function_match.pre_match.sub(/(#define\s*)\z/, '')
           stripped_post_match = inline_function_match.post_match.sub(/\A(.*[\n]?)/, '')
@@ -155,7 +155,7 @@ class CMockHeaderParser
         # 2. Determine if we are dealing with an inline function declaration iso function definition
         # If the start of the post-match string is a function-declaration-like string (something ending with semicolon after the function arguments),
         # we are dealing with a inline function declaration
-        if /\A#{@function_declaration_parse_base_match}\s*;/m === inline_function_match.post_match
+        if /\A#{@function_declaration_parse_base_match}\s*;/m =~ inline_function_match.post_match
           # Only remove the inline part from the function declaration, leaving the function declaration won't do any harm
           source = inline_function_match.pre_match + inline_function_match.post_match
           next
@@ -367,9 +367,11 @@ class CMockHeaderParser
   def divine_const(arg)
     # a non-pointer arg containing "const" is a constant
     # an arg containing "const" before the last * is a pointer to a constant
-    (arg.include?('*') ? (/(^|\s|\*)const(\s(\w|\s)*)?\*(?!.*\*)/ =~ arg)
-                       : (/(^|\s)const(\s|$)/ =~ arg)
-    ) ? true : false
+    if arg.include?('*') ? (/(^|\s|\*)const(\s(\w|\s)*)?\*(?!.*\*)/ =~ arg) : (/(^|\s)const(\s|$)/ =~ arg)
+      true
+    else
+      false
+    end
   end
 
   def divine_ptr_and_const(arg)

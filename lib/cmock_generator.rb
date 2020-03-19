@@ -298,13 +298,13 @@ class CMockGenerator
 
     decl = "#{function_mod_and_rettype} #{function[:name]}(#{args_string})"
 
-    unless existing.include?(decl)
-      file << "#{decl}\n"
-      file << "{\n"
-      file << "  //TODO: Implement Me!\n"
-      function[:args].each { |arg| file << "  (void)#{arg[:name]};\n" }
-      file << "  return (#{(function[:return][:type])})0;\n" unless function[:return][:void?]
-      file << "}\n\n"
-    end
+    return if existing.include?(decl)
+
+    file << "#{decl}\n"
+    file << "{\n"
+    file << "  //TODO: Implement Me!\n"
+    function[:args].each { |arg| file << "  (void)#{arg[:name]};\n" }
+    file << "  return (#{(function[:return][:type])})0;\n" unless function[:return][:void?]
+    file << "}\n\n"
   end
 end

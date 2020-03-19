@@ -32,7 +32,7 @@ configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
 task :default => [:test]
-task :ci      => [:no_color, :default]
+task :ci      => [:no_color, :default, 'style:check', 'style:c']
 task :cruise  => :ci
 
 desc "Load configuration"
@@ -43,7 +43,7 @@ task :config, :config_file do |t, args|
 end
 
 # Still support testing everything with just 'test' but switch default to ceedling-like test:all
-task :test => [:clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
+task :test => ['test:all']
 
 namespace :test do
   desc "Run all unit, c, and system tests"

@@ -25,13 +25,13 @@ module RakefileHelpers
     configure_clean
   end
 
-  def get_unit_test_files
+  def unit_test_files
     path = $cfg['compiler']['unit_tests_path'] + 'Test*' + C_EXTENSION
     path.gsub!(/\\/, '/')
     FileList.new(path)
   end
 
-  def get_local_include_dirs
+  def local_include_dirs
     include_dirs = $cfg['compiler']['includes']['items'].dup
     include_dirs.delete_if { |dir| dir.is_a?(Array) }
     include_dirs
@@ -178,7 +178,7 @@ module RakefileHelpers
     $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
     $cfg['compiler']['defines']['items'] << 'TEST'
 
-    include_dirs = get_local_include_dirs
+    include_dirs = local_include_dirs
 
     # Build and execute each unit test
     test_files.each do |test|
@@ -250,7 +250,7 @@ module RakefileHelpers
     main_path = $cfg['compiler']['source_path'] + main + C_EXTENSION
 
     # Detect dependencies and build required required modules
-    include_dirs = get_local_include_dirs
+    include_dirs = local_include_dirs
     extract_headers(main_path).each do |header|
       src_file = find_source_file(header, include_dirs)
       unless src_file.nil?

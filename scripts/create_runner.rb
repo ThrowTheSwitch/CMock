@@ -14,6 +14,5 @@ if $0 == __FILE__
 
   test = ARGV[0]
   runner = ARGV[1]
-  generator = UnityTestRunnerGenerator.new.run(test, runner)
-
+  UnityTestRunnerGenerator.new.run(test, runner)
 end

@@ -13,7 +13,7 @@ class CMockPluginManager
     plugins_to_load.each do |plugin|
       plugin_name = plugin.to_s
       object_name = 'CMockGeneratorPlugin' + camelize(plugin_name)
-      self.class.plugin_require_mutex.synchronize { load_plugin(plugin_name, object_name, config, utils) }
+      self.class.mutex.synchronize { load_plugin(plugin_name, object_name, config, utils) }
     end
     @plugins.sort! { |a, b| a.priority <=> b.priority }
   end
@@ -30,11 +30,11 @@ class CMockPluginManager
     lower_case_and_underscored_word.gsub(/\/(.?)/) { '::' + Regexp.last_match(1).upcase }.gsub(/(^|_)(.)/) { Regexp.last_match(2).upcase }
   end
 
-  private
-
-  def self.plugin_require_mutex
+  def self.mutex
     @mutex ||= Mutex.new
   end
+
+  private
 
   def load_plugin(plugin_name, object_name, config, utils)
     unless Object.const_defined? object_name
