@@ -32,7 +32,7 @@ configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
 task :default => [:test]
-task :ci      => [:no_color, :default, 'test:examples', 'style:check', 'style:c']
+task :ci      => [:no_color, :default, 'test:examples', 'style:check']
 task :cruise  => :ci
 
 desc "Load configuration"
