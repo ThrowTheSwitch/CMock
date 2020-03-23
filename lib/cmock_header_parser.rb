@@ -37,8 +37,8 @@ class CMockHeaderParser
     @normalized_source = nil
     function_names = []
 
-    all_funcs = parse_functions( import_source(source) ).map {|item| [item]}
-    all_funcs += parse_cpp_functions( import_source(source, cpp=true) )
+    all_funcs = parse_functions(import_source(source)).map { |item| [item] }
+    all_funcs += parse_cpp_functions(import_source(source, true))
     all_funcs.map do |decl|
       func = parse_declaration(*decl)
       unless function_names.include? func[:name]
@@ -182,7 +182,7 @@ class CMockHeaderParser
     source
   end
 
-  def import_source(source, cpp=false)
+  def import_source(source, cpp = false)
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding('ISO-8859-1').encode('utf-8', :replace => nil)
 
@@ -292,7 +292,7 @@ class CMockHeaderParser
     source.each do |line|
       # Search for namespace, class, opening and closing braces
       line.scan(/(?:(?:\b(?:namespace|class)\s+(?:\S+)\s*)?{)|}/).each do |item|
-        if '}' == item
+        if item == '}'
           ns.pop
         else
           token = item.strip.sub(/\s+/, ' ')
@@ -304,29 +304,29 @@ class CMockHeaderParser
       end
 
       pub = true if line =~ /public:/
-      pub = false if line =~ /private:/ or line =~ /protected:/
+      pub = false if line =~ /private:/ || line =~ /protected:/
 
       # ignore non-public and non-static
       next unless pub
       next unless line =~ /\bstatic\b/
 
       line.sub!(/^.*static/, '')
-      if (line =~ @declaration_parse_matcher)
-        tmp = ns.reject{ |item| item == '{'}
+      next unless line =~ @declaration_parse_matcher
 
-        # Identify class name, if any
-        cls = nil
-        if tmp[-1].start_with? "class "
-          cls = tmp.pop.sub(/class (\S+) {/, '\1')
-        end
+      tmp = ns.reject { |item| item == '{' }
 
-        # Assemble list of namespaces
-        tmp.each{ |item| item.sub!(/(?:namespace|class) (\S+) {/, '\1') }
-
-        funcs << [line.strip.gsub(/\s+/, ' '), tmp, cls]
+      # Identify class name, if any
+      cls = nil
+      if tmp[-1].start_with? 'class '
+        cls = tmp.pop.sub(/class (\S+) {/, '\1')
       end
+
+      # Assemble list of namespaces
+      tmp.each { |item| item.sub!(/(?:namespace|class) (\S+) {/, '\1') }
+
+      funcs << [line.strip.gsub(/\s+/, ' '), tmp, cls]
     end
-    return funcs
+    funcs
   end
 
   def parse_functions(source)
@@ -499,7 +499,7 @@ class CMockHeaderParser
     end
   end
 
-  def parse_declaration(declaration, namespace=[], classname=nil)
+  def parse_declaration(declaration, namespace = [], classname = nil)
     decl = {}
     decl[:namespace] = namespace
     decl[:class] = classname
@@ -519,11 +519,11 @@ class CMockHeaderParser
     # Prefix name with namespace scope (if any) and then class
     decl[:name] = namespace.join('_')
     unless classname.nil?
-      decl[:name] << "_" unless decl[:name].length == 0
+      decl[:name] << '_' unless decl[:name].empty?
       decl[:name] << classname
     end
     # Add original name to complete fully scoped name
-    decl[:name] << "_" unless decl[:name].length == 0
+    decl[:name] << '_' unless decl[:name].empty?
     decl[:name] << decl[:orig_name]
 
     decl[:modifier] = parsed[:modifier]

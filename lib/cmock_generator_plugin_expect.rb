@@ -30,9 +30,9 @@ class CMockGeneratorPluginExpect
       lines << "  #{function[:return][:type].chomp('&')} ReturnRefVal;\n"
       lines << "  std::reference_wrapper<#{function[:return][:type].chomp('&')}> ReturnVal = ReturnRefVal;\n"
     else
-      lines << "  #{function[:return][:type]} ReturnVal;\n"  unless function[:return][:void?]
+      lines << "  #{function[:return][:type]} ReturnVal;\n" unless function[:return][:void?]
     end
-    lines << "  int CallOrder;\n"                          if @ordered
+    lines << "  int CallOrder;\n" if @ordered
     function[:args].each do |arg|
       lines << "  #{arg[:type]} Expected_#{arg[:name]};\n"
     end

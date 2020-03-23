@@ -66,9 +66,7 @@ class CMockGenerator
   end
 
   def create_using_statement(file, function)
-    if function[:namespace].length > 0
-      file << "using namespace #{function[:namespace].join('::')};\n"
-    end
+    file << "using namespace #{function[:namespace].join('::')};\n" unless function[:namespace].empty?
   end
 
   def create_mock_header_file(parsed_stuff)
@@ -272,7 +270,7 @@ class CMockGenerator
     end
 
     # Determine class prefix (if any)
-    cls_pre = ""
+    cls_pre = ''
     unless function[:class].nil?
       cls_pre = "#{function[:class]}::"
     end
@@ -307,7 +305,7 @@ class CMockGenerator
     file << "}\n"
 
     # Close any namespace(s) opened above
-    function[:namespace].each do |ns|
+    function[:namespace].each do
       file << "}\n"
     end
 
