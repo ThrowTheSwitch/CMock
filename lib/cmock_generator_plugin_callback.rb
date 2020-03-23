@@ -85,4 +85,11 @@ class CMockGeneratorPluginCallback
     "    call_instance = CMOCK_GUTS_NONE;\n" \
     "    (void)call_instance;\n  }\n"
   end
+
+  def mock_destroy(function)
+    func_name = function[:name]
+    "  Mock.#{func_name}_CallbackBool = 0;\n" \
+    "  Mock.#{func_name}_CallbackFunctionPointer = NULL;\n" \
+    "  Mock.#{func_name}_CallbackCalls = 0;\n"
+  end
 end
