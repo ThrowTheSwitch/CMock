@@ -57,6 +57,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :treat_inlines, :exclude
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator.module_name = @module_name
+    @cmock_generator.module_ext = '.h'
     @cmock_generator.mock_name = "Mock#{@module_name}"
     @cmock_generator.clean_mock_name = "Mock#{@module_name}"
 
@@ -76,6 +77,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :treat_inlines, :exclude
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator_strict.module_name = @module_name
+    @cmock_generator_strict.module_ext = '.h'
     @cmock_generator_strict.mock_name = "Mock#{@module_name}"
     @cmock_generator_strict.clean_mock_name = "Mock#{@module_name}"
   end
@@ -83,11 +85,12 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
   after do
   end
 
-  it "create the top of a header file with optional include files from config and include file from plugin" do
+  def helper_create_header_top_with_opt_incldues_form_config_and_plugin(ext)
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    orig_filename = "PoutPoutFish.h"
+    @cmock_generator.module_ext = ext
+    orig_filename = "PoutPoutFish#{ext}"
     define_name = "MOCKPOUTPOUTFISH_H"
     output = []
     expected = [
@@ -117,9 +120,15 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}")
 
     assert_equal(expected, output)
+  end
+
+  it "create the top of a header file with optional include files from config and include file from plugin" do
+    ['.h','.hh','.hpp'].each do |ext|
+      helper_create_header_top_with_opt_incldues_form_config_and_plugin(ext)
+    end
   end
 
   it "handle dashes and spaces in the module name" do
@@ -138,6 +147,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :treat_inlines, :exclude
     @cmock_generator2 = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator2.module_name = "Pout-Pout Fish"
+    @cmock_generator2.module_ext = '.h'
     @cmock_generator2.mock_name = "MockPout-Pout Fish"
     @cmock_generator2.clean_mock_name = "MockPout_Pout_Fish"
 
@@ -315,6 +325,9 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "#include <string.h>\n",
                  "#include <stdlib.h>\n",
                  "#include <setjmp.h>\n",
+                 "#ifdef __cplusplus\n",
+                 "#include <functional>\n",
+                 "#endif\n",
                  "#include \"cmock.h\"\n",
                  "#include \"MockPoutPoutFish.h\"\n",
                  "\n",

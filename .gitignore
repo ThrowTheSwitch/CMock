@@ -6,3 +6,4 @@ Gemfile.lock
 .DS_Store
 *.swp
 examples/make_example/build
+examples/temp_sensor/build

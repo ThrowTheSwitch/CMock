@@ -1,5 +1,4 @@
-
-suppress_error = !ARGV.nil? && !ARGV.empty? && (ARGV[0].upcase == "--SILENT")
+suppress_error = !ARGV.nil? && !ARGV.empty? && (ARGV[0].casecmp('--SILENT') == 0)
 
 begin
   require "#{ENV['UNITY_DIR']}/auto/unity_test_summary.rb"
