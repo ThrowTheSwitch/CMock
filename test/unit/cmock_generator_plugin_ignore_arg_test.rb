@@ -54,9 +54,9 @@ describe CMockGeneratorPluginIgnoreArg, "Verify CMockGeneratorPluginIgnoreArg Mo
   end
 
   it "add to tyepdef structure mock needs of functions of style 'void func(int chicken, int* pork)'" do
-    expected = "  int IgnoreArg_chicken;\n" +
-               "  int IgnoreArg_beef;\n" +
-               "  int IgnoreArg_tofu;\n"
+    expected = "  char IgnoreArg_chicken;\n" +
+               "  char IgnoreArg_beef;\n" +
+               "  char IgnoreArg_tofu;\n"
     returned = @cmock_generator_plugin_ignore_arg.instance_typedefs(@complex_func)
     assert_equal(expected, returned)
   end
