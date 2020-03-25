@@ -16,7 +16,8 @@
 
 /* should be big enough to index full range of CMOCK_MEM_MAX */
 #ifndef CMOCK_MEM_INDEX_TYPE
-#define CMOCK_MEM_INDEX_TYPE  unsigned int
+#include <stddef.h>
+#define CMOCK_MEM_INDEX_TYPE  size_t
 #endif
 
 #define CMOCK_GUTS_NONE   (0)
