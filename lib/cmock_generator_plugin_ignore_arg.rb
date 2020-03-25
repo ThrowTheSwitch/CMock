@@ -10,7 +10,7 @@ class CMockGeneratorPluginIgnoreArg
   def instance_typedefs(function)
     lines = ''
     function[:args].each do |arg|
-      lines << "  int IgnoreArg_#{arg[:name]};\n"
+      lines << "  char IgnoreArg_#{arg[:name]};\n"
     end
     lines
   end

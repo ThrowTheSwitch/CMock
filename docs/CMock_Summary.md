@@ -732,7 +732,7 @@ based on other settings, particularly Unity's settings.
 
 * `CMOCK_MEM_INDEX_TYPE`
   This needs to be something big enough to point anywhere in Cmock's
-  memory space... usually it's an unsigned int.
+  memory space... usually it's a size_t.
 
 Other Tips
 ==========

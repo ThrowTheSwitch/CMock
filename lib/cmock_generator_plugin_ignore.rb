@@ -16,11 +16,11 @@ class CMockGeneratorPluginIgnore
 
   def instance_structure(function)
     if function[:return][:void?]
-      "  int #{function[:name]}_IgnoreBool;\n"
+      "  char #{function[:name]}_IgnoreBool;\n"
     elsif function[:return][:type].end_with?('&') # C++ reference
-      "  int #{function[:name]}_IgnoreBool;\n  #{function[:return][:type].chomp('&')} #{function[:name]}_FinalRefReturn;\n  std::reference_wrapper<#{function[:return][:type].chomp('&')}> #{function[:name]}_FinalReturn = #{function[:name]}_FinalRefReturn;\n"
+      "  char #{function[:name]}_IgnoreBool;\n  #{function[:return][:type].chomp('&')} #{function[:name]}_FinalRefReturn;\n  std::reference_wrapper<#{function[:return][:type].chomp('&')}> #{function[:name]}_FinalReturn = #{function[:name]}_FinalRefReturn;\n"
     else
-      "  int #{function[:name]}_IgnoreBool;\n  #{function[:return][:type]} #{function[:name]}_FinalReturn;\n"
+      "  char #{function[:name]}_IgnoreBool;\n  #{function[:return][:type]} #{function[:name]}_FinalReturn;\n"
     end
   end
 
@@ -61,12 +61,12 @@ class CMockGeneratorPluginIgnore
     unless function[:return][:void?]
       lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n"
     end
-    lines << "  Mock.#{function[:name]}_IgnoreBool = (int)1;\n"
+    lines << "  Mock.#{function[:name]}_IgnoreBool = (char)1;\n"
     lines << "}\n\n"
   end
 
   def mock_ignore(function)
-    "  Mock.#{function[:name]}_IgnoreBool = (int) 1;\n"
+    "  Mock.#{function[:name]}_IgnoreBool = (char) 1;\n"
   end
 
   def mock_verify(function)
