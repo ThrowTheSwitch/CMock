@@ -32,7 +32,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
 
   it "add to instance structure" do
     function = {:name => "Oak", :args => [:type => "int*", :name => "blah", :ptr? => true], :return => test_return[:int_ptr]}
-    expected = "  int Oak_CallbackBool;\n" +
+    expected = "  char Oak_CallbackBool;\n" +
                "  CMOCK_Oak_CALLBACK Oak_CallbackFunctionPointer;\n" +
                "  int Oak_CallbackCalls;\n"
     returned = @cmock_generator_plugin_callback.instance_structure(function)
@@ -264,14 +264,14 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
 
     expected = ["void Lemon_AddCallback(CMOCK_Lemon_CALLBACK Callback)\n",
                 "{\n",
-                "  Mock.Lemon_IgnoreBool = (int)0;\n",
-                "  Mock.Lemon_CallbackBool = (int)1;\n",
+                "  Mock.Lemon_IgnoreBool = (char)0;\n",
+                "  Mock.Lemon_CallbackBool = (char)1;\n",
                 "  Mock.Lemon_CallbackFunctionPointer = Callback;\n",
                 "}\n\n",
                 "void Lemon_Stub(CMOCK_Lemon_CALLBACK Callback)\n",
                 "{\n",
-                "  Mock.Lemon_IgnoreBool = (int)0;\n",
-                "  Mock.Lemon_CallbackBool = (int)0;\n",
+                "  Mock.Lemon_IgnoreBool = (char)0;\n",
+                "  Mock.Lemon_CallbackBool = (char)0;\n",
                 "  Mock.Lemon_CallbackFunctionPointer = Callback;\n",
                 "}\n\n"
                ].join

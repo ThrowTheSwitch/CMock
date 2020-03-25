@@ -71,7 +71,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
 
   it "add to tyepdef structure mock needs of functions of style 'void func(int chicken, int* pork)'" do
     complex_func_expect()
-    expected = "  int ReturnThruPtr_tofu_Used;\n" +
+    expected = "  char ReturnThruPtr_tofu_Used;\n" +
                "  int* ReturnThruPtr_tofu_Val;\n" +
                "  int ReturnThruPtr_tofu_Size;\n"
     returned = @cmock_generator_plugin_return_thru_ptr.instance_typedefs(@complex_func)

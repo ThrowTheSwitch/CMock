@@ -15,7 +15,7 @@ class CMockGeneratorPluginExpectAnyArgs
   end
 
   def instance_typedefs(_function)
-    "  int ExpectAnyArgsBool;\n"
+    "  char ExpectAnyArgsBool;\n"
   end
 
   def mock_function_declarations(function)
@@ -42,7 +42,7 @@ class CMockGeneratorPluginExpectAnyArgs
       unless function[:return][:void?]
         lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n"
       end
-      lines << "  cmock_call_instance->ExpectAnyArgsBool = (int)1;\n"
+      lines << "  cmock_call_instance->ExpectAnyArgsBool = (char)1;\n"
       lines << "}\n\n"
     end
     lines
