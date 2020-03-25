@@ -28,7 +28,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
 
   it "add a required variable to the instance structure" do
     function = {:name => "Grass", :args => [], :return => test_return[:void]}
-    expected = "  int Grass_IgnoreBool;\n"
+    expected = "  char Grass_IgnoreBool;\n"
     returned = @cmock_generator_plugin_ignore.instance_structure(function)
     assert_equal(expected, returned)
   end
@@ -81,7 +81,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
     function = {:name => "Slime", :args => [], :args_string => "void", :return => test_return[:void]}
     expected = ["void Slime_CMockIgnore(void)\n",
                 "{\n",
-                "  Mock.Slime_IgnoreBool = (int)1;\n",
+                "  Mock.Slime_IgnoreBool = (char)1;\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_ignore.mock_interfaces(function)
@@ -95,7 +95,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
                 "{\n",
                 "mock_return_1",
                 "  cmock_call_instance->ReturnVal = cmock_to_return;\n",
-                "  Mock.Slime_IgnoreBool = (int)1;\n",
+                "  Mock.Slime_IgnoreBool = (char)1;\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_ignore.mock_interfaces(function)

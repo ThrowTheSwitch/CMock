@@ -12,7 +12,7 @@ class CMockGeneratorPluginReturnThruPtr
     function[:args].each do |arg|
       next unless @utils.ptr_or_str?(arg[:type]) && !(arg[:const?])
 
-      lines << "  int ReturnThruPtr_#{arg[:name]}_Used;\n"
+      lines << "  char ReturnThruPtr_#{arg[:name]}_Used;\n"
       lines << "  #{arg[:type]} ReturnThruPtr_#{arg[:name]}_Val;\n"
       lines << "  int ReturnThruPtr_#{arg[:name]}_Size;\n"
     end

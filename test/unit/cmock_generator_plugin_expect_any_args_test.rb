@@ -57,7 +57,7 @@ describe CMockGeneratorPluginExpectAnyArgs, "Verify CMockGeneratorPluginExpectAn
     expected = ["void Slime_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line)\n",
                 "{\n",
                 "mock_return_1",
-                "  cmock_call_instance->ExpectAnyArgsBool = (int)1;\n",
+                "  cmock_call_instance->ExpectAnyArgsBool = (char)1;\n",
                 "}\n\n"
                ].join
     @utils.expect :code_add_base_expectation, "mock_return_1", ["Slime", true]
