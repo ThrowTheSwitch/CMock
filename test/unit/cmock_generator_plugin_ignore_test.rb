@@ -35,7 +35,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
 
   it "add required variables to the instance structure for simple non-void return type" do
     function = {:name => "Grass", :args => [], :return => test_return[:int]}
-    expected = ["  int Grass_IgnoreBool;\n",
+    expected = ["  char Grass_IgnoreBool;\n",
                 "  int Grass_FinalReturn;\n"
                ].join
     returned = @cmock_generator_plugin_ignore.instance_structure(function)
@@ -44,7 +44,7 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
 
   it "add required variables to the instance structure for C++ reference return type" do
     function = {:name => "Grass", :args => [], :return => test_return[:int_ref]}
-    expected = ["  int Grass_IgnoreBool;\n",
+    expected = ["  char Grass_IgnoreBool;\n",
                 "  int Grass_FinalRefReturn;\n",
                 "  std::reference_wrapper<int> Grass_FinalReturn = Grass_FinalRefReturn;\n"
                ].join
