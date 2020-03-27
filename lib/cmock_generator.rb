@@ -192,9 +192,17 @@ class CMockGenerator
   def create_instance_structure(file, functions)
     functions.each do |function|
       file << "typedef struct _CMOCK_#{function[:name]}_CALL_INSTANCE\n{\n"
-      file << "  UNITY_LINE_TYPE LineNumber;\n"
-      file << @plugins.run(:instance_typedefs, function)
+      fields = "  UNITY_LINE_TYPE LineNumber;\n"
+      fields += @plugins.run(:instance_typedefs, function).to_s
+      file << fields
       file << "\n} CMOCK_#{function[:name]}_CALL_INSTANCE;\n\n"
+
+      # Also generate reset method since memset'ing a std::reference_wrapper may cause problems
+      file << "void reset_CMOCK_#{function[:name]}_CALL_INSTANCE(CMOCK_#{function[:name]}_CALL_INSTANCE *CallInstance)\n{\n"
+      fields.scan(/^(.*)\s+(\w+);/) do |type, name|
+        file << "  memset(&CallInstance->#{name}, 0, sizeof(CallInstance->#{name}));\n" unless type.include? 'std::reference_wrapper'
+      end
+      file << "\n}\n\n"
     end
     file << "static struct #{@clean_mock_name}Instance\n{\n"
     if functions.empty?

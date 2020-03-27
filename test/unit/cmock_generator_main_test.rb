@@ -366,11 +366,24 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                 ]
     expected = [ "typedef struct _CMOCK_First_CALL_INSTANCE\n{\n",
                  "  UNITY_LINE_TYPE LineNumber;\n",
-                 "  b1  b2",
+                 "  int Expected_Candy;\n",
+                 "  int ReturnVal;\n",
                  "\n} CMOCK_First_CALL_INSTANCE;\n\n",
+                 "void reset_CMOCK_First_CALL_INSTANCE(CMOCK_First_CALL_INSTANCE *CallInstance)\n{\n",
+                 "  memset(&CallInstance->LineNumber, 0, sizeof(CallInstance->LineNumber));\n",
+                 "  memset(&CallInstance->Expected_Candy, 0, sizeof(CallInstance->Expected_Candy));\n",
+                 "  memset(&CallInstance->ReturnVal, 0, sizeof(CallInstance->ReturnVal));\n",
+                 "\n}\n\n",
                  "typedef struct _CMOCK_Second_CALL_INSTANCE\n{\n",
                  "  UNITY_LINE_TYPE LineNumber;\n",
+                 "  bool Expected_Smarty;\n",
+                 "  const char* ReturnVal;\n",
                  "\n} CMOCK_Second_CALL_INSTANCE;\n\n",
+                 "void reset_CMOCK_Second_CALL_INSTANCE(CMOCK_Second_CALL_INSTANCE *CallInstance)\n{\n",
+                 "  memset(&CallInstance->LineNumber, 0, sizeof(CallInstance->LineNumber));\n",
+                 "  memset(&CallInstance->Expected_Smarty, 0, sizeof(CallInstance->Expected_Smarty));\n",
+                 "  memset(&CallInstance->ReturnVal, 0, sizeof(CallInstance->ReturnVal));\n",
+                 "\n}\n\n",
                  "static struct MockPoutPoutFishInstance\n{\n",
                  "  d1",
                  "  CMOCK_MEM_INDEX_TYPE First_CallInstance;\n",
@@ -378,11 +391,38 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "  CMOCK_MEM_INDEX_TYPE Second_CallInstance;\n",
                  "} Mock;\n\n"
                ].join
-    @plugins.expect :run, ["  b1","  b2"],        [:instance_typedefs, functions[0]]
-    @plugins.expect :run, [],                     [:instance_typedefs, functions[1]]
+    @plugins.expect :run, "  int Expected_Candy;\n  int ReturnVal;\n",           [:instance_typedefs, functions[0]]
+    @plugins.expect :run, "  bool Expected_Smarty;\n  const char* ReturnVal;\n", [:instance_typedefs, functions[1]]
 
-    @plugins.expect :run, ["  d1"],               [:instance_structure, functions[0]]
-    @plugins.expect :run, ["  e1","  e2","  e3"], [:instance_structure, functions[1]]
+    @plugins.expect :run, "  d1",         [:instance_structure, functions[0]]
+    @plugins.expect :run, "  e1  e2  e3", [:instance_structure, functions[1]]
+
+    @cmock_generator.create_instance_structure(output, functions)
+
+    assert_equal(expected, output.join)
+  end
+
+  it "creates the reset function for the instance structure for all fields except C++ references" do
+    output = []
+    functions = [ { :name => "First", :args => "int Candy", :return => test_return[:int_ref] }]
+    expected = [ "typedef struct _CMOCK_First_CALL_INSTANCE\n{\n",
+                 "  UNITY_LINE_TYPE LineNumber;\n",
+                 "  int Expected_Candy;\n",
+                 "  int ReturnRefVal;\n",
+                 "  std::reference_wrapper<int> ReturnVal = ReturnRefVal;\n",
+                 "\n} CMOCK_First_CALL_INSTANCE;\n\n",
+                 "void reset_CMOCK_First_CALL_INSTANCE(CMOCK_First_CALL_INSTANCE *CallInstance)\n{\n",
+                 "  memset(&CallInstance->LineNumber, 0, sizeof(CallInstance->LineNumber));\n",
+                 "  memset(&CallInstance->Expected_Candy, 0, sizeof(CallInstance->Expected_Candy));\n",
+                 "  memset(&CallInstance->ReturnRefVal, 0, sizeof(CallInstance->ReturnRefVal));\n",
+                 "\n}\n\n",
+                 "static struct MockPoutPoutFishInstance\n{\n",
+                 "  CMOCK_MEM_INDEX_TYPE First_CallInstance;\n",
+                 "} Mock;\n\n"
+               ].join
+    @plugins.expect :run, "  int Expected_Candy;\n  int ReturnRefVal;\n  std::reference_wrapper<int> ReturnVal = ReturnRefVal;\n", [:instance_typedefs, functions[0]]
+
+    @plugins.expect :run, nil, [:instance_structure, functions[0]]
 
     @cmock_generator.create_instance_structure(output, functions)
 

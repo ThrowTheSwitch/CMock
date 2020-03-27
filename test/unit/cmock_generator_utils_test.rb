@@ -59,7 +59,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
       "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
       "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
-      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  reset_CMOCK_Apple_CALL_INSTANCE(cmock_call_instance);\n" +
       "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n"
     output = @cmock_generator_utils_simple.code_add_base_expectation("Apple")
@@ -71,7 +71,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
       "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
       "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
-      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  reset_CMOCK_Apple_CALL_INSTANCE(cmock_call_instance);\n" +
       "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  Mock.Apple_IgnoreBool = (char)0;\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n" +
@@ -86,7 +86,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
       "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
       "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
-      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  reset_CMOCK_Apple_CALL_INSTANCE(cmock_call_instance);\n" +
       "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  Mock.Apple_IgnoreBool = (char)0;\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n" +
