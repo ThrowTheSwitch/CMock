@@ -166,7 +166,7 @@ StopIgnore:
 
 Maybe you want to ignore a particular function for part of a test but dont want to 
 ignore it later on. In that case, you want to use StopIgnore which will cancel the 
-previously called Ignore or IgnoreAndReturn requireing you to Expect or otherwise
+previously called Ignore or IgnoreAndReturn requiring you to Expect or otherwise
 handle the call to a function. 
 
 * `void func(void)` => `void func_StopIgnore(void)`
