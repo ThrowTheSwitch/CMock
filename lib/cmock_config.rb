@@ -41,6 +41,7 @@ class CMockConfig
       :orig_header_include_fmt     => '#include "%s"',
       :array_size_type             => [],
       :array_size_name             => 'size|len',
+      :array_as_byte               => false,
       :skeleton                    => false,
       :exclude_setjmp_h            => false,
 
