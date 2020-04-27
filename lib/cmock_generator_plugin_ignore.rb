@@ -30,10 +30,10 @@ class CMockGeneratorPluginIgnore
       lines =  "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n" \
              "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
     end
-    
+
     #add stop ignore function. it does not matter if there are any args
     lines << "#define #{function[:name]}_StopIgnore() #{function[:name]}_CMockStopIgnore()\n" \
-                "void #{function[:name]}_CMockStopIgnore(void);\n"
+                "void #{function[:name]}_CMockStopIgnore(void);\n"void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n
     lines
   end
 
@@ -68,9 +68,9 @@ class CMockGeneratorPluginIgnore
     lines << "}\n\n"
   
     #add stop ignore function. it does not matter if there are any args
-    lines << "void #{function[:name]}_CMockStopIgnore(void)\n  {\n"
+    lines << "void #{function[:name]}_CMockStopIgnore(void)\n{\n"
     unless function[:return][:void?]
-      lines << "  if(Mock.#{function[:name]}_IgnoreBool) \n"
+      lines << "  if(Mock.#{function[:name]}_IgnoreBool)\n"
       lines << "    Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
     end
     lines << "  Mock.#{function[:name]}_IgnoreBool = (char)0;\n"
