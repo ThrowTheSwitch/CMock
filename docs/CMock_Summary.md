@@ -161,6 +161,18 @@ care how many times it was called, right?
 * `retval func(void)` => `void func_IgnoreAndReturn(retval_to_return)`
 * `retval func(params)` => `void func_IgnoreAndReturn(retval_to_return)`
 
+StopIgnore:
+-------
+
+Maybe you want to ignore a particular function for part of a test but dont want to
+ignore it later on. In that case, you want to use StopIgnore which will cancel the
+previously called Ignore or IgnoreAndReturn requiring you to Expect or otherwise
+handle the call to a function.
+
+* `void func(void)` => `void func_StopIgnore(void)`
+* `void func(params)` => `void func_StopIgnore(void)`
+* `retval func(void)` => `void func_StopIgnore(void)`
+* `retval func(params)` => `void func_StopIgnore(void)`
 
 Ignore Arg:
 ------------
