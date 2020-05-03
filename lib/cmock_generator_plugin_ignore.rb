@@ -33,7 +33,7 @@ class CMockGeneratorPluginIgnore
 
     #add stop ignore function. it does not matter if there are any args
     lines << "#define #{function[:name]}_StopIgnore() #{function[:name]}_CMockStopIgnore()\n" \
-                "void #{function[:name]}_CMockStopIgnore(void);\n"void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n
+             "void #{function[:name]}_CMockStopIgnore(void);\n"
     lines
   end
 
@@ -66,7 +66,7 @@ class CMockGeneratorPluginIgnore
     end
     lines << "  Mock.#{function[:name]}_IgnoreBool = (char)1;\n"
     lines << "}\n\n"
-  
+
     #add stop ignore function. it does not matter if there are any args
     lines << "void #{function[:name]}_CMockStopIgnore(void)\n{\n"
     unless function[:return][:void?]
