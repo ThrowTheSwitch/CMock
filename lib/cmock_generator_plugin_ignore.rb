@@ -33,7 +33,7 @@ class CMockGeneratorPluginIgnore
 
     #add stop ignore function. it does not matter if there are any args
     lines << "#define #{function[:name]}_StopIgnore() #{function[:name]}_CMockStopIgnore()\n" \
-             "void #{function[:name]}_CMockStopIgnore(void);\n"
+                "void #{function[:name]}_CMockStopIgnore(void);\n"
     lines
   end
 
