@@ -14,7 +14,7 @@ class CMockGeneratorPluginReturnThruPtr
 
       lines << "  char ReturnThruPtr_#{arg[:name]}_Used;\n"
       lines << "  #{arg[:type]} ReturnThruPtr_#{arg[:name]}_Val;\n"
-      lines << "  int ReturnThruPtr_#{arg[:name]}_Size;\n"
+      lines << "  size_t ReturnThruPtr_#{arg[:name]}_Size;\n"
     end
     lines
   end
@@ -33,10 +33,10 @@ class CMockGeneratorPluginReturnThruPtr
                  " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, sizeof(*#{arg[:name]}))\n"
                end
       lines << "#define #{function[:name]}_ReturnArrayThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_len)"
-      lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, (int)(cmock_len * (int)sizeof(*#{arg[:name]})))\n"
+      lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, cmock_len * sizeof(*#{arg[:name]}))\n"
       lines << "#define #{function[:name]}_ReturnMemThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_size)"
       lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, cmock_size)\n"
-      lines << "void #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg[:name]}, int cmock_size);\n"
+      lines << "void #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg[:name]}, size_t cmock_size);\n"
     end
     lines
   end
@@ -48,7 +48,7 @@ class CMockGeneratorPluginReturnThruPtr
       arg_name = arg[:name]
       next unless @utils.ptr_or_str?(arg[:type]) && !(arg[:const?])
 
-      lines << "void #{func_name}_CMockReturnMemThruPtr_#{arg_name}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg_name}, int cmock_size)\n"
+      lines << "void #{func_name}_CMockReturnMemThruPtr_#{arg_name}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg_name}, size_t cmock_size)\n"
       lines << "{\n"
       lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " \
                "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
