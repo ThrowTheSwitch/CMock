@@ -22,19 +22,25 @@
 
 #define CMOCK_GUTS_NONE   (0)
 
+#if defined __GNUC__
+#    define CMOCK_FUNCTION_ATTR(a) __attribute__((a))
+#else
+#    define CMOCK_FUNCTION_ATTR(a) /* ignore */
+#endif
+
 /*-------------------------------------------------------
  * Memory API
  *-------------------------------------------------------*/
 CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemNew(CMOCK_MEM_INDEX_TYPE size);
 CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemChain(CMOCK_MEM_INDEX_TYPE root_index, CMOCK_MEM_INDEX_TYPE obj_index);
-CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemNext(CMOCK_MEM_INDEX_TYPE previous_item_index);
-CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemEndOfChain(CMOCK_MEM_INDEX_TYPE root_index);
+CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemNext(CMOCK_MEM_INDEX_TYPE previous_item_index) CMOCK_FUNCTION_ATTR(pure);
+CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemEndOfChain(CMOCK_MEM_INDEX_TYPE root_index) CMOCK_FUNCTION_ATTR(pure);
 
-void*                 CMock_Guts_GetAddressFor(CMOCK_MEM_INDEX_TYPE index);
+void*                 CMock_Guts_GetAddressFor(CMOCK_MEM_INDEX_TYPE index) CMOCK_FUNCTION_ATTR(pure);
 
-CMOCK_MEM_INDEX_TYPE CMock_Guts_MemBytesCapacity(void);
-CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesFree(void);
-CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesUsed(void);
+CMOCK_MEM_INDEX_TYPE CMock_Guts_MemBytesCapacity(void) CMOCK_FUNCTION_ATTR(const);
+CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesFree(void) CMOCK_FUNCTION_ATTR(pure);
+CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesUsed(void) CMOCK_FUNCTION_ATTR(pure);
 void                  CMock_Guts_MemFreeAll(void);
 void                  CMock_Guts_MemFreeFinal(void);
 
