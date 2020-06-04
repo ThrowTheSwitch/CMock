@@ -457,7 +457,7 @@ from the defaults. We've tried to specify what the defaults are below.
   to prevent a function `functionName` from being mocked. By default, it
   is ignoring all gcc attribute extensions.
 
-  * default: ['(?:__attribute__\s*\(+.*?\)+)']
+  * default: `['(?:__attribute__\s*\(+.*?\)+)']`
 
 * `:subdir`:
   This is a relative subdirectory for your mocks.  Set this to e.g. "sys" in
