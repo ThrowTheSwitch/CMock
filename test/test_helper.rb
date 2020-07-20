@@ -26,6 +26,7 @@ def test_return
   {
     :int     => {:type => "int",         :name => 'cmock_to_return', :ptr? => false, :const? => false, :void? => false, :str => 'int cmock_to_return'},
     :int_ptr => {:type => "int*",        :name => 'cmock_to_return', :ptr? => true,  :const? => false, :void? => false, :str => 'int* cmock_to_return'},
+    :int_ref => {:type => "int&",        :name => 'cmock_to_return', :ptr? => true,  :const? => false, :void? => false, :str => 'int& cmock_to_return'},
     :void    => {:type => "void",        :name => 'cmock_to_return', :ptr? => false, :const? => false, :void? => true,  :str => 'void cmock_to_return'},
     :string  => {:type => "const char*", :name => 'cmock_to_return', :ptr? => false, :const? => true,  :void? => false, :str => 'const char* cmock_to_return'},
   }
@@ -35,6 +36,7 @@ def test_arg
   {
     :int        => {:type => "int",         :name => 'MyInt',       :ptr? => false, :const? => false, :const_ptr? => false},
     :int_ptr    => {:type => "int*",        :name => 'MyIntPtr',    :ptr? => true,  :const? => false, :const_ptr? => false},
+    :int_ref    => {:type => "int&",        :name => 'MyIntRef',    :ptr? => true,  :const? => false, :const_ptr? => false},
     :const_ptr  => {:type => "int*",        :name => 'MyConstPtr',  :ptr? => true,  :const? => false, :const_ptr? => true},
     :double_ptr => {:type => "int const**", :name => 'MyDoublePtr', :ptr? => true,  :const? => true,  :const_ptr? => false},
     :mytype     => {:type => "MY_TYPE",     :name => 'MyMyType',    :ptr? => false, :const? => true,  :const_ptr? => false},

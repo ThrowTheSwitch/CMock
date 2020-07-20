@@ -2266,6 +2266,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "\n",
       "        static void f_void();\n",
       "        static int f_ret_simple();\n",
+      "        static int& f_ret_ref();\n",
       "\n",
       "      protected:\n",
       "        static void protected_f_void();\n",
@@ -2283,6 +2284,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "namespace ns1 { namespace ns2 { class cls1 { public: int f_header_impl",
       "static void f_void()",
       "static int f_ret_simple()",
+      "static int& f_ret_ref()",
       "protected: static void protected_f_void()",
       "public: private: static void private_f_void()",
       "}",
@@ -2454,6 +2456,72 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     SOURCE
 
     expected = [dummy_func, voidvoid_func]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "parses functions with a reference return type" do
+    source = <<~SOURCE
+      int& dummy(void);
+
+      class Classic {
+        public:
+          static int& functional(void);
+      };
+    SOURCE
+
+    # Verify both classic C and C++ examples
+    expected = [
+      { :name => "dummy",
+        :unscoped_name => "dummy",
+        :class => nil,
+        :namespace => [],
+        :var_arg => nil,
+        :args_string => "void",
+        :args => [],
+        :args_call => "",
+        :contains_ptr? => false,
+        :modifier => "",
+        :return => {
+          :type=>"int&",
+          :name=>"cmock_to_return",
+          :str=>"int& cmock_to_return",
+          :void? => false,
+          :ptr? => false,
+          :const? => false,
+          :const_ptr? => false}},
+      { :name => "Classic_functional",
+        :unscoped_name => "functional",
+        :class => "Classic",
+        :namespace => [],
+        :var_arg => nil,
+        :args_string => "void",
+        :args => [],
+        :args_call => "",
+        :contains_ptr? => false,
+        :modifier => "",
+        :return => {
+          :type=>"int&",
+          :name=>"cmock_to_return",
+          :str=>"int& cmock_to_return",
+          :void? => false,
+          :ptr? => false,
+          :const? => false,
+          :const_ptr? => false}}]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  # Known limitation - would be great to overcome in future
+  it "cannot handle reference type args" do
+    source = dummy_source + <<~SOURCE
+      class Classic {
+        public:
+          static void functional(int& a);
+      };
+    SOURCE
+
+    expected = [dummy_func]
 
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end

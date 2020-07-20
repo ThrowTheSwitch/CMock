@@ -170,6 +170,9 @@ class CMockGenerator
     file << "#include <string.h>\n"
     file << "#include <stdlib.h>\n"
     file << "#include <setjmp.h>\n"
+    file << "#ifdef __cplusplus\n"
+    file << "#include <functional>\n"
+    file << "#endif\n"
     file << "#include \"cmock.h\"\n"
     @includes_c_pre_header.each { |inc| file << "#include #{inc}\n" }
     file << "#include \"#{header_file}\"\n"
@@ -236,7 +239,10 @@ class CMockGenerator
   def create_mock_destroy_function(file, functions)
     file << "void #{@clean_mock_name}_Destroy(void)\n{\n"
     file << "  CMock_Guts_MemFreeAll();\n"
-    file << "  memset(&Mock, 0, sizeof(Mock));\n"
+    # NOTE: zeroing an object may result in crashes so we muct be selective when erasing this structure
+    functions.each do |function|
+      file << "  memset(&Mock.#{function[:name]}_CallInstance, 0, sizeof(Mock.#{function[:name]}_CallInstance));\n"
+    end
     file << functions.collect { |function| @plugins.run(:mock_destroy, function) }.join
 
     unless @fail_on_unexpected_calls
