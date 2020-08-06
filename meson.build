@@ -5,10 +5,11 @@
 # license: MIT
 #
 project('cmock', 'c',
-    license: 'MIT',
-    meson_version: '>=0.53.0',
+    license : 'MIT', 
+    version : '2.5.2',
+    meson_version : '>=0.53.0',
     subproject_dir : 'vendor',
-    default_options: ['layout=flat', 'warning_level=3', 'werror=true', 'c_std=c11']
+    default_options : ['layout=flat', 'warning_level=3', 'werror=true', 'c_std=c11']
 )
 lang = 'c'
 cc = meson.get_compiler(lang)
@@ -50,4 +51,7 @@ unity_dep = dependency('unity', fallback: ['unity', 'unity_dep'])
 #
 # Sub directory to project source code
 subdir('src')
-cmock_dep = declare_dependency(link_with: cmock_lib, include_directories: cmock_dir)
+cmock_dep = declare_dependency(
+    link_with : cmock_lib, 
+    version : meson.project_version(),
+    include_directories : cmock_dir)
