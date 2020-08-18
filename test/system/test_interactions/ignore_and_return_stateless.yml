@@ -1,0 +1,39 @@
+---
+:cmock:
+  :plugins:
+  - 'ignore_stateless'
+
+:systest:
+  :types: |
+
+  :mockable: |
+    int foo(int a);
+    void bar(int b);
+
+  :source:
+    :header: |
+      int function(int a, int b, int c);
+    :code: |
+      int function(int a, int b, int c)
+      {
+        bar(b);
+        return foo(a) + foo(b) + foo(c);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: 'successfully exercise simple ExpectAndReturn mock calls'
+      :code: |
+        test()
+        {
+          bar_Expect(2);
+          foo_ExpectAndReturn(1, 10);
+          foo_ExpectAndReturn(2, 20);
+          foo_ExpectAndReturn(3, 30);
+          TEST_ASSERT_EQUAL(60, function(1, 2, 3));
+        }

@@ -2,9 +2,6 @@
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
-#
-#   !!! This file is not included in the original Cmock framework !!!
-#           Adjusted copy of cmock_generator_plugin_ignore.rb
 # ==========================================
 
 class CMockGeneratorPluginIgnoreStateless
@@ -30,8 +27,8 @@ class CMockGeneratorPluginIgnoreStateless
               "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" +
               "void #{function[:name]}_CMockIgnore(void);\n"
             else
-              "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n" +
-              "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n";
+              "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(cmock_retval)\n" +
+              "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]});\n";
             end
 
     # Add stop ignore function. it does not matter if there are any args
@@ -60,12 +57,10 @@ class CMockGeneratorPluginIgnoreStateless
     lines << if function[:return][:void?]
                "void #{function[:name]}_CMockIgnore(void)\n{\n"
              else
-               "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
+               "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]})\n{\n"
              end
     unless function[:return][:void?]
       lines << "  Mock.#{function[:name]}_CallInstance = CMOCK_GUTS_NONE;\n"
-    end
-    unless function[:return][:void?]
       lines << "  Mock.#{function[:name]}_FinalReturn = cmock_to_return;\n"
     end
     lines << "  Mock.#{function[:name]}_IgnoreBool = (char) 1;\n"
