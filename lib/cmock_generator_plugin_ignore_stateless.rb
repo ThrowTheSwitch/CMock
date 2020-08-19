@@ -23,12 +23,12 @@ class CMockGeneratorPluginIgnoreStateless
   end
 
   def mock_function_declarations(function)
-    lines = if (function[:return][:void?])
-              "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" +
+    lines = if function[:return][:void?]
+              "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" \
               "void #{function[:name]}_CMockIgnore(void);\n"
             else
-              "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(cmock_retval)\n" +
-              "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]});\n";
+              "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(cmock_retval)\n" \
+              "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]});\n"
             end
 
     # Add stop ignore function. it does not matter if there are any args
@@ -70,7 +70,7 @@ class CMockGeneratorPluginIgnoreStateless
     lines << "void #{function[:name]}_CMockStopIgnore(void)\n{\n"
     lines << "  Mock.#{function[:name]}_IgnoreBool = (char)0;\n"
     lines << "}\n\n"
-    
+
     lines
   end
 
