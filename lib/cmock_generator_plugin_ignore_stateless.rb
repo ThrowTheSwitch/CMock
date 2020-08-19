@@ -70,7 +70,7 @@ class CMockGeneratorPluginIgnoreStateless
     lines << "void #{function[:name]}_CMockStopIgnore(void)\n{\n"
     lines << "  Mock.#{function[:name]}_IgnoreBool = (char)0;\n"
     lines << "}\n\n"
-    
+
     lines
   end
 
