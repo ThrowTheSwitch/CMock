@@ -35,7 +35,8 @@ describe CMockGeneratorPluginIgnoreStateless, "Verify CMockGeneratorPluginIgnore
 
   it "handle function declarations for functions without return values" do
     function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
-    expected = "#define Mold_Ignore() Mold_CMockIgnore()\nvoid Mold_CMockIgnore(void);\n"
+    expected = "#define Mold_Ignore() Mold_CMockIgnore()\nvoid Mold_CMockIgnore(void);\n" +
+               "#define Mold_StopIgnore() Mold_CMockStopIgnore()\nvoid Mold_CMockStopIgnore(void);\n"
     returned = @cmock_generator_plugin_ignore_stateless.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -43,7 +44,9 @@ describe CMockGeneratorPluginIgnoreStateless, "Verify CMockGeneratorPluginIgnore
   it "handle function declarations for functions that returns something" do
     function = {:name => "Fungus", :args_string => "void", :return => test_return[:string]}
     expected = "#define Fungus_IgnoreAndReturn(cmock_retval) Fungus_CMockIgnoreAndReturn(cmock_retval)\n"+
-               "void Fungus_CMockIgnoreAndReturn(const char* cmock_to_return);\n"
+               "void Fungus_CMockIgnoreAndReturn(const char* cmock_to_return);\n" +
+               "#define Fungus_StopIgnore() Fungus_CMockStopIgnore()\n"+
+               "void Fungus_CMockStopIgnore(void);\n"
     returned = @cmock_generator_plugin_ignore_stateless.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -82,6 +85,10 @@ describe CMockGeneratorPluginIgnoreStateless, "Verify CMockGeneratorPluginIgnore
     expected = ["void Slime_CMockIgnore(void)\n",
                 "{\n",
                 "  Mock.Slime_IgnoreBool = (char)1;\n",
+                "}\n\n",
+                "void Slime_CMockStopIgnore(void)\n",
+                "{\n",
+                "  Mock.Slime_IgnoreBool = (char)0;\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_ignore_stateless.mock_interfaces(function)
@@ -96,6 +103,10 @@ describe CMockGeneratorPluginIgnoreStateless, "Verify CMockGeneratorPluginIgnore
                 "  Mock.Slime_CallInstance = CMOCK_GUTS_NONE;\n",
                 "  Mock.Slime_FinalReturn = cmock_to_return;\n",
                 "  Mock.Slime_IgnoreBool = (char)1;\n",
+                "}\n\n",
+                "void Slime_CMockStopIgnore(void)\n",
+                "{\n",
+                "  Mock.Slime_IgnoreBool = (char)0;\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_ignore_stateless.mock_interfaces(function)

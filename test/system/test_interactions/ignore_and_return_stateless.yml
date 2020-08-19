@@ -273,4 +273,53 @@
           TEST_ASSERT_EQUAL(60, function(4, 5, 6));
         }
 
+# StopIgnore
+
+    - :pass: FALSE
+      :should: 'fail when function is called after ignore is stopped'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_IgnoreAndReturn(10);
+          function(0, 0, 0);
+          bar_StopIgnore();
+          function(0, 0, 0);
+        }
+
+    - :pass: FALSE
+      :should: 'delete expect after ignore is stopped'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_ExpectAndReturn(0, 40);
+          foo_ExpectAndReturn(0, 30);
+          foo_ExpectAndReturn(0, 40);
+
+          foo_IgnoreAndReturn(20);
+          foo_StopIgnore();
+          
+          TEST_ASSERT_EQUAL(110, function(0, 0, 0));  // THIS SHOULD FAIL
+        }
+    
+    - :pass: TRUE
+      :should: 'delete expected return values after ignore is stopped'
+      :code: |
+        test()
+        {
+          bar_Ignore();
+          foo_ExpectAndReturn(0, 40);
+          foo_ExpectAndReturn(0, 30);
+          foo_ExpectAndReturn(0, 40);
+
+          foo_IgnoreAndReturn(20);
+          foo_StopIgnore();
+          
+          foo_ExpectAndReturn(0, 50);
+          foo_ExpectAndReturn(0, 30);
+          foo_ExpectAndReturn(0, 40);
+          TEST_ASSERT_EQUAL(120, function(0, 0, 0));
+        }
+
 ...

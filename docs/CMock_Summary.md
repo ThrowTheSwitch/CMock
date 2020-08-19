@@ -180,8 +180,11 @@ IgnoreStateless:
 This plugin is similar to the Ignore plugin, but the IgnoreAndReturn functions are
 stateless. So the Ignored function will always return the last specified return value
 and does not queue the return values as the IgnoreAndReturn of the default plugin will.
+
 To stop ignoring a function you can call StopIgnore or simply overwrite the Ignore
-(resp. IgnoreAndReturn) with an Expect (resp. ExpectAndReturn).
+(resp. IgnoreAndReturn) with an Expect (resp. ExpectAndReturn). Note that calling
+Ignore (resp IgnoreAndReturn) will clear your previous called Expect
+(resp. ExpectAndReturn), so they are not restored after StopIgnore is called.
 
 You can use this plugin by using `:ignore_stateless` instead of `:ignore` in your
 CMock configuration file.
