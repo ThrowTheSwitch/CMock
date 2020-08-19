@@ -30,11 +30,6 @@ class CMockGeneratorPluginIgnoreStateless
               "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(cmock_retval)\n" +
               "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]});\n";
             end
-
-    # Add stop ignore function. it does not matter if there are any args
-    lines << "#define #{function[:name]}_StopIgnore() #{function[:name]}_CMockStopIgnore()\n" \
-                "void #{function[:name]}_CMockStopIgnore(void);\n"
-    lines
   end
 
   def mock_implementation_precheck(function)
@@ -63,14 +58,14 @@ class CMockGeneratorPluginIgnoreStateless
       lines << "  Mock.#{function[:name]}_CallInstance = CMOCK_GUTS_NONE;\n"
       lines << "  Mock.#{function[:name]}_FinalReturn = cmock_to_return;\n"
     end
-    lines << "  Mock.#{function[:name]}_IgnoreBool = (char) 1;\n"
+    lines << "  Mock.#{function[:name]}_IgnoreBool = (char)1;\n"
     lines << "}\n\n"
 
     lines
   end
 
   def mock_ignore(function)
-    "  Mock.#{function[:name]}_IgnoreBool = (char) 1;\n"
+    "  Mock.#{function[:name]}_IgnoreBool = (char)1;\n"
   end
 
   def mock_verify(function)
