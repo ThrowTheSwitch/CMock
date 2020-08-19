@@ -174,6 +174,23 @@ handle the call to a function.
 * `retval func(void)` => `void func_StopIgnore(void)`
 * `retval func(params)` => `void func_StopIgnore(void)`
 
+IgnoreStateless:
+----------------
+
+This plugin is similar to the Ignore plugin, but the IgnoreAndReturn functions are
+stateless. So the Ignored function will always return the last specified return value
+and does not queue the return values as the IgnoreAndReturn of the default plugin will.
+
+To stop ignoring a function you can call StopIgnore or simply overwrite the Ignore
+(resp. IgnoreAndReturn) with an Expect (resp. ExpectAndReturn). Note that calling
+Ignore (resp IgnoreAndReturn) will clear your previous called Expect
+(resp. ExpectAndReturn), so they are not restored after StopIgnore is called.
+
+You can use this plugin by using `:ignore_stateless` instead of `:ignore` in your
+CMock configuration file.
+
+The generated functions are the same as **Ignore** and **StopIgnore** above.
+
 Ignore Arg:
 ------------
 
@@ -440,6 +457,7 @@ from the defaults. We've tried to specify what the defaults are below.
   available currently:
 
   * `:ignore`
+  * `:ignore_stateless`
   * `:ignore_arg`
   * `:expect_any_args`
   * `:array`

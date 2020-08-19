@@ -17,6 +17,7 @@ class CMockGeneratorUtils
     @return_thru_ptr = @config.plugins.include? :return_thru_ptr
     @ignore_arg = @config.plugins.include? :ignore_arg
     @ignore = @config.plugins.include? :ignore
+    @ignore_stateless = @config.plugins.include? :ignore_stateless
     @treat_as = @config.treat_as
     @helpers = helpers
   end
@@ -52,7 +53,7 @@ class CMockGeneratorUtils
     lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n"
     lines << "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n"
     lines << "  Mock.#{func_name}_CallInstance = CMock_Guts_MemChain(Mock.#{func_name}_CallInstance, cmock_guts_index);\n"
-    lines << "  Mock.#{func_name}_IgnoreBool = (char)0;\n" if @ignore
+    lines << "  Mock.#{func_name}_IgnoreBool = (char)0;\n" if @ignore || @ignore_stateless
     lines << "  cmock_call_instance->LineNumber = cmock_line;\n"
     lines << "  cmock_call_instance->CallOrder = ++GlobalExpectCount;\n" if @ordered && global_ordering_supported
     lines << "  cmock_call_instance->ExceptionToThrow = CEXCEPTION_NONE;\n" if @cexception

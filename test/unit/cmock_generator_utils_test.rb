@@ -20,17 +20,19 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     @config.expect :plugins, []
     @config.expect :plugins, []
     @config.expect :plugins, []
+    @config.expect :plugins, []
     @config.expect :treat_as, {'int' => 'INT','short' => 'INT16','long' => 'INT','char' => 'INT8','const char*' => 'STRING'}
     @cmock_generator_utils_simple = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper})
 
     @config.expect :when_ptr, :smart
     @config.expect :enforce_strict_ordering, true
-    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
-    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
-    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
-    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
-    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
-    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore]
+    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore, :ignore_stateless]
+    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore, :ignore_stateless]
+    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore, :ignore_stateless]
+    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore, :ignore_stateless]
+    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore, :ignore_stateless]
+    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore, :ignore_stateless]
+    @config.expect :plugins, [:array, :cexception, :return_thru_ptr, :ignore_arg, :ignore, :ignore_stateless]
     @config.expect :treat_as, {'int' => 'INT','short' => 'INT16','long' => 'INT','char' => 'INT8','uint32_t' => 'HEX32','const char*' => 'STRING'}
     @cmock_generator_utils_complex = CMockGeneratorUtils.new(@config, {:unity_helper => @unity_helper, :A=>1, :B=>2})
   end
