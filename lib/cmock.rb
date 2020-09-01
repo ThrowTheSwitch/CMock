@@ -25,9 +25,9 @@ class CMock
     @silent        = (cm_config.verbosity < 2)
   end
 
-  def setup_mocks(files)
+  def setup_mocks(files, folder = nil)
     [files].flatten.each do |src|
-      generate_mock src
+      generate_mock(src, folder)
     end
   end
 
@@ -39,11 +39,11 @@ class CMock
 
   private ###############################
 
-  def generate_mock(src)
+  def generate_mock(src, folder)
     name = File.basename(src, '.*')
     ext = File.extname(src)
     puts "Creating mock for #{name}..." unless @silent
-    @cm_generator.create_mock(name, @cm_parser.parse(name, File.read(src)), ext)
+    @cm_generator.create_mock(name, @cm_parser.parse(name, File.read(src)), ext, folder)
   end
 
   def generate_skeleton(src)
