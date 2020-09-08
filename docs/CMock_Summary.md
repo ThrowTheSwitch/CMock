@@ -477,6 +477,13 @@ from the defaults. We've tried to specify what the defaults are below.
 
   * default: `['(?:__attribute__\s*\(+.*?\)+)']`
 
+* `:has_setjmp_h`:
+  Some embedded systems don't have <setjmp.h> available. Setting this to false
+  removes references to this header file and the ability to use cexception.
+
+  * default: true
+
+
 * `:subdir`:
   This is a relative subdirectory for your mocks.  Set this to e.g. "sys" in
   order to create a mock for `sys/types.h` in `(:mock_path)/sys/`.
