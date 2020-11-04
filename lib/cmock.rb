@@ -89,7 +89,7 @@ if $0 == __FILE__
       options.merge! CMockConfig.load_config_file_from_yaml(arg.gsub(/^-o/, ''))
     elsif arg == '--skeleton'
       options[:skeleton] = true
-    elsif arg =~ /^--([a-zA-Z0-9._\\\/:\s]+)=\"?([a-zA-Z0-9._\-\\\/:\s\;]+)\"?/
+    elsif arg =~ /^--([a-zA-Z0-9._\\\/:\s]+)=\"?([a-zA-Z0-9._\-\\\/:\s\;]*)\"?/
       options = option_maker(options, Regexp.last_match(1), Regexp.last_match(2))
     else
       filelist << arg
