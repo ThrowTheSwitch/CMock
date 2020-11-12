@@ -96,7 +96,7 @@ if $0 == __FILE__
       # enter any valid regular expression as argument
       options = option_maker(options, 'strippables', Regexp.last_match(1))
     elsif (arg =~ /^--([a-zA-Z0-9._\\\/:\s]+)=
-           \"?([a-zA-Z0-9._\-\\\/:\s\;]+)\"?/x)
+           \"?([a-zA-Z0-9._\-\\\/:\s\;]*)\"?/x)
       options = option_maker(options, Regexp.last_match(1),
                              Regexp.last_match(2))
     else
