@@ -239,7 +239,7 @@ class CMockGenerator
   def create_mock_destroy_function(file, functions)
     file << "void #{@clean_mock_name}_Destroy(void)\n{\n"
     file << "  CMock_Guts_MemFreeAll();\n"
-    # NOTE: zeroing an object may result in crashes so we muct be selective when erasing this structure
+    # NOTE: zeroing an object may result in crashes so we must be selective when erasing this structure
     functions.each do |function|
       file << "  memset(&Mock.#{function[:name]}_CallInstance, 0, sizeof(Mock.#{function[:name]}_CallInstance));\n"
     end
