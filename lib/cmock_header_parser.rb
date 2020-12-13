@@ -138,11 +138,18 @@ class CMockHeaderParser
     #  - Copy everything after the inline function implementation and start the parsing of the next inline function
     # There are ofcourse some special cases (inline macro declarations, inline function declarations, ...) which are handled and explained below
     inline_function_regex_formats.each do |format|
+      inspected_source = ''
+      regex_matched = false
       loop do
         inline_function_match = source.match(/#{format}/) # Search for inline function declaration
 
-        break if inline_function_match.nil? # No inline functions so nothing to do
+        if inline_function_match.nil? # No inline functions so nothing to do
+          # Join pre and post match stripped parts for the next inline function detection regex
+          source = inspected_source + source if regex_matched == true
+          break
+        end
 
+        regex_matched = true
         # 1. Determine if we are dealing with a user defined macro to declare inline functions
         # If the end of the pre-match string is a macro-declaration-like string,
         # we are dealing with a user defined macro to declare inline functions
@@ -150,7 +157,8 @@ class CMockHeaderParser
           # Remove the macro from the source
           stripped_pre_match = inline_function_match.pre_match.sub(/(#define\s*)\z/, '')
           stripped_post_match = inline_function_match.post_match.sub(/\A(.*[\n]?)/, '')
-          source = stripped_pre_match + stripped_post_match
+          inspected_source += stripped_pre_match
+          source = stripped_post_match
           next
         end
 
@@ -159,23 +167,32 @@ class CMockHeaderParser
         # we are dealing with a inline function declaration
         if /\A#{@function_declaration_parse_base_match}\s*;/m =~ inline_function_match.post_match
           # Only remove the inline part from the function declaration, leaving the function declaration won't do any harm
-          source = inline_function_match.pre_match + inline_function_match.post_match
+          inspected_source += inline_function_match.pre_match
+          source = inline_function_match.post_match
           next
         end
 
         # 3. If we get here, we found an inline function declaration AND inline function body.
-        #    Remove the function body to transform it into a 'normal' function.
-        total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
+        # Remove the function body to transform it into a 'normal' function declaration.
+        if /\A#{@function_declaration_parse_base_match}\s*\{/m =~ inline_function_match.post_match
+          total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
-        break if total_pairs_to_remove == 0 # Bad source?
+          break if total_pairs_to_remove == 0 # Bad source?
 
-        inline_function_stripped = inline_function_match.post_match
+          inline_function_stripped = inline_function_match.post_match
 
-        total_pairs_to_remove.times do
-          inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ';') # Remove inline implementation (+ some whitespace because it's prettier)
+          total_pairs_to_remove.times do
+            inline_function_stripped.sub!(/\s*#{square_bracket_pair_regex_format}/, ';') # Remove inline implementation (+ some whitespace because it's prettier)
+          end
+          inspected_source += inline_function_match.pre_match
+          source = inline_function_stripped
+          next
         end
 
-        source = inline_function_match.pre_match + inline_function_stripped # Make new source with the inline function removed and move on to the next
+        # 4. If we get here, it means the regex match, but it is not related to the function (ex. static variable in header)
+        # Leave this code as it is.
+        inspected_source += inline_function_match.pre_match + inline_function_match[0]
+        source = inline_function_match.post_match
       end
     end
 
