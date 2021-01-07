@@ -2009,7 +2009,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     end
   end
 
-  it "Transform inline functions doesn't change a header with no inlines" do
+  it "Transform inline functions only removes comments from a header with no inlines" do
+    # We remove the comments from the header, this is to protect the parser from wrongfully recognizing inline functions
     source =
       "#ifndef _NOINCLUDES\n" +
       "#define _NOINCLUDES\n" +
@@ -2040,7 +2041,37 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "\n" +
       "#endif _NOINCLUDES\n"
 
-    assert_equal(source, @parser.transform_inline_functions(source))
+    expected =
+      "#ifndef _NOINCLUDES\n" +
+      "#define _NOINCLUDES\n" +
+      "#include \"unity.h\"\n" +
+      "#include \"cmock.h\"\n" +
+      "#include \"YetAnotherHeader.h\"\n" +
+      "\n" +
+      "\n" +                    # Removed comment
+      "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
+      "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
+      "#pragma GCC diagnostic push\n" +
+      "#endif\n" +
+      "#if !defined(__clang__)\n" +
+      "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
+      "#endif\n" +
+      "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
+      "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
+      "#endif\n" +
+      "\n" +
+      "struct my_struct {\n" +
+      "int a;\n" +
+      "int b;\n" +
+      "int b;\n" +
+      "char c;\n" +
+      "};\n" +
+      "int my_function(int a);\n" +
+      "int my_better_function(struct my_struct *s);\n" +
+      "\n" +
+      "#endif _NOINCLUDES\n"
+
+    assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
   it "Transform inline functions changes inline functions to function declarations" do
@@ -2133,7 +2164,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "#include \"cmock.h\"\n" +
       "#include \"YetAnotherHeader.h\"\n" +
       "\n" +
-      "/* Ignore the following warnings since we are copying code */\n" +
+      "\n" +                    # Removed comment
       "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
       "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
       "#pragma GCC diagnostic push\n" +
@@ -2713,5 +2744,33 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @parser.inline_function_patterns = ['MY_LIBRARY_INLINE', 'INLINE_THREE', 'INLINE_TWO', 'INLINE', 'static __inline__ __attribute__ \(\(always_inline\)\)', 'static __inline__']
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
+
+  it "Transform inline functions will ignore comments containing static" do
+    source =
+      "typedef struct {\n" +
+      "const uint32_t var1;\n" +
+      "const uint16_t var2; // comment with the word static in it\n" +
+      "} struct1;\n" +
+      "\n" +
+      "typedef struct {\n" +
+      "const uint32_t var1;\n" +
+      "const uint16_t var2;\n" +
+      "} struct2;\n"
+
+    expected =
+      "typedef struct {\n" +
+      "const uint32_t var1;\n" +
+      "const uint16_t var2; \n" +
+      "} struct1;\n" +
+      "\n" +
+      "typedef struct {\n" +
+      "const uint32_t var1;\n" +
+      "const uint16_t var2;\n" +
+      "} struct2;\n"
+
+    @parser.treat_inlines = :include
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
 
 end

@@ -61,6 +61,15 @@ class CMockHeaderParser
 
   private if $ThisIsOnlyATest.nil? ################
 
+  # Remove C/C++ comments from a string
+  # +source+:: String which will have the comments removed
+  def remove_comments_from_source(source)
+    # remove comments (block and line, in three steps to ensure correct precedence)
+    source.gsub!(/(?<!\*)\/\/(?:.+\/\*|\*(?:$|[^\/])).*$/, '')  # remove line comments that comment out the start of blocks
+    source.gsub!(/\/\*.*?\*\//m, '')                            # remove block comments
+    source.gsub!(/\/\/.*$/, '')                                 # remove line comments (all that remain)
+  end
+
   def remove_nested_pairs_of_braces(source)
     # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
     if RUBY_VERSION.split('.')[0].to_i > 1
@@ -118,6 +127,9 @@ class CMockHeaderParser
 
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding('ISO-8859-1').encode('utf-8', :replace => nil)
+
+    # Comments can contain words that will trigger the parser (static|inline|<user_defined_static_keyword>)
+    remove_comments_from_source(source)
 
     # smush multiline macros into single line (checking for continuation character at end of line '\')
     # If the user uses a macro to declare an inline function,
@@ -205,10 +217,7 @@ class CMockHeaderParser
     # smush multiline macros into single line (checking for continuation character at end of line '\')
     source.gsub!(/\s*\\\s*/m, ' ')
 
-    # remove comments (block and line, in three steps to ensure correct precedence)
-    source.gsub!(/(?<!\*)\/\/(?:.+\/\*|\*(?:$|[^\/])).*$/, '')  # remove line comments that comment out the start of blocks
-    source.gsub!(/\/\*.*?\*\//m, '')                            # remove block comments
-    source.gsub!(/\/\/.*$/, '')                                 # remove line comments (all that remain)
+    remove_comments_from_source(source)
 
     # remove assembler pragma sections
     source.gsub!(/^\s*#\s*pragma\s+asm\s+.*?#\s*pragma\s+endasm/m, '')
