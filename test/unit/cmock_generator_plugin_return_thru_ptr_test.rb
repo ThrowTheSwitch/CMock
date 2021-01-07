@@ -73,7 +73,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     complex_func_expect()
     expected = "  char ReturnThruPtr_tofu_Used;\n" +
                "  int* ReturnThruPtr_tofu_Val;\n" +
-               "  int ReturnThruPtr_tofu_Size;\n"
+               "  size_t ReturnThruPtr_tofu_Size;\n"
     returned = @cmock_generator_plugin_return_thru_ptr.instance_typedefs(@complex_func)
     assert_equal(expected, returned)
   end
@@ -91,10 +91,10 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "#define Pine_ReturnThruPtr_tofu(tofu)" +
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, sizeof(int))\n" +
       "#define Pine_ReturnArrayThruPtr_tofu(tofu, cmock_len)" +
-      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, (int)(cmock_len * (int)sizeof(*tofu)))\n" +
+      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, cmock_len * sizeof(*tofu))\n" +
       "#define Pine_ReturnMemThruPtr_tofu(tofu, cmock_size)" +
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, cmock_size)\n" +
-      "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int* tofu, int cmock_size);\n"
+      "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int* tofu, size_t cmock_size);\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_function_declarations(@complex_func)
     assert_equal(expected, returned)
@@ -104,7 +104,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     complex_func_expect();
 
     expected =
-      "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int* tofu, int cmock_size)\n" +
+      "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int* tofu, size_t cmock_size)\n" +
       "{\n" +
       "  CMOCK_Pine_CALL_INSTANCE* cmock_call_instance = " +
       "(CMOCK_Pine_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.Pine_CallInstance));\n" +
