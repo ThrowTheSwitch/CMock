@@ -1,7 +1,12 @@
-CMock - Mock/stub generator for C
-=================================
+CMock ![CI](https://github.com/ThrowTheSwitch/Unity/workflows/CI/badge.svg)
+=====
+CMock is a mock and stub generator and runtime for unit testing C. It's been designed
+to work smoothly with Unity Test, another of the embedded-software testing tools 
+developed by ThrowTheSwitch.org. CMock automagically parses your C headers and creates
+useful and usable mock interfaces for unit testing. Give it a try!
 
-[![CMock Build Status](https://api.travis-ci.org/ThrowTheSwitch/CMock.png?branch=master)](https://travis-ci.org/ThrowTheSwitch/CMock)
+If you don't care to manage unit testing builds yourself, consider checking out Ceedling, 
+a test-centered build manager for unit testing C code.
 
 Getting Started
 ================

@@ -24,6 +24,8 @@ jobs:
       # Checks out repository under $GITHUB_WORKSPACE
       - name: Checkout Latest Repo
         uses: actions/checkout@v2
+        with: 
+          submodules: recursive
 
       # Install Ruby Testing Tools
       - name: Setup Ruby Testing Tools
