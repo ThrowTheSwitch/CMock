@@ -2245,7 +2245,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     "#include \"cmock.h\"\n" +
     "#include \"YetAnotherHeader.h\"\n" +
     "\n" +
-    "/* Ignore the following warnings since we are copying code */\n" +
+    "\n" + #The comments are now removed
     "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
     "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
     "#pragma GCC diagnostic push\n" +

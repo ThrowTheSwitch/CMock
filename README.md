@@ -1,4 +1,4 @@
-CMock ![CI](https://github.com/ThrowTheSwitch/Unity/workflows/CI/badge.svg)
+CMock ![CI](https://github.com/ThrowTheSwitch/CMock/workflows/CI/badge.svg)
 =====
 CMock is a mock and stub generator and runtime for unit testing C. It's been designed
 to work smoothly with Unity Test, another of the embedded-software testing tools 
