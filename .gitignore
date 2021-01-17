@@ -1,6 +1,7 @@
 test/system/build
 test/system/generated
 *.sublime-project
+*.sublime-workspace
 Gemfile.lock
 .rake_t_cache
 .DS_Store
