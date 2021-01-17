@@ -21,6 +21,10 @@ jobs:
         run: |
           sudo apt-get install --assume-yes --quiet gcc-multilib
 
+      # Checks out repository under $GITHUB_WORKSPACE
+      - name: Checkout Latest Repo
+        uses: actions/checkout@v2
+
       # Install Ruby Testing Tools
       - name: Setup Ruby Testing Tools
         run: |
@@ -28,10 +32,6 @@ jobs:
           sudo gem install rspec
           sudo gem install rubocop -v 0.57.2
           bundle install
-
-      # Checks out repository under $GITHUB_WORKSPACE
-      - name: Checkout Latest Repo
-        uses: actions/checkout@v2
 
       # Run Tests
       - name: Run All Unit Tests
