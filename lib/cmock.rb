@@ -87,16 +87,15 @@ if $0 == __FILE__
   options = {}
   filelist = []
   ARGV.each do |arg|
-    if (arg =~ /^-o\"?([a-zA-Z0-9@._\\\/:\s]+)\"?/)
+    if arg =~ /^-o\"?([a-zA-Z0-9@._\\\/:\s]+)\"?/
       options.merge! CMockConfig.load_config_file_from_yaml(arg.gsub(/^-o/, ''))
-    elsif (arg == '--skeleton')
+    elsif arg == '--skeleton'
       options[:skeleton] = true
-    elsif (arg =~ /^--strippables=\"?(.*)\"?/)
+    elsif arg =~ /^--strippables=\"?(.*)\"?/
       # --strippables are dealt with separately since the user is allowed to
       # enter any valid regular expression as argument
       options = option_maker(options, 'strippables', Regexp.last_match(1))
-    elsif (arg =~ /^--([a-zA-Z0-9._\\\/:\s]+)=
-           \"?([a-zA-Z0-9._\-\\\/:\s\;]*)\"?/x)
+    elsif arg =~ /^--([a-zA-Z0-9._\\\/:\s]+)=\"?([a-zA-Z0-9._\-\\\/:\s\;]*)\"?/x
       options = option_maker(options, Regexp.last_match(1),
                              Regexp.last_match(2))
     else
