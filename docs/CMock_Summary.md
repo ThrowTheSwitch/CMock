@@ -477,11 +477,11 @@ from the defaults. We've tried to specify what the defaults are below.
 
   * default: `['(?:__attribute__\s*\(+.*?\)+)']`
 
-* `:has_setjmp_h`:
-  Some embedded systems don't have <setjmp.h> available. Setting this to false
+* `:exclude_setjmp_h`:
+  Some embedded systems don't have <setjmp.h> available. Setting this to true
   removes references to this header file and the ability to use cexception.
 
-  * default: true
+  * default: false
 
 
 * `:subdir`:
