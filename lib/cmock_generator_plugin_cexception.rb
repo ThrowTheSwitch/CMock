@@ -12,7 +12,7 @@ class CMockGeneratorPluginCexception
     @config = config
     @utils = utils
     @priority = 7
-    raise 'Error: cexception is not supported without setjmp support' unless @config.has_setjmp_h
+    raise 'Error: cexception is not supported without setjmp support' if @config.exclude_setjmp_h
   end
 
   def include_files

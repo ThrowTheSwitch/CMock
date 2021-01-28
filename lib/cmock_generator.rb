@@ -19,7 +19,7 @@ class CMockGenerator
     @ordered = @config.enforce_strict_ordering
     @framework = @config.framework.to_s
     @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
-    @has_setjmp_h = @config.has_setjmp_h
+    @exclude_setjmp_h = @config.exclude_setjmp_h
 
     @subdir = @config.subdir
 
