@@ -11,6 +11,9 @@ describe CMockGeneratorPluginCexception, "Verify CMockGeneratorPluginCexception 
 
   before do
     create_mocks :config, :utils
+
+    @config.expect :exclude_setjmp_h, false
+    
     @cmock_generator_plugin_cexception = CMockGeneratorPluginCexception.new(@config, @utils)
   end
 
@@ -91,6 +94,15 @@ describe CMockGeneratorPluginCexception, "Verify CMockGeneratorPluginCexception 
                ].join
     returned = @cmock_generator_plugin_cexception.mock_interfaces(function)
     assert_equal(expected, returned)
+  end
+
+  it "should throw an exception if we try to use this plugin when setjmp disabled" do
+
+    @config.expect :exclude_setjmp_h, true
+    
+    assert_raises RuntimeError do
+      @cmock_generator_plugin_cexception = CMockGeneratorPluginCexception.new(@config, @utils)
+    end
   end
 
 end

@@ -18,7 +18,8 @@ describe CMockPluginManager, "Verify CMockPluginManager Module" do
       :respond_to => true,
       :when_ptr => :compare_data,
       :enforce_strict_ordering => false,
-      :ignore => :args_and_calls
+      :ignore => :args_and_calls,
+      :exclude_setjmp_h => false
     )
 
     def @config.plugins
