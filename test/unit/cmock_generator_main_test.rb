@@ -55,6 +55,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
     @config.expect :treat_inlines, :exclude
+    @config.expect :exclude_setjmp_h, false
     @cmock_generator = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator.module_name = @module_name
     @cmock_generator.module_ext = '.h'
@@ -75,6 +76,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
     @config.expect :treat_inlines, :exclude
+    @config.expect :exclude_setjmp_h, false
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator_strict.module_name = @module_name
     @cmock_generator_strict.module_ext = '.h'
@@ -145,6 +147,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :subdir, nil
     @config.expect :fail_on_unexpected_calls, true
     @config.expect :treat_inlines, :exclude
+    @config.expect :exclude_setjmp_h, false
     @cmock_generator2 = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
     @cmock_generator2.module_name = "Pout-Pout Fish"
     @cmock_generator2.module_ext = '.h'

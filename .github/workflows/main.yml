@@ -19,6 +19,7 @@ jobs:
       # Install Multilib
       - name: Install Multilib
         run: |
+          sudo apt-get update --assume-yes
           sudo apt-get install --assume-yes --quiet gcc-multilib
 
       # Checks out repository under $GITHUB_WORKSPACE
