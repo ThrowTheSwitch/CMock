@@ -325,6 +325,9 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "#include <string.h>\n",
                  "#include <stdlib.h>\n",
                  "#include <setjmp.h>\n",
+                 "#ifdef __cplusplus\n",
+                 "#include <functional>\n",
+                 "#endif\n",
                  "#include \"cmock.h\"\n",
                  "#include \"MockPoutPoutFish.h\"\n",
                  "\n",
@@ -460,7 +463,6 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
                  "  CMock_Guts_MemFreeAll();\n",
-                 "  memset(&Mock, 0, sizeof(Mock));\n",
                  "}\n\n"
                ]
 
@@ -476,7 +478,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = [ "void MockPoutPoutFish_Destroy(void)\n{\n",
                  "  CMock_Guts_MemFreeAll();\n",
-                 "  memset(&Mock, 0, sizeof(Mock));\n",
+                 "  memset(&Mock.First_CallInstance, 0, sizeof(Mock.First_CallInstance));\n",
+                 "  memset(&Mock.Second_CallInstance, 0, sizeof(Mock.Second_CallInstance));\n",
                  "  uno",
                  "  GlobalExpectCount = 0;\n",
                  "  GlobalVerifyOrder = 0;\n",

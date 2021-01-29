@@ -33,6 +33,25 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
     assert_equal(expected, returned)
   end
 
+  it "add required variables to the instance structure for simple non-void return type" do
+    function = {:name => "Grass", :args => [], :return => test_return[:int]}
+    expected = ["  char Grass_IgnoreBool;\n",
+                "  int Grass_FinalReturn;\n"
+               ].join
+    returned = @cmock_generator_plugin_ignore.instance_structure(function)
+    assert_equal(expected, returned)
+  end
+
+  it "add required variables to the instance structure for C++ reference return type" do
+    function = {:name => "Grass", :args => [], :return => test_return[:int_ref]}
+    expected = ["  char Grass_IgnoreBool;\n",
+                "  int Grass_FinalRefReturn;\n",
+                "  std::reference_wrapper<int> Grass_FinalReturn = Grass_FinalRefReturn;\n"
+               ].join
+    returned = @cmock_generator_plugin_ignore.instance_structure(function)
+    assert_equal(expected, returned)
+  end
+
   it "handle function declarations for functions without return values" do
     function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
     expected = "#define Mold_Ignore() Mold_CMockIgnore()\nvoid Mold_CMockIgnore(void);\n" +
