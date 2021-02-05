@@ -8,7 +8,6 @@ class CMockHeaderParser
   attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns
 
   def initialize(cfg)
-    @funcs = []
     @c_strippables = cfg.strippables
     @c_attr_noconst = cfg.attributes.uniq - ['const']
     @c_attributes = ['const'] + c_attr_noconst
@@ -31,32 +30,35 @@ class CMockHeaderParser
   end
 
   def parse(name, source)
-    @module_name = name.gsub(/\W/, '')
-    @typedefs = []
-    @funcs = []
-    @normalized_source = nil
+    parse_project = {
+      :module_name       => name.gsub(/\W/, ''),
+      :typedefs          => [],
+      :functions         => [],
+      :normalized_source => nil
+    }
+
     function_names = []
 
-    all_funcs = parse_functions(import_source(source)).map { |item| [item] }
-    all_funcs += parse_cpp_functions(import_source(source, true))
+    all_funcs = parse_functions(import_source(source, parse_project)).map { |item| [item] }
+    all_funcs += parse_cpp_functions(import_source(source, parse_project, true))
     all_funcs.map do |decl|
-      func = parse_declaration(*decl)
+      func = parse_declaration(parse_project, *decl)
       unless function_names.include? func[:name]
-        @funcs << func
+        parse_project[:functions] << func
         function_names << func[:name]
       end
     end
 
-    @normalized_source = if @treat_inlines == :include
-                           transform_inline_functions(source)
-                         else
-                           ''
-                         end
+    parse_project[:normalized_source] = if @treat_inlines == :include
+                                          transform_inline_functions(source)
+                                        else
+                                          ''
+                                        end
 
     { :includes  => nil,
-      :functions => @funcs,
-      :typedefs  => @typedefs,
-      :normalized_source    => @normalized_source }
+      :functions => parse_project[:functions],
+      :typedefs  => parse_project[:typedefs],
+      :normalized_source    => parse_project[:normalized_source] }
   end
 
   private if $ThisIsOnlyATest.nil? ################
@@ -211,7 +213,7 @@ class CMockHeaderParser
     source
   end
 
-  def import_source(source, cpp = false)
+  def import_source(source, parse_project, cpp = false)
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding('ISO-8859-1').encode('utf-8', :replace => nil)
 
@@ -264,9 +266,9 @@ class CMockHeaderParser
 
     # scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |_m|
-      functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
+      functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
       unless cpp # only collect once
-        @typedefs << "typedef #{Regexp.last_match(1).strip}(*#{functype})(#{Regexp.last_match(4)});"
+        parse_project[:typedefs] << "typedef #{Regexp.last_match(1).strip}(*#{functype})(#{Regexp.last_match(4)});"
         "#{functype} #{Regexp.last_match(2).strip}(#{Regexp.last_match(3)});"
       end
     end
@@ -469,7 +471,7 @@ class CMockHeaderParser
     divination
   end
 
-  def clean_args(arg_list)
+  def clean_args(arg_list, parse_project)
     if @local_as_void.include?(arg_list.strip) || arg_list.empty?
       'void'
     else
@@ -483,7 +485,7 @@ class CMockHeaderParser
 
       # scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s\*]+)\(+\s*\*[\*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
-        functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
+        functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
         funcret  = Regexp.last_match(1).strip
         funcname = Regexp.last_match(2).strip
         funcargs = Regexp.last_match(3).strip
@@ -492,14 +494,14 @@ class CMockHeaderParser
           funcname.gsub!('const', '').strip!
           funconst = 'const '
         end
-        @typedefs << "typedef #{funcret}(*#{functype})(#{funcargs});"
+        parse_project[:typedefs] << "typedef #{funcret}(*#{functype})(#{funcargs});"
         funcname = "cmock_arg#{c += 1}" if funcname.empty?
         "#{functype} #{funconst}#{funcname}"
       end
 
       # scan argument list for function pointers with shorthand notation and replace them with custom types
       arg_list.gsub!(/([\w\s\*]+)+\s+(\w+)\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
-        functype = "cmock_#{@module_name}_func_ptr#{@typedefs.size + 1}"
+        functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
         funcret  = Regexp.last_match(1).strip
         funcname = Regexp.last_match(2).strip
         funcargs = Regexp.last_match(3).strip
@@ -508,7 +510,7 @@ class CMockHeaderParser
           funcname.gsub!('const', '').strip!
           funconst = 'const '
         end
-        @typedefs << "typedef #{funcret}(*#{functype})(#{funcargs});"
+        parse_project[:typedefs] << "typedef #{funcret}(*#{functype})(#{funcargs});"
         funcname = "cmock_arg#{c += 1}" if funcname.empty?
         "#{functype} #{funconst}#{funcname}"
       end
@@ -525,7 +527,7 @@ class CMockHeaderParser
     end
   end
 
-  def parse_declaration(declaration, namespace = [], classname = nil)
+  def parse_declaration(parse_project, declaration, namespace = [], classname = nil)
     decl = {}
     decl[:namespace] = namespace
     decl[:class] = classname
@@ -581,7 +583,7 @@ class CMockHeaderParser
     else
       decl[:var_arg] = nil
     end
-    args = clean_args(args)
+    args = clean_args(args, parse_project)
     decl[:args_string] = args
     decl[:args] = parse_args(args)
     decl[:args_call] = decl[:args].map { |a| a[:name] }.join(', ')

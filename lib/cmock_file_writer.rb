@@ -41,8 +41,7 @@ class CMockFileWriter
 
   def update_file(dest, src)
     require 'fileutils'
-    FileUtils.rm(dest) if File.exist?(dest)
-    FileUtils.cp(src, dest)
-    FileUtils.rm(src)
+    FileUtils.rm(dest, :force => true)
+    FileUtils.mv(src, dest)
   end
 end

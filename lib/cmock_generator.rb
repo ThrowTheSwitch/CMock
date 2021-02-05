@@ -20,9 +20,7 @@ class CMockGenerator
     @framework = @config.framework.to_s
     @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
     @exclude_setjmp_h = @config.exclude_setjmp_h
-
     @subdir = @config.subdir
-    @folder = nil
 
     @includes_h_pre_orig_header  = (@config.includes || @config.includes_h_pre_orig_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
     @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
@@ -47,54 +45,70 @@ class CMockGenerator
   end
 
   def create_mock(module_name, parsed_stuff, module_ext = nil, folder = nil)
-    @module_name = module_name
-    @module_ext  = module_ext || '.h'
-    @mock_name   = @prefix + @module_name + @suffix
-    @clean_mock_name = TypeSanitizer.sanitize_c_identifier(@mock_name)
+    # determine the name for our new mock
+    mock_name = @prefix + module_name + @suffix
 
-    @folder = if folder && @subdir
-                File.join(@subdir, folder)
-              elsif @subdir
-                @subdir
-              else
-                folder
-              end
+    # determine the folder our mock will reside
+    mock_folder = if folder && @subdir
+                    File.join(@subdir, folder)
+                  elsif @subdir
+                    @subdir
+                  else
+                    folder
+                  end
+
     # adds a trailing slash to the folder output
-    @folder = File.join(@folder, '') if @folder
+    mock_folder = File.join(mock_folder, '') if mock_folder
 
-    create_mock_subdir
+    # create out mock project from incoming data
+    mock_project = {
+      :module_name  => module_name,
+      :module_ext   => (module_ext || '.h'),
+      :mock_name    => mock_name,
+      :clean_name   => TypeSanitizer.sanitize_c_identifier(mock_name),
+      :folder       => mock_folder,
+      :parsed_stuff => parsed_stuff,
+      :skeleton     => false
+    }
 
-    create_mock_header_file(parsed_stuff)
-    create_mock_source_file(parsed_stuff)
+    create_mock_subdir(mock_project)
+    create_mock_header_file(mock_project)
+    create_mock_source_file(mock_project)
   end
 
   def create_skeleton(module_name, parsed_stuff)
-    @module_name = module_name
-    create_skeleton_source_file(parsed_stuff)
+    mock_project = {
+      :module_name  => module_name,
+      :module_ext   => '.h',
+      :parsed_stuff => parsed_stuff,
+      :skeleton     => true
+    }
+
+    create_skeleton_source_file(mock_project)
   end
 
   private if $ThisIsOnlyATest.nil? ##############################
 
-  def create_mock_subdir
-    @file_writer.create_subdir(@folder)
+  def create_mock_subdir(mock_project)
+    @file_writer.create_subdir(mock_project[:folder])
   end
 
   def create_using_statement(file, function)
     file << "using namespace #{function[:namespace].join('::')};\n" unless function[:namespace].empty?
   end
 
-  def create_mock_header_file(parsed_stuff)
+  def create_mock_header_file(mock_project)
     if @include_inline == :include
-      @file_writer.create_file(@module_name + (@module_ext || '.h'), @folder) do |file, _filename|
-        file << parsed_stuff[:normalized_source]
+      @file_writer.create_file(mock_project[:module_name] + (mock_project[:module_ext]), mock_project[:folder]) do |file, _filename|
+        file << mock_project[:parsed_stuff][:normalized_source]
       end
     end
 
-    @file_writer.create_file(@mock_name + (@module_ext || '.h'), @folder) do |file, filename|
-      create_mock_header_header(file, filename)
-      create_mock_header_service_call_declarations(file)
-      create_typedefs(file, parsed_stuff[:typedefs])
-      parsed_stuff[:functions].each do |function|
+    @file_writer.create_file(mock_project[:mock_name] + mock_project[:module_ext], mock_project[:folder]) do |file, filename|
+      create_mock_header_header(file, filename, mock_project)
+      create_mock_header_service_call_declarations(file, mock_project)
+      create_typedefs(file, mock_project)
+      mock_project[:parsed_stuff][:functions].each do |function|
         create_using_statement(file, function)
         file << @plugins.run(:mock_function_declarations, function)
       end
@@ -102,35 +116,37 @@ class CMockGenerator
     end
   end
 
-  def create_mock_source_file(parsed_stuff)
-    @file_writer.create_file(@mock_name + '.c', @folder) do |file, filename|
-      create_source_header_section(file, filename, parsed_stuff[:functions])
-      create_instance_structure(file, parsed_stuff[:functions])
+  def create_mock_source_file(mock_project)
+    @file_writer.create_file(mock_project[:mock_name] + '.c', mock_project[:folder]) do |file, filename|
+      create_source_header_section(file, filename, mock_project)
+      create_instance_structure(file, mock_project)
       create_extern_declarations(file)
-      create_mock_verify_function(file, parsed_stuff[:functions])
-      create_mock_init_function(file)
-      create_mock_destroy_function(file, parsed_stuff[:functions])
-      parsed_stuff[:functions].each do |function|
+      create_mock_verify_function(file, mock_project)
+      create_mock_init_function(file, mock_project)
+      create_mock_destroy_function(file, mock_project)
+      mock_project[:parsed_stuff][:functions].each do |function|
         create_mock_implementation(file, function)
         create_mock_interfaces(file, function)
       end
     end
   end
 
-  def create_skeleton_source_file(parsed_stuff)
-    filename = "#{@config.mock_path}/#{@subdir + '/' if @subdir}#{module_name}.c"
+  def create_skeleton_source_file(mock_project)
+    filename = "#{@config.mock_path}/#{@subdir + '/' if @subdir}#{mock_project[:module_name]}.c"
     existing = File.exist?(filename) ? File.read(filename) : ''
-    @file_writer.append_file(@module_name + '.c', @subdir) do |file, fullname|
-      create_source_header_section(file, fullname, []) if existing.empty?
-      parsed_stuff[:functions].each do |function|
+    @file_writer.append_file(mock_project[:module_name] + '.c', @subdir) do |file, fullname|
+      blank_project = mock_project.clone
+      blank_project[:parsed_stuff] = { :functions => [] }
+      create_source_header_section(file, fullname, blank_project) if existing.empty?
+      mock_project[:parsed_stuff][:functions].each do |function|
         create_function_skeleton(file, function, existing)
       end
     end
   end
 
-  def create_mock_header_header(file, _filename)
-    define_name   = @clean_mock_name.upcase
-    orig_filename = (@folder || '') + @module_name + (@module_ext || '.h')
+  def create_mock_header_header(file, _filename, mock_project)
+    define_name = mock_project[:clean_name].upcase
+    orig_filename = (mock_project[:folder] || '') + mock_project[:module_name] + mock_project[:module_ext]
     file << "/* AUTOGENERATED FILE. DO NOT EDIT. */\n"
     file << "#ifndef _#{define_name}_H\n"
     file << "#define _#{define_name}_H\n\n"
@@ -155,16 +171,16 @@ class CMockGenerator
     file << "\n"
   end
 
-  def create_typedefs(file, typedefs)
+  def create_typedefs(file, mock_project)
     file << "\n"
-    typedefs.each { |typedef| file << "#{typedef}\n" }
+    mock_project[:parsed_stuff][:typedefs].each { |typedef| file << "#{typedef}\n" }
     file << "\n\n"
   end
 
-  def create_mock_header_service_call_declarations(file)
-    file << "void #{@clean_mock_name}_Init(void);\n"
-    file << "void #{@clean_mock_name}_Destroy(void);\n"
-    file << "void #{@clean_mock_name}_Verify(void);\n\n"
+  def create_mock_header_service_call_declarations(file, mock_project)
+    file << "void #{mock_project[:clean_name]}_Init(void);\n"
+    file << "void #{mock_project[:clean_name]}_Destroy(void);\n"
+    file << "void #{mock_project[:clean_name]}_Verify(void);\n\n"
   end
 
   def create_mock_header_footer(header)
@@ -178,9 +194,9 @@ class CMockGenerator
     header << "#endif\n"
   end
 
-  def create_source_header_section(file, filename, functions)
-    header_file = (@folder || '') + filename.gsub('.c', (@module_ext || '.h'))
-    file << "/* AUTOGENERATED FILE. DO NOT EDIT. */\n" unless functions.empty?
+  def create_source_header_section(file, filename, mock_project)
+    header_file = (mock_project[:folder] || '') + filename.gsub('.c', mock_project[:module_ext])
+    file << "/* AUTOGENERATED FILE. DO NOT EDIT. */\n" unless mock_project[:parsed_stuff][:functions].empty?
     file << "#include <string.h>\n"
     file << "#include <stdlib.h>\n"
     unless @exclude_setjmp_h
@@ -192,7 +208,7 @@ class CMockGenerator
     @includes_c_post_header.each { |inc| file << "#include #{inc}\n" }
     file << "\n"
     strs = []
-    functions.each do |func|
+    mock_project[:parsed_stuff][:functions].each do |func|
       strs << func[:name]
       func[:args].each { |arg| strs << arg[:name] }
     end
@@ -202,14 +218,15 @@ class CMockGenerator
     file << "\n"
   end
 
-  def create_instance_structure(file, functions)
+  def create_instance_structure(file, mock_project)
+    functions = mock_project[:parsed_stuff][:functions]
     functions.each do |function|
       file << "typedef struct _CMOCK_#{function[:name]}_CALL_INSTANCE\n{\n"
       file << "  UNITY_LINE_TYPE LineNumber;\n"
       file << @plugins.run(:instance_typedefs, function)
       file << "\n} CMOCK_#{function[:name]}_CALL_INSTANCE;\n\n"
     end
-    file << "static struct #{@clean_mock_name}Instance\n{\n"
+    file << "static struct #{mock_project[:clean_name]}Instance\n{\n"
     if functions.empty?
       file << "  unsigned char placeHolder;\n"
     end
@@ -231,9 +248,9 @@ class CMockGenerator
     file << "\n"
   end
 
-  def create_mock_verify_function(file, functions)
-    file << "void #{@clean_mock_name}_Verify(void)\n{\n"
-    verifications = functions.collect do |function|
+  def create_mock_verify_function(file, mock_project)
+    file << "void #{mock_project[:clean_name]}_Verify(void)\n{\n"
+    verifications = mock_project[:parsed_stuff][:functions].collect do |function|
       v = @plugins.run(:mock_verify, function)
       v.empty? ? v : ["  call_instance = Mock.#{function[:name]}_CallInstance;\n", v]
     end.join
@@ -245,20 +262,20 @@ class CMockGenerator
     file << "}\n\n"
   end
 
-  def create_mock_init_function(file)
-    file << "void #{@clean_mock_name}_Init(void)\n{\n"
-    file << "  #{@clean_mock_name}_Destroy();\n"
+  def create_mock_init_function(file, mock_project)
+    file << "void #{mock_project[:clean_name]}_Init(void)\n{\n"
+    file << "  #{mock_project[:clean_name]}_Destroy();\n"
     file << "}\n\n"
   end
 
-  def create_mock_destroy_function(file, functions)
-    file << "void #{@clean_mock_name}_Destroy(void)\n{\n"
+  def create_mock_destroy_function(file, mock_project)
+    file << "void #{mock_project[:clean_name]}_Destroy(void)\n{\n"
     file << "  CMock_Guts_MemFreeAll();\n"
     file << "  memset(&Mock, 0, sizeof(Mock));\n"
-    file << functions.collect { |function| @plugins.run(:mock_destroy, function) }.join
+    file << mock_project[:parsed_stuff][:functions].collect { |function| @plugins.run(:mock_destroy, function) }.join
 
     unless @fail_on_unexpected_calls
-      file << functions.collect { |function| @plugins.run(:mock_ignore, function) }.join
+      file << mock_project[:parsed_stuff][:functions].collect { |function| @plugins.run(:mock_ignore, function) }.join
     end
 
     if @ordered
