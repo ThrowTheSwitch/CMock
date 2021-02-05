@@ -45,7 +45,6 @@ class CMockGenerator
   end
 
   def create_mock(module_name, parsed_stuff, module_ext = nil, folder = nil)
-
     # determine the name for our new mock
     mock_name = @prefix + module_name + @suffix
 
@@ -78,7 +77,6 @@ class CMockGenerator
   end
 
   def create_skeleton(module_name, parsed_stuff)
-
     mock_project = {
       :module_name  => module_name,
       :module_ext   => '.h',
@@ -92,7 +90,7 @@ class CMockGenerator
   private if $ThisIsOnlyATest.nil? ##############################
 
   def create_mock_subdir(mock_project)
-    @file_writer.create_subdir( mock_project[:folder] )
+    @file_writer.create_subdir(mock_project[:folder])
   end
 
   def create_using_statement(file, function)

@@ -30,7 +30,6 @@ class CMockHeaderParser
   end
 
   def parse(name, source)
-
     parse_project = {
       :module_name       => name.gsub(/\W/, ''),
       :typedefs          => [],
