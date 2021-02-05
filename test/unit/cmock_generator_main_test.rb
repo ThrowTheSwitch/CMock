@@ -78,20 +78,26 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :treat_inlines, :exclude
     @config.expect :exclude_setjmp_h, false
     @cmock_generator_strict = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
-    @cmock_generator_strict.module_name = @module_name
-    @cmock_generator_strict.module_ext = '.h'
-    @cmock_generator_strict.mock_name = "Mock#{@module_name}"
-    @cmock_generator_strict.clean_mock_name = "Mock#{@module_name}"
+
+    @test_project = {
+      :module_name  => @module_name,
+      :module_ext   => '.h',
+      :mock_name    => "Mock#{@module_name}",
+      :clean_name   => "Mock#{@module_name}",
+      :folder       => nil,
+      :parsed_stuff => {},
+      :skeleton     => false
+    }
   end
 
   after do
   end
 
-  def helper_create_header_top_with_opt_incldues_form_config_and_plugin(ext)
+  def helper_create_header_top_with_opt_includes_form_config_and_plugin(ext)
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    @cmock_generator.module_ext = ext
+
     orig_filename = "PoutPoutFish#{ext}"
     define_name = "MOCKPOUTPOUTFISH_H"
     output = []
@@ -122,41 +128,26 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}")
+    # Update the extention for this test
+    test_project = @test_project.clone 
+    test_project[:module_ext] = ext
+
+    @cmock_generator.create_mock_header_header(output, "Mock#{orig_filename}", test_project)
 
     assert_equal(expected, output)
   end
 
   it "create the top of a header file with optional include files from config and include file from plugin" do
     ['.h','.hh','.hpp'].each do |ext|
-      helper_create_header_top_with_opt_incldues_form_config_and_plugin(ext)
+      helper_create_header_top_with_opt_includes_form_config_and_plugin(ext)
     end
   end
 
   it "handle dashes and spaces in the module name" do
-    #no strict handling
     @config.expect :mock_prefix, "Mock"
     @config.expect :mock_suffix, ""
     @config.expect :weak, ""
-    @config.expect :enforce_strict_ordering, nil
-    @config.expect :framework, :unity
-    @config.expect :includes, ["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"]
-    @config.expect :includes_h_post_orig_header, nil
-    @config.expect :includes_c_pre_header, nil
-    @config.expect :includes_c_post_header, nil
-    @config.expect :subdir, nil
-    @config.expect :fail_on_unexpected_calls, true
-    @config.expect :treat_inlines, :exclude
-    @config.expect :exclude_setjmp_h, false
-    @cmock_generator2 = CMockGenerator.new(@config, @file_writer, @utils, @plugins)
-    @cmock_generator2.module_name = "Pout-Pout Fish"
-    @cmock_generator2.module_ext = '.h'
-    @cmock_generator2.mock_name = "MockPout-Pout Fish"
-    @cmock_generator2.clean_mock_name = "MockPout_Pout_Fish"
-
-    @config.expect :mock_prefix, "Mock"
-    @config.expect :mock_suffix, ""
-    @config.expect :weak, ""
+    
     orig_filename = "Pout-Pout Fish.h"
     define_name = "MOCKPOUT_POUT_FISH_H"
     output = []
@@ -187,7 +178,13 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator2.create_mock_header_header(output, "MockPout-Pout Fish.h")
+    # Create a project with some added challenges
+    test_project = @test_project.clone 
+    test_project[:module_name] = "Pout-Pout Fish"
+    test_project[:mock_name] = "MockPout-Pout Fish"
+    test_project[:clean_name] = "MockPout_Pout_Fish"
+
+    @cmock_generator.create_mock_header_header(output, "MockPout-Pout Fish.h", test_project)
 
     assert_equal(expected, output)
   end
@@ -225,7 +222,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run,  '', [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h", @test_project)
 
     assert_equal(expected, output)
   end
@@ -264,7 +261,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :orig_header_include_fmt, "#include \"%s\""
     @plugins.expect :run, "#include \"PluginRequiredHeader.h\"\n", [:include_files]
 
-    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h")
+    @cmock_generator.create_mock_header_header(output, "MockPoutPoutFish.h", @test_project)
 
     assert_equal(expected, output)
   end
@@ -282,7 +279,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "\n\n"
                ]
 
-    @cmock_generator.create_typedefs(output, typedefs)
+    @test_project[:parsed_stuff][:typedefs] = typedefs
+    @cmock_generator.create_typedefs(output, @test_project)
 
     assert_equal(expected, output.flatten)
   end
@@ -296,7 +294,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "void #{mock_name}_Verify(void);\n\n"
                ]
 
-    @cmock_generator.create_mock_header_service_call_declarations(output)
+    @cmock_generator.create_mock_header_service_call_declarations(output, @test_project)
 
     assert_equal(expected, output)
   end
@@ -340,7 +338,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "\n"
                ]
 
-    @cmock_generator.create_source_header_section(output, "MockPoutPoutFish.c", functions)
+    @test_project[:parsed_stuff][:functions] = functions
+    @cmock_generator.create_source_header_section(output, "MockPoutPoutFish.c", @test_project)
 
     assert_equal(expected, output)
   end
@@ -354,7 +353,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "} Mock;\n\n"
                ].join
 
-    @cmock_generator.create_instance_structure(output, functions)
+    @test_project[:parsed_stuff][:functions] = functions
+    @cmock_generator.create_instance_structure(output, @test_project)
 
     assert_equal(expected, output.join)
   end
@@ -384,7 +384,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  d1"],               [:instance_structure, functions[0]]
     @plugins.expect :run, ["  e1","  e2","  e3"], [:instance_structure, functions[1]]
 
-    @cmock_generator.create_instance_structure(output, functions)
+    @test_project[:parsed_stuff][:functions] = functions
+    @cmock_generator.create_instance_structure(output, @test_project)
 
     assert_equal(expected, output.join)
   end
@@ -416,7 +417,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = "void MockPoutPoutFish_Verify(void)\n{\n}\n\n"
 
-    @cmock_generator.create_mock_verify_function(output, functions)
+    @test_project[:parsed_stuff][:functions] = functions
+    @cmock_generator.create_mock_verify_function(output, @test_project)
 
     assert_equal(expected, output.join)
   end
@@ -441,7 +443,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  Uno_Second","  Dos_Second"], [:mock_verify, functions[1]]
 
     @cmock_generator.ordered = true
-    @cmock_generator.create_mock_verify_function(output, functions)
+    @test_project[:parsed_stuff][:functions] = functions
+    @cmock_generator.create_mock_verify_function(output, @test_project)
 
     assert_equal(expected, output.flatten)
   end
@@ -453,7 +456,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "}\n\n"
                ]
 
-    @cmock_generator.create_mock_init_function(output)
+    @cmock_generator.create_mock_init_function(output, @test_project)
 
     assert_equal(expected.join, output.join)
   end
@@ -467,7 +470,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
                  "}\n\n"
                ]
 
-    @cmock_generator.create_mock_destroy_function(output, functions)
+    @test_project[:parsed_stuff][:functions] = functions
+    @cmock_generator.create_mock_destroy_function(output, @test_project)
 
     assert_equal(expected.join, output.join)
   end
@@ -488,7 +492,8 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, [],        [:mock_destroy, functions[0]]
     @plugins.expect :run, ["  uno"], [:mock_destroy, functions[1]]
 
-    @cmock_generator_strict.create_mock_destroy_function(output, functions)
+    @test_project[:parsed_stuff][:functions] = functions
+    @cmock_generator_strict.create_mock_destroy_function(output, @test_project)
 
     assert_equal(expected.join, output.join)
   end
