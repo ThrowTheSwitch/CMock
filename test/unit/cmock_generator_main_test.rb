@@ -48,7 +48,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :enforce_strict_ordering, nil
     @config.expect :framework, :unity
     @config.expect :includes, ["ConfigRequiredHeader1.h","ConfigRequiredHeader2.h"]
-    #@config.expect :includes_h_pre_orig_header, nil #not called because includes called
+    @config.expect :includes_h_pre_orig_header, nil
     @config.expect :includes_h_post_orig_header, nil
     @config.expect :includes_c_pre_header, nil
     @config.expect :includes_c_post_header, nil
