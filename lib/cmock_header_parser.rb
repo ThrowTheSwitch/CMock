@@ -245,8 +245,8 @@ class CMockHeaderParser
     source.gsub!(/__attribute(?:__)?\s*\(\(+.*\)\)+/, '')
 
     # remove preprocessor statements and extern "C"
-    source.gsub!(/^\s*#.*/, '')
     source.gsub!(/extern\s+\"C\"\s*\{/, '')
+    source.gsub!(/^\s*#.*/, '')
 
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
