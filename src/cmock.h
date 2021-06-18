@@ -11,7 +11,7 @@
 
 #define CMOCK_VERSION_MAJOR    2
 #define CMOCK_VERSION_MINOR    5
-#define CMOCK_VERSION_BUILD    3
+#define CMOCK_VERSION_BUILD    4
 #define CMOCK_VERSION          ((CMOCK_VERSION_MAJOR << 16) | (CMOCK_VERSION_MINOR << 8) | CMOCK_VERSION_BUILD)
 
 /* should be big enough to index full range of CMOCK_MEM_MAX */
