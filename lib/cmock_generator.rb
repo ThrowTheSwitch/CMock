@@ -22,7 +22,8 @@ class CMockGenerator
     @exclude_setjmp_h = @config.exclude_setjmp_h
     @subdir = @config.subdir
 
-    @includes_h_pre_orig_header  = (@config.includes || @config.includes_h_pre_orig_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
+    @includes_h_pre_orig_header  = (@config.includes_h_pre_orig_header ||  []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
+    @includes_h_pre_orig_header += (@config.includes || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
     @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
     @includes_c_pre_header       = (@config.includes_c_pre_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
     @includes_c_post_header      = (@config.includes_c_post_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
