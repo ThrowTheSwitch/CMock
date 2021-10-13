@@ -216,7 +216,7 @@ return values into a queue, this function lets you specify one or more return va
 are queued up and copied into the space being pointed at each time the mock is called.
 
 * `void func(param1)` => `void func_ReturnThruPtr_paramName(val_to_return)`
-* => `void func_ReturnArrayThruPtr_paramName(cal_to_return, len)`
+* => `void func_ReturnArrayThruPtr_paramName(val_to_return, len)`
 * => `void func_ReturnMemThruPtr_paramName(val_to_return, size)`
 
 
