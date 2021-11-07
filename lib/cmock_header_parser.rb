@@ -495,7 +495,10 @@ class CMockHeaderParser
           funcname.gsub!('const', '').strip!
           funconst = 'const '
         end
-        parse_project[:typedefs] << "typedef #{funcret}(#{funcdecl} *#{functype})(#{funcargs});"
+        if funcdecl != ''
+          funcdecl += ' '
+        end
+        parse_project[:typedefs] << "typedef #{funcret}(#{funcdecl}*#{functype})(#{funcargs});"
         funcname = "cmock_arg#{c += 1}" if funcname.empty?
         "#{functype} #{funconst}#{funcname}"
       end
