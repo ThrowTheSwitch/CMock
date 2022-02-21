@@ -500,7 +500,7 @@ class CMockHeaderParser
       end
 
       # scan argument list for function pointers with shorthand notation and replace them with custom types
-      arg_list.gsub!(/([\w\s\*]+)+\s+(\w+)\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
+      arg_list.gsub!(/([\w\s\*]+)\s+(\w+)\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
         functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
         funcret  = Regexp.last_match(1).strip
         funcname = Regexp.last_match(2).strip
