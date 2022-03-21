@@ -32,7 +32,7 @@ API Documentation
 * Not sure what you're doing?
 	* [View docs/CMock_Summary.md](docs/CMock_Summary.md)
 * Interested in our MIT-style license?
-	* [View docs/license.txt](docs/license.txt)
+	* [View docs/license.txt](LICENSE.txt)
 * Are there examples?
 	* They are all in [/examples](examples/)
 * Any other resources to check out?
