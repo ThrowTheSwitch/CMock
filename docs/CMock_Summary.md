@@ -135,8 +135,9 @@ that resembles a pointer or array, it breaks the argument into TWO arguments.
 The first is the original pointer. The second specify the number of elements
 it is to verify of that array. If you specify 1, it'll check one object. If 2,
 it'll assume your pointer is pointing at the first of two elements in an array.
-If you specify zero elements, it will check just the pointer if
-`:smart` mode is configured or fail if `:compare_data` is set.
+If you specify zero elements and `UNITY_COMPARE_PTRS_ON_ZERO_ARRAY` is defined, 
+then this assertion can also be used to directly compare the pointers to verify
+that they are pointing to the same memory address.
 
 * `void func(void)` => (nothing. In fact, an additional function is only generated if the params list contains pointers)
 * `void func(ptr * param, other)` => `void func_ExpectWithArray(ptr* param, int param_depth, other)`
