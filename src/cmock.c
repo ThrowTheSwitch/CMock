@@ -25,8 +25,10 @@ static unsigned char*         CMock_Guts_Buffer = NULL;
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_ALIGN_SIZE;
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #else
-static unsigned char          CMock_Guts_Buffer[CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE];
-static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE;
+static long long              CMock_Guts_Space[(CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE + sizeof(long long) - 1) /
+                                                sizeof(long long)];
+static unsigned char*         CMock_Guts_Buffer = (unsigned char *)CMock_Guts_Space;
+static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = sizeof(CMock_Guts_Space);
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #endif
 
