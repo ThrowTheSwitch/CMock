@@ -234,13 +234,13 @@ For example, consider the following function:
 We might want to mock this function so that regardless of the inputs, it returns TRUE and a result of 23.
 We could do so like this:
 
-`int result_1 = 23;
+`uint result_1 = 23;
 divide_ExpectAnyArgsAndReturn(TRUE);
 divide_ReturnThruPtr_result(&result_1);
 `
 
 If we want to expect a numerator of 5 and a denominator of 2 and return a result of 42:
-`int result_1 = 42;
+`uint result_1 = 42;
 divide_ExpectAndReturn(5,2,NULL,TRUE);
 divide_IgnoreArg_result();
 divide_ReturnThruPtr_result(&result_1);
