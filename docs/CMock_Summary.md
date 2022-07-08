@@ -222,7 +222,7 @@ are queued up and copied into the space being pointed at each time the mock is c
 
 For example, consider the following function:
 
-`BOOL divide(uint numerator, uint denominator, int* result){
+`BOOL divide(uint numerator, uint denominator, uint* result){
     if (denominator == 0){
         return FALSE;
     }
