@@ -123,6 +123,10 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n",
       "#endif\n",
       "\n",
+      "#ifdef __cplusplus\n",
+      "extern \"C\" {\n",
+      "#endif\n",
+      "\n",
     ]
 
     @config.expect :orig_header_include_fmt, "#include \"%s\""
@@ -173,6 +177,10 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n",
       "#endif\n",
       "\n",
+      "#ifdef __cplusplus\n",
+      "extern \"C\" {\n",
+      "#endif\n",
+      "\n",
     ]
 
     @config.expect :orig_header_include_fmt, "#include \"%s\""
@@ -217,6 +225,10 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n",
       "#endif\n",
       "\n",
+      "#ifdef __cplusplus\n",
+      "extern \"C\" {\n",
+      "#endif\n",
+      "\n",
     ]
 
     @config.expect :orig_header_include_fmt, "#include \"%s\""
@@ -254,6 +266,10 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
       "#endif\n",
       "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n",
       "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n",
+      "#endif\n",
+      "\n",
+      "#ifdef __cplusplus\n",
+      "extern \"C\" {\n",
       "#endif\n",
       "\n",
     ]
@@ -302,6 +318,10 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
   it "append the proper footer to the header file" do
     output = []
     expected = ["\n",
+                "#ifdef __cplusplus\n",
+                "}\n",
+                "#endif\n",
+                "\n",
                 "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n",
                 "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n",
                 "#pragma GCC diagnostic pop\n",

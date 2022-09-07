@@ -169,6 +169,10 @@ class CMockGenerator
     file << "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n"
     file << "#endif\n"
     file << "\n"
+    file << "#ifdef __cplusplus\n"
+    file << "extern \"C\" {\n"
+    file << "#endif\n"
+    file << "\n"
   end
 
   def create_typedefs(file, mock_project)
@@ -184,6 +188,10 @@ class CMockGenerator
   end
 
   def create_mock_header_footer(header)
+    header << "\n"
+    header << "#ifdef __cplusplus\n"
+    header << "}\n"
+    header << "#endif\n"
     header << "\n"
     header << "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n"
     header << "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n"
