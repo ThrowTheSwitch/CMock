@@ -134,7 +134,7 @@ class CMockGenerator
   def create_skeleton_source_file(mock_project)
     filename = "#{@config.mock_path}/#{@subdir + '/' if @subdir}#{mock_project[:module_name]}.c"
     existing = File.exist?(filename) ? File.read(filename) : ''
-    @file_writer.append_file(mock_project[:module_name] + '.c', @subdir) do |file, fullname|
+    @file_writer.create_file(mock_project[:module_name] + '.c', @subdir) do |file, fullname|
       blank_project = mock_project.clone
       blank_project[:parsed_stuff] = { :functions => [] }
       create_source_header_section(file, fullname, blank_project) if existing.empty?
