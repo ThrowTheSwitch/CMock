@@ -34,8 +34,7 @@ jobs:
           sudo gem install bundler
           sudo gem install rspec
           sudo gem install rubocop -v 0.57.2
-          rm -rf ~/.bundle
-          bundle install
+          bundle --no-cache install
 
       # Run Tests
       - name: Run All Unit Tests
