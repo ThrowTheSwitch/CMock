@@ -21,7 +21,6 @@ jobs:
         run: |
           sudo apt-get update --assume-yes
           sudo apt-get install --assume-yes --quiet gcc-multilib
-          sudo apt-get install --assume-yes --quiet ruby-dev
 
       # Checks out repository under $GITHUB_WORKSPACE
       - name: Checkout Latest Repo
@@ -35,6 +34,7 @@ jobs:
           sudo gem install bundler
           sudo gem install rspec
           sudo gem install rubocop -v 0.57.2
+          sudo chmod 17777 -R /var/lib/gems
           bundle install 
 
       # Run Tests
