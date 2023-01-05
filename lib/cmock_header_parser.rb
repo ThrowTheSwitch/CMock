@@ -484,17 +484,21 @@ class CMockHeaderParser
       arg_list.gsub!(/\*(\w)/, '* \1')
 
       # scan argument list for function pointers and replace them with custom types
-      arg_list.gsub!(/([\w\s\*]+)\(+\s*\*[\*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
+      arg_list.gsub!(/([\w\s\*]+)\(+([\w\s]*)\*[\*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
         functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
         funcret  = Regexp.last_match(1).strip
-        funcname = Regexp.last_match(2).strip
-        funcargs = Regexp.last_match(3).strip
+        funcdecl = Regexp.last_match(2).strip
+        funcname = Regexp.last_match(3).strip
+        funcargs = Regexp.last_match(4).strip
         funconst = ''
         if funcname.include? 'const'
           funcname.gsub!('const', '').strip!
           funconst = 'const '
         end
-        parse_project[:typedefs] << "typedef #{funcret}(*#{functype})(#{funcargs});"
+        if funcdecl != ''
+          funcdecl += ' '
+        end
+        parse_project[:typedefs] << "typedef #{funcret}(#{funcdecl}*#{functype})(#{funcargs});"
         funcname = "cmock_arg#{c += 1}" if funcname.empty?
         "#{functype} #{funconst}#{funcname}"
       end
