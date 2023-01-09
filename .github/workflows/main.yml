@@ -20,7 +20,7 @@ jobs:
         with:
           ruby-version: '3.0' # Not needed with a .ruby-version file
           bundler-cache: true # runs 'bundle install' and caches
-          
+
       # Install Multilib
       - name: Install Multilib
         run: |
@@ -39,7 +39,6 @@ jobs:
           sudo gem install bundler
           sudo gem install rspec
           sudo gem install rubocop -v 0.57.2
-          sudo chmod 17777 -R /var/lib/gems
           bundle install 
 
       # Run Tests
