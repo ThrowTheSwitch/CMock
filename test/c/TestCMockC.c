@@ -32,7 +32,7 @@ void test_MemNewWillReturnNullIfGivenIllegalSizes(void)
 
 void test_MemShouldProtectAgainstMemoryOverflow(void)
 {
-  (void)CMock_Guts_MemNew(CMOCK_MEM_SIZE - TEST_MEM_INDEX_SIZE);
+  TEST_ASSERT_NOT_EQUAL_UINT( CMOCK_GUTS_NONE, CMock_Guts_MemNew(CMOCK_MEM_SIZE - TEST_MEM_INDEX_SIZE) );
 
   //verify we've used all the memory
   TEST_ASSERT_LESS_OR_EQUAL_UINT32(TEST_MEM_INDEX_SIZE, CMock_Guts_MemBytesFree());
