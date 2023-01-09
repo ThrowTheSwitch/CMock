@@ -16,6 +16,11 @@ jobs:
     name: "Unit Tests"
     runs-on: ubuntu-latest
     steps:
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0' # Not needed with a .ruby-version file
+          bundler-cache: true # runs 'bundle install' and caches
+
       # Install Multilib
       - name: Install Multilib
         run: |
@@ -34,7 +39,7 @@ jobs:
           sudo gem install bundler
           sudo gem install rspec
           sudo gem install rubocop -v 0.57.2
-          bundle install
+          bundle install 
 
       # Run Tests
       - name: Run All Unit Tests

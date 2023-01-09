@@ -41,7 +41,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
   end
 
   it "create and initialize variables to defaults appropriately" do
-    assert_equal(nil, @parser.funcs)
+    assert_nil(@parser.funcs)
     assert_equal(['const', '__ramfunc', 'funky_attrib', 'SQLITE_API'], @parser.c_attributes)
     assert_equal(['void','MY_FUNKY_VOID'], @parser.treat_as_void)
   end
@@ -377,7 +377,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       @parser.parse("module", source)
     end
 
-    assert_equal(nil, @parser.funcs)
+    assert_nil(@parser.funcs)
 
     # verify exception message
     begin
@@ -401,7 +401,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       @parser.parse("module", source)
     end
 
-    assert_equal(nil, @parser.funcs)
+    assert_nil(@parser.funcs)
 
     # verify exception message
     begin
@@ -429,7 +429,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       @parser.parse("module", source)
     end
 
-    assert_equal(nil, @parser.funcs)
+    assert_nil(@parser.funcs)
 
     # verify exception message
     begin
@@ -670,7 +670,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       @parser.parse("module", source)
     end
 
-    assert_equal(nil, @parser.funcs)
+    assert_nil(@parser.funcs)
 
     # verify exception message
     begin
@@ -699,7 +699,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       @parser.parse("module", source)
     end
 
-    assert_equal(nil, @parser.funcs)
+    assert_nil(@parser.funcs)
 
     # verify exception message
     begin

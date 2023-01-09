@@ -25,10 +25,9 @@ static unsigned char*         CMock_Guts_Buffer = NULL;
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_ALIGN_SIZE;
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #else
-static long long              CMock_Guts_Space[(CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE + sizeof(long long) - 1) /
-                                                sizeof(long long)];
+static long long              CMock_Guts_Space[(CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE + sizeof(long long) - 1) / sizeof(long long)];
 static unsigned char*         CMock_Guts_Buffer = (unsigned char *)CMock_Guts_Space;
-static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = sizeof(CMock_Guts_Space);
+static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE;//sizeof(CMock_Guts_Space);
 static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #endif
 
@@ -41,12 +40,16 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemNew(CMOCK_MEM_INDEX_TYPE size)
 
   /* verify arguments valid (we must be allocating space for at least 1 byte, and the existing chain must be in memory somewhere) */
   if (size < 1)
+  {
     return CMOCK_GUTS_NONE;
+  }
 
   /* verify we have enough room */
   size = size + CMOCK_MEM_INDEX_SIZE;
   if (size & CMOCK_MEM_ALIGN_MASK)
+  {
     size = (size + CMOCK_MEM_ALIGN_MASK) & ~CMOCK_MEM_ALIGN_MASK;
+  }
   if ((CMock_Guts_BufferSize - CMock_Guts_FreePtr) < size)
   {
 #ifndef CMOCK_MEM_DYNAMIC
@@ -105,9 +108,13 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemChain(CMOCK_MEM_INDEX_TYPE root_index, CMOCK_
     do {
       index = *(CMOCK_MEM_INDEX_TYPE*)((CMOCK_MEM_PTR_AS_INT)next - CMOCK_MEM_INDEX_SIZE);
       if (index >= CMock_Guts_FreePtr)
+      {
         return CMOCK_GUTS_NONE;
+      }
       if (index > 0)
+      {
         next = (void*)(&CMock_Guts_Buffer[index]);
+      }
     } while (index > 0);
     *(CMOCK_MEM_INDEX_TYPE*)((CMOCK_MEM_PTR_AS_INT)next - CMOCK_MEM_INDEX_SIZE) = (CMOCK_MEM_INDEX_TYPE)((CMOCK_MEM_PTR_AS_INT)obj - (CMOCK_MEM_PTR_AS_INT)CMock_Guts_Buffer);
     return root_index;
@@ -124,16 +131,22 @@ CMOCK_MEM_INDEX_TYPE CMock_Guts_MemNext(CMOCK_MEM_INDEX_TYPE previous_item_index
 
   /* There is nothing "next" if the pointer isn't from our buffer */
   if ((previous_item_index < CMOCK_MEM_ALIGN_SIZE) || (previous_item_index  >= CMock_Guts_FreePtr))
+  {
     return CMOCK_GUTS_NONE;
+  }
   previous_item = (void*)(&CMock_Guts_Buffer[previous_item_index]);
 
   /* if the pointer is good, then use it to look up the next index
    * (we know the first element always goes in zero, so NEXT must always be > 1) */
   index = *(CMOCK_MEM_INDEX_TYPE*)((CMOCK_MEM_PTR_AS_INT)previous_item - CMOCK_MEM_INDEX_SIZE);
   if ((index > 1) && (index < CMock_Guts_FreePtr))
+  {
     return index;
+  }
   else
+  {
     return CMOCK_GUTS_NONE;
+  }
 }
 
 /*-------------------------------------------------------
