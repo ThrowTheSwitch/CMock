@@ -137,7 +137,7 @@ class CMockGenerator
     @file_writer.create_file(mock_project[:module_name] + '.c', @subdir) do |file, fullname|
       blank_project = mock_project.clone
       blank_project[:parsed_stuff] = { :functions => [] }
-      if (existing.empty?)
+      if existing.empty?
         create_source_header_section(file, fullname, blank_project)
       else
         file << existing << "\n"
