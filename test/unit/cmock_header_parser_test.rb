@@ -121,7 +121,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "  my_realloc(void*, size_t) __attribute__((alloc_size(2)));\n" +
       "extern int\n" +
       "  my_printf (void *my_object, const char *my_format, ...)\n" +
-      "  __attribute__ ((format (printf, 2, 3)));\n" +
+      "  __attribute__ ( (format (printf, 2, 3)) );\n" +
       "  void __attribute__ ((interrupt)) universal_handler ();\n"
 
     expected =
@@ -2752,6 +2752,28 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "\n"
 
     @parser.treat_inlines = :include
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
+  it "Transform inline functions using gnu attribute notation" do
+    source =
+      "static __inline__ __attribute__ ((always_inline)) uint16_t _somefunc (uint32_t a)\n" +
+      "{\n" +
+      "    return _someotherfunc (a);\n" +
+      "}\n" +
+      "static __attribute__ (( always_inline )) uint16_t _somefunc_0  (uint32_t a)\n" +
+      "{\n" +
+      "    return (uint16_t) a;\n" +
+      "}\n" +
+      "\n"
+
+    expected =
+      "uint16_t _somefunc (uint32_t a);\n" +
+      "uint16_t _somefunc_0  (uint32_t a);\n" +
+      "\n"
+
+    @parser.treat_inlines = :include
+    @parser.inline_function_patterns = ['(?:static\s*)?(?:__inline__)?__attribute__\s*\([ (]*always_inline[ )]*\)', 'static __inline__']
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
