@@ -16,8 +16,8 @@ typedef struct _POINT_T
   int y;
 } POINT_T;
 
-// typedef edge case;
-// not ANSI C but it has been done and will break cmock if not handled
+/* typedef edge case;
+   not ANSI C but it has been done and will break cmock if not handled */
 typedef void VOID_TYPE_CRAZINESS;
 
 /* fun parsing & mock generation cases */
@@ -35,6 +35,9 @@ char
 (
   int a,
   unsigned int b);
+
+/* this isn't a function, despite the parenthesis */
+static const unsigned int foo = (1);
 
 U16  *ptr_return1(int a);
 U16*  ptr_return2(int a);
