@@ -9,9 +9,17 @@ module RakefileHelpers
 
   C_EXTENSION = '.c'.freeze
 
+  def load_yaml(yaml_string)
+    begin
+      return YAML.load(yaml_string, aliases: true)
+    rescue ArgumentError
+      return YAML.load(yaml_string)
+    end
+  end
+
   def load_configuration(config_file)
     $cfg_file = config_file
-    $cfg = YAML.load(File.read($cfg_file))
+    $cfg = load_yaml(File.read('./targets/' + $cfg_file))
     $colour_output = false unless $cfg['colour']
   end
 

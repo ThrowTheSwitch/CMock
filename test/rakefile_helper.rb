@@ -19,9 +19,18 @@ module RakefileHelpers
   C_EXTENSION = '.c'
   RESULT_EXTENSION = '.result'
 
+  def load_yaml(yaml_filename)
+    yaml_string = File.read(yaml_filename)
+    begin
+      return YAML.load(yaml_string, aliases: true)
+    rescue ArgumentError
+      return YAML.load(yaml_string)
+    end
+  end
+
   def load_configuration(config_file)
     $cfg_file = config_file
-    $cfg = YAML.load(File.read('./targets/' + $cfg_file))
+    $cfg = load_yaml('./targets/' + $cfg_file)
     $colour_output = false unless $cfg['colour']
   end
 
@@ -252,7 +261,7 @@ module RakefileHelpers
     failure_messages = []
 
     test_case_files.each do |test_case|
-      tests = (YAML.load_file(test_case))[:systest][:tests][:units]
+      tests = (load_yaml(test_case))[:systest][:tests][:units]
       total_tests += tests.size
 
       test_file    = 'test_' + File.basename(test_case).ext(C_EXTENSION)
@@ -367,7 +376,7 @@ module RakefileHelpers
     report "----------------\n"
     errors = false
     FileList.new("c/*.yml").each do |yaml_file|
-      test = YAML.load(File.read(yaml_file))
+      test = load_yaml(yaml_file)
       report "\nTesting #{yaml_file.sub('.yml','')}"
       report "(#{test[:options].join(', ')})"
       test[:files].each { |f| compile(f, test[:options]) }
