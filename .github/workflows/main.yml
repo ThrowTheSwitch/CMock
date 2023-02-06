@@ -22,7 +22,7 @@ jobs:
       # Install Multilib
       - name: Install Multilib
         run: |
-          sudo apt-get update --assume-yes
+          sudo apt-get update -qq
           sudo apt-get install --assume-yes --quiet gcc-multilib
 
       # Checks out repository under $GITHUB_WORKSPACE
@@ -31,12 +31,19 @@ jobs:
         with: 
           submodules: recursive
 
+      # Setup Ruby Testing Tools to do tests on multiple ruby version
+      - name: Setup Ruby Testing Tools
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
       # Install Ruby Testing Tools
       - name: Setup Ruby Testing Tools
         run: |
-          sudo gem install bundler
           sudo gem install rspec
           sudo gem install rubocop -v 0.57.2
+          sudo gem install bundler
+          bundle update
           bundle install 
 
       # Run Tests
