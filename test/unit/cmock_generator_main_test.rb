@@ -550,7 +550,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
     @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
-    @cmock_generator.create_mock_implementation(output, function)
+    @cmock_generator.create_mock_implementation(file = output, function = function)
 
     assert_equal(expected.join, output.join)
   end
@@ -588,7 +588,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
     @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
-    @cmock_generator.create_mock_implementation(output, function)
+    @cmock_generator.create_mock_implementation(file = output, function = function)
 
     assert_equal(expected.join, output.join)
   end
@@ -629,7 +629,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
     @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
-    @cmock_generator.create_mock_implementation(output, function)
+    @cmock_generator.create_mock_implementation(file = output, function = function)
 
     assert_equal(expected.join, output.join)
   end
@@ -667,7 +667,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
     @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
-    @cmock_generator.create_mock_implementation(output, function)
+    @cmock_generator.create_mock_implementation(file = output, function = function)
 
     assert_equal(expected.join, output.join)
   end
@@ -687,7 +687,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = "using namespace ns1;\n"
 
-    @cmock_generator.create_using_statement(output, function)
+    @cmock_generator.create_using_statement(file = output, function = function)
 
     assert_equal(expected, output.join)
   end
@@ -707,7 +707,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = "using namespace ns1::ns2;\n"
 
-    @cmock_generator.create_using_statement(output, function)
+    @cmock_generator.create_using_statement(file = output, function = function)
 
     assert_equal(expected, output.join)
   end
