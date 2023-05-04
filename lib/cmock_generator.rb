@@ -89,6 +89,34 @@ class CMockGenerator
 
   private if $ThisIsOnlyATest.nil? ##############################
 
+  def is_noreturn?(function)
+    if function[:attributes].nil?
+      return nil;
+    else
+	  return function[:attributes].include?('noreturn');
+    end
+  end
+
+  def generate_return(function)
+    if is_noreturn?(function)
+      return "  TEST_DO_NOT_RETURN();\n"
+    elsif function[:return][:void?]
+      return "  return;\n"
+    else
+      return "  return cmock_call_instance->ReturnVal;\n"
+    end
+  end
+
+  def generate_template_return(function)
+    if is_noreturn?(function)
+      return "  TEST_DO_NOT_RETURN();\n"
+    elsif function[:return][:void?]
+      return "  return;\n"
+    else
+      return "  return (#{(function[:return][:type])})0;\n"
+    end
+  end
+
   def create_mock_subdir(mock_project)
     @file_writer.create_subdir(mock_project[:folder])
   end
@@ -339,7 +367,7 @@ class CMockGenerator
     end
     file << @plugins.run(:mock_implementation, function)
     file << "  UNITY_CLR_DETAILS();\n"
-    file << "  return cmock_call_instance->ReturnVal;\n" unless function[:return][:void?]
+    file << generate_return(function);
     file << "}\n"
 
     # Close any namespace(s) opened above
@@ -371,7 +399,7 @@ class CMockGenerator
     file << "{\n"
     file << "  /*TODO: Implement Me!*/\n"
     function[:args].each { |arg| file << "  (void)#{arg[:name]};\n" }
-    file << "  return (#{(function[:return][:type])})0;\n" unless function[:return][:void?]
+    file << generate_template_return(function);
     file << "}\n\n"
   end
 end
