@@ -1,3 +1,4 @@
+# coding: utf-8
 # ==========================================
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
@@ -8,14 +9,18 @@ $ThisIsOnlyATest = true
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_header_parser'
+require File.expand_path(File.dirname(__FILE__)) + '/../../lib/CLexer'
 
 describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   before do
     create_mocks :config
     @config.expect :strippables, ["STRIPPABLE"]
-    @config.expect :attributes, ['__ramfunc', 'funky_attrib', 'SQLITE_API']
+    @config.expect :attributes, ['__ramfunc', 'funky_attrib', 'SQLITE_API','access','rt::access','deprecated']
     @config.expect :c_calling_conventions, ['__stdcall']
+	@config.expect :c_noreturn_attributes,['_Noreturn', 'noreturn', '__noreturn__']
+    @config.expect :process_gcc_attributes, true
+    @config.expect :process_cpp_attributes, true
     @config.expect :treat_as_void, ['MY_FUNKY_VOID']
     @config.expect :treat_as, { "BANJOS" => "INT", "TUBAS" => "HEX16"}
     @config.expect :treat_as_array, {"IntArray" => "int", "Book" => "Page"}
@@ -42,7 +47,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "create and initialize variables to defaults appropriately" do
     assert_nil(@parser.funcs)
-    assert_equal(['const', '__ramfunc', 'funky_attrib', 'SQLITE_API'], @parser.c_attributes)
+    assert_equal(['const', '__ramfunc', 'funky_attrib', 'SQLITE_API','access','rt::access','deprecated'], @parser.c_attributes)
     assert_equal(['void','MY_FUNKY_VOID'], @parser.treat_as_void)
   end
 
@@ -53,10 +58,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "who // is you\n"
 
     expected =
-    [
-      "abcd",
-      "who"
-    ]
+      [
+        "abcd",
+        "who"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -83,13 +88,13 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "//*/\n"
 
     expected =
-    [
-      "no_comments",
-      "pre_block",
-      "shown_because_block_comment_invalid_from_line_comment",
-      "shown_because_block_comment_invalid_from_shorter_line_comment",
-      "shown_because_line_above_ended_comment_this_time"
-    ]
+      [
+        "no_comments",
+        "pre_block",
+        "shown_because_block_comment_invalid_from_line_comment",
+        "shown_because_block_comment_invalid_from_shorter_line_comment",
+        "shown_because_line_above_ended_comment_this_time"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -105,16 +110,16 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "  void STRIPPABLE universal_handler ();\n"
 
     expected =
-    [
-      "void* my_calloc(size_t, size_t)",
-      "void my_realloc(void*, size_t)",
-      "void universal_handler()"
-    ]
+      [
+        "void* my_calloc(size_t, size_t)",
+        "void my_realloc(void*, size_t)",
+        "void universal_handler()"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project))
   end
 
-  it "remove gcc's function __attribute__'s" do
+  it "keep gcc's function __attribute__'s" do
     source =
       "void* my_calloc(size_t, size_t) __attribute__((alloc_size(1,2)));\n" +
       "void\n" +
@@ -125,11 +130,11 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "  void __attribute__ ((interrupt)) universal_handler ();\n"
 
     expected =
-    [
-      "void* my_calloc(size_t, size_t)",
-      "void my_realloc(void*, size_t)",
-      "void universal_handler()"
-    ]
+      [ # attributes will be removed later, depending on their name.
+        "void* my_calloc(size_t, size_t)__attribute__((alloc_size(1,2)))",
+        "void my_realloc(void*, size_t)__attribute__((alloc_size(2)))",
+        "void __attribute__((interrupt))universal_handler()"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project))
   end
@@ -167,9 +172,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "when \\ \n"
 
     expected =
-    [
-      "hoo hah when"
-    ]
+      [
+        "hoo hah when"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -212,11 +217,11 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "};\n"
 
     expected =
-    [
-      "int notatypedef",
-      "int typedef_isnt_me",
-      "this should remain!"
-    ]
+      [
+        "int notatypedef",
+        "int typedef_isnt_me",
+        "this should remain!"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -291,10 +296,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "void kinda_ugly_on_the_next_line(unsigned int);\n"
 
     expected =
-    [
-      "uint32 extern_name_func(unsigned int)",
-      "uint32 funcinline(unsigned int)"
-    ]
+      [
+        "uint32 extern_name_func(unsigned int)",
+        "uint32 funcinline(unsigned int)"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -311,12 +316,12 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "}\n"
 
     expected =
-    [
-      "uint32 func_with_decl_a(unsigned int)",
-      "uint32 func_with_decl_a",                 #okay. it's not going to be interpretted as another function
-      "uint32 func_with_decl_b(unsigned int)",
-      "uint32 func_with_decl_b",                 #okay. it's not going to be interpretted as another function
-    ]
+      [
+        "uint32 func_with_decl_a(unsigned int)",
+        "uint32 func_with_decl_a",                 #okay. it's not going to be interpretted as another function
+        "uint32 func_with_decl_b(unsigned int)",
+        "uint32 func_with_decl_b",                 #okay. it's not going to be interpretted as another function
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -351,14 +356,14 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "}\n"
 
     expected =
-    [
-      "uint32 func_with_decl_a(unsigned int)",
-      "uint32 func_with_decl_a",                 #okay. it's not going to be interpretted as another function
-      "uint32 func_with_decl_b(unsigned int)",
-      "uint32 func_with_decl_b",                 #okay. it's not going to be interpretted as another function
-      "uint32 func_with_decl_c(unsigned int)",
-      "uint32 func_with_decl_c",                 #okay. it's not going to be interpretted as another function
-    ]
+      [
+        "uint32 func_with_decl_a(unsigned int)",
+        "uint32 func_with_decl_a",                 #okay. it's not going to be interpretted as another function
+        "uint32 func_with_decl_b(unsigned int)",
+        "uint32 func_with_decl_b",                 #okay. it's not going to be interpretted as another function
+        "uint32 func_with_decl_c(unsigned int)",
+        "uint32 func_with_decl_c",                 #okay. it's not going to be interpretted as another function
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -450,12 +455,12 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "void kinda_ugly_on_the_next_line(unsigned int);\n"
 
     expected =
-    [ "extern uint32 foobar(unsigned int)",
-      "uint32 extern_name_func(unsigned int)",
-      "uint32 funcinline(unsigned int)",
-      "extern void bar(unsigned int)",
-      "extern void kinda_ugly_on_the_next_line(unsigned int)"
-    ]
+      [ "extern uint32 foobar(unsigned int)",
+        "uint32 extern_name_func(unsigned int)",
+        "uint32 funcinline(unsigned int)",
+        "extern void bar(unsigned int)",
+        "extern void kinda_ugly_on_the_next_line(unsigned int)"
+      ]
 
     @parser.treat_externs = :include
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
@@ -476,12 +481,12 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "}\n"
 
     expected =
-    [ "uint32 extern_name_func(unsigned int)",
-      "uint32 funcinline(unsigned int)",
-      "void inlineBar(unsigned int)",
-      "void staticinlineBar(unsigned int)",
-      "void bar(unsigned int)"
-    ]
+      [ "uint32 extern_name_func(unsigned int)",
+        "uint32 funcinline(unsigned int)",
+        "void inlineBar(unsigned int)",
+        "void staticinlineBar(unsigned int)",
+        "void bar(unsigned int)"
+      ]
 
     @parser.treat_inlines = :include
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
@@ -502,14 +507,14 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "}\n"
 
     expected =
-    [ "extern uint32 foobar(unsigned int)",
-      "uint32 extern_name_func(unsigned int)",
-      "uint32 funcinline(unsigned int)",
-      "void inlineBar(unsigned int)",
-      "extern int extern_bar(void)",
-      "void staticinlineBar(unsigned int)",
-      "void bar(unsigned int)"
-    ]
+      [ "extern uint32 foobar(unsigned int)",
+        "uint32 extern_name_func(unsigned int)",
+        "uint32 funcinline(unsigned int)",
+        "void inlineBar(unsigned int)",
+        "extern int extern_bar(void)",
+        "void staticinlineBar(unsigned int)",
+        "void bar(unsigned int)"
+      ]
 
     @parser.treat_externs = :include
     @parser.treat_inlines = :include
@@ -535,11 +540,11 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected =
       [
-      "uint32 foo(unsigned int)",
-      "uint32 bar(unsigned int)",
-      "void inlineBar(void)",
-      "int alwaysinlinefunc(int a)",
-      "void inlinebar(unsigned int)"
+        "uint32 foo(unsigned int)",
+        "uint32 bar(unsigned int)",
+        "void inlineBar(void)",
+        "int alwaysinlinefunc(int a)",
+        "void inlinebar(unsigned int)"
       ]
 
     @parser.treat_inlines = :include
@@ -556,9 +561,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "#define get_foo() \\\n   ((Thing)foo.bar)" # exercise multiline define
 
     expected =
-    [
-      "void hello(void)",
-    ]
+      [
+        "void hello(void)",
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -569,9 +574,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "const int TheMatrix(register int Trinity, unsigned int *restrict Neo)"
 
     expected =
-    [
-      "const int TheMatrix(int Trinity, unsigned int * Neo)",
-    ]
+      [
+        "const int TheMatrix(int Trinity, unsigned int * Neo)",
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -581,70 +586,73 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
   # since cmock treats void specially, we can't let void be obfuscated
   it "handle odd case of typedef'd void returned" do
     source = "MY_FUNKY_VOID FunkyVoidReturned(int a)"
-    expected = { :var_arg=>nil,
-                 :name=>"FunkyVoidReturned",
-                 :unscoped_name=>"FunkyVoidReturned",
-                 :namespace=>[],
-                 :class=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :modifier=>"",
+    expected = { :var_arg => nil,
+                 :name => "FunkyVoidReturned",
+                 :unscoped_name => "FunkyVoidReturned",
+                 :namespace => [],
+                 :class => nil,
+                 :noreturn => false,
+                 :return => { :type   => "void",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "void cmock_to_return",
+                              :void?  => true
+                            },
+                 :modifier => "",
                  :contains_ptr? => false,
-                 :args=>[{:type=>"int", :name=>"a", :ptr? => false, :const? => false, :const_ptr? => false}],
-                 :args_string=>"int a",
-                 :args_call=>"a"}
+                 :args => [{:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false}],
+                 :args_string => "int a",
+                 :args_call => "a"}
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
   end
 
   it "handle odd case of typedef'd void as arg" do
     source = "int FunkyVoidAsArg(MY_FUNKY_VOID)"
-    expected = { :var_arg=>nil,
-                 :name=>"FunkyVoidAsArg",
-                 :unscoped_name=>"FunkyVoidAsArg",
-                 :namespace=>[],
-                 :class=>nil,
-                 :return=>{ :type   => "int",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "int cmock_to_return",
-                            :void?  => false
-                          },
-                 :modifier=>"",
+    expected = { :var_arg => nil,
+                 :name => "FunkyVoidAsArg",
+                 :unscoped_name => "FunkyVoidAsArg",
+                 :namespace => [],
+                 :class => nil,
+                 :noreturn => false,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "",
                  :contains_ptr? => false,
-                 :args=>[],
-                 :args_string=>"void",
-                 :args_call=>"" }
+                 :args => [],
+                 :args_string => "void",
+                 :args_call => "" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
   end
 
   it "handle odd case of typedef'd void as arg pointer" do
     source = "char FunkyVoidPointer(MY_FUNKY_VOID* bluh)"
-    expected = { :var_arg=>nil,
-                 :name=>"FunkyVoidPointer",
-                 :unscoped_name=>"FunkyVoidPointer",
-                 :namespace=>[],
-                 :class=>nil,
-                 :return=>{ :type   => "char",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "char cmock_to_return",
-                            :void?  => false
-                          },
-                 :modifier=>"",
+    expected = { :var_arg => nil,
+                 :name => "FunkyVoidPointer",
+                 :unscoped_name => "FunkyVoidPointer",
+                 :namespace => [],
+                 :class => nil,
+                 :noreturn => false,
+                 :return => { :type   => "char",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "char cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "",
                  :contains_ptr? => true,
-                 :args=>[{:type=>"MY_FUNKY_VOID*", :name=>"bluh", :ptr? => true, :const? => false, :const_ptr? => false}],
-                 :args_string=>"MY_FUNKY_VOID* bluh",
-                 :args_call=>"bluh" }
+                 :args => [{:type => "MY_FUNKY_VOID*", :name => "bluh", :ptr? => true, :const? => false, :const_ptr? => false}],
+                 :args_string => "MY_FUNKY_VOID* bluh",
+                 :args_call => "bluh" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
   end
 
@@ -654,9 +662,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "void Foo(int a = 57, float b=37.52, char c= 'd', char* e=\"junk\");\n"
 
     expected =
-    [
-      "void Foo(int a, float b, char c, char* e)"
-    ]
+      [
+        "void Foo(int a, float b, char c, char* e)"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project).map!{|s|s.strip})
   end
@@ -729,155 +737,161 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
   it "extract and return function declarations with retval and args" do
 
     source = "int Foo(int a, unsigned int b)"
-    expected = { :var_arg=>nil,
-                 :name=>"Foo",
-                 :unscoped_name=>"Foo",
-                 :namespace=>[],
-                 :class=>nil,
-                 :return=>{ :type   => "int",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "int cmock_to_return",
-                            :void?  => false
-                          },
-                 :modifier=>"",
+    expected = { :var_arg => nil,
+                 :name => "Foo",
+                 :unscoped_name => "Foo",
+                 :namespace => [],
+                 :class => nil,
+                 :noreturn => false,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned int", :name=>"b", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"int a, unsigned int b",
-                 :args_call=>"a, b" }
+                 :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int a, unsigned int b",
+                 :args_call => "a, b" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
   end
 
   it "extract and return function declarations with no retval" do
 
     source = "void    FunkyChicken(    uint la,  int     de, bool da)"
-    expected = { :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"FunkyChicken",
-                 :unscoped_name=>"FunkyChicken",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
+    expected = { :var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "void",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "void cmock_to_return",
+                              :void?  => true
+                            },
+                 :name => "FunkyChicken",
+                 :unscoped_name => "FunkyChicken",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"uint", :name=>"la", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"int",  :name=>"de", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"bool", :name=>"da", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"uint la, int     de, bool da",
-                 :args_call=>"la, de, da" }
+                 :args => [ {:type => "uint", :name => "la", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "int",  :name => "de", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "bool", :name => "da", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "uint la, int de, bool da",
+                 :args_call => "la, de, da" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
   end
 
   it "extract and return function declarations with implied voids" do
 
     source = "void tat()"
-    expected = { :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"tat",
-                 :unscoped_name=>"tat",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
+    expected = { :var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "void",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "void cmock_to_return",
+                              :void?  => true
+                            },
+                 :name => "tat",
+                 :unscoped_name => "tat",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "",
                  :contains_ptr? => false,
-                 :args=>[ ],
-                 :args_string=>"void",
-                 :args_call=>"" }
+                 :args => [ ],
+                 :args_string => "void",
+                 :args_call => "" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
   end
 
   it "extract modifiers properly" do
 
     source = "const int TheMatrix(int Trinity, unsigned int * Neo)"
-    expected = { :var_arg=>nil,
-                 :return=>{ :type   => "int",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => true,
-                            :const_ptr? => false,
-                            :str    => "int cmock_to_return",
-                            :void?  => false
-                          },
-                 :name=>"TheMatrix",
-                 :unscoped_name=>"TheMatrix",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"const",
+    expected = { :var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => true,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :name => "TheMatrix",
+                 :unscoped_name => "TheMatrix",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "const",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"int Trinity, unsigned int* Neo",
-                 :args_call=>"Trinity, Neo" }
+                 :args => [ {:type => "int",           :name => "Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int*", :name => "Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int Trinity, unsigned int* Neo",
+                 :args_call => "Trinity, Neo" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
   end
 
   it "extract c calling conventions properly" do
 
     source = "const int __stdcall TheMatrix(int Trinity, unsigned int * Neo)"
-    expected = { :var_arg=>nil,
-                 :return=>{ :type   => "int",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => true,
-                            :const_ptr? => false,
-                            :str    => "int cmock_to_return",
-                            :void?  => false
-                          },
-                 :name=>"TheMatrix",
-                 :unscoped_name=>"TheMatrix",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"const",
-                 :c_calling_convention=>"__stdcall",
+    expected = { :var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => true,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :name => "TheMatrix",
+                 :unscoped_name => "TheMatrix",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "const",
+                 :c_calling_convention => "__stdcall",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"int Trinity, unsigned int* Neo",
-                 :args_call=>"Trinity, Neo" }
+                 :args => [ {:type => "int",           :name => "Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int*", :name => "Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int Trinity, unsigned int* Neo",
+                 :args_call => "Trinity, Neo" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
   end
 
   it "extract and return function declarations inside namespace and class" do
     source = "int Foo(int a, unsigned int b)"
-    expected = { :var_arg=>nil,
-                 :name=>"ns1_ns2_Bar_Foo",
-                 :unscoped_name=>"Foo",
-                 :class=>"Bar",
-                 :namespace=>["ns1", "ns2"],
-                 :return=>{ :type   => "int",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "int cmock_to_return",
-                            :void?  => false
-                          },
-                 :modifier=>"",
+    expected = { :var_arg => nil,
+                 :name => "ns1_ns2_Bar_Foo",
+                 :unscoped_name => "Foo",
+                 :class => "Bar",
+                 :namespace => ["ns1", "ns2"],
+                 :noreturn => false,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned int", :name=>"b", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"int a, unsigned int b",
-                 :args_call=>"a, b" }
+                 :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int a, unsigned int b",
+                 :args_call => "a, b" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source, ["ns1", "ns2"], "Bar"))
   end
 
@@ -886,46 +900,48 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" +
              "int Morpheus(int, unsigned int*);\n"
 
-    expected = [{ :var_arg=>nil,
-                  :return=> { :type   => "int",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => true,
-                              :const_ptr? => false,
-                              :str    => "int cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"TheMatrix",
-                  :unscoped_name=>"TheMatrix",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"const",
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => true,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "TheMatrix",
+                  :unscoped_name => "TheMatrix",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "const",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
-                         ],
-                  :args_string=>"int Trinity, unsigned int* Neo",
-                 :args_call=>"Trinity, Neo" },
-                { :var_arg=>nil,
-                  :return=> { :type   => "int",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => false,
-                              :const_ptr? => false,
-                              :str    => "int cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"Morpheus",
-                  :unscoped_name=>"Morpheus",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+                  :args => [ {:type => "int",           :name => "Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "unsigned int*", :name => "Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "int Trinity, unsigned int* Neo",
+                  :args_call => "Trinity, Neo" },
+                { :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "Morpheus",
+                  :unscoped_name => "Morpheus",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"unsigned int*", :name=>"cmock_arg2", :ptr? => true,  :const? => false, :const_ptr? => false}
-                         ],
-                  :args_string=>"int cmock_arg1, unsigned int* cmock_arg2",
-                 :args_call=>"cmock_arg1, cmock_arg2"
+                  :args => [ {:type => "int",           :name => "cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "unsigned int*", :name => "cmock_arg2", :ptr? => true,  :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "int cmock_arg1, unsigned int* cmock_arg2",
+                  :args_call => "cmock_arg1, cmock_arg2"
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
@@ -935,26 +951,27 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = "const int TheMatrix(int Trinity, unsigned int * Neo);\n" +
              "const int TheMatrix(int, unsigned int*);\n"
 
-    expected = [{ :var_arg=>nil,
-                  :name=>"TheMatrix",
-                  :unscoped_name=>"TheMatrix",
-                  :namespace=>[],
-                  :class=>nil,
-                  :return=> { :type   => "int",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => true,
-                              :const_ptr? => false,
-                              :str    => "int cmock_to_return",
-                              :void?  => false
-                            },
-                  :modifier=>"const",
+    expected = [{ :var_arg => nil,
+                  :name => "TheMatrix",
+                  :unscoped_name => "TheMatrix",
+                  :namespace => [],
+                  :class => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => true,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :modifier => "const",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"unsigned int*", :name=>"Neo", :ptr? => true,      :const? => false, :const_ptr? => false}
-                         ],
-                  :args_string=>"int Trinity, unsigned int* Neo",
-                  :args_call=>"Trinity, Neo"
+                  :args => [ {:type => "int",           :name => "Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "unsigned int*", :name => "Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "int Trinity, unsigned int* Neo",
+                  :args_call => "Trinity, Neo"
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
@@ -969,8 +986,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     expected = [{ :var_arg => nil,
                   :name    => "PorkRoast",
                   :unscoped_name => "PorkRoast",
-                  :namespace=>[],
-                  :class=>nil,
+                  :namespace => [],
+                  :class => nil,
+                  :noreturn => false,
                   :return  => { :type       => "const int*",
                                 :name       => 'cmock_to_return',
                                 :ptr?       => true,
@@ -1001,14 +1019,15 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     expected = [{ :var_arg => nil,
                   :name    => "PorkRoast",
                   :unscoped_name => "PorkRoast",
-                  :namespace=>[],
-                  :class=>nil,
-                  :return  => { :type       => "int const*",
+                  :namespace => [],
+                  :class => nil,
+                  :noreturn => false,
+                  :return  => { :type       => "const int*",
                                 :name       => 'cmock_to_return',
                                 :ptr?       => true,
                                 :const?     => true,
                                 :const_ptr? => false,
-                                :str        => "int const* cmock_to_return",
+                                :str        => "const int* cmock_to_return",
                                 :void?      => false
                               },
                   :modifier      => "",
@@ -1027,24 +1046,25 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     source = "int * const PorkRoast(void);\n"
 
-    expected = [{ :var_arg=>nil,
-                  :name=>"PorkRoast",
-                  :unscoped_name=>"PorkRoast",
-                  :namespace=>[],
-                  :class=>nil,
-                  :return=> { :type   => "int*",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => true,
-                              :const? => false,
-                              :const_ptr? => true,
-                              :str    => "int* cmock_to_return",
-                              :void?  => false
-                            },
-                  :modifier=>"const",
+    expected = [{ :var_arg => nil,
+                  :name => "PorkRoast",
+                  :unscoped_name => "PorkRoast",
+                  :namespace => [],
+                  :class => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int*",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => true,
+                               :const? => false,
+                               :const_ptr? => true,
+                               :str    => "int* cmock_to_return",
+                               :void?  => false
+                             },
+                  :modifier => "const",
                   :contains_ptr? => false,
-                  :args=>[],
-                  :args_string=>"void",
-                  :args_call=>""
+                  :args => [],
+                  :args_string => "void",
+                  :args_call => ""
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
@@ -1055,9 +1075,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected = [{ :name => "foo",
                   :unscoped_name => "foo",
-                  :namespace=>[],
-                  :class=>nil,
+                  :namespace => [],
+                  :class => nil,
                   :modifier => "",
+                  :noreturn => false,
                   :return => { :type       => "void",
                                :name       => "cmock_to_return",
                                :str        => "void cmock_to_return",
@@ -1069,14 +1090,14 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :var_arg => nil,
                   :args_string => "int const* cmock_arg1, int* const cmock_arg2, const int* cmock_arg3, const int* const cmock_arg4, " +
                                   "int const* const cmock_arg5, int* cmock_arg6, int cmock_arg7, const int cmock_arg8",
-                  :args => [{ :type=>"int const*", :name => "cmock_arg1", :ptr? => true,  :const? => true,  :const_ptr? => false },
-                            { :type=>"int*",       :name => "cmock_arg2", :ptr? => true,  :const? => false, :const_ptr? => true  },
-                            { :type=>"const int*", :name => "cmock_arg3", :ptr? => true,  :const? => true,  :const_ptr? => false },
-                            { :type=>"const int*", :name => "cmock_arg4", :ptr? => true,  :const? => true,  :const_ptr? => true  },
-                            { :type=>"int const*", :name => "cmock_arg5", :ptr? => true,  :const? => true,  :const_ptr? => true  },
-                            { :type=>"int*",       :name => "cmock_arg6", :ptr? => true,  :const? => false, :const_ptr? => false },
-                            { :type=>"int",        :name => "cmock_arg7", :ptr? => false, :const? => false, :const_ptr? => false },
-                            { :type=>"int",        :name => "cmock_arg8", :ptr? => false, :const? => true,  :const_ptr? => false }],
+                  :args => [{ :type => "const int*", :name => "cmock_arg1", :ptr? => true,  :const? => true,  :const_ptr? => false },
+                            { :type => "int*",       :name => "cmock_arg2", :ptr? => true,  :const? => false, :const_ptr? => true  },
+                            { :type => "const int*", :name => "cmock_arg3", :ptr? => true,  :const? => true,  :const_ptr? => false },
+                            { :type => "const int*", :name => "cmock_arg4", :ptr? => true,  :const? => true,  :const_ptr? => true  },
+                            { :type => "const int*", :name => "cmock_arg5", :ptr? => true,  :const? => true,  :const_ptr? => true  },
+                            { :type => "int*",       :name => "cmock_arg6", :ptr? => true,  :const? => false, :const_ptr? => false },
+                            { :type => "int",        :name => "cmock_arg7", :ptr? => false, :const? => false, :const_ptr? => false },
+                            { :type => "int",        :name => "cmock_arg8", :ptr? => false, :const? => true,  :const_ptr? => false }],
                   :args_call => "cmock_arg1, cmock_arg2, cmock_arg3, cmock_arg4, cmock_arg5, cmock_arg6, cmock_arg7, cmock_arg8",
                   :contains_ptr? => true
                 }]
@@ -1090,9 +1111,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected = [{ :name => "bar",
                   :unscoped_name => "bar",
-                  :namespace=>[],
-                  :class=>nil,
+                  :namespace => [],
+                  :class => nil,
                   :modifier => "",
+                  :noreturn => false,
                   :return => { :type       => "void",
                                :name       => "cmock_to_return",
                                :str        => "void cmock_to_return",
@@ -1104,14 +1126,14 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :var_arg => nil,
                   :args_string => "int const* param1, int* const param2, const int* param3, const int* const param4, " +
                                   "int const* const param5, int* param6, int param7, const int param8",
-                  :args => [{ :type=>"int const*", :name => "param1", :ptr? => true,  :const? => true,  :const_ptr? => false },
-                            { :type=>"int*",       :name => "param2", :ptr? => true,  :const? => false, :const_ptr? => true  },
-                            { :type=>"const int*", :name => "param3", :ptr? => true,  :const? => true,  :const_ptr? => false },
-                            { :type=>"const int*", :name => "param4", :ptr? => true,  :const? => true,  :const_ptr? => true  },
-                            { :type=>"int const*", :name => "param5", :ptr? => true,  :const? => true,  :const_ptr? => true  },
-                            { :type=>"int*",       :name => "param6", :ptr? => true,  :const? => false, :const_ptr? => false },
-                            { :type=>"int",        :name => "param7", :ptr? => false, :const? => false, :const_ptr? => false },
-                            { :type=>"int",        :name => "param8", :ptr? => false, :const? => true,  :const_ptr? => false }],
+                  :args => [{ :type => "const int*", :name => "param1", :ptr? => true,  :const? => true,  :const_ptr? => false },
+                            { :type => "int*",       :name => "param2", :ptr? => true,  :const? => false, :const_ptr? => true  },
+                            { :type => "const int*", :name => "param3", :ptr? => true,  :const? => true,  :const_ptr? => false },
+                            { :type => "const int*", :name => "param4", :ptr? => true,  :const? => true,  :const_ptr? => true  },
+                            { :type => "const int*", :name => "param5", :ptr? => true,  :const? => true,  :const_ptr? => true  },
+                            { :type => "int*",       :name => "param6", :ptr? => true,  :const? => false, :const_ptr? => false },
+                            { :type => "int",        :name => "param7", :ptr? => false, :const? => false, :const_ptr? => false },
+                            { :type => "int",        :name => "param8", :ptr? => false, :const? => true,  :const_ptr? => false }],
                   :args_call => "param1, param2, param3, param4, param5, param6, param7, param8",
                   :contains_ptr? => true
                 }].freeze
@@ -1124,9 +1146,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     expected = [{ :name => "AddToBook",
                   :unscoped_name => "AddToBook",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :noreturn => false,
                   :return  => { :type       => "Book",
                                 :name       => "cmock_to_return",
                                 :str        => "Book cmock_to_return",
@@ -1154,11 +1177,12 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
              "FUNKY_VOID_T DrHorrible(int SingAlong);\n" +
              "int CaptainHammer(CHUNKY_VOID_T);\n"
 
-    expected = [{ :var_arg=>nil,
-                  :name=>"DrHorrible",
-                  :unscoped_name=>"DrHorrible",
-                  :namespace=>[],
-                  :class=>nil,
+    expected = [{ :var_arg => nil,
+                  :name => "DrHorrible",
+                  :unscoped_name => "DrHorrible",
+                  :namespace => [],
+                  :class => nil,
+                  :noreturn => false,
                   :return  => { :type   => "void",
                                 :name   => 'cmock_to_return',
                                 :ptr?   => false,
@@ -1167,30 +1191,31 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                                 :str    => "void cmock_to_return",
                                 :void?  => true
                               },
-                  :modifier=>"",
+                  :modifier => "",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"SingAlong", :ptr? => false, :const? => false, :const_ptr? => false} ],
-                  :args_string=>"int SingAlong",
-                  :args_call=>"SingAlong"
+                  :args => [ {:type => "int", :name => "SingAlong", :ptr? => false, :const? => false, :const_ptr? => false} ],
+                  :args_string => "int SingAlong",
+                  :args_call => "SingAlong"
                 },
-                { :var_arg=>nil,
-                  :return=> { :type   => "int",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => false,
-                              :const_ptr? => false,
-                              :str    => "int cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"CaptainHammer",
-                  :unscoped_name=>"CaptainHammer",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+                { :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "CaptainHammer",
+                  :unscoped_name => "CaptainHammer",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
                   :contains_ptr? => false,
-                  :args=>[ ],
-                  :args_string=>"void",
-                  :args_call=>""
+                  :args => [ ],
+                  :args_string => "void",
+                  :args_call => ""
                 }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
@@ -1201,7 +1226,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
              "void Penny(struct const _KeepYourHeadUp_ * const BillyBuddy);\n" +
              "struct TheseArentTheHammer CaptainHammer(void);\n"
 
-    expected = [{ :var_arg=>nil,
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
                   :return =>{ :type   => "int",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
@@ -1210,18 +1236,121 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :str    => "int cmock_to_return",
                               :void?  => false
                             },
-                  :name=>"DrHorrible",
-                  :unscoped_name=>"DrHorrible",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+                  :name => "DrHorrible",
+                  :unscoped_name => "DrHorrible",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"struct SingAlong", :name=>"Blog", :ptr? => false, :const? => false, :const_ptr? => false} ],
-                  :args_string=>"struct SingAlong Blog",
-                  :args_call=>"Blog"
+                  :args => [ {:type => "struct SingAlong", :name => "Blog", :ptr? => false, :const? => false, :const_ptr? => false} ],
+                  :args_string => "struct SingAlong Blog",
+                  :args_call => "Blog"
                 },
-                { :var_arg=>nil,
-                  :return=> { :type   => "void",
+                { :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "Penny",
+                  :unscoped_name => "Penny",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => true,
+                  :args => [ {:type => "const struct _KeepYourHeadUp_*", :name => "BillyBuddy", :ptr? => true, :const? => true, :const_ptr? => true} ],
+                  :args_string => "struct const _KeepYourHeadUp_* const BillyBuddy",
+                  :args_call => "BillyBuddy"
+                },
+                { :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "struct TheseArentTheHammer",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "struct TheseArentTheHammer cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "CaptainHammer",
+                  :unscoped_name => "CaptainHammer",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ ],
+                  :args_string => "void",
+                  :args_call => ""
+                }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "extract functions containing unions with union specifier" do
+    source = "void OrangePeel(union STARS_AND_STRIPES * a, union AFL_CIO b)"
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "OrangePeel",
+                  :unscoped_name => "OrangePeel",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => true,
+                  :args => [ {:type => "union STARS_AND_STRIPES*", :name => "a", :ptr? => true, :const? => false, :const_ptr? => false},
+                             {:type => "union AFL_CIO", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "union STARS_AND_STRIPES* a, union AFL_CIO b",
+                  :args_call => "a, b" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+
+  it "not be thwarted by variables named with primitive types as part of the name" do
+    source = "void ApplePeel(const unsigned int const_param, int int_param, int integer, char character, int* const constant)"
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "ApplePeel",
+                  :unscoped_name => "ApplePeel",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => true,
+                  :args => [ {:type => "unsigned int", :name => "const_param", :ptr? => false, :const? => true, :const_ptr? => false},
+                             {:type => "int", :name => "int_param", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "int", :name => "integer", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "char", :name => "character", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "int*", :name => "constant", :ptr? => true, :const? => false, :const_ptr? => true}
+                           ],
+                  :args_string => "const unsigned int const_param, int int_param, int integer, char character, int* const constant",
+                  :args_call => "const_param, int_param, integer, character, constant" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+  end
+
+  it "not be thwarted by custom types named similarly to primitive types" do
+    source = "void LemonPeel(integer param, character thing, longint * junk, constant value, int32_t const number)"
+    expected = [{:var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "void",
                               :name   => 'cmock_to_return',
                               :ptr?   => false,
                               :const? => false,
@@ -1229,174 +1358,78 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :str    => "void cmock_to_return",
                               :void?  => true
                             },
-                  :name=>"Penny",
-                  :unscoped_name=>"Penny",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
-                  :contains_ptr? => true,
-                  :args=>[ {:type=>"struct const _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :const? => true, :const_ptr? => true} ],
-                  :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy",
-                  :args_call=>"BillyBuddy"
-                },
-                { :var_arg=>nil,
-                  :return=> { :type   => "struct TheseArentTheHammer",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => false,
-                              :const_ptr? => false,
-                              :str    => "struct TheseArentTheHammer cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"CaptainHammer",
-                  :unscoped_name=>"CaptainHammer",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
-                  :contains_ptr? => false,
-                  :args=>[ ],
-                  :args_string=>"void",
-                  :args_call=>""
-                }]
-    assert_equal(expected, @parser.parse("module", source)[:functions])
-  end
-
-  it "extract functions containing unions with union specifier" do
-    source = "void OrangePeel(union STARS_AND_STRIPES * a, union AFL_CIO b)"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"OrangePeel",
-                 :unscoped_name=>"OrangePeel",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
+                 :name => "LemonPeel",
+                 :unscoped_name => "LemonPeel",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"union STARS_AND_STRIPES*", :name=>"a", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"union AFL_CIO", :name=>"b", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"union STARS_AND_STRIPES* a, union AFL_CIO b",
-                 :args_call=>"a, b" }]
-    result = @parser.parse("module", source)
-    assert_equal(expected, result[:functions])
-  end
-
-  it "not be thwarted by variables named with primitive types as part of the name" do
-    source = "void ApplePeel(const unsigned int const_param, int int_param, int integer, char character, int* const constant)"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"ApplePeel",
-                 :unscoped_name=>"ApplePeel",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => true,
-                 :args=>[ {:type=> "unsigned int", :name=>"const_param", :ptr? => false, :const? => true, :const_ptr? => false},
-                          {:type=>"int", :name=>"int_param", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"int", :name=>"integer", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"char", :name=>"character", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"int*", :name=>"constant", :ptr? => true, :const? => false, :const_ptr? => true}
-                        ],
-                 :args_string=>"const unsigned int const_param, int int_param, int integer, char character, int* const constant",
-                 :args_call=>"const_param, int_param, integer, character, constant" }]
-    result = @parser.parse("module", source)
-    assert_equal(expected, result[:functions])
-  end
-
-  it "not be thwarted by custom types named similarly to primitive types" do
-    source = "void LemonPeel(integer param, character thing, longint * junk, constant value, int32_t const number)"
-    expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"LemonPeel",
-                 :unscoped_name=>"LemonPeel",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => true,
-                 :args=>[ {:type=>"integer", :name=>"param", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"character", :name=>"thing", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"longint*", :name=>"junk", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"constant", :name=>"value", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"int32_t", :name=>"number", :ptr? => false, :const? => true, :const_ptr? => false}
-                        ],
-                 :args_string=>"integer param, character thing, longint* junk, constant value, int32_t const number",
-                 :args_call=>"param, thing, junk, value, number" }]
+                 :args => [ {:type => "integer", :name => "param", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "character", :name => "thing", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "longint*", :name => "junk", :ptr? => true, :const? => false, :const_ptr? => false},
+                            {:type => "constant", :name => "value", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "int32_t", :name => "number", :ptr? => false, :const? => true, :const_ptr? => false}
+                          ],
+                 :args_string => "integer param, character thing, longint* junk, constant value, int32_t const number",
+                 :args_call => "param, thing, junk, value, number" }]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
 
   it "handle some of those chains of C name specifiers naturally" do
     source = "void CoinOperated(signed char abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law)"
-    expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"CoinOperated",
-                 :unscoped_name=>"CoinOperated",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
+    expected = [{:var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "void",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "void cmock_to_return",
+                              :void?  => true
+                            },
+                 :name => "CoinOperated",
+                 :unscoped_name => "CoinOperated",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"signed char", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned long int", :name=>"xyz_123", :ptr? => false, :const? => true, :const_ptr? => false},
-                          {:type=>"unsigned int", :name=>"abc_123", :ptr? => false, :const? => true, :const_ptr? => false},
-                          {:type=>"long long", :name=>"arm_of_the_law", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"signed char abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law",
-                 :args_call=>"abc, xyz_123, abc_123, arm_of_the_law" }]
+                 :args => [ {:type => "signed char", :name => "abc", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned long int", :name => "xyz_123", :ptr? => false, :const? => true, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "abc_123", :ptr? => false, :const? => true, :const_ptr? => false},
+                            {:type => "long long", :name => "arm_of_the_law", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "signed char abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law",
+                 :args_call => "abc, xyz_123, abc_123, arm_of_the_law" }]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
 
   it "handle custom types of various formats" do
     source = "void CardOperated(CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const * const abc123)"
-    expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"CardOperated",
-                 :unscoped_name=>"CardOperated",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
+    expected = [{:var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "void",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "void cmock_to_return",
+                              :void?  => true
+                            },
+                 :name => "CardOperated",
+                 :unscoped_name => "CardOperated",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"CUSTOM_TYPE", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"CUSTOM_TYPE*", :name=>"xyz_123", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"CUSTOM_TYPE", :name=>"abcxyz", :ptr? => false, :const? => true, :const_ptr? => false},
-                          {:type=>"struct CUSTOM_TYPE const*", :name=>"abc123", :ptr? => true, :const? => true, :const_ptr? => true}
-                        ],
-                 :args_string=>"CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const* const abc123",
-                 :args_call=>"abc, xyz_123, abcxyz, abc123" }]
+                 :args => [ {:type => "CUSTOM_TYPE", :name => "abc", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "CUSTOM_TYPE*", :name => "xyz_123", :ptr? => true, :const? => false, :const_ptr? => false},
+                            {:type => "CUSTOM_TYPE", :name => "abcxyz", :ptr? => false, :const? => true, :const_ptr? => false},
+                            {:type => "const struct CUSTOM_TYPE*", :name => "abc123", :ptr? => true, :const? => true, :const_ptr? => true}
+                          ],
+                 :args_string => "CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const* const abc123",
+                 :args_call => "abc, xyz_123, abcxyz, abc123" }]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
@@ -1413,20 +1446,21 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       { type: 'int**',        name: 'thing4', ptr?: true,  const?: false, const_ptr?: false },
       { type: 'u8*',          name: 'thing5', ptr?: true,  const?: false, const_ptr?: false }
     ]
-    expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"KeyOperated",
-                 :unscoped_name=>"KeyOperated",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
+    expected = [{:var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "void",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "void cmock_to_return",
+                              :void?  => true
+                            },
+                 :name => "KeyOperated",
+                 :unscoped_name => "KeyOperated",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "",
                  :contains_ptr? => true,
                  :args => expected_args,
                  :args_string => 'CUSTOM_TYPE* thing1, int* thing2, ' \
@@ -1438,52 +1472,54 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "give a reasonable guess when dealing with weird combinations of custom types and modifiers" do
     source = "void Cheese(unsigned CUSTOM_TYPE abc, unsigned xyz, CUSTOM_TYPE1 CUSTOM_TYPE2 pdq)"
-    expected = [{:var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"Cheese",
-                 :unscoped_name=>"Cheese",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
+    expected = [{:var_arg => nil,
+                 :noreturn => false,
+                 :return => { :type   => "void",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "void cmock_to_return",
+                              :void?  => true
+                            },
+                 :name => "Cheese",
+                 :unscoped_name => "Cheese",
+                 :namespace => [],
+                 :class => nil,
+                 :modifier => "",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"unsigned CUSTOM_TYPE", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned", :name=>"xyz", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"CUSTOM_TYPE1 CUSTOM_TYPE2", :name=>"pdq", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"unsigned CUSTOM_TYPE abc, unsigned xyz, CUSTOM_TYPE1 CUSTOM_TYPE2 pdq",
-                 :args_call=>"abc, xyz, pdq" }]
+                 :args => [ {:type => "unsigned CUSTOM_TYPE", :name => "abc", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned", :name => "xyz", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "CUSTOM_TYPE1 CUSTOM_TYPE2", :name => "pdq", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "unsigned CUSTOM_TYPE abc, unsigned xyz, CUSTOM_TYPE1 CUSTOM_TYPE2 pdq",
+                 :args_call => "abc, xyz, pdq" }]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
   end
 
   it "extract functions containing a function pointer" do
     source = "void FunkyTurkey(unsigned int (*func_ptr)(int, char))"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"FunkyTurkey",
-                 :unscoped_name=>"FunkyTurkey",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"cmock_module_func_ptr1 func_ptr",
-                 :args_call=>"func_ptr" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "FunkyTurkey",
+                  :unscoped_name => "FunkyTurkey",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "cmock_module_func_ptr1", :name => "func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "cmock_module_func_ptr1 func_ptr",
+                  :args_call => "func_ptr" }]
     typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1492,25 +1528,26 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions using a function pointer with shorthand notation" do
     source = "void FunkyTurkey(unsigned int func_ptr(int, char))"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"FunkyTurkey",
-                 :unscoped_name=>"FunkyTurkey",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"cmock_module_func_ptr1 func_ptr",
-                 :args_call=>"func_ptr" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "FunkyTurkey",
+                  :unscoped_name => "FunkyTurkey",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "cmock_module_func_ptr1", :name => "func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "cmock_module_func_ptr1 func_ptr",
+                  :args_call => "func_ptr" }]
     typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1519,25 +1556,26 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions containing a function pointer with a void" do
     source = "void FunkyTurkey(void (*func_ptr)(void))"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"FunkyTurkey",
-                 :unscoped_name=>"FunkyTurkey",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"cmock_module_func_ptr1 func_ptr",
-                 :args_call=>"func_ptr" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "FunkyTurkey",
+                  :unscoped_name => "FunkyTurkey",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "cmock_module_func_ptr1", :name => "func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "cmock_module_func_ptr1 func_ptr",
+                  :args_call => "func_ptr" }]
     typedefs = ["typedef void(*cmock_module_func_ptr1)(void);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1546,25 +1584,26 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions containing a function pointer with an implied void" do
     source = "void FunkyTurkey(unsigned int (*func_ptr)())"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"FunkyTurkey",
-                 :unscoped_name=>"FunkyTurkey",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"cmock_module_func_ptr1 func_ptr",
-                 :args_call=>"func_ptr" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "FunkyTurkey",
+                  :unscoped_name => "FunkyTurkey",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "cmock_module_func_ptr1", :name => "func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "cmock_module_func_ptr1 func_ptr",
+                  :args_call => "func_ptr" }]
     typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)();"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1573,80 +1612,82 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions containing a constant function pointer and a pointer in the nested arg list" do
     source = "void FunkyChicken(unsigned int (* const func_ptr)(unsigned long int * , char))"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"FunkyChicken",
-                 :unscoped_name=>"FunkyChicken",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => true, :const_ptr? => false}
-                        ],
-                 :args_string=>"cmock_module_func_ptr1 const func_ptr",
-                 :args_call=>"func_ptr" }]
-    typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(unsigned long int* , char);"]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "FunkyChicken",
+                  :unscoped_name => "FunkyChicken",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "cmock_module_func_ptr1", :name => "func_ptr", :ptr? => false, :const? => true, :const_ptr? => false}
+                           ],
+                  :args_string => "cmock_module_func_ptr1 const func_ptr",
+                  :args_call => "func_ptr" }]
+    typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(unsigned long int*, char);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
   end
 
   # it "extract functions containing a function pointer taking a vararg" do
-    # source = "void FunkyParrot(unsigned int (*func_ptr)(int, char, ...))"
-    # expected = [{ :var_arg=>nil,
-                 # :return=>{ :type   => "void",
-                            # :name   => 'cmock_to_return',
-                            # :ptr?   => false,
-                            # :const? => false,
-                            # :const_ptr? => false,
-                            # :str    => "void cmock_to_return",
-                            # :void?  => true
-                          # },
-                 # :name=>"FunkyParrot",
-                 # :unscoped_name=>"FunkyParrot",
-                 # :namespace=>[],
-                 # :class=>nil,
-                 # :modifier=>"",
-                 # :contains_ptr? => false,
-                 # :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
-                        # ],
-                 # :args_string=>"cmock_module_func_ptr1 func_ptr",
-                 # :args_call=>"func_ptr" }]
-    # typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char, ...);"]
-    # result = @parser.parse("module", source)
-    # assert_equal(expected, result[:functions])
-    # assert_equal(typedefs, result[:typedefs])
+  # source = "void FunkyParrot(unsigned int (*func_ptr)(int, char, ...))"
+  # expected = [{ :var_arg => nil,
+  # :return => { :type   => "void",
+  # :name   => 'cmock_to_return',
+  # :ptr?   => false,
+  # :const? => false,
+  # :const_ptr? => false,
+  # :str    => "void cmock_to_return",
+  # :void?  => true
+  # },
+  # :name => "FunkyParrot",
+  # :unscoped_name => "FunkyParrot",
+  # :namespace => [],
+  # :class => nil,
+  # :modifier => "",
+  # :contains_ptr? => false,
+  # :args => [ {:type => "cmock_module_func_ptr1", :name => "func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+  # ],
+  # :args_string => "cmock_module_func_ptr1 func_ptr",
+  # :args_call => "func_ptr" }]
+  # typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char, ...);"]
+  # result = @parser.parse("module", source)
+  # assert_equal(expected, result[:functions])
+  # assert_equal(typedefs, result[:typedefs])
   # end
 
   it "extract functions containing a function pointer with extra parenthesis and two sets" do
     source = "void FunkyBudgie(int (((* func_ptr1)(int, char))), void (*func_ptr2)(void))"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"FunkyBudgie",
-                 :unscoped_name=>"FunkyBudgie",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"cmock_module_func_ptr2", :name=>"func_ptr2", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"cmock_module_func_ptr1 func_ptr1, cmock_module_func_ptr2 func_ptr2",
-                 :args_call=>"func_ptr1, func_ptr2" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "FunkyBudgie",
+                  :unscoped_name => "FunkyBudgie",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "cmock_module_func_ptr1", :name => "func_ptr1", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "cmock_module_func_ptr2", :name => "func_ptr2", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "cmock_module_func_ptr1 func_ptr1, cmock_module_func_ptr2 func_ptr2",
+                  :args_call => "func_ptr1, func_ptr2" }]
     typedefs = ["typedef int(*cmock_module_func_ptr1)(int, char);", "typedef void(*cmock_module_func_ptr2)(void);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1655,27 +1696,28 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions containing a function pointers, structs and other things" do
     source = "struct mytype *FunkyRobin(uint16_t num1, uint16_t num2, void (*func_ptr1)(uint16_t num3, struct mytype2 *s));"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "struct mytype*",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => true,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "struct mytype* cmock_to_return",
-                            :void?  => false
-                          },
-                 :name=>"FunkyRobin",
-                 :unscoped_name=>"FunkyRobin",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"uint16_t", :name=>"num1", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"uint16_t", :name=>"num2", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"uint16_t num1, uint16_t num2, cmock_module_func_ptr1 func_ptr1",
-                 :args_call=>"num1, num2, func_ptr1" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "struct mytype*",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => true,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "struct mytype* cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "FunkyRobin",
+                  :unscoped_name => "FunkyRobin",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "uint16_t", :name => "num1", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "uint16_t", :name => "num2", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "cmock_module_func_ptr1", :name => "func_ptr1", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "uint16_t num1, uint16_t num2, cmock_module_func_ptr1 func_ptr1",
+                  :args_call => "num1, num2, func_ptr1" }]
     typedefs = ["typedef void(*cmock_module_func_ptr1)(uint16_t num3, struct mytype2* s);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1684,25 +1726,26 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions containing an anonymous function pointer" do
     source = "void FunkyFowl(unsigned int (* const)(int, char))"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "void",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "void cmock_to_return",
-                            :void?  => true
-                          },
-                 :name=>"FunkyFowl",
-                 :unscoped_name=>"FunkyFowl",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => true, :const_ptr? => false}
-                        ],
-                 :args_string=>"cmock_module_func_ptr1 const cmock_arg1",
-                 :args_call=>"cmock_arg1" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void cmock_to_return",
+                               :void?  => true
+                             },
+                  :name => "FunkyFowl",
+                  :unscoped_name => "FunkyFowl",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "cmock_module_func_ptr1", :name => "cmock_arg1", :ptr? => false, :const? => true, :const_ptr? => false}
+                           ],
+                  :args_string => "cmock_module_func_ptr1 const cmock_arg1",
+                  :args_call => "cmock_arg1" }]
     typedefs = ["typedef unsigned int(*cmock_module_func_ptr1)(int, char);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1711,25 +1754,26 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions returning a function pointer" do
     source = "unsigned short (*FunkyPidgeon( const char op_code ))( int, long int )"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "cmock_module_func_ptr1",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "cmock_module_func_ptr1 cmock_to_return",
-                            :void?  => false
-                          },
-                 :name=>"FunkyPidgeon",
-                 :unscoped_name=>"FunkyPidgeon",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[ {:type=>"char", :name=>"op_code", :ptr? => false, :const? => true, :const_ptr? => false}
-                        ],
-                 :args_string=>"const char op_code",
-                 :args_call=>"op_code" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "cmock_module_func_ptr1",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "cmock_module_func_ptr1 cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "FunkyPidgeon",
+                  :unscoped_name => "FunkyPidgeon",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [ {:type => "char", :name => "op_code", :ptr? => false, :const? => true, :const_ptr? => false}
+                           ],
+                  :args_string => "const char op_code",
+                  :args_call => "op_code" }]
     typedefs = ["typedef unsigned short(*cmock_module_func_ptr1)( int, long int );"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1738,24 +1782,25 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions returning a function pointer with implied void" do
     source = "unsigned short (*FunkyTweetie())()"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "cmock_module_func_ptr1",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "cmock_module_func_ptr1 cmock_to_return",
-                            :void?  => false
-                          },
-                 :name=>"FunkyTweetie",
-                 :unscoped_name=>"FunkyTweetie",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[],
-                 :args_string=>"void",
-                 :args_call=>"" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "cmock_module_func_ptr1",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "cmock_module_func_ptr1 cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "FunkyTweetie",
+                  :unscoped_name => "FunkyTweetie",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [],
+                  :args_string => "void",
+                  :args_call => "" }]
     typedefs = ["typedef unsigned short(*cmock_module_func_ptr1)();"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1764,24 +1809,25 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions returning a function pointer where everything is a void" do
     source = "void (*   FunkySeaGull(void))(void)"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "cmock_module_func_ptr1",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "cmock_module_func_ptr1 cmock_to_return",
-                            :void?  => false
-                          },
-                 :name=>"FunkySeaGull",
-                 :unscoped_name=>"FunkySeaGull",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => false,
-                 :args=>[],
-                 :args_string=>"void",
-                 :args_call=>"" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "cmock_module_func_ptr1",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "cmock_module_func_ptr1 cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "FunkySeaGull",
+                  :unscoped_name => "FunkySeaGull",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => false,
+                  :args => [],
+                  :args_string => "void",
+                  :args_call => "" }]
     typedefs = ["typedef void(*cmock_module_func_ptr1)(void);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1790,26 +1836,27 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions returning a function pointer with some pointer nonsense" do
     source = "unsigned int * (* FunkyMacaw(double* foo, THING *bar))(unsigned int)"
-    expected = [{ :var_arg=>nil,
-                 :return=>{ :type   => "cmock_module_func_ptr1",
-                            :name   => 'cmock_to_return',
-                            :ptr?   => false,
-                            :const? => false,
-                            :const_ptr? => false,
-                            :str    => "cmock_module_func_ptr1 cmock_to_return",
-                            :void?  => false
-                          },
-                 :name=>"FunkyMacaw",
-                 :unscoped_name=>"FunkyMacaw",
-                 :namespace=>[],
-                 :class=>nil,
-                 :modifier=>"",
-                 :contains_ptr? => true,
-                 :args=>[ {:type=>"double*", :name=>"foo", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"THING*", :name=>"bar", :ptr? => true, :const? => false, :const_ptr? => false}
-                        ],
-                 :args_string=>"double* foo, THING* bar",
-                 :args_call=>"foo, bar" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "cmock_module_func_ptr1",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "cmock_module_func_ptr1 cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "FunkyMacaw",
+                  :unscoped_name => "FunkyMacaw",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
+                  :contains_ptr? => true,
+                  :args => [ {:type => "double*", :name => "foo", :ptr? => true, :const? => false, :const_ptr? => false},
+                             {:type => "THING*", :name => "bar", :ptr? => true, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "double* foo, THING* bar",
+                  :args_call => "foo, bar" }]
     typedefs = ["typedef unsigned int *(*cmock_module_func_ptr1)(unsigned int);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1818,29 +1865,30 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract this SQLite3 function with an anonymous function pointer arg (regression test)" do
     source = "SQLITE_API int sqlite3_bind_text(sqlite3_stmt*, int, const char*, int n, void(*)(void*))"
-    expected = [{ :var_arg=>nil,
-                  :return=>{ :type   => "int",
-                             :name   => "cmock_to_return",
-                             :ptr?   => false,
-                             :const? => false,
-                             :const_ptr? => false,
-                             :str    => "int cmock_to_return",
-                             :void?  => false
-                           },
-                   :name=>"sqlite3_bind_text",
-                   :unscoped_name=>"sqlite3_bind_text",
-                   :namespace=>[],
-                   :class=>nil,
-                   :modifier=>"SQLITE_API",
-                   :contains_ptr? => true,
-                   :args=>[ {:type=>"sqlite3_stmt*", :name=>"cmock_arg2", :ptr? => true, :const? => false, :const_ptr? => false},
-                            {:type=>"int", :name=>"cmock_arg3", :ptr? => false, :const? => false, :const_ptr? => false},
-                            {:type=>"const char*", :name=>"cmock_arg4", :ptr? => false, :const? => true, :const_ptr? => false},
-                            {:type=>"int", :name=>"n", :ptr? => false, :const? => false, :const_ptr? => false},
-                            {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false}
-                          ],
-                   :args_string=>"sqlite3_stmt* cmock_arg2, int cmock_arg3, const char* cmock_arg4, int n, cmock_module_func_ptr1 cmock_arg1",
-                   :args_call=>"cmock_arg2, cmock_arg3, cmock_arg4, n, cmock_arg1" }]
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => "cmock_to_return",
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "sqlite3_bind_text",
+                  :unscoped_name => "sqlite3_bind_text",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "SQLITE_API",
+                  :contains_ptr? => true,
+                  :args => [ {:type => "sqlite3_stmt*", :name => "cmock_arg2", :ptr? => true, :const? => false, :const_ptr? => false},
+                             {:type => "int", :name => "cmock_arg3", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "const char*", :name => "cmock_arg4", :ptr? => false, :const? => true, :const_ptr? => false},
+                             {:type => "int", :name => "n", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "cmock_module_func_ptr1", :name => "cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "sqlite3_stmt* cmock_arg2, int cmock_arg3, const char* cmock_arg4, int n, cmock_module_func_ptr1 cmock_arg1",
+                  :args_call => "cmock_arg2, cmock_arg3, cmock_arg4, n, cmock_arg1" }]
     typedefs = ["typedef void(*cmock_module_func_ptr1)(void*);"]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1849,138 +1897,143 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "extract functions with varargs" do
     source = "int XFiles(int Scully, int Mulder, ...);\n"
-    expected = [{ :var_arg=>"...",
-                  :return=> { :type   => "int",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => false,
-                              :const_ptr? => false,
-                              :str    => "int cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"XFiles",
-                  :unscoped_name=>"XFiles",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+    expected = [{ :var_arg => "...",
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "XFiles",
+                  :unscoped_name => "XFiles",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"int", :name=>"Mulder", :ptr? => false, :const? => false, :const_ptr? => false}
-                         ],
-                  :args_string=>"int Scully, int Mulder",
-                  :args_call=>"Scully, Mulder"
-               }]
+                  :args => [ {:type => "int", :name => "Scully", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "int", :name => "Mulder", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "int Scully, int Mulder",
+                  :args_call => "Scully, Mulder"
+                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
   it "extract functions with void pointers" do
     source = "void* MoreSillySongs(void* stuff);\n"
-    expected = [{ :var_arg=>nil,
-                  :return=> { :type   => "void*",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => true,
-                              :const? => false,
-                              :const_ptr? => false,
-                              :str    => "void* cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"MoreSillySongs",
-                  :unscoped_name=>"MoreSillySongs",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "void*",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => true,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "void* cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "MoreSillySongs",
+                  :unscoped_name => "MoreSillySongs",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"void*", :name=>"stuff", :ptr? => true, :const? => false, :const_ptr? => false}
-                         ],
-                  :args_string=>"void* stuff",
-                  :args_call=>"stuff"
-               }]
+                  :args => [ {:type => "void*", :name => "stuff", :ptr? => true, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "void* stuff",
+                  :args_call => "stuff"
+                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
   it "extract functions with strippable confusing junk like gcc attributes" do
     source = "int LaverneAndShirley(int Lenny, int Squiggy) __attribute__((weak)) __attribute__ ((deprecated));\n"
-    expected = [{ :var_arg=>nil,
-                  :return=> { :type   => "int",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => false,
-                              :const_ptr? => false,
-                              :str    => "int cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"LaverneAndShirley",
-                  :unscoped_name=>"LaverneAndShirley",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "LaverneAndShirley",
+                  :unscoped_name => "LaverneAndShirley",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"int", :name=>"Squiggy", :ptr? => false, :const? => false, :const_ptr? => false}
-                         ],
-                  :args_string=>"int Lenny, int Squiggy",
-                  :args_call=>"Lenny, Squiggy"
-               }]
+                  :args => [ {:type => "int", :name => "Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "int", :name => "Squiggy", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "int Lenny, int Squiggy",
+                  :args_call => "Lenny, Squiggy"
+                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
   it "extract functions with strippable confusing junk like gcc attributes with parenthesis" do
     source = "int TheCosbyShow(int Cliff, int Claire) __attribute__((weak, alias (\"__f\"));\n"
-    expected = [{ :var_arg=>nil,
-                  :return=> { :type   => "int",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => false,
-                              :const_ptr? => false,
-                              :str    => "int cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"TheCosbyShow",
-                  :unscoped_name=>"TheCosbyShow",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "TheCosbyShow",
+                  :unscoped_name => "TheCosbyShow",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Cliff", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"int", :name=>"Claire", :ptr? => false, :const? => false, :const_ptr? => false}
-                         ],
-                  :args_string=>"int Cliff, int Claire",
-                  :args_call=>"Cliff, Claire"
-               }]
+                  :args => [ {:type => "int", :name => "Cliff", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "int", :name => "Claire", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "int Cliff, int Claire",
+                  :args_call => "Cliff, Claire"
+                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
   it "divines all permutations of ptr, const, and const_ptr correctly" do
     truth_table = [
       # argument                                           ptr    const  const_ptr
-      [ "constNOTconst constNOTconst",                     false, false, false ],
-      [ "const constNOTconst constNOTconst",               false, true,  false ],
-      [ "constNOTconst const constNOTconst",               false, true,  false ],
-      [ "constNOTconst *constNOTconst",                    true,  false, false ],
-      [ "const constNOTconst *constNOTconst",              true,  true,  false ],
-      [ "constNOTconst const *constNOTconst",              true,  true,  false ],
-      [ "constNOTconst *const constNOTconst",              true,  false, true ],
-      [ "const constNOTconst *const constNOTconst",        true,  true,  true ],
-      [ "constNOTconst const *const constNOTconst",        true,  true,  true ],
-      [ "constNOTconst **constNOTconst",                   true,  false, false ],
-      [ "const constNOTconst **constNOTconst",             true,  false, false ],
-      [ "constNOTconst const **constNOTconst",             true,  false, false ],
-      [ "constNOTconst *const *constNOTconst",             true,  true,  false ],
       [ "const constNOTconst *const *constNOTconst",       true,  true,  false ],
+      [ "const constNOTconst *constNOTconst",              true,  true,  false ],
+      [ "const constNOTconst constNOTconst",               false, true,  false ],
+      [ "constNOTconst *const *constNOTconst",             true,  true,  false ],
       [ "constNOTconst const *const *constNOTconst",       true,  true,  false ],
-      [ "constNOTconst **const constNOTconst",             true,  false, true ],
-      [ "const constNOTconst **const constNOTconst",       true,  false, true ],
-      [ "constNOTconst const **const constNOTconst",       true,  false, true ],
-      [ "constNOTconst *const *const constNOTconst",       true,  true,  true ],
+      [ "constNOTconst const *constNOTconst",              true,  true,  false ],
+      [ "constNOTconst const constNOTconst",               false, true,  false ],
+      [ "constNOTconst const *const *const constNOTconst", true,  true,  true ],
       [ "const constNOTconst *const *const constNOTconst", true,  true,  true ],
-      [ "constNOTconst const *const *const constNOTconst", true,  true,  true ]
+      [ "const constNOTconst *const constNOTconst",        true,  true,  true ],
+      [ "constNOTconst *const *const constNOTconst",       true,  true,  true ],
+      [ "constNOTconst const *const constNOTconst",        true,  true,  true ],
+      [ "const constNOTconst **constNOTconst",             true,  false, false ],
+      [ "constNOTconst **constNOTconst",                   true,  false, false ],
+      [ "constNOTconst *constNOTconst",                    true,  false, false ],
+      [ "constNOTconst const **constNOTconst",             true,  false, false ],
+      [ "constNOTconst constNOTconst",                     false, false, false ],
+      [ "const constNOTconst **const constNOTconst",       true,  false, true ],
+      [ "constNOTconst **const constNOTconst",             true,  false, true ],
+      [ "constNOTconst *const constNOTconst",              true,  false, true ],
+      [ "constNOTconst const **const constNOTconst",       true,  false, true ],
     ]
 
     truth_table.each do |entry|
-      assert_equal(@parser.divine_ptr(entry[0]), entry[1])
-      assert_equal(@parser.divine_const(entry[0]), entry[2])
-      assert_equal(@parser.divine_ptr_and_const(entry[0]),
-        { ptr?: entry[1], const?: entry[2], const_ptr?: entry[3] })
+      lexer = CLexer.new(entry[0])
+      tokens = lexer.tokenize
+      
+      assert_equal(@parser.guess_ptr_and_const(tokens),
+                   { ptr?: entry[1], const?: entry[2], const_ptr?: entry[3] })
     end
   end
 
@@ -2011,7 +2064,14 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     ]
 
     truth_table.each do |entry|
-      assert_equal(@parser.divine_ptr(entry[0]), entry[1])
+      lexer = CLexer.new(entry[0])
+      tokens = lexer.tokenize
+      if @parser.guess_ptr_and_const(tokens)[:ptr?] != entry[1]
+        puts "source = #{entry[0].inspect}"
+        puts "expected = #{entry[1].inspect}"
+        puts "got @parser.guess_ptr_and_const(tokens)[:ptr?] = #{@parser.guess_ptr_and_const(tokens)[:ptr?]}"
+      end
+      assert_equal(@parser.guess_ptr_and_const(tokens)[:ptr?], entry[1])
     end
   end
 
@@ -2245,34 +2305,34 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "#endif _NOINCLUDES\n"
 
     expected =
-    "#ifndef _NOINCLUDES\n" +
-    "#define _NOINCLUDES\n" +
-    "#include \"unity.h\"\n" +
-    "#include \"cmock.h\"\n" +
-    "#include \"YetAnotherHeader.h\"\n" +
-    "\n" +
-    "\n" + #The comments are now removed
-    "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
-    "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
-    "#pragma GCC diagnostic push\n" +
-    "#endif\n" +
-    "#if !defined(__clang__)\n" +
-    "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
-    "#endif\n" +
-    "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
-    "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
-    "#endif\n" +
-    "\n" +
-    "int my_function(int a);\n" +
-    "int staticinlinefunc(struct my_struct *s);\n" +
-    "static const int my_variable = 5;\n" +
-    "struct my_struct {\n" +
-    "int a;\n" +
-    "int b;\n" +
-    "int b;\n" +
-    "char c;\n" +
-    "};\n" +
-    "#endif _NOINCLUDES\n"
+      "#ifndef _NOINCLUDES\n" +
+      "#define _NOINCLUDES\n" +
+      "#include \"unity.h\"\n" +
+      "#include \"cmock.h\"\n" +
+      "#include \"YetAnotherHeader.h\"\n" +
+      "\n" +
+      "\n" + #The comments are now removed
+      "#if defined(__GNUC__) && !defined(__ICC) && !defined(__TMS470__)\n" +
+      "#if __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0)))\n" +
+      "#pragma GCC diagnostic push\n" +
+      "#endif\n" +
+      "#if !defined(__clang__)\n" +
+      "#pragma GCC diagnostic ignored \"-Wpragmas\"\n" +
+      "#endif\n" +
+      "#pragma GCC diagnostic ignored \"-Wunknown-pragmas\"\n" +
+      "#pragma GCC diagnostic ignored \"-Wduplicate-decl-specifier\"\n" +
+      "#endif\n" +
+      "\n" +
+      "int my_function(int a);\n" +
+      "int staticinlinefunc(struct my_struct *s);\n" +
+      "static const int my_variable = 5;\n" +
+      "struct my_struct {\n" +
+      "int a;\n" +
+      "int b;\n" +
+      "int b;\n" +
+      "char c;\n" +
+      "};\n" +
+      "#endif _NOINCLUDES\n"
 
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
@@ -2332,66 +2392,67 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "handles parsing multiline functions" do
     source = "int\nLaverneAndShirley(int Lenny,\n                   int Squiggy);\n"
-    expected = [{ :var_arg=>nil,
-                  :return=> { :type   => "int",
-                              :name   => 'cmock_to_return',
-                              :ptr?   => false,
-                              :const? => false,
-                              :const_ptr? => false,
-                              :str    => "int cmock_to_return",
-                              :void?  => false
-                            },
-                  :name=>"LaverneAndShirley",
-                  :unscoped_name=>"LaverneAndShirley",
-                  :namespace=>[],
-                  :class=>nil,
-                  :modifier=>"",
+    expected = [{ :var_arg => nil,
+                  :noreturn => false,
+                  :return => { :type   => "int",
+                               :name   => 'cmock_to_return',
+                               :ptr?   => false,
+                               :const? => false,
+                               :const_ptr? => false,
+                               :str    => "int cmock_to_return",
+                               :void?  => false
+                             },
+                  :name => "LaverneAndShirley",
+                  :unscoped_name => "LaverneAndShirley",
+                  :namespace => [],
+                  :class => nil,
+                  :modifier => "",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"int", :name=>"Squiggy", :ptr? => false, :const? => false, :const_ptr? => false}
-                         ],
-                  :args_string=>"int Lenny, int Squiggy",
-                  :args_call=>"Lenny, Squiggy"
-               }]
+                  :args => [ {:type => "int", :name => "Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
+                             {:type => "int", :name => "Squiggy", :ptr? => false, :const? => false, :const_ptr? => false}
+                           ],
+                  :args_string => "int Lenny, int Squiggy",
+                  :args_call => "Lenny, Squiggy"
+                }]
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
   it "imports C++ differently when asked" do
     source =
-    [
-      "namespace ns1 {\n",
-      "  namespace ns2 {\n",
-      "\n",
-      "    class cls1 {\n",
-      "      public:\n",
-      "        int f_header_impl(int a, int b){\n",
-      "          return a + b;\n",
-      "        }\n",
-      "\n",
-      "        static void f_void();\n",
-      "        static int f_ret_simple();\n",
-      "\n",
-      "      protected:\n",
-      "        static void protected_f_void();\n",
-      "\n",
-      "      public:\n",
-      "      private:\n",
-      "        static void private_f_void();\n",
-      "    }; // cls1\n",
-      "  } // ns2\n",
-      "} // ns1\n"
-    ].join
+      [
+        "namespace ns1 {\n",
+        "  namespace ns2 {\n",
+        "\n",
+        "    class cls1 {\n",
+        "      public:\n",
+        "        int f_header_impl(int a, int b){\n",
+        "          return a + b;\n",
+        "        }\n",
+        "\n",
+        "        static void f_void();\n",
+        "        static int f_ret_simple();\n",
+        "\n",
+        "      protected:\n",
+        "        static void protected_f_void();\n",
+        "\n",
+        "      public:\n",
+        "      private:\n",
+        "        static void private_f_void();\n",
+        "    }; // cls1\n",
+        "  } // ns2\n",
+        "} // ns1\n"
+      ].join
 
     expected =
-    [
-      "namespace ns1 { namespace ns2 { class cls1 { public: int f_header_impl",
-      "static void f_void()",
-      "static int f_ret_simple()",
-      "protected: static void protected_f_void()",
-      "public: private: static void private_f_void()",
-      "}",
-      "} }"
-    ]
+      [
+        "namespace ns1 { namespace ns2 { class cls1 { public: int f_header_impl",
+        "static void f_void()",
+        "static int f_ret_simple()",
+        "protected: static void protected_f_void()",
+        "public: private: static void private_f_void()",
+        "}",
+        "} }"
+      ]
 
     assert_equal(expected, @parser.import_source(source, @test_project, cpp=true))
     refute_equal(expected, @parser.import_source(source, @test_project))
@@ -2414,6 +2475,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       :args_call => "",
       :contains_ptr? => false,
       :modifier => "",
+      :noreturn => false,
       :return => {
         :type => "void",
         :name => "cmock_to_return",
@@ -2436,10 +2498,11 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       :args_call => "",
       :contains_ptr? => false,
       :modifier => "",
+      :noreturn => false,
       :return => {
-        :type=>"void",
-        :name=>"cmock_to_return",
-        :str=>"void cmock_to_return",
+        :type => "void",
+        :name => "cmock_to_return",
+        :str => "void cmock_to_return",
         :void? => true,
         :ptr? => false,
         :const? => false,
@@ -2470,7 +2533,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     SOURCE
 
     expected = [dummy_func,
-      voidvoid_func(namespace=["ns1"], name="ns1_Classic_functional")]
+                voidvoid_func(namespace=["ns1"], name="ns1_Classic_functional")]
 
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
@@ -2488,7 +2551,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     SOURCE
 
     expected = [dummy_func,
-      voidvoid_func(namespace=["ns1", "ns2"], name="ns1_ns2_Classic_functional")]
+                voidvoid_func(namespace=["ns1", "ns2"], name="ns1_ns2_Classic_functional")]
 
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
@@ -2583,53 +2646,55 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     SOURCE
 
     expected = [dummy_func,
-      voidvoid_func(["ns1"], name="ns1_Classic_functional"),
-      { :name => "ns1_Classical_functionality",
-        :unscoped_name => "functionality",
-        :class => "Classical",
-        :namespace => ["ns1"],
-        :var_arg => nil,
-        :args_string => "int a",
-        :args => [
-          { :ptr? => false,
-            :const? => false,
-            :const_ptr? => false,
-            :name => "a",
-            :type => "int"}],
-        :args_call => "a",
-        :contains_ptr? => false,
-        :modifier => "",
-        :return => {
-          :type=>"int",
-          :name=>"cmock_to_return",
-          :str=>"int cmock_to_return",
-          :void? => false,
-          :ptr? => false,
-          :const? => false,
-          :const_ptr? => false}},
-      { :name => "Classy_func",
-        :unscoped_name => "func",
-        :class => "Classy",
-        :namespace => [],
-        :var_arg => nil,
-        :args_string => "int* a",
-        :args => [
-          { :ptr? => true,
-            :const? => false,
-            :const_ptr? => false,
-            :name => "a",
-            :type => "int*"}],
-        :args_call => "a",
-        :contains_ptr? => true,
-        :modifier => "",
-        :return => {
-          :type=>"int*",
-          :name=>"cmock_to_return",
-          :str=>"int* cmock_to_return",
-          :void? => false,
-          :ptr? => true,
-          :const? => false,
-          :const_ptr? => false}}]
+                voidvoid_func(["ns1"], name="ns1_Classic_functional"),
+                { :name => "ns1_Classical_functionality",
+                  :unscoped_name => "functionality",
+                  :class => "Classical",
+                  :namespace => ["ns1"],
+                  :var_arg => nil,
+                  :args_string => "int a",
+                  :args => [
+                    { :ptr? => false,
+                      :const? => false,
+                      :const_ptr? => false,
+                      :name => "a",
+                      :type => "int"}],
+                  :args_call => "a",
+                  :contains_ptr? => false,
+                  :modifier => "",
+                  :noreturn => false,
+                  :return => {
+                    :type => "int",
+                    :name => "cmock_to_return",
+                    :str => "int cmock_to_return",
+                    :void? => false,
+                    :ptr? => false,
+                    :const? => false,
+                    :const_ptr? => false}},
+                { :name => "Classy_func",
+                  :unscoped_name => "func",
+                  :class => "Classy",
+                  :namespace => [],
+                  :var_arg => nil,
+                  :args_string => "int* a",
+                  :args => [
+                    { :ptr? => true,
+                      :const? => false,
+                      :const_ptr? => false,
+                      :name => "a",
+                      :type => "int*"}],
+                  :args_call => "a",
+                  :contains_ptr? => true,
+                  :modifier => "",
+                  :noreturn => false,
+                  :return => {
+                    :type => "int*",
+                    :name => "cmock_to_return",
+                    :str => "int* cmock_to_return",
+                    :void? => false,
+                    :ptr? => true,
+                    :const? => false,
+                    :const_ptr? => false}}]
 
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
@@ -2655,53 +2720,55 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     SOURCE
 
     expected = [dummy_func,
-      voidvoid_func(["ns1"], name="ns1_Classic_functional"),
-      { :name => "ns1_Classical_functional",
-        :unscoped_name => "functional",
-        :class => "Classical",
-        :namespace => ["ns1"],
-        :var_arg => nil,
-        :args_string => "int a",
-        :args => [
-          { :ptr? => false,
-            :const? => false,
-            :const_ptr? => false,
-            :name => "a",
-            :type => "int"}],
-        :args_call => "a",
-        :contains_ptr? => false,
-        :modifier => "",
-        :return => {
-          :type=>"int",
-          :name=>"cmock_to_return",
-          :str=>"int cmock_to_return",
-          :void? => false,
-          :ptr? => false,
-          :const? => false,
-          :const_ptr? => false}},
-      { :name => "Classy_functional",
-        :unscoped_name => "functional",
-        :class => "Classy",
-        :namespace => [],
-        :var_arg => nil,
-        :args_string => "int* a",
-        :args => [
-          { :ptr? => true,
-            :const? => false,
-            :const_ptr? => false,
-            :name => "a",
-            :type => "int*"}],
-        :args_call => "a",
-        :contains_ptr? => true,
-        :modifier => "",
-        :return => {
-          :type=>"int*",
-          :name=>"cmock_to_return",
-          :str=>"int* cmock_to_return",
-          :void? => false,
-          :ptr? => true,
-          :const? => false,
-          :const_ptr? => false}}]
+                voidvoid_func(["ns1"], name="ns1_Classic_functional"),
+                { :name => "ns1_Classical_functional",
+                  :unscoped_name => "functional",
+                  :class => "Classical",
+                  :namespace => ["ns1"],
+                  :var_arg => nil,
+                  :args_string => "int a",
+                  :args => [
+                    { :ptr? => false,
+                      :const? => false,
+                      :const_ptr? => false,
+                      :name => "a",
+                      :type => "int"}],
+                  :args_call => "a",
+                  :contains_ptr? => false,
+                  :modifier => "",
+                  :noreturn => false,
+                  :return => {
+                    :type => "int",
+                    :name => "cmock_to_return",
+                    :str => "int cmock_to_return",
+                    :void? => false,
+                    :ptr? => false,
+                    :const? => false,
+                    :const_ptr? => false}},
+                { :name => "Classy_functional",
+                  :unscoped_name => "functional",
+                  :class => "Classy",
+                  :namespace => [],
+                  :var_arg => nil,
+                  :args_string => "int* a",
+                  :args => [
+                    { :ptr? => true,
+                      :const? => false,
+                      :const_ptr? => false,
+                      :name => "a",
+                      :type => "int*"}],
+                  :args_call => "a",
+                  :contains_ptr? => true,
+                  :modifier => "",
+                  :noreturn => false,
+                  :return => {
+                    :type => "int*",
+                    :name => "cmock_to_return",
+                    :str => "int* cmock_to_return",
+                    :void? => false,
+                    :ptr? => true,
+                    :const? => false,
+                    :const_ptr? => false}}]
 
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
@@ -2879,6 +2946,325 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
     @parser.treat_inlines = :include
     assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
+
+  # // PJB // REMOVE BEFORE COMMIT //
+
+  it "builds parser on sound bases" do
+
+    assert(@parser.is_parens([:parens,[[:identifier,"a"]]]),"is_parens identifies parens")
+    refute(@parser.is_parens([:brackets,[[:identifier,"a"]]]),"is_parens rejects brackets")
+    refute(@parser.is_parens([:identifier,"Foo"]),"is_parens rejects identifier")
+    assert_equal([[:identifier,"a"],[:integer_literal,"42"]],
+                 @parser.parens_list([:parens,[[:identifier,"a"],[:integer_literal,"42"]]]),
+                 "parens_list returns list of elements in parens")
+
+    assert(@parser.is_brackets([:brackets,[[:identifier,"a"]]]),"is_brackets identifies brackets")
+    refute(@parser.is_brackets([:parens,[[:identifier,"a"]]]),"is_brackets rejects parens")
+    refute(@parser.is_brackets([:identifier,"Foo"]),"is_brackets rejects identifier")
+    assert_equal([[:identifier,"a"],[:integer_literal,"42"]],
+                 @parser.brackets_list([:brackets,[[:identifier,"a"],[:integer_literal,"42"]]]),
+                 "brackets_list returns list of elements in brackets")
+
+
+    # assert(@parser.is_braces([:braces,[[:identifier,"a"]]]),"is_braces identifies braces")
+    # refute(@parser.is_braces([:brackets,[[:identifier,"a"]]]),"is_braces rejects brackets")
+    # refute(@parser.is_braces([:identifier,"Foo"]),"is_braces rejects identifier")
+    # assert_equal([[:identifier,"a"],[:integer_literal,"42"]],
+    #              @parser.braces_list([:braces,[[:identifier,"a"],[:integer_literal,"42"]]]),
+    #              "braces_list returns list of elements in braces")
+
+    assert(@parser.is_identifier([:identifier,"Foo"]),"is_identifier identifies identifier")
+    assert(@parser.is_identifier([:identifier,"Foo"],"Foo"),"is_identifier identifies identifier with name")
+    refute(@parser.is_identifier([:identifier,"Foo"],"Bar"),"is_identifier rejects identifier with wrong name")
+    refute(@parser.is_identifier(:bar,"Bar"),"is_identifier rejects non-identifier")
+    refute(@parser.is_identifier(:bar),"is_identifier rejects non-identifier")
+
+    assert_equal("Foo",@parser.identifier_name([:identifier,"Foo"]),"identifier_name returns name of identifier")
+
+    assert(@parser.is_c_calling_convention([:identifier,"__stdcall"]),"is_c_calling_convention should identify __stdcall")
+    refute(@parser.is_c_calling_convention([:identifier,"callfoo"]),"is_c_calling_convention should refute callfoo")
+    assert(@parser.is_c_calling_convention(:__stdcall),"is_c_calling_convention should accept :__stdcall")
+
+    assert(@parser.is_c_attribute(:const),"is_c_attribute should identify :const")
+    assert(@parser.is_c_attribute([:identifier,"const"]),"is_c_attribute should identify [:identifier, 'const']")
+    assert(@parser.is_c_attribute([:identifier,"__ramfunc"]),"is_c_attribute should identify [:identifier, '__ramfunc']")
+    refute(@parser.is_c_attribute([:identifier,"__attribute__"]),"is_c_attribute should refute [:identifier, '__attribute__']")
+    refute(@parser.is_c_attribute(:conste),"is_c_attribute should refute :constes")
+    assert(@parser.is_c_attribute([:identifier,"noreturn"]),"is_c_attribute should identify [:identifier, 'noreturn']")
+    assert(@parser.is_c_attribute(:noreturn),"is_c_attribute should identify :noreturn")
+
+    assert(@parser.is_gcc_attribute_syntax([:identifier,"__attribute__"],[:parens,[[:parens,[[:identifier,"noreturn"]]]]]),
+           "is_gcc_attribute_syntax identifies parsed __attribute__((noreturn))")
+
+    assert(@parser.is_attribute([:attribute,nil,"noreturn",nil,:gcc]),
+           "is_attribute identifies [:attribute,nil,\"noreturn\",nil,:gcc]")
+
+  end
+
+
+  it "parses stuffs" do
+
+    source ="int hello (int a, int b) {\n" +
+            "    static int table[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };\n" +
+            "    return table[a] + b;\n" +
+            "}\n"
+
+    expected = [[:int,[:identifier, "hello"],
+                 [:parens, [:int, [:identifier, "a"], :comma, :int, [:identifier, "b"]]],
+                 [:braces,
+                  [:static, :int, [:identifier, "table"], [:brackets, [[:integer_literal, "10"]]],
+                   :assign, [:braces, [[:integer_literal, "1"],:comma,
+                                       [:integer_literal, "2"],:comma,
+                                       [:integer_literal, "3"],:comma,
+                                       [:integer_literal, "4"],:comma,
+                                       [:integer_literal, "5"],:comma,
+                                       [:integer_literal, "6"],:comma,
+                                       [:integer_literal, "7"],:comma,
+                                       [:integer_literal, "8"],:comma,
+                                       [:integer_literal, "9"]]], :semicolon,
+                   :return, [:identifier, "table"], [:brackets, [[:identifier, "a"]]], :add_op, [:identifier, "b"], :semicolon]]],
+                46]
+
+    lexer = CLexer.new(source)
+    tokens = lexer.tokenize
+    assert_equal(expected, @parser.parse_stuffs(tokens,0))
+  end
+
+  it "parses gcc attributes" do
+
+    assert_equal([[:attribute,nil,"noreturn",nil,:gcc],
+                  [:attribute,nil,"deprecated",nil,:gcc]],
+                 @parser.parse_gcc_attribute([:identifier,"__attribute__"],
+                                             [:parens, [[:parens, [[:identifier, "noreturn"], :comma ,[:identifier, "deprecated"]]]]]))
+
+    assert_equal([[:attribute,nil,"noreturn",nil,:gcc],
+                  [:attribute,nil,"deprecated",nil,:gcc]],
+                 @parser.parse_gcc_attribute([:identifier,"__attribute__"],
+                                             [:parens, [[:parens, [[:identifier,"noreturn"]]],:comma,[:parens,[[:identifier,"deprecated"]]]]]))
+
+    assert_equal([[:attribute,nil,"access",[:parens,[[:identifier,"read_write"],:comma,[:integer_literal,"1"]]],:gcc],
+                  [:attribute,nil,"access",[:parens,[[:identifier,"read_only"],:comma,[:integer_literal,"2"]]],:gcc]],
+                 @parser.parse_gcc_attribute([:identifier,"__attribute__"],
+                                             [:parens, [[:parens,
+                                                         [[:identifier,"access"],[:parens,[[:identifier,"read_write"],
+                                                                                           :comma,[:integer_literal,"1"]]],
+                                                          :comma,[:identifier,"access"],[:parens,[[:identifier,"read_only"],
+                                                                                                  :comma,[:integer_literal,"2"]]]]]]]))
+  end
+
+
+  it "parses cpp attributes" do
+
+    assert_equal([[:attribute,nil,"noreturn",nil,:cpp],
+                  [:attribute,nil,"deprecated",nil,:cpp]],
+                 @parser.parse_cpp_attributes([:brackets, [[:brackets, [[:identifier, "noreturn"], :comma ,[:identifier, "deprecated"]]]]]))
+
+    assert_equal([[:attribute,nil,"access",[:parens,[[:identifier,"read_write"],:comma,[:integer_literal,"1"]]],:cpp],
+                  [:attribute,nil,"access",[:parens,[[:identifier,"read_only"],:comma,[:integer_literal,"2"]]],:cpp]],
+                 @parser.parse_cpp_attributes([:brackets, [[:brackets,
+                                                         [[:identifier,"access"],[:parens,[[:identifier,"read_write"],
+                                                                                           :comma,[:integer_literal,"1"]]],
+                                                          :comma,[:identifier,"access"],[:parens,[[:identifier,"read_only"],
+                                                                                                  :comma,[:integer_literal,"2"]]]]]]]))
+
+    assert_equal([[:attribute,"rt","access",[:parens,[[:identifier,"read_write"],:comma,[:integer_literal,"1"]]],:cpp],
+                  [:attribute,"rt","access",[:parens,[[:identifier,"read_only"],:comma,[:integer_literal,"2"]]],:cpp]],
+                 @parser.parse_cpp_attributes([:brackets, [[:brackets,
+                                                            [[:identifier,"using"],[:identifier,"rt"],:colon,
+                                                             [:identifier,"access"],[:parens,[[:identifier,"read_write"],
+                                                                                              :comma,[:integer_literal,"1"]]],:comma,
+                                                             [:identifier,"access"],[:parens,[[:identifier,"read_only"],
+                                                                                              :comma,[:integer_literal,"2"]]]]]]]))
+
+    assert_equal([[:attribute,"rt","access",[:parens,[[:identifier,"read_write"],:comma,[:integer_literal,"1"]]],:cpp],
+                  [:attribute,"rt","access",[:parens,[[:identifier,"read_only"],:comma,[:integer_literal,"2"]]],:cpp]],
+                 @parser.parse_cpp_attributes([:brackets, [[:brackets,
+                                                            [[:identifier,"rt"],:colon,:colon,[:identifier,"access"],[:parens,[[:identifier,"read_write"],
+                                                                                              :comma,[:integer_literal,"1"]]],:comma,
+                                                             [:identifier,"rt"],:colon,:colon,[:identifier,"access"],[:parens,[[:identifier,"read_only"],
+                                                                                              :comma,[:integer_literal,"2"]]]]]]]))
+  end
+
+  #   it "Note functions do not return" do
+  # 
+  # # """
+  # #    :cmock
+  # #      :attributes
+  # #         - '_Noreturn'
+  # #         - 'noreturn'
+  # #         - '[[[[noreturn]]]]'
+  # #         - '__attribute__((noreturn))'
+  # #         - '__attribute__((__noreturn__))'
+  # # """
+  # 	source ="void foo1() __attribute__((noreturn)); /* GNU C & GNU C++ & Clang */\n" +
+  #             "_Noreturn void foo2(); /* C99 */\n" +
+  #             "noreturn void foo3(); /* C11 */\n" +
+  #             "[[noreturn]] void foo4(); /* C++11 */\n"
+  # 
+  # 	expected = ["void foo1()",
+  #                 "void foo2()",
+  #                 "void foo3()",
+  #                 "void foo4()"]
+  # 
+  #     assert_equal(expected, @parser.transform_noreturn(source))
+  #   end
+
+  it "extract and return function declarations with _Noreturn" do
+    source = "_Noreturn int Foo(int a, unsigned int b)"
+    expected = { :var_arg => nil,
+                 :name => "Foo",
+                 :unscoped_name => "Foo",
+                 :class => nil,
+                 :namespace => [],
+				 :noreturn => true,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "_Noreturn",
+                 :contains_ptr? => false,
+                 :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int a, unsigned int b",
+                 :args_call => "a, b" }
+    assert_equal(expected, @parser.parse_declaration(@test_project, source, [], nil))
+  end
+
+  it "extract and return function declarations with noreturn" do
+    source = "noreturn int Foo(int a, unsigned int b)"
+    expected = { :var_arg => nil,
+                 :name => "Foo",
+                 :unscoped_name => "Foo",
+                 :class => nil,
+                 :namespace => [],
+				 :noreturn => true,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "noreturn",
+                 :contains_ptr? => false,
+                 :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int a, unsigned int b",
+                 :args_call => "a, b" }
+    assert_equal(expected, @parser.parse_declaration(@test_project, source, [], nil))
+  end
+
+  it "extract and return function declarations with [[noreturn]]" do
+    source = "[[noreturn]] int Foo(int a, unsigned int b)"
+    expected = { :var_arg => nil,
+                 :name => "Foo",
+                 :unscoped_name => "Foo",
+                 :class => nil,
+                 :namespace => [],
+				 :noreturn => true,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "[[noreturn]]",
+                 :contains_ptr? => false,
+                 :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int a, unsigned int b",
+                 :args_call => "a, b" }
+    assert_equal(expected, @parser.parse_declaration(@test_project, source, [], nil))
+  end
+
+  it "extract and return function declarations with __attribute__((noreturn))" do
+    source = "int Foo(int a, unsigned int b) __attribute__((noreturn))"
+    expected = { :var_arg => nil,
+                 :name => "Foo",
+                 :unscoped_name => "Foo",
+                 :class => nil,
+                 :namespace => [],
+				 :noreturn => true,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "",
+                 :contains_ptr? => false,
+                 :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int a, unsigned int b",
+                 :args_call => "a, b" }
+    assert_equal(expected, @parser.parse_declaration(@test_project, source, [], nil))
+  end
+
+  it "extract and return function declarations with __attribute__  ((noreturn))" do
+    source = "int Foo(int a, unsigned int b) __attribute__  ((noreturn))"
+    expected = { :var_arg => nil,
+                 :name => "Foo",
+                 :unscoped_name => "Foo",
+                 :class => nil,
+                 :namespace => [],
+				 :noreturn => true,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "",
+                 :contains_ptr? => false,
+                 :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int a, unsigned int b",
+                 :args_call => "a, b" }
+    assert_equal(expected, @parser.parse_declaration(@test_project, source, [], nil))
+  end
+
+  it "extract and return function declarations with __attribute__  ((__noreturn__))" do
+    source = "int Foo(int a, unsigned int b) __attribute__  ((__noreturn__))"
+    expected = { :var_arg => nil,
+                 :name => "Foo",
+                 :unscoped_name => "Foo",
+                 :class => nil,
+                 :namespace => [],
+				 :noreturn => true,
+                 :return => { :type   => "int",
+                              :name   => 'cmock_to_return',
+                              :ptr?   => false,
+                              :const? => false,
+                              :const_ptr? => false,
+                              :str    => "int cmock_to_return",
+                              :void?  => false
+                            },
+                 :modifier => "",
+                 :contains_ptr? => false,
+                 :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
+                            {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
+                          ],
+                 :args_string => "int a, unsigned int b",
+                 :args_call => "a, b" }
+    assert_equal(expected, @parser.parse_declaration(@test_project, source, [], nil))
   end
 
 
