@@ -137,7 +137,7 @@ class CMockHeaderParser
     # If the user uses a macro to declare an inline function,
     # smushing the macros makes it easier to recognize them as a macro and if required,
     # remove them later on in this function
-    source.gsub!(/\s*\\\s*/m, ' ')
+    source.gsub!(/\s*\\(\n|\s*)/m, ' ')
 
     # Just looking for static|inline in the gsub is a bit too aggressive (functions that are named like this, ...), so we try to be a bit smarter
     # Instead, look for an inline pattern (f.e. "static inline") and parse it.

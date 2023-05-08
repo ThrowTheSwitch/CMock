@@ -2867,5 +2867,19 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
+  it "Transform macros with escapes of empty lines" do
+    source =
+      "#define some_msg_t_FIELDLIST(X, a) \\\n" +
+      "\n" +
+      "#define some_msg_t_CALLBACK NULL\n"
+
+    expected =
+      "#define some_msg_t_FIELDLIST(X, a) \n" +
+      "#define some_msg_t_CALLBACK NULL\n"
+
+    @parser.treat_inlines = :include
+    assert_equal(expected, @parser.transform_inline_functions(source))
+  end
+
 
 end
