@@ -18,11 +18,8 @@ class CMockConfig
       :strippables                 => ['(?:__attribute__\s*\([ (]*.*?[ )]*\)+)'],
       :process_gcc_attributes      => false, # __attribute__((...)) ; also remove it from strippables.
       :process_cpp_attributes      => false, # [[ ... ]] 
+      :noreturn_attributes         => [], # simple keyword, before the function name
       :attributes                  => %w[__ramfunc __irq __fiq register extern],
-      :c_noreturn_attributes       => [], # simple keyword, before the function name
-      :gcc_noreturn_attributes     => [], # put 'noreturn' for __attribute__((noreturn)), 
-      #                                   # before or after the function name,
-      #                                   # also remove it from :strippables
       :c_calling_conventions       => %w[__stdcall __cdecl __fastcall],
       :enforce_strict_ordering     => false,
       :fail_on_unexpected_calls    => true,

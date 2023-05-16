@@ -18,9 +18,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @config.expect :strippables, ["STRIPPABLE"]
     @config.expect :attributes, ['__ramfunc', 'funky_attrib', 'SQLITE_API','access','rt::access','deprecated']
     @config.expect :c_calling_conventions, ['__stdcall']
-	@config.expect :c_noreturn_attributes,['_Noreturn', 'noreturn', '__noreturn__']
     @config.expect :process_gcc_attributes, true
     @config.expect :process_cpp_attributes, true
+	@config.expect :noreturn_attributes,['_Noreturn', 'noreturn', '__noreturn__']
     @config.expect :treat_as_void, ['MY_FUNKY_VOID']
     @config.expect :treat_as, { "BANJOS" => "INT", "TUBAS" => "HEX16"}
     @config.expect :treat_as_array, {"IntArray" => "int", "Book" => "Page"}
@@ -3127,7 +3127,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :str    => "int cmock_to_return",
                               :void?  => false
                             },
-                 :modifier => "_Noreturn",
+                 :modifier => "",
                  :contains_ptr? => false,
                  :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
                             {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
@@ -3153,7 +3153,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :str    => "int cmock_to_return",
                               :void?  => false
                             },
-                 :modifier => "noreturn",
+                 :modifier => "",
                  :contains_ptr? => false,
                  :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
                             {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
@@ -3179,7 +3179,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :str    => "int cmock_to_return",
                               :void?  => false
                             },
-                 :modifier => "[[noreturn]]",
+                 :modifier => "",
                  :contains_ptr? => false,
                  :args => [ {:type => "int", :name => "a", :ptr? => false, :const? => false, :const_ptr? => false},
                             {:type => "unsigned int", :name => "b", :ptr? => false, :const? => false, :const_ptr? => false}
