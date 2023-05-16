@@ -9,15 +9,15 @@ require "#{__dir__}/CLexer"
 
 class CMockHeaderParser
   attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns
-  attr_reader :c_noreturn_attributes, :c_calling_conventions
+  attr_reader :noreturn_attributes, :process_gcc_attributes, :process_cpp_attributes, :c_calling_conventions
 
   def initialize(cfg)
     @c_strippables = cfg.strippables
     @process_gcc_attributes = cfg.process_gcc_attributes
     @process_cpp_attributes = cfg.process_cpp_attributes
+	@noreturn_attributes = cfg.noreturn_attributes.uniq
     @c_attr_noconst = cfg.attributes.uniq - ['const']
     @c_attributes = ['const'] + @c_attr_noconst
-	@c_noreturn_attributes = cfg.c_noreturn_attributes.uniq
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_array = cfg.treat_as_array
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
@@ -256,7 +256,7 @@ class CMockHeaderParser
     # remove assembler pragma sections
     source.gsub!(/^\s*#\s*pragma\s+asm\s+.*?#\s*pragma\s+endasm/m, '')
 
-    if @c_noreturn_attributes.nil?
+    if @noreturn_attributes.nil?
       # remove gcc's __attribute__ tags
       source.gsub!(/__attribute(?:__)?\s*\(\(+.*\)\)+/, '')
     end
@@ -559,7 +559,7 @@ class CMockHeaderParser
   end
 
   def is_c_attribute(token)
-    # whether the token is a C attribute (listed in @c_attributes or in @c_noreturn_attributes).
+    # whether the token is a C attribute (listed in @c_attributes or in @noreturn_attributes).
     # note: token may be either a symbol, a string or an :identifier array.
     if token.is_a?(String)
       name = token
@@ -574,8 +574,8 @@ class CMockHeaderParser
     end
 
     res = (@c_attributes.index(name) or
-           ((not @c_noreturn_attributes.nil?) and
-            (@c_noreturn_attributes.any? { |attr_regexp| name =~ /^#{attr_regexp}$/ })))
+           ((not @noreturn_attributes.nil?) and
+            (@noreturn_attributes.any? { |attr_regexp| name =~ /^#{attr_regexp}$/ })))
     res
   end
 
@@ -620,9 +620,9 @@ class CMockHeaderParser
 
   def is_noreturn(attribute)
     if is_identifier(attribute)
-      @c_noreturn_attributes.include?(identifier_name(attribute))
+      @noreturn_attributes.include?(identifier_name(attribute))
     elsif is_attribute(attribute)
-      @c_noreturn_attributes.include?(attribute_qualified_name(attribute))
+      @noreturn_attributes.include?(attribute_qualified_name(attribute))
     else
       false
     end
@@ -925,9 +925,8 @@ class CMockHeaderParser
       type.delete_at(cindex) unless cindex.nil?
     end
 
-    arg_info[:modifier] = unparse(attributes.uniq)
     arg_info[:type] = unparse(type).gsub(/\s+\*/, '*') # remove space before asterisks
-    arg_info[:noreturn] = has_noreturn_attribute(attributes)
+    arg_info[:modifier] = unparse(attributes.uniq)
     arg_info[:c_calling_convention] = unparse(ccc)
 
     [type, attributes, ccc, arg_info]
@@ -1255,20 +1254,26 @@ class CMockHeaderParser
     decl[:name] << '_' unless decl[:name].empty?
     decl[:name] << decl[:unscoped_name]
 
-    decl[:modifier] = parsed[:modifier] 
+    decl[:noreturn] = has_noreturn_attribute(attributes)
+    if decl[:noreturn]
+      attributes.delete_if{|attribute| is_noreturn(attribute)}
+    end
+
     if parsed[:ptr?]
       if parsed[:const?] 
-        type = [:const] + type
+        type = [:const] + type unless type[0]==:const
         attributes.delete_if{|attr| attribute_name(attr) == "const"}
-        decl[:modifier] = unparse(attributes)
       end 
     end
+
+    # TODO: perhaps we need a specific configuration, or use strippable to select the __attributes__ to remove.
+    attributes.delete_if{|attribute| is_attribute(attribute) and (attribute_kind(attribute) == :gcc)}
+
+    decl[:modifier] = unparse(attributes.uniq)
 
     if not (parsed[:c_calling_convention].nil? or parsed[:c_calling_convention].empty?)
       decl[:c_calling_convention] = parsed[:c_calling_convention] 
     end
-
-	decl[:noreturn] = has_noreturn_attribute(attributes)
 
     rettype = unparse(type).gsub(/\s+\*/,'*')
     rettype = 'void' if @local_as_void.include?(rettype.strip)

@@ -90,11 +90,7 @@ class CMockGenerator
   private if $ThisIsOnlyATest.nil? ##############################
 
   def is_noreturn?(function)
-    if function[:attributes].nil?
-      return nil;
-    else
-	  return function[:attributes].include?('noreturn');
-    end
+    function[:noreturn]
   end
 
   def generate_return(function)
