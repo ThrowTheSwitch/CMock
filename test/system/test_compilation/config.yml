@@ -8,3 +8,7 @@
   :treat_as_void:
   - OSEK_TASK
   - VOID_TYPE_CRAZINESS
+  :strippables: []
+  :process_gcc_attributes: true
+  :noreturn_attributes: ['_Noreturn','noreturn']
+  
