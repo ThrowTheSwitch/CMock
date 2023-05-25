@@ -35,6 +35,7 @@ class CMockConfig
       :treat_inlines               => :exclude,        # the options being :include or :exclude
       :callback_include_count      => true,
       :callback_after_arg_check    => false,
+      :callback_kind               => "*",
       :includes                    => nil,
       :includes_h_pre_orig_header  => nil,
       :includes_h_post_orig_header => nil,
