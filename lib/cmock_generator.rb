@@ -44,7 +44,7 @@ class CMockGenerator
     end
   end
 
-  def create_mock(module_name, parsed_stuff, module_ext = nil, folder = nil)
+  def create_mock(module_name, parsed_stuff, module_ext = nil, folder = nil, src = nil)
     # determine the name for our new mock
     mock_name = @prefix + module_name + @suffix
 
@@ -68,7 +68,8 @@ class CMockGenerator
       :clean_name   => TypeSanitizer.sanitize_c_identifier(mock_name),
       :folder       => mock_folder,
       :parsed_stuff => parsed_stuff,
-      :skeleton     => false
+      :skeleton     => false,
+      :source       => src
     }
 
     create_mock_subdir(mock_project)
@@ -131,6 +132,7 @@ class CMockGenerator
     end
 
     @file_writer.create_file(mock_project[:mock_name] + mock_project[:module_ext], mock_project[:folder]) do |file, filename|
+      file << "/* Source File: #{mock_project[:source]} */\n" # if mock_project[:source]
       create_mock_header_header(file, filename, mock_project)
       create_mock_header_service_call_declarations(file, mock_project)
       create_typedefs(file, mock_project)
@@ -144,6 +146,7 @@ class CMockGenerator
 
   def create_mock_source_file(mock_project)
     @file_writer.create_file(mock_project[:mock_name] + '.c', mock_project[:folder]) do |file, filename|
+      file << "/* Source File: #{mock_project[:source]} */\n" # if mock_project[:source]
       create_source_header_section(file, filename, mock_project)
       create_instance_structure(file, mock_project)
       create_extern_declarations(file)
