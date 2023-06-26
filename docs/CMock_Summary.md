@@ -82,7 +82,7 @@ replied with a version that is older than 2.0.0. Go ahead. We'll wait.
 Once you have Ruby, you have three options:
 
 * Clone the latest [CMock repo on github](https://github.com/ThrowTheSwitch/CMock/)
-  (This includes updating the submodules: `git submodules update`)
+  (This includes updating the submodules: `git submodules update --recursive`)
 * Download the latest [CMock zip from github](https://github.com/ThrowTheSwitch/CMock/)
 * Install Ceedling (which has it built in!) through your commandline using `gem install ceedling`.
 
