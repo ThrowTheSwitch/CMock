@@ -16,6 +16,7 @@ class CMockGeneratorUtils
     @expect_any   = @config.plugins.include? :expect_any_args
     @return_thru_ptr = @config.plugins.include? :return_thru_ptr
     @ignore_arg = @config.plugins.include? :ignore_arg
+    @validate_ptr_address   = @config.plugins.include? :validate_ptr_address
     @ignore = @config.plugins.include? :ignore
     @ignore_stateless = @config.plugins.include? :ignore_stateless
     @treat_as = @config.treat_as
@@ -64,6 +65,7 @@ class CMockGeneratorUtils
   def code_add_an_arg_expectation(arg, depth = 1)
     lines =  code_assign_argument_quickly("cmock_call_instance->Expected_#{arg[:name]}", arg)
     lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{arg[:name]}_Depth;\n" if @arrays && (depth.class == String)
+    lines << "  cmock_call_instance->ValidateAddressArg_#{arg[:name]} = 0;\n" if (@validate_ptr_address and ptr_or_str?(arg[:type]) and not arg[:const?])
     lines << "  cmock_call_instance->IgnoreArg_#{arg[:name]} = 0;\n" if @ignore_arg
     lines << "  cmock_call_instance->ReturnThruPtr_#{arg[:name]}_Used = 0;\n" if @return_thru_ptr && ptr_or_str?(arg[:type]) && !(arg[:const?])
     lines
