@@ -10,6 +10,7 @@ require "#{__dir__}/CLexer"
 class CMockHeaderParser
   attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns
   attr_reader :noreturn_attributes, :process_gcc_attributes, :process_cpp_attributes, :c_calling_conventions
+  attr_reader :parse_project
 
   def initialize(cfg)
     @c_strippables = cfg.strippables
@@ -41,11 +42,13 @@ class CMockHeaderParser
   end
 
   def raise_parse_error(message)
-    raise "Failed Parsing Declaration Prototype!" + "\n" + message
+    # TODO: keep track of line number to be able to insert it in the error message.
+    raise "#{@parse_project[:source_path]}:1: Failed Parsing Declaration Prototype!" + "\n" + message
   end
 
-  def parse(name, source)
-    parse_project = {
+  def parse(src_path, name, source)
+    @parse_project = {
+      :source_path       => src_path,
       :module_name       => name.gsub(/\W/, ''),
       :typedefs          => [],
       :functions         => [],
@@ -54,26 +57,26 @@ class CMockHeaderParser
 
     function_names = []
 
-    all_funcs = parse_functions(import_source(source, parse_project)).map { |item| [item] }
-    all_funcs += parse_cpp_functions(import_source(source, parse_project, true))
+    all_funcs = parse_functions(import_source(source)).map { |item| [item] }
+    all_funcs += parse_cpp_functions(import_source(source, true))
     all_funcs.map do |decl|
-      func = parse_declaration(parse_project, *decl)
+      func = parse_declaration(*decl)
       unless function_names.include? func[:name]
-        parse_project[:functions] << func
+        @parse_project[:functions] << func
         function_names << func[:name]
       end
     end
 
-    parse_project[:normalized_source] = if @treat_inlines == :include
+    @parse_project[:normalized_source] = if @treat_inlines == :include
                                           transform_inline_functions(source)
                                         else
                                           ''
                                         end
 
     { :includes  => nil,
-      :functions => parse_project[:functions],
-      :typedefs  => parse_project[:typedefs],
-      :normalized_source    => parse_project[:normalized_source] }
+      :functions => @parse_project[:functions],
+      :typedefs  => @parse_project[:typedefs],
+      :normalized_source    => @parse_project[:normalized_source] }
   end
 
   # REMVOVE BEFORE COMMIT #  private if $ThisIsOnlyATest.nil? ################
@@ -228,7 +231,7 @@ class CMockHeaderParser
     source
   end
 
-  def import_source(source, parse_project, cpp = false)
+  def import_source(source, cpp = false)
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding('ISO-8859-1').encode('utf-8', :replace => nil)
 
@@ -1033,7 +1036,7 @@ class CMockHeaderParser
 #  [:int, [:identifier, "a"]]]
 
 
-  def replace_function_pointers_by_custom_types(parameters, parse_project)
+  def replace_function_pointers_by_custom_types(parameters)
     parameters.map do |parameter|
       plen = parameter.length
       if 2<plen and is_parens(parameter[-1]) # ...x()
@@ -1067,12 +1070,12 @@ class CMockHeaderParser
           raise_parse_error "Invalid syntax for function parameter #{parameter.inspect}"
         end
 
-        functype = [:identifier,"cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"]
+        functype = [:identifier,"cmock_#{@parse_project[:module_name]}_func_ptr#{@parse_project[:typedefs].size + 1}"]
         funcret = parameter[0..-3]
         funcargs = parameter[-1]
 
         # add typedef for function pointer
-        parse_project[:typedefs] << "typedef #{unparse(funcret)}(#{unparse(funcdecl+[:mul_op]+[functype])})#{unparse(funcargs)};".gsub(/\(\*\s+/,'(*').gsub(/\s+\*/,'*').gsub(/\s+,/,',')
+        @parse_project[:typedefs] << "typedef #{unparse(funcret)}(#{unparse(funcdecl+[:mul_op]+[functype])})#{unparse(funcargs)};".gsub(/\(\*\s+/,'(*').gsub(/\s+\*/,'*').gsub(/\s+,/,',')
         funcname = [[:identifier, "cmock_arg#{@c += 1}"]] if funcname.empty?
         [functype] + funcconst + funcname
       else
@@ -1129,7 +1132,7 @@ class CMockHeaderParser
     end
   end
 
-  def clean_args(parameters, parse_project)
+  def clean_args(parameters)
     # parameter is now a list of parameter declarations each being a lists of tokens.
     # eg. for (int* b, int c[5], int a=42) we'd have now (=42 has been removed earlier):
     #     [ [ :int, :mul_op, [:identifier, "b"] ],
@@ -1158,7 +1161,7 @@ class CMockHeaderParser
       # scan argument list for function pointers with shorthand notation and replace them with custom types
       # Note: if I'm not wrong, this new code using tokens handles both cases, with and without funcdecl.
       # parameters=[[:unsigned, :int, [:parens, [:mul_op, [:identifier, "func_ptr"]]], [:parens, [:int, :comma, :char]]]]
-      parameters=replace_function_pointers_by_custom_types(parameters, parse_project)
+      parameters=replace_function_pointers_by_custom_types(parameters)
 
       # automatically name unnamed arguments (those that only had a type)
       parameters = add_names_to_anonymous_parameters(parameters)
@@ -1222,7 +1225,7 @@ class CMockHeaderParser
     args
   end
   
-  def parse_declaration(parse_project, declaration, namespace = [], classname = nil)
+  def parse_declaration(declaration, namespace = [], classname = nil)
     decl = {}
     decl[:namespace] = namespace
     decl[:class] = classname
@@ -1316,7 +1319,7 @@ class CMockHeaderParser
     if parameters.any?(nil)
       raise_parse_error "Invalid parameters #{parameters.inspect}"
     end
-    parameters = clean_args(parameters, parse_project)
+    parameters = clean_args(parameters)
     decl[:args_string] = parameters.map{|parameter| unparse(parameter)}.join(', ').gsub(/\s+\*/, '*')
     decl[:args] = parse_args(parameters)
     decl[:args_call] = decl[:args].map { |a| a[:name] }.join(', ')
