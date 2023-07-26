@@ -29,12 +29,14 @@ class CMock
 
   def setup_mocks(files, folder = nil)
     [files].flatten.each do |src|
+      $stderr.puts "Creating mock for #{src}..." unless @silent
       generate_mock(src, folder)
     end
   end
 
   def setup_skeletons(files)
     [files].flatten.each do |src|
+      $stderr.puts "Creating skeleton for #{src}..." unless @silent
       generate_skeleton src
     end
   end
