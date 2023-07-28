@@ -35,6 +35,9 @@ class CMockUnityHelperParser
   def map_c_types
     c_types = {}
     @config.treat_as.each_pair do |ctype, expecttype|
+      if ctype.is_a?(Symbol)
+        raise ":treat_as expects a list of  identifier: identifier  mappings, but got a symbol: #{ctype}. Check the indentation in your project.yml"
+      end
       c_type = ctype.gsub(/\s+/, '_')
       if expecttype =~ /\*/
         c_types[c_type] = "UNITY_TEST_ASSERT_EQUAL_#{expecttype.delete('*')}_ARRAY"
