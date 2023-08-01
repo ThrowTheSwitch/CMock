@@ -29,14 +29,12 @@ class CMock
 
   def setup_mocks(files, folder = nil)
     [files].flatten.each do |src|
-      $stderr.puts "Creating mock for #{src}..." unless @silent
       generate_mock(src, folder)
     end
   end
 
   def setup_skeletons(files)
     [files].flatten.each do |src|
-      $stderr.puts "Creating skeleton for #{src}..." unless @silent
       generate_skeleton src
     end
   end
@@ -46,14 +44,12 @@ class CMock
   def generate_mock(src, folder)
     name = File.basename(src, '.*')
     ext = File.extname(src)
-    puts "Creating mock for #{name}..." unless @silent
-    @cm_generator.create_mock(name, @cm_parser.parse(src, name, File.read(src)), ext, folder,src)
+    @cm_generator.create_mock(name, @cm_parser.parse(src, name, File.read(src)), ext, folder, src)
   end
 
   def generate_skeleton(src)
     name = File.basename(src, '.*')
-    puts "Creating skeleton for #{name}..." unless @silent
-    @cm_generator.create_skeleton(name, @cm_parser.parse(src, name, File.read(src)))
+    @cm_generator.create_skeleton(name, @cm_parser.parse(src, name, File.read(src)), src)
   end
 end
 

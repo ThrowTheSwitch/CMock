@@ -21,7 +21,7 @@ class CMockGenerator
     @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
     @exclude_setjmp_h = @config.exclude_setjmp_h
     @subdir = @config.subdir
-
+    @silent = (@config.verbosity < 2)
     @includes_h_pre_orig_header  = ((@config.includes || []) + (@config.includes_h_pre_orig_header || [])).uniq.map { |h| h =~ /</ ? h : "\"#{h}\"" }
     @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
     @includes_c_pre_header       = (@config.includes_c_pre_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
@@ -45,6 +45,8 @@ class CMockGenerator
   end
 
   def create_mock(module_name, parsed_stuff, module_ext = nil, folder = nil, src = nil)
+    $stderr.puts "Creating mock for #{src ? src : module_name}..." unless @silent
+    
     # determine the name for our new mock
     mock_name = @prefix + module_name + @suffix
 
@@ -77,7 +79,9 @@ class CMockGenerator
     create_mock_source_file(mock_project)
   end
 
-  def create_skeleton(module_name, parsed_stuff)
+  def create_skeleton(module_name, parsed_stuff, src = nil)
+    $stderr.puts "Creating skeleton for #{src ? src : module_name}..." unless @silent
+    
     mock_project = {
       :module_name  => module_name,
       :module_ext   => '.h',
@@ -132,7 +136,7 @@ class CMockGenerator
     end
 
     @file_writer.create_file(mock_project[:mock_name] + mock_project[:module_ext], mock_project[:folder]) do |file, filename|
-      file << "/* Source File: #{mock_project[:source]} */\n" # if mock_project[:source]
+      file << "/* Source File: #{mock_project[:source]} */\n"
       create_mock_header_header(file, filename, mock_project)
       create_mock_header_service_call_declarations(file, mock_project)
       create_typedefs(file, mock_project)
@@ -146,7 +150,7 @@ class CMockGenerator
 
   def create_mock_source_file(mock_project)
     @file_writer.create_file(mock_project[:mock_name] + '.c', mock_project[:folder]) do |file, filename|
-      file << "/* Source File: #{mock_project[:source]} */\n" # if mock_project[:source]
+      file << "/* Source File: #{mock_project[:source]} */\n"
       create_source_header_section(file, filename, mock_project)
       create_instance_structure(file, mock_project)
       create_extern_declarations(file)
