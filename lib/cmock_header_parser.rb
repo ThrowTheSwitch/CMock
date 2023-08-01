@@ -47,6 +47,7 @@ class CMockHeaderParser
   end
 
   def parse(src_path, name, source)
+    $stderr.puts "Parsing #{src_path}" if @verbosity >= 1
     @parse_project = {
       :source_path       => src_path,
       :module_name       => name.gsub(/\W/, ''),
