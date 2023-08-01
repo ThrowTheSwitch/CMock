@@ -10,7 +10,7 @@ require "#{__dir__}/CLexer"
 class CMockHeaderParser
   attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns
   attr_reader :noreturn_attributes, :process_gcc_attributes, :process_cpp_attributes, :c_calling_conventions
-  attr_reader :parse_project
+  attr_accessor :parse_project
 
   def initialize(cfg)
     @c_strippables = cfg.strippables
@@ -43,11 +43,15 @@ class CMockHeaderParser
 
   def raise_parse_error(message)
     # TODO: keep track of line number to be able to insert it in the error message.
-    raise "#{@parse_project[:source_path]}:1: Failed Parsing Declaration Prototype!" + "\n" + message
+    if @parse_project[:source_path].nil?
+      raise "Failed Parsing Declaration Prototype!" + "\n" + message
+    else
+      raise "#{@parse_project[:source_path]}:1: Failed Parsing Declaration Prototype!" + "\n" + message
+    end
   end
 
-  def parse(src_path, name, source)
-    $stderr.puts "Parsing #{src_path}" if @verbosity >= 1
+  def parse(name, source, src_path = nil)
+    $stderr.puts "Parsing #{src_path}" if !src_path.nil? and @verbosity >= 1
     @parse_project = {
       :source_path       => src_path,
       :module_name       => name.gsub(/\W/, ''),
@@ -233,6 +237,7 @@ class CMockHeaderParser
   end
 
   def import_source(source, cpp = false)
+    
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding('ISO-8859-1').encode('utf-8', :replace => nil)
 
@@ -287,9 +292,9 @@ class CMockHeaderParser
 
     # scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |_m|
-      functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
+      functype = "cmock_#{@parse_project[:module_name]}_func_ptr#{@parse_project[:typedefs].size + 1}"
       unless cpp # only collect once
-        parse_project[:typedefs] << "typedef #{Regexp.last_match(1).strip}(*#{functype})(#{Regexp.last_match(4)});"
+        @parse_project[:typedefs] << "typedef #{Regexp.last_match(1).strip}(*#{functype})(#{Regexp.last_match(4)});"
         "#{functype} #{Regexp.last_match(2).strip}(#{Regexp.last_match(3)});"
       end
     end

@@ -12,11 +12,14 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
   before do
     create_mocks :config, :utils
 
+    @config.expect :callback_kind, '*'
+    @config.expect :callback_kind, '*'
     @config.expect :callback_include_count, true
     @config.expect :callback_after_arg_check, false
     @config.expect :plugins, [:ignore]
 
     @cmock_generator_plugin_callback = CMockGeneratorPluginCallback.new(@config, @utils)
+    
   end
 
   after do
@@ -36,7 +39,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                "  CMOCK_Oak_CALLBACK Oak_CallbackFunctionPointer;\n" +
                "  int Oak_CallbackCalls;\n"
     returned = @cmock_generator_plugin_callback.instance_structure(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function declaration for function without arguments" do
@@ -46,7 +49,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                  "void Maple_Stub(CMOCK_Maple_CALLBACK Callback);\n",
                  "#define Maple_StubWithCallback Maple_Stub\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function declaration for function without arguments when count is also turned off" do
@@ -57,7 +60,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                  "#define Maple_StubWithCallback Maple_Stub\n" ].join
     @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function declaration for function with arguments" do
@@ -99,7 +102,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions with no arg check and of style 'void func(void)' when count turned off" do
@@ -111,7 +114,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                ].join
     @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_implementation(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions with no arg check and of style 'int func(void)'" do
@@ -122,7 +125,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions with no arg check and of style 'void func(int* steak, uint8_t flag)'" do
@@ -137,7 +140,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions with no arg check and of style 'void func(int* steak, uint8_t flag)' when count turned off" do
@@ -153,7 +156,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                ].join
     @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_implementation(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions with no arg check and of style 'int16_t func(int* steak, uint8_t flag)'" do
@@ -168,7 +171,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions without arg check and of style 'void func(void)' when count turned off" do
@@ -183,7 +186,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                ].join
     @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions without arg check and of style 'int func(void)'" do
@@ -215,7 +218,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions without arg check and of style 'void func(int* steak, uint8_t flag)' when count turned off" do
@@ -234,7 +237,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                ].join
     @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock function implementation for functions without arg check and of style 'int16_t func(int* steak, uint8_t flag)'" do
@@ -252,7 +255,7 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "  }\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_implementation_precheck(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 
   it "add mock interfaces for functions " do
@@ -276,6 +279,6 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_callback.mock_interfaces(function)
-    assert_equal(expected, returned)
+    assert_equal(expected, returned, "Expected:\n#{expected}\nGot:\n#{returned}")
   end
 end

@@ -21,7 +21,13 @@ module RakefileHelpers
 
   def load_configuration(config_file)
     $cfg_file = config_file
-    $cfg = YAML.load(File.read('./targets/' + $cfg_file),aliases: true)
+    yaml_version = YAML::VERSION[0].to_i  # Extract major version number of YAML
+    options = if yaml_version > 3
+                { aliases: true }
+              else
+                { }
+              end
+    $cfg = YAML.load(File.read('./targets/' + $cfg_file), **options)
     $colour_output = false unless $cfg['colour']
   end
 

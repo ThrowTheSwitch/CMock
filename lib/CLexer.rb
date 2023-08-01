@@ -123,7 +123,7 @@ class CLexer
         @input = $'
         @tokens << OPERATOR_SYMBOLS[operator]
       else
-        raise "Unexpected character: #{@input[0]}"
+        raise "Unexpected character: #{@input[0].inspect}"
       end
     end
 
