@@ -2956,53 +2956,45 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
 
   it "builds parser on sound bases" do
 
-    assert(@parser.is_parens([:parens,[[:identifier,"a"]]]),"is_parens identifies parens")
-    refute(@parser.is_parens([:brackets,[[:identifier,"a"]]]),"is_parens rejects brackets")
-    refute(@parser.is_parens([:identifier,"Foo"]),"is_parens rejects identifier")
+    assert(@parser.parens?([:parens,[[:identifier,"a"]]]),"parens? identifies parens")
+    refute(@parser.parens?([:brackets,[[:identifier,"a"]]]),"parens? rejects brackets")
+    refute(@parser.parens?([:identifier,"Foo"]),"parens? rejects identifier")
     assert_equal([[:identifier,"a"],[:integer_literal,"42"]],
                  @parser.parens_list([:parens,[[:identifier,"a"],[:integer_literal,"42"]]]),
                  "parens_list returns list of elements in parens")
 
-    assert(@parser.is_brackets([:brackets,[[:identifier,"a"]]]),"is_brackets identifies brackets")
-    refute(@parser.is_brackets([:parens,[[:identifier,"a"]]]),"is_brackets rejects parens")
-    refute(@parser.is_brackets([:identifier,"Foo"]),"is_brackets rejects identifier")
+    assert(@parser.brackets?([:brackets,[[:identifier,"a"]]]),"brackets? identifies brackets")
+    refute(@parser.brackets?([:parens,[[:identifier,"a"]]]),"brackets? rejects parens")
+    refute(@parser.brackets?([:identifier,"Foo"]),"brackets? rejects identifier")
     assert_equal([[:identifier,"a"],[:integer_literal,"42"]],
                  @parser.brackets_list([:brackets,[[:identifier,"a"],[:integer_literal,"42"]]]),
                  "brackets_list returns list of elements in brackets")
 
-
-    # assert(@parser.is_braces([:braces,[[:identifier,"a"]]]),"is_braces identifies braces")
-    # refute(@parser.is_braces([:brackets,[[:identifier,"a"]]]),"is_braces rejects brackets")
-    # refute(@parser.is_braces([:identifier,"Foo"]),"is_braces rejects identifier")
-    # assert_equal([[:identifier,"a"],[:integer_literal,"42"]],
-    #              @parser.braces_list([:braces,[[:identifier,"a"],[:integer_literal,"42"]]]),
-    #              "braces_list returns list of elements in braces")
-
-    assert(@parser.is_identifier([:identifier,"Foo"]),"is_identifier identifies identifier")
-    assert(@parser.is_identifier([:identifier,"Foo"],"Foo"),"is_identifier identifies identifier with name")
-    refute(@parser.is_identifier([:identifier,"Foo"],"Bar"),"is_identifier rejects identifier with wrong name")
-    refute(@parser.is_identifier(:bar,"Bar"),"is_identifier rejects non-identifier")
-    refute(@parser.is_identifier(:bar),"is_identifier rejects non-identifier")
+    assert(@parser.identifier?([:identifier,"Foo"]),"identifier? identifies identifier")
+    assert(@parser.identifier?([:identifier,"Foo"],"Foo"),"identifier? identifies identifier with name")
+    refute(@parser.identifier?([:identifier,"Foo"],"Bar"),"identifier? rejects identifier with wrong name")
+    refute(@parser.identifier?(:bar,"Bar"),"identifier? rejects non-identifier")
+    refute(@parser.identifier?(:bar),"identifier? rejects non-identifier")
 
     assert_equal("Foo",@parser.identifier_name([:identifier,"Foo"]),"identifier_name returns name of identifier")
 
-    assert(@parser.is_c_calling_convention([:identifier,"__stdcall"]),"is_c_calling_convention should identify __stdcall")
-    refute(@parser.is_c_calling_convention([:identifier,"callfoo"]),"is_c_calling_convention should refute callfoo")
-    assert(@parser.is_c_calling_convention(:__stdcall),"is_c_calling_convention should accept :__stdcall")
+    assert(@parser.c_calling_convention?([:identifier,"__stdcall"]),"c_calling_convention? should identify __stdcall")
+    refute(@parser.c_calling_convention?([:identifier,"callfoo"]),"c_calling_convention? should refute callfoo")
+    assert(@parser.c_calling_convention?(:__stdcall),"c_calling_convention? should accept :__stdcall")
 
-    assert(@parser.is_c_attribute(:const),"is_c_attribute should identify :const")
-    assert(@parser.is_c_attribute([:identifier,"const"]),"is_c_attribute should identify [:identifier, 'const']")
-    assert(@parser.is_c_attribute([:identifier,"__ramfunc"]),"is_c_attribute should identify [:identifier, '__ramfunc']")
-    refute(@parser.is_c_attribute([:identifier,"__attribute__"]),"is_c_attribute should refute [:identifier, '__attribute__']")
-    refute(@parser.is_c_attribute(:conste),"is_c_attribute should refute :constes")
-    assert(@parser.is_c_attribute([:identifier,"noreturn"]),"is_c_attribute should identify [:identifier, 'noreturn']")
-    assert(@parser.is_c_attribute(:noreturn),"is_c_attribute should identify :noreturn")
+    assert(@parser.c_attribute?(:const),"c_attribute? should identify :const")
+    assert(@parser.c_attribute?([:identifier,"const"]),"c_attribute? should identify [:identifier, 'const']")
+    assert(@parser.c_attribute?([:identifier,"__ramfunc"]),"c_attribute? should identify [:identifier, '__ramfunc']")
+    refute(@parser.c_attribute?([:identifier,"__attribute__"]),"c_attribute? should refute [:identifier, '__attribute__']")
+    refute(@parser.c_attribute?(:conste),"c_attribute? should refute :constes")
+    assert(@parser.c_attribute?([:identifier,"noreturn"]),"c_attribute? should identify [:identifier, 'noreturn']")
+    assert(@parser.c_attribute?(:noreturn),"c_attribute? should identify :noreturn")
 
-    assert(@parser.is_gcc_attribute_syntax([:identifier,"__attribute__"],[:parens,[[:parens,[[:identifier,"noreturn"]]]]]),
-           "is_gcc_attribute_syntax identifies parsed __attribute__((noreturn))")
+    assert(@parser.gcc_attribute_syntax?([:identifier,"__attribute__"],[:parens,[[:parens,[[:identifier,"noreturn"]]]]]),
+           "gcc_attribute_syntax? identifies parsed __attribute__((noreturn))")
 
-    assert(@parser.is_attribute([:attribute,nil,"noreturn",nil,:gcc]),
-           "is_attribute identifies [:attribute,nil,\"noreturn\",nil,:gcc]")
+    assert(@parser.attribute?([:attribute,nil,"noreturn",nil,:gcc]),
+           "attribute? identifies [:attribute,nil,\"noreturn\",nil,:gcc]")
 
   end
 

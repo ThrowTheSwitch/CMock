@@ -1,9 +1,17 @@
 #
-# This is a simple lexer for the C programming language. 
+# This is a simple lexer for the C programming language.
 # MIT license. (c) 2023 Pascal Bourguignon
 #
 
 class CLexer
+  #
+  # CLexer is a simple C lexer. It is used to tokenize a C source file.
+  #
+  # Usage:
+  #   lexer = CLexer.new(pre_processed_c_source)
+  #   tokens = lexer.tokenize
+  #
+  # The tokenize method returns an array of tokens.
 
   KEYWORDS = %w[auto break case char const continue default do double else enum
                 extern float for goto if int long register return short signed
@@ -67,14 +75,13 @@ class CLexer
     '{' => :open_brace,
     '|' => :logical_or_op,
     '}' => :close_brace,
-    '~' => :bitwise_not_op,
+    '~' => :bitwise_not_op
 
   }.freeze
 
-
   OPERATOR_REGEX = Regexp.new('\A(' + OPERATOR_SYMBOLS.keys.map { |op| Regexp.escape(op) }.join('|') + ')')
   OPERATOR_SYMS = OPERATOR_SYMBOLS.values.freeze
-  KEYWORDS_SYMS = KEYWORDS.map{ |n| n.to_sym }.freeze
+  KEYWORDS_SYMS = KEYWORDS.map(&:to_sym).freeze
 
   def initialize(input)
     @input = input
@@ -82,7 +89,7 @@ class CLexer
   end
 
   def tokenize
-    while @input.size > 0
+    while @input.size.positive?
       case @input
       when /\A[[:space:]]+/m
         @input = $'
@@ -91,7 +98,7 @@ class CLexer
       when /\A\/\*/
         consume_multiline_comment
       when /\A[_a-zA-Z][_a-zA-Z0-9]*/
-        identifier_or_keyword = $& ;
+        identifier_or_keyword = $&
         @input = $'
         if KEYWORDS.include?(identifier_or_keyword)
           @tokens << identifier_or_keyword.to_sym
@@ -99,27 +106,27 @@ class CLexer
           @tokens << [:identifier, identifier_or_keyword]
         end
       when /\A\d+\.\d*([eE][+-]?\d+)?[fFlL]?|\.\d+([eE][+-]?\d+)?[fFlL]?|\d+[eE][+-]?\d+[fFlL]?/
-        float_constant = $& ;
+        float_constant = $&
         @input = $'
         @tokens << [:float_literal, float_constant]
       when /\A\d+/
-        integer_constant = $& ;
+        integer_constant = $&
         @input = $'
         @tokens << [:integer_literal, integer_constant]
       when /\A0[xX][0-9a-fA-F]+/
-        hex_constant = $& ;
+        hex_constant = $&
         @input = $'
         @tokens << [:hex_literal, hex_constant]
       when /\A'((\\.|[^\\'])*)'/
-        char_literal = $& ;
+        char_literal = $&
         @input = $'
         @tokens << [:char_literal, char_literal]
       when /\A"((\\.|[^\\"])*)"/
-        string_literal = $& ;
+        string_literal = $&
         @input = $'
         @tokens << [:string_literal, string_literal]
       when OPERATOR_REGEX
-        operator = $& ;
+        operator = $&
         @input = $'
         @tokens << OPERATOR_SYMBOLS[operator]
       else
@@ -133,7 +140,7 @@ class CLexer
   private
 
   def consume_multiline_comment
-    while @input.size > 0
+    while @input.size.positive?
       case @input
       when /\A\*\//
         @input = $'
@@ -145,8 +152,8 @@ class CLexer
   end
 end
 
-def example 
-  input = File.read("/home/pbourguignon/src/c-tidbits/pipes/tee.out.c")
+def example
+  input = File.read('tee.c')
   lexer = CLexer.new(input)
   tokens = lexer.tokenize
   puts tokens.inspect
