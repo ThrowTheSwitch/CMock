@@ -105,9 +105,9 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int const* tofu, size_t cmock_size);\n"+
       "#define Pine_ReturnThruPtr_bean_buffer(bean_buffer)" +
       " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, sizeof(char*))\n" +
-      "#define Pine_ReturnArrayThruPtr_bean_buffer(bean_buffe, cmock_len)" +
+      "#define Pine_ReturnArrayThruPtr_bean_buffer(bean_buffer, cmock_len)" +
       " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, cmock_len * sizeof(*bean_buffer))\n" +
-      "#define Pine_ReturnMemThruPtr_bean_buffer(bean_buffe, cmock_size)" +
+      "#define Pine_ReturnMemThruPtr_bean_buffer(bean_buffer, cmock_size)" +
       " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, cmock_size)\n" +
       "void Pine_CMockReturnMemThruPtr_bean_buffer(UNITY_LINE_TYPE cmock_line, char* const* bean_buffer, size_t cmock_size);\n"
 
