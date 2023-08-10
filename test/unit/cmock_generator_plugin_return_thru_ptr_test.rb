@@ -167,7 +167,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "  if (cmock_call_instance->ReturnThruPtr_tofu_Used)\n" +
       "  {\n" +
       "    UNITY_TEST_ASSERT_NOT_NULL(tofu, cmock_line, CMockStringPtrIsNULL);\n" +
-      "    memcpy((void*)tofu, (void*)cmock_call_instance->ReturnThruPtr_tofu_Val,\n" +
+      "    CMock_memcpy((void*)tofu, (void*)cmock_call_instance->ReturnThruPtr_tofu_Val,\n" +
       "      cmock_call_instance->ReturnThruPtr_tofu_Size);\n" +
       "  }\n"
 

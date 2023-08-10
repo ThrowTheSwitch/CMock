@@ -61,7 +61,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
       "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
       "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
-      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  CMock_memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
       "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n"
     output = @cmock_generator_utils_simple.code_add_base_expectation("Apple")
@@ -73,7 +73,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
       "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
       "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
-      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  CMock_memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
       "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  Mock.Apple_IgnoreBool = (char)0;\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n" +
@@ -88,7 +88,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
       "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
       "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
       "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
-      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  CMock_memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
       "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
       "  Mock.Apple_IgnoreBool = (char)0;\n" +
       "  cmock_call_instance->LineNumber = cmock_line;\n" +
@@ -108,7 +108,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     expected3 = "  cmock_call_instance->Expected_Kiwi = Kiwi;\n"
 
     arg4 = { :name => "Lime", :const? => false, :type => 'LIME_T', :ptr? => false }
-    expected4 = "  memcpy((void*)(&cmock_call_instance->Expected_Lime), (void*)(&Lime),\n" +
+    expected4 = "  CMock_memcpy((void*)(&cmock_call_instance->Expected_Lime), (void*)(&Lime),\n" +
                 "         sizeof(LIME_T[sizeof(Lime) == sizeof(LIME_T) ? 1 : -1])); /* add LIME_T to :treat_as_array if this causes an error */\n"
 
     assert_equal(expected1, @cmock_generator_utils_simple.code_add_an_arg_expectation(arg1))
@@ -134,7 +134,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                 "  cmock_call_instance->ReturnThruPtr_Kiwi_Used = 0;\n"
 
     arg4 = { :name => "Lime", :const? => false, :type => 'LIME_T', :ptr? => false }
-    expected4 = "  memcpy((void*)(&cmock_call_instance->Expected_Lime), (void*)(&Lime),\n" +
+    expected4 = "  CMock_memcpy((void*)(&cmock_call_instance->Expected_Lime), (void*)(&Lime),\n" +
                 "         sizeof(LIME_T[sizeof(Lime) == sizeof(LIME_T) ? 1 : -1])); /* add LIME_T to :treat_as_array if this causes an error */\n" +
                 "  cmock_call_instance->IgnoreArg_Lime = 0;\n"
 
@@ -158,7 +158,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     expected = "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, stuff);\n" +
                "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, stuff)\n{\n" +
                "  cmock_call_instance->Expected_MyIntPtr = MyIntPtr;\n" +
-               "  memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType),\n" +
+               "  CMock_memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType),\n" +
                "         sizeof(MY_TYPE[sizeof(MyMyType) == sizeof(MY_TYPE) ? 1 : -1])); /* add MY_TYPE to :treat_as_array if this causes an error */\n" +
                "  cmock_call_instance->Expected_MyStr = MyStr;\n" +
                "}\n\n"
@@ -176,7 +176,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "  cmock_call_instance->Expected_MyIntPtr_Depth = MyIntPtr_Depth;\n" +
                "  cmock_call_instance->IgnoreArg_MyIntPtr = 0;\n" +
                "  cmock_call_instance->ReturnThruPtr_MyIntPtr_Used = 0;\n" +
-               "  memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType),\n" +
+               "  CMock_memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType),\n" +
                "         sizeof(MY_TYPE[sizeof(MyMyType) == sizeof(MY_TYPE) ? 1 : -1])); /* add MY_TYPE to :treat_as_array if this causes an error */\n" +
                "  cmock_call_instance->IgnoreArg_MyMyType = 0;\n" +
                "  cmock_call_instance->Expected_MyStr = MyStr;\n" +

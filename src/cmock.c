@@ -237,3 +237,12 @@ void CMock_memset(void* ptr, int value, size_t num)
 	((char*)ptr)[i] = (char)value;
   }
 }
+
+void CMock_memcpy(void* ptr, const void* src, size_t num)
+{
+  size_t i;
+  for (i = 0; i < num; i++)
+  {
+    ((char*)ptr)[i] = ((char*)src)[i];
+  }
+}
