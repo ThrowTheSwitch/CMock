@@ -43,5 +43,6 @@ CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesFree(void) CMOCK_FUNCTION_ATTR(pure);
 CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesUsed(void) CMOCK_FUNCTION_ATTR(pure);
 void                  CMock_Guts_MemFreeAll(void);
 void                  CMock_Guts_MemFreeFinal(void);
+void                  CMock_memset(void* ptr, int value, size_t num);
 
 #endif /* end of CMOCK_FRAMEWORK_H */
