@@ -2,9 +2,10 @@ class CMockGeneratorPluginReturnThruPtr
   attr_reader :priority
   attr_accessor :utils
 
-  def initialize(_config, utils)
+  def initialize(config, utils)
     @utils        = utils
     @priority     = 9
+    @config       = config
   end
 
   def instance_typedefs(function)
@@ -19,6 +20,15 @@ class CMockGeneratorPluginReturnThruPtr
     lines
   end
 
+  def void_pointer?(type)
+    # returns true if the provided type is a void, or is supposed to be treated as void
+    if type.casecmp?('void')
+      true
+    else
+      @config.respond_to?(:treat_as_void) ? @config.treat_as_void.include?(type) : false
+    end
+  end
+
   def mock_function_declarations(function)
     lines = ''
     function[:args].each do |arg|
@@ -27,7 +37,8 @@ class CMockGeneratorPluginReturnThruPtr
       lines << "#define #{function[:name]}_ReturnThruPtr_#{arg[:name]}(#{arg[:name]})"
       # If the pointer type actually contains an asterisk, we can do sizeof the type (super safe), otherwise
       # we need to do a sizeof the dereferenced pointer (which could be a problem if give the wrong size
-      lines << if arg[:type][-1] == '*'
+      # however if its a void pointer we are given then we have to use the provided parameter name because sizeof(void) is UB.
+      lines << if (arg[:type][-1] == '*') && (void_pointer?(arg[:type][0..-2]) == false)
                  " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, sizeof(#{arg[:type][0..-2]}))\n"
                else
                  " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, sizeof(*#{arg[:name]}))\n"
