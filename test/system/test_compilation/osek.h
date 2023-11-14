@@ -242,7 +242,7 @@ void OSEKOSStartupEnable(void);
 void OSEKOSNop(void);
 unsigned int OSEKOSV850CheckIsrSwitch(void);
 void OSEKOSV850InitInterrupts(void);
-void OSEKOSV850SetupInterrupts();
+void OSEKOSV850SetupInterrupts(void);
 void OSEKOSV850SyncContextLoad(OSEKOSSaveType);
 void OSEKOSV850SyncContextLoadFromIRQ(OSEKOSSaveType);
 void OSEKOSV850ASyncContextLoad(OSEKOSSaveType);

@@ -50,7 +50,7 @@ class CMockConfig
       # - The keywords can appear before or after the return type (this is a compiler warning but people do weird stuff),
       #   so we check for word boundaries when searching for them
       # - We first remove "static inline" combinations and boil down to single inline or static statements
-      :inline_function_patterns    => ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*', '(?:static\s*)?(?:__inline__)?__attribute__\s*\([ (]*always_inline[ )]*\)', 'static __inline__'] # Last part (\s*) is just to remove whitespaces (only to prettify the output)
+      :inline_function_patterns    => ['(static\s+inline|inline\s+static)\s*', '(\binline\b)\s*', '(?:static\s*)?(?:__inline__)?__attribute__\s*\([ (]*always_inline[ )]*\)', 'static __inline__'] # Last part (\s*) is just to remove whitespaces (only to prettify the output)
     }.freeze
 
   def initialize(options = nil)

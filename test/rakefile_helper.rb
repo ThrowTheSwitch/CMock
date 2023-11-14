@@ -66,7 +66,7 @@ module RakefileHelpers
   def find_source_file(header, paths)
     paths.each do |dir|
       src_file = dir + header.ext(C_EXTENSION)
-      if (File.exists?(src_file))
+      if (File.exist?(src_file))
         return src_file
       end
     end
