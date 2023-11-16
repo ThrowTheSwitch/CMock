@@ -27,10 +27,11 @@ class CMockGeneratorPluginCallback
   def mock_function_declarations(function)
     func_name = function[:name]
     return_type = function[:return][:type]
+    kind   = @config.callback_kind.nil? ? '*' : @config.callback_kind
     action = @config.callback_after_arg_check ? 'AddCallback' : 'Stub'
     style  = (@include_count ? 1 : 0) | (function[:args].empty? ? 0 : 2)
     styles = ['void', 'int cmock_num_calls', function[:args_string], "#{function[:args_string]}, int cmock_num_calls"]
-    "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\n" \
+    "typedef #{return_type} (#{kind} CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\n" \
     "void #{func_name}_AddCallback(CMOCK_#{func_name}_CALLBACK Callback);\n" \
     "void #{func_name}_Stub(CMOCK_#{func_name}_CALLBACK Callback);\n" \
     "#define #{func_name}_StubWithCallback #{func_name}_#{action}\n"

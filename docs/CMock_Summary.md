@@ -82,6 +82,7 @@ replied with a version that is older than 2.0.0. Go ahead. We'll wait.
 Once you have Ruby, you have three options:
 
 * Clone the latest [CMock repo on github](https://github.com/ThrowTheSwitch/CMock/)
+  (This includes updating the submodules: `git submodules update --recursive`)
 * Download the latest [CMock zip from github](https://github.com/ThrowTheSwitch/CMock/)
 * Install Ceedling (which has it built in!) through your commandline using `gem install ceedling`.
 
@@ -135,7 +136,7 @@ that resembles a pointer or array, it breaks the argument into TWO arguments.
 The first is the original pointer. The second specify the number of elements
 it is to verify of that array. If you specify 1, it'll check one object. If 2,
 it'll assume your pointer is pointing at the first of two elements in an array.
-If you specify zero elements and `UNITY_COMPARE_PTRS_ON_ZERO_ARRAY` is defined, 
+If you specify zero elements and `UNITY_COMPARE_PTRS_ON_ZERO_ARRAY` is defined,
 then this assertion can also be used to directly compare the pointers to verify
 that they are pointing to the same memory address.
 
@@ -384,6 +385,38 @@ from the defaults. We've tried to specify what the defaults are below.
   * defaults: ['__ramfunc', '__irq', '__fiq', 'register', 'extern']
   * **note:** this option will reinsert these attributes onto the mock's calls.
     If that isn't what you are looking for, check out :strippables.
+
+* `:process_cpp_attributes`:
+  Allows the parsing and processing of C++ attribute syntax `[[...]]`.
+
+  * defaults: false
+
+* `:process_gcc_attributes`:
+  Allows the parsing and processing of GNU gcc attribute syntax
+  `__attribute__ ((...))`.
+  When setting it to true, mind removing `__attribute__` from the
+  `:strippables`` option.
+  Those attributes are matched both before and after the function name.
+
+  * defaults: false
+
+* `:noreturn_attributes`:
+    To allow processing of noreturn attributes, list in
+    `:noreturn_attributes` the keywords used as noreturn attributes.
+    (Since such attributes may hide behind macros, you may need to list
+    the macros too).
+>  :noreturn_attributes => ['_Noreturn', 'noreturn', '__noreturn__']
+	Note: when a keyword is listed in this option, it's available for
+    both the C syntax (keyword standing alone), the C++ syntax (keyword
+    in a `[[...]]` syntax, and the GNU gcc syntax (keyword in a
+    `__attribute__((...))` syntax)
+    When a noreturn attribute is matched, the returned function
+    dictionary will contain a :noreturn => true` entry, and the cmock
+    code generator will then avoid returning from the mocked function,
+    but instead will use the `TEST_DO_NOT_RETURN()` macro.
+
+  * defaults: []
+
 
 * `:c_calling_conventions`:
   Similarly, CMock may need to understand which C calling conventions

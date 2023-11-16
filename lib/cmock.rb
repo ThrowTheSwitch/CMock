@@ -44,14 +44,12 @@ class CMock
   def generate_mock(src, folder)
     name = File.basename(src, '.*')
     ext = File.extname(src)
-    puts "Creating mock for #{name}..." unless @silent
-    @cm_generator.create_mock(name, @cm_parser.parse(name, File.read(src)), ext, folder)
+    @cm_generator.create_mock(name, @cm_parser.parse(name, File.read(src), src), ext, folder, src)
   end
 
   def generate_skeleton(src)
     name = File.basename(src, '.*')
-    puts "Creating skeleton for #{name}..." unless @silent
-    @cm_generator.create_skeleton(name, @cm_parser.parse(name, File.read(src)))
+    @cm_generator.create_skeleton(name, @cm_parser.parse(name, File.read(src), src), src)
   end
 end
 

@@ -16,6 +16,9 @@ class CMockConfig
       :subdir                      => nil,
       :plugins                     => [],
       :strippables                 => ['(?:__attribute__\s*\([ (]*.*?[ )]*\)+)'],
+      :process_gcc_attributes      => false, # __attribute__((...)) ; also remove it from strippables.
+      :process_cpp_attributes      => false, # [[ ... ]] 
+      :noreturn_attributes         => [], # simple keyword, before the function name
       :attributes                  => %w[__ramfunc __irq __fiq register extern],
       :c_calling_conventions       => %w[__stdcall __cdecl __fastcall],
       :enforce_strict_ordering     => false,
@@ -32,6 +35,7 @@ class CMockConfig
       :treat_inlines               => :exclude,        # the options being :include or :exclude
       :callback_include_count      => true,
       :callback_after_arg_check    => false,
+      :callback_kind               => "*",
       :includes                    => nil,
       :includes_h_pre_orig_header  => nil,
       :includes_h_post_orig_header => nil,

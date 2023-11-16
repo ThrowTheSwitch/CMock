@@ -22,6 +22,8 @@ class CMockFileWriter
 
     full_file_name_temp = "#{@config.mock_path}/#{subdir + '/' if subdir}#{filename}.new"
     full_file_name_done = "#{@config.mock_path}/#{subdir + '/' if subdir}#{filename}"
+    puts "Creating #{full_file_name_done.inspect}" unless @config.verbosity < 2
+
     File.open(full_file_name_temp, 'w') do |file|
       yield(file, filename)
     end
