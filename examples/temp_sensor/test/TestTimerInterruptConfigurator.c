@@ -35,7 +35,7 @@ void testResetSystemTimeDelegatesTo_Timer_SetSystemTime_Appropriately(void)
 
 void testConfigureInterruptShouldSetInterruptHandlerAppropriately(void)
 {
-  AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TC0] = (uint32)NULL;
+  AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TC0] = (uint32)0;
   Timer_ConfigureInterrupt();
   TEST_ASSERT_EQUAL((uint32)Timer_InterruptHandler, AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TC0]);
 }

@@ -27,13 +27,16 @@ void TemperatureFilter_ProcessInput(float temperature)
   {
     if (temperature == +INFINITY ||
         temperature == -INFINITY ||
-        temperature == +NAN ||
-        temperature == -NAN)
+        temperature != temperature)
     {
+      /* Check if +/- Infinity or NaN... reset to -Inf in this instance. */
       initialized = FALSE;
-      temperature = -INFINITY;
+      temperatureInCelcius = -INFINITY;
     }
-    
-    temperatureInCelcius = (temperatureInCelcius * 0.75f) + (temperature * 0.25);
+    else
+    {
+      /* Otherwise apply our low-pass filter to smooth the values */
+      temperatureInCelcius = (temperatureInCelcius * 0.75f) + (temperature * 0.25);
+    }
   }
 }

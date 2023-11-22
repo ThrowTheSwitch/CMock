@@ -199,7 +199,7 @@ module RakefileHelpers
         next unless header =~ /Mock/
 
         require '../../lib/cmock.rb'
-        @cmock ||= CMock.new($cfg_file)
+        @cmock ||= CMock.new('./targets/' + $cfg_file)
         @cmock.setup_mocks([$cfg['compiler']['source_path'] + header.gsub('Mock', '')])
       end
 
@@ -217,7 +217,7 @@ module RakefileHelpers
       runner_name = test_base + '_Runner.c'
       if $cfg['compiler']['runner_path'].nil?
         runner_path = $cfg['compiler']['build_path'] + runner_name
-        test_gen = UnityTestRunnerGenerator.new($cfg_file)
+        test_gen = UnityTestRunnerGenerator.new('./targets/' + $cfg_file)
         test_gen.run(test, runner_path)
       else
         runner_path = $cfg['compiler']['runner_path'] + runner_name
@@ -254,7 +254,7 @@ module RakefileHelpers
     report 'Building application...'
 
     obj_list = []
-    load_configuration($cfg_file)
+    load_configuration('./targets/' + $cfg_file)
     main_path = $cfg['compiler']['source_path'] + main + C_EXTENSION
 
     # Detect dependencies and build required required modules
