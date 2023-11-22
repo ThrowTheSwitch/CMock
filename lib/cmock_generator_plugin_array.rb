@@ -7,6 +7,7 @@
 class CMockGeneratorPluginArray
   attr_reader :priority
   attr_accessor :config, :utils, :unity_helper, :ordered
+
   def initialize(config, utils)
     @config       = config
     @ptr_handling = @config.when_ptr
@@ -31,10 +32,10 @@ class CMockGeneratorPluginArray
       m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
     end.join(', ')
     if function[:return][:void?]
-      return "#define #{function[:name]}_ExpectWithArray(#{args_call}) #{function[:name]}_CMockExpectWithArray(__LINE__, #{args_call})\n" \
+      "#define #{function[:name]}_ExpectWithArray(#{args_call}) #{function[:name]}_CMockExpectWithArray(__LINE__, #{args_call})\n" \
              "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string});\n"
     else
-      return "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call}, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call}, cmock_retval)\n" \
+      "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call}, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call}, cmock_retval)\n" \
              "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]});\n"
     end
   end

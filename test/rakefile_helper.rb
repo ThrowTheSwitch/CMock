@@ -396,6 +396,10 @@ module RakefileHelpers
   end
 
   def run_examples()
+    report "\n"
+    report "-----------------\n"
+    report "VALIDATE EXAMPLES\n"
+    report "-----------------\n"
     [ "cd #{File.join("..","examples","make_example")} && make clean && make setup && make test",
       "cd #{File.join("..","examples","temp_sensor")} && rake ci"
     ].each do |cmd|

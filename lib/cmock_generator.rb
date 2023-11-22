@@ -117,7 +117,7 @@ class CMockGenerator
   end
 
   def create_mock_source_file(mock_project)
-    @file_writer.create_file(mock_project[:mock_name] + '.c', mock_project[:folder]) do |file, filename|
+    @file_writer.create_file("#{mock_project[:mock_name]}.c", mock_project[:folder]) do |file, filename|
       create_source_header_section(file, filename, mock_project)
       create_instance_structure(file, mock_project)
       create_extern_declarations(file)
@@ -132,9 +132,9 @@ class CMockGenerator
   end
 
   def create_skeleton_source_file(mock_project)
-    filename = "#{@config.mock_path}/#{@subdir + '/' if @subdir}#{mock_project[:module_name]}.c"
+    filename = "#{@config.mock_path}/#{"#{@subdir}/" if @subdir}#{mock_project[:module_name]}.c"
     existing = File.exist?(filename) ? File.read(filename) : ''
-    @file_writer.create_file(mock_project[:module_name] + '.c', @subdir) do |file, fullname|
+    @file_writer.create_file("#{mock_project[:module_name]}.c", @subdir) do |file, fullname|
       blank_project = mock_project.clone
       blank_project[:parsed_stuff] = { :functions => [] }
       if existing.empty?
@@ -156,7 +156,7 @@ class CMockGenerator
     file << "#define _#{define_name}_H\n\n"
     file << "#include \"#{@framework}.h\"\n"
     @includes_h_pre_orig_header.each { |inc| file << "#include #{inc}\n" }
-    file << @config.orig_header_include_fmt.gsub(/%s/, orig_filename.to_s) + "\n"
+    file << "#{@config.orig_header_include_fmt.gsub(/%s/, orig_filename.to_s)}\n"
     @includes_h_post_orig_header.each { |inc| file << "#include #{inc}\n" }
     plugin_includes = @plugins.run(:include_files)
     file << plugin_includes unless plugin_includes.empty?
@@ -303,7 +303,7 @@ class CMockGenerator
                                (function[:return][:type]) +
                                (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
     args_string = function[:args_string]
-    args_string += (', ' + function[:var_arg]) unless function[:var_arg].nil?
+    args_string += ", #{function[:var_arg]}" unless function[:var_arg].nil?
 
     # Encapsulate in namespace(s) if applicable
     function[:namespace].each do |ns|
@@ -364,7 +364,7 @@ class CMockGenerator
                                (function[:return][:type]) +
                                (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
     args_string = function[:args_string]
-    args_string += (', ' + function[:var_arg]) unless function[:var_arg].nil?
+    args_string += ", #{function[:var_arg]}" unless function[:var_arg].nil?
 
     decl = "#{function_mod_and_rettype} #{function[:name]}(#{args_string})"
 
@@ -374,7 +374,7 @@ class CMockGenerator
     file << "{\n"
     file << "  /*TODO: Implement Me!*/\n"
     function[:args].each { |arg| file << "  (void)#{arg[:name]};\n" }
-    file << "  return (#{(function[:return][:type])})0;\n" unless function[:return][:void?]
+    file << "  return (#{function[:return][:type]})0;\n" unless function[:return][:void?]
     file << "}\n\n"
   end
 end

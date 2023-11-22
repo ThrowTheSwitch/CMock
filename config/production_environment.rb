@@ -8,5 +8,5 @@
 [
   'lib'
 ].each do |dir|
-  $:.unshift(File.join(__dir__ + '/../', dir))
+  $:.unshift(File.join("#{__dir__}//..//", dir))
 end

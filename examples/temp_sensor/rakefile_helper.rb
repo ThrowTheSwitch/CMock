@@ -10,21 +10,19 @@ module RakefileHelpers
   C_EXTENSION = '.c'.freeze
 
   def load_yaml(yaml_string)
-    begin
-      return YAML.load(yaml_string, aliases: true)
-    rescue ArgumentError
-      return YAML.load(yaml_string)
-    end
+    YAML.load(yaml_string, aliases: true)
+  rescue ArgumentError
+    YAML.load(yaml_string)
   end
 
   def load_configuration(config_file)
     $cfg_file = config_file
-    $cfg = load_yaml(File.read('./targets/' + $cfg_file))
+    $cfg = load_yaml(File.read("./targets/#{$cfg_file}"))
     $colour_output = false unless $cfg['colour']
   end
 
   def configure_clean
-    CLEAN.include($cfg['compiler']['build_path'] + '*.*') unless $cfg['compiler']['build_path'].nil?
+    CLEAN.include("#{$cfg['compiler']['build_path']}*.*") unless $cfg['compiler']['build_path'].nil?
   end
 
   def configure_toolchain(config_file = DEFAULT_CONFIG_FILE)
@@ -34,7 +32,7 @@ module RakefileHelpers
   end
 
   def unit_test_files
-    path = $cfg['compiler']['unit_tests_path'] + 'Test*' + C_EXTENSION
+    path = $cfg['compiler']['unit_tests_path'] + "Test*#{C_EXTENSION}"
     path.tr!('\\', '/')
     FileList.new(path)
   end
@@ -49,7 +47,7 @@ module RakefileHelpers
     includes = []
     lines = File.readlines(filename)
     lines.each do |line|
-      m = line.match(/^\s*#include\s+\"\s*(.+\.[hH])\s*\"/)
+      m = line.match(/^\s*#include\s+"\s*(.+\.[hH])\s*"/)
       unless m.nil?
         includes << m[1]
       end
@@ -95,7 +93,7 @@ module RakefileHelpers
               end
     options = squash('', $cfg['compiler']['options'])
     includes = squash($cfg['compiler']['includes']['prefix'], $cfg['compiler']['includes']['items'])
-    includes = includes.gsub(/\\ /, ' ').gsub(/\\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
+    includes = includes.gsub(/\\ /, ' ').gsub(/\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
     { :command => command, :defines => defines, :options => options, :includes => includes }
   end
 
@@ -120,17 +118,17 @@ module RakefileHelpers
                else
                  squash($cfg['linker']['includes']['prefix'], $cfg['linker']['includes']['items'])
                end
-    includes = includes.gsub(/\\ /, ' ').gsub(/\\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
+    includes = includes.gsub(/\\ /, ' ').gsub(/\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
     { :command => command, :options => options, :includes => includes }
   end
 
   def link_it(exe_name, obj_list)
     linker = build_linker_fields
-    cmd_str = "#{linker[:command]}#{linker[:includes]} " +
-              (obj_list.map { |obj| "#{$cfg['linker']['object_files']['path']}#{obj} " }).join +
-              $cfg['linker']['bin_files']['prefix'] + ' ' +
-              $cfg['linker']['bin_files']['destination'] +
-              exe_name + $cfg['linker']['bin_files']['extension'] + " #{linker[:options]}"
+    cmd_str = "#{linker[:command]}#{linker[:includes]} " \
+              "#{(obj_list.map { |obj| "#{$cfg['linker']['object_files']['path']}#{obj} " }).join}" \
+              "#{$cfg['linker']['bin_files']['prefix']} " \
+              "#{$cfg['linker']['bin_files']['destination']}" \
+              "#{exe_name}#{$cfg['linker']['bin_files']['extension']} #{linker[:options]}"
     execute(cmd_str)
   end
 
@@ -140,7 +138,7 @@ module RakefileHelpers
     command = if $cfg['simulator']['path'].nil?
                 ''
               else
-                (tackit($cfg['simulator']['path']) + ' ')
+                "#{tackit($cfg['simulator']['path'])} "
               end
     pre_support = if $cfg['simulator']['pre_support'].nil?
                     ''
@@ -190,20 +188,19 @@ module RakefileHelpers
 
     # Build and execute each unit test
     test_files.each do |test|
-      obj_list = []
-
       # Detect dependencies and build required required modules
       header_list = (extract_headers(test) + ['cmock.h'] + [$cfg[:cmock][:unity_helper_path]]).compact.uniq
       header_list.each do |header|
         # create mocks if needed
         next unless header =~ /Mock/
 
-        require '../../lib/cmock.rb'
-        @cmock ||= CMock.new('./targets/' + $cfg_file)
+        require '../../lib/cmock'
+        @cmock ||= CMock.new(".//targets//#{$cfg_file}")
         @cmock.setup_mocks([$cfg['compiler']['source_path'] + header.gsub('Mock', '')])
       end
 
       # compile all mocks
+      obj_list = []
       header_list.each do |header|
         # compile source file header if it exists
         src_file = find_source_file(header, include_dirs)
@@ -214,10 +211,10 @@ module RakefileHelpers
 
       # Build the test runner (generate if configured to do so)
       test_base = File.basename(test, C_EXTENSION)
-      runner_name = test_base + '_Runner.c'
+      runner_name = "#{test_base}_Runner.c"
       if $cfg['compiler']['runner_path'].nil?
-        runner_path = $cfg['compiler']['build_path'] + runner_name
-        test_gen = UnityTestRunnerGenerator.new('./targets/' + $cfg_file)
+        runner_path = "#{$cfg['compiler']['build_path']}#{runner_name}"
+        test_gen = UnityTestRunnerGenerator.new(".//targets//#{$cfg_file}")
         test_gen.run(test, runner_path)
       else
         runner_path = $cfg['compiler']['runner_path'] + runner_name
@@ -254,7 +251,7 @@ module RakefileHelpers
     report 'Building application...'
 
     obj_list = []
-    load_configuration('./targets/' + $cfg_file)
+    load_configuration(".//targets//#{$cfg_file}")
     main_path = $cfg['compiler']['source_path'] + main + C_EXTENSION
 
     # Detect dependencies and build required required modules

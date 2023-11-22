@@ -5,8 +5,7 @@
 # ==========================================
 
 class CMockGeneratorPluginExpectAnyArgs
-  attr_reader :priority
-  attr_reader :config, :utils
+  attr_reader :priority, :config, :utils
 
   def initialize(config, utils)
     @config = config

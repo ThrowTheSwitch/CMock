@@ -5,8 +5,7 @@
 # ==========================================
 
 class CMockGeneratorPluginIgnore
-  attr_reader :priority
-  attr_reader :config, :utils
+  attr_reader :priority, :config, :utils
 
   def initialize(config, utils)
     @config = config
@@ -45,7 +44,7 @@ class CMockGeneratorPluginIgnore
     else
       retval = function[:return].merge(:name => 'cmock_call_instance->ReturnVal')
       lines << "    if (cmock_call_instance == NULL)\n      return Mock.#{function[:name]}_FinalReturn;\n"
-      lines << '  ' + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless retval[:void?]
+      lines << "  #{@utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval)}" unless retval[:void?]
       lines << "    return cmock_call_instance->ReturnVal;\n  }\n"
     end
     lines

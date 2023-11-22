@@ -117,7 +117,10 @@ end
 namespace :style do
   desc "Check style"
   task :check do
-    report "\nVERIFYING RUBY STYLE"
+    report "\n"
+    report "--------------------\n"
+    report "VERIFYING RUBY STYLE\n"
+    report "--------------------\n"
     report execute("rubocop ../lib ../examples ../config ../scripts --config ../vendor/unity/test/.rubocop.yml", true)
     report "Styling Ruby:PASS"
   end

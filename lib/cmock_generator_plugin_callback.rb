@@ -6,8 +6,7 @@
 
 class CMockGeneratorPluginCallback
   attr_accessor :include_count
-  attr_reader :priority
-  attr_reader :config, :utils
+  attr_reader :priority, :config, :utils
 
   def initialize(config, utils)
     @config = config

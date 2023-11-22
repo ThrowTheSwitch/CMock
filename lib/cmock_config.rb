@@ -63,13 +63,13 @@ class CMockConfig
 
     # do some quick type verification
     %i[plugins attributes treat_as_void].each do |opt|
-      unless options[opt].class == Array
+      unless options[opt].instance_of?(Array)
         options[opt] = []
         puts "WARNING: :#{opt} should be an array." unless options[:verbosity] < 1
       end
     end
     %i[includes includes_h_pre_orig_header includes_h_post_orig_header includes_c_pre_header includes_c_post_header].each do |opt|
-      unless options[opt].nil? || (options[opt].class == Array)
+      unless options[opt].nil? || options[opt].instance_of?(Array)
         options[opt] = []
         puts "WARNING: :#{opt} should be an array." unless options[:verbosity] < 1
       end
@@ -109,9 +109,9 @@ class CMockConfig
     require 'yaml'
     require 'fileutils'
     begin
-      return YAML.load_file(yaml_filename, aliases: true)[:cmock]
+      YAML.load_file(yaml_filename, aliases: true)[:cmock]
     rescue ArgumentError
-      return YAML.load_file(yaml_filename)[:cmock]
+      YAML.load_file(yaml_filename)[:cmock]
     end
   end
 
@@ -123,7 +123,7 @@ class CMockConfig
     return nil unless @options[:unity_helper_path]
 
     @options[:unity_helper_path].inject('') do |unity_helper, filename|
-      unity_helper + "\n" + File.new(filename).read
+      unity_helper + "\n#{File.new(filename).read}"
     end
   end
 
