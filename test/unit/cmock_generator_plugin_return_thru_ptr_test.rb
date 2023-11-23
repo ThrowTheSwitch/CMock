@@ -144,14 +144,14 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     " Spruce_CMockReturnMemThruPtr_pork(__LINE__, pork, cmock_len * sizeof(*pork))\n" +
     "#define Spruce_ReturnMemThruPtr_pork(pork, cmock_size)" +
     " Spruce_CMockReturnMemThruPtr_pork(__LINE__, pork, cmock_size)\n" +
-    "void Spruce_CMockReturnMemThruPtr_pork(UNITY_LINE_TYPE cmock_line, void* pork, size_t cmock_size);\n" + 
+    "void Spruce_CMockReturnMemThruPtr_pork(UNITY_LINE_TYPE cmock_line, void const* pork, size_t cmock_size);\n" + 
     "#define Spruce_ReturnThruPtr_salad(salad)" +
     " Spruce_CMockReturnMemThruPtr_salad(__LINE__, salad, sizeof(*salad))\n" +
     "#define Spruce_ReturnArrayThruPtr_salad(salad, cmock_len)" +
     " Spruce_CMockReturnMemThruPtr_salad(__LINE__, salad, cmock_len * sizeof(*salad))\n" +
     "#define Spruce_ReturnMemThruPtr_salad(salad, cmock_size)" +
     " Spruce_CMockReturnMemThruPtr_salad(__LINE__, salad, cmock_size)\n" +
-    "void Spruce_CMockReturnMemThruPtr_salad(UNITY_LINE_TYPE cmock_line, MY_FANCY_VOID* salad, size_t cmock_size);\n"
+    "void Spruce_CMockReturnMemThruPtr_salad(UNITY_LINE_TYPE cmock_line, MY_FANCY_VOID const* salad, size_t cmock_size);\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_function_declarations(@void_ptr_func)
     assert_equal(expected, returned)
