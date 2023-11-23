@@ -229,3 +229,11 @@ void CMock_Guts_MemFreeFinal(void)
 #endif
 }
 
+void CMock_memset(void* ptr, int value, size_t num)
+{
+  size_t i;
+  for (i = 0; i < num; i++)
+  {
+	((char*)ptr)[i] = (char)value;
+  }
+}

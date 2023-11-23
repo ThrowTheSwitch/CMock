@@ -1,20 +1,31 @@
+# coding: utf-8
 # ==========================================
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
 #   [Released under MIT License. Please refer to license.txt for details]
 # ==========================================
 
+require "#{__dir__}/CLexer"
+
 class CMockHeaderParser
   attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns
+  attr_reader :noreturn_attributes, :process_gcc_attributes, :process_cpp_attributes, :c_calling_conventions
+  attr_accessor :parse_project
 
   def initialize(cfg)
     @c_strippables = cfg.strippables
+    @process_gcc_attributes = cfg.process_gcc_attributes
+    @process_cpp_attributes = cfg.process_cpp_attributes
+    @noreturn_attributes = cfg.noreturn_attributes.uniq
     @c_attr_noconst = cfg.attributes.uniq - ['const']
-    @c_attributes = ['const'] + c_attr_noconst
+    @c_attributes = ['const'] + @c_attr_noconst
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_array = cfg.treat_as_array
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
-    @function_declaration_parse_base_match = '([\w\s\*\(\),\[\]]*?\w[\w\s\*\(\),\[\]]*?)\(([\w\s\*\(\),\.\[\]+\-\/]*)\)'
+    attribute_regexp = '((?:\s*__attribute__\s*\(\s*\(.*?\)\s*\))*)'
+    type_and_name_regexp = '([\w\s\*\(\),\[\]]*?\w[\w\s\*\(\),\[\]]*?)'
+    args_regexp = '([\w\s\*\(\),\.\[\]+\-\/]*)'
+    @function_declaration_parse_base_match = type_and_name_regexp + '\(' + args_regexp + '\)' + attribute_regexp
     @declaration_parse_matcher = /#{@function_declaration_parse_base_match}$/m
     @standards = (%w[int short char long unsigned signed] + cfg.treat_as.keys).uniq
     @array_size_name = cfg.array_size_name
@@ -27,10 +38,22 @@ class CMockHeaderParser
     @inline_function_patterns = cfg.inline_function_patterns
     @c_strippables += ['extern'] if @treat_externs == :include # we'll need to remove the attribute if we're allowing externs
     @c_strippables += ['inline'] if @treat_inlines == :include # we'll need to remove the attribute if we're allowing inlines
+    @c = 0
   end
 
-  def parse(name, source)
-    parse_project = {
+  def raise_parse_error(message)
+    # TODO: keep track of line number to be able to insert it in the error message.
+    if @parse_project[:source_path].nil?
+      raise 'Failed Parsing Declaration Prototype!' + "\n" + message
+    else
+      raise "#{@parse_project[:source_path]}:1: Failed Parsing Declaration Prototype!" + "\n" + message
+    end
+  end
+
+  def parse(name, source, src_path = nil)
+    $stderr.puts "Parsing #{src_path}" if !src_path.nil? && (@verbosity >= 1)
+    @parse_project = {
+      :source_path       => src_path,
       :module_name       => name.gsub(/\W/, ''),
       :typedefs          => [],
       :functions         => [],
@@ -39,29 +62,29 @@ class CMockHeaderParser
 
     function_names = []
 
-    all_funcs = parse_functions(import_source(source, parse_project)).map { |item| [item] }
-    all_funcs += parse_cpp_functions(import_source(source, parse_project, true))
+    all_funcs = parse_functions(import_source(source)).map { |item| [item] }
+    all_funcs += parse_cpp_functions(import_source(source, true))
     all_funcs.map do |decl|
-      func = parse_declaration(parse_project, *decl)
+      func = parse_declaration(*decl)
       unless function_names.include? func[:name]
-        parse_project[:functions] << func
+        @parse_project[:functions] << func
         function_names << func[:name]
       end
     end
 
-    parse_project[:normalized_source] = if @treat_inlines == :include
-                                          transform_inline_functions(source)
-                                        else
-                                          ''
-                                        end
+    @parse_project[:normalized_source] = if @treat_inlines == :include
+                                           transform_inline_functions(source)
+                                         else
+                                           ''
+                                         end
 
     { :includes  => nil,
-      :functions => parse_project[:functions],
-      :typedefs  => parse_project[:typedefs],
-      :normalized_source    => parse_project[:normalized_source] }
+      :functions => @parse_project[:functions],
+      :typedefs  => @parse_project[:typedefs],
+      :normalized_source    => @parse_project[:normalized_source] }
   end
 
-  private if $ThisIsOnlyATest.nil? ################
+  # REMVOVE BEFORE COMMIT #  private if $ThisIsOnlyATest.nil? ################
 
   # Remove C/C++ comments from a string
   # +source+:: String which will have the comments removed
@@ -73,9 +96,12 @@ class CMockHeaderParser
   end
 
   def remove_nested_pairs_of_braces(source)
-    # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
+    # remove nested pairs of braces because no function declarations
+    # will be inside of them (leave outer pair for function definition
+    # detection)
     if RUBY_VERSION.split('.')[0].to_i > 1
-      # we assign a string first because (no joke) if Ruby 1.9.3 sees this line as a regex, it will crash.
+      # we assign a string first because (no joke) if Ruby 1.9.3 sees
+      # this line as a regex, it will crash.
       r = '\\{([^\\{\\}]*|\\g<0>)*\\}'
       source.gsub!(/#{r}/m, '{ }')
     else
@@ -102,7 +128,7 @@ class CMockHeaderParser
         curr_level -= 1
       end
 
-      break if is_function_start_found && curr_level == 0 # We reached the end of the inline function body
+      break if is_function_start_found && curr_level.zero? # We reached the end of the inline function body
     end
 
     if curr_level != 0
@@ -177,10 +203,13 @@ class CMockHeaderParser
         end
 
         # 2. Determine if we are dealing with an inline function declaration iso function definition
-        # If the start of the post-match string is a function-declaration-like string (something ending with semicolon after the function arguments),
-        # we are dealing with a inline function declaration
+        # If the start of the post-match string is a
+        # function-declaration-like string (something ending with
+        # semicolon after the function arguments), we are dealing with
+        # a inline function declaration
         if /\A#{@function_declaration_parse_base_match}\s*;/m =~ inline_function_match.post_match
-          # Only remove the inline part from the function declaration, leaving the function declaration won't do any harm
+          # Only remove the inline part from the function declaration,
+          # leaving the function declaration won't do any harm
           inspected_source += inline_function_match.pre_match
           source = inline_function_match.post_match
           next
@@ -191,7 +220,7 @@ class CMockHeaderParser
         if /\A#{@function_declaration_parse_base_match}\s*\{/m =~ inline_function_match.post_match
           total_pairs_to_remove = count_number_of_pairs_of_braces_in_function(inline_function_match.post_match)
 
-          break if total_pairs_to_remove == 0 # Bad source?
+          break if total_pairs_to_remove.zero? # Bad source?
 
           inline_function_stripped = inline_function_match.post_match
 
@@ -203,7 +232,8 @@ class CMockHeaderParser
           next
         end
 
-        # 4. If we get here, it means the regex match, but it is not related to the function (ex. static variable in header)
+        # 4. If we get here, it means the regex match, but it is not
+        # related to the function (ex. static variable in header)
         # Leave this code as it is.
         inspected_source += inline_function_match.pre_match + inline_function_match[0]
         source = inline_function_match.post_match
@@ -213,20 +243,24 @@ class CMockHeaderParser
     source
   end
 
-  def import_source(source, parse_project, cpp = false)
+  def import_source(source, cpp = false)
     # let's clean up the encoding in case they've done anything weird with the characters we might find
     source = source.force_encoding('ISO-8859-1').encode('utf-8', :replace => nil)
 
-    # void must be void for cmock _ExpectAndReturn calls to process properly, not some weird typedef which equates to void
-    # to a certain extent, this action assumes we're chewing on pre-processed header files, otherwise we'll most likely just get stuff from @treat_as_void
+    # void must be void for cmock _ExpectAndReturn calls to process
+    # properly, not some weird typedef which equates to void to a
+    # certain extent, this action assumes we're chewing on
+    # pre-processed header files, otherwise we'll most likely just get
+    # stuff from @treat_as_void
     @local_as_void = @treat_as_void
     void_types = source.scan(/typedef\s+(?:\(\s*)?void(?:\s*\))?\s+([\w]+)\s*;/)
     if void_types
       @local_as_void += void_types.flatten.uniq.compact
     end
 
-    # If user wants to mock inline functions,
-    # remove the (user specific) inline keywords before removing anything else to avoid missing an inline function
+    # If user wants to mock inline functions, remove the (user
+    # specific) inline keywords before removing anything else to avoid
+    # missing an inline function
     if @treat_inlines == :include
       @inline_function_patterns.each do |user_format_string|
         source.gsub!(/#{user_format_string}/, '') # remove user defined inline function patterns
@@ -241,15 +275,20 @@ class CMockHeaderParser
     # remove assembler pragma sections
     source.gsub!(/^\s*#\s*pragma\s+asm\s+.*?#\s*pragma\s+endasm/m, '')
 
-    # remove gcc's __attribute__ tags
-    source.gsub!(/__attribute(?:__)?\s*\(\(+.*\)\)+/, '')
+    if @noreturn_attributes.nil?
+      # remove gcc's __attribute__ tags
+      source.gsub!(/__attribute(?:__)?\s*\(\(+.*\)\)+/, '')
+    end
 
     # remove preprocessor statements and extern "C"
     source.gsub!(/extern\s+\"C\"\s*\{/, '')
     source.gsub!(/^\s*#.*/, '')
 
-    # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
-    # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
+    # enums, unions, structs, and typedefs can all contain things
+    # (e.g. function pointers) that parse like function prototypes, so
+    # yank them forward declared structs are removed before struct
+    # definitions so they don't mess up real thing later. we leave
+    # structs keywords in function prototypes
     source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                                      # remove forward declared structs
     source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s]*\{[^\}]+\}[\w\s\*\,]*;/m, '')  # remove struct, union, and enum definitions and typedefs with braces
     # remove problem keywords
@@ -266,9 +305,9 @@ class CMockHeaderParser
 
     # scan for functions which return function pointers, because they are a pain
     source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |_m|
-      functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
+      functype = "cmock_#{@parse_project[:module_name]}_func_ptr#{@parse_project[:typedefs].size + 1}"
       unless cpp # only collect once
-        parse_project[:typedefs] << "typedef #{Regexp.last_match(1).strip}(*#{functype})(#{Regexp.last_match(4)});"
+        @parse_project[:typedefs] << "typedef #{Regexp.last_match(1).strip}(*#{functype})(#{Regexp.last_match(4)});"
         "#{functype} #{Regexp.last_match(2).strip}(#{Regexp.last_match(3)});"
       end
     end
@@ -306,6 +345,7 @@ class CMockHeaderParser
     end
 
     src_lines.delete_if(&:empty?) # drop empty lines
+    src_lines
   end
 
   # Rudimentary C++ parser - does not handle all situations - e.g.:
@@ -371,60 +411,819 @@ class CMockHeaderParser
     funcs
   end
 
-  def parse_type_and_name(arg)
+  # This grammar is quite ambiguous:
+  #
+  # fun_declaration : type name parameters { attributes | c_calling_convention } ;
+  #
+  # type : stuffs ;
+  #
+  # stuffs : | stuff stuffs ;
+  #
+  # stuff : token
+  #       | :open_paren stuffs :close_paren
+  #       | :open_bracket stuffs :close_bracket
+  #       | :open_brace stuffs :close_brace
+  #       | :lt stuffs :gt' -- angle brackets
+  #       ;
+  # -- Note: we will also scan char_literal and string_literal
+  # --       because they could appear in constant expressions (eg. enums)
+  # --       and contain parentheses.
+  # -- Note: angle brackets for templates are very ambiguous, because
+  # --       we may also have '<' tokens in constant expressions (eg. in a enum).
+  # --       So we'd need a real parser to handle this correctly.
+  #
+  # token : identifier | literals_and_other_tokens ;
+  #
+  # name : identifier ;
+  #
+  # parameters : :open_paren stuffs :close_paren ;
+  #
+  # attributes : '__attributes__'  :open_paren stuffs :close_paren ;
+  # -- we won't parse macro calls in attributes because of the ambiguity.
+  #
+  #
+  # Therefore we will parse in two phases:
+  # Phase 1:
+  #     we parse fun_declaration_1 : { stuff } ;
+  #     -- this takes care of parentheses, et al.
+  # Phase 2:
+  #    then match from the end of the list of stuffs,
+  #    for c_calling_conventions, __attributes__ (...)
+  #    then '(' parameters ')' = '(' stuffs ')'
+  #    then name identifier,
+  #    then the rest is type.
+
+  def eos?(src, pos)
+    src.length <= pos
+  end
+
+  def validate_identifier(token, what)
+    if token[0] == :identifier
+      token
+    else
+      raise_parse_error "Expected #{what} identifier, got #{token[0]} #{token[1]}"
+    end
+  end
+
+  def parse_token(src, pos)
+    if eos?(src, pos)
+      raise_parse_error "Expected a token, not end of source at position #{pos}"
+    end
+    [src[pos], pos + 1]
+  end
+
+  def parse_stuff(src, pos)
+    # stuff : token
+    #       | '(' stuffs ')'
+    #       | '[' stuffs ']'
+    #       | '{' stuffs '}'
+    #       | '<' stuffs '>'
+    #       ;
+    stuff = nil
+    if !eos?(src, pos)
+      case src[pos]
+      when :open_paren   then stuff, pos = parse_delimited_stuffs(src, pos, :close_paren)
+      when :open_bracket then stuff, pos = parse_delimited_stuffs(src, pos, :close_bracket)
+      when :open_brace   then stuff, pos = parse_delimited_stuffs(src, pos, :close_brace)
+      when :lt           then stuff, pos = parse_delimited_stuffs(src, pos, :gt)
+      else stuff, pos = parse_token(src, pos)
+      end
+    end
+    [stuff, pos]
+  end
+
+  def parse_delimited_stuffs(src, pos, closing)
+    pos += 1 # eat the opening token
+    stuffs = []
+    while !eos?(src, pos) && (src[pos] != closing)
+      item, pos = parse_stuff(src, pos)
+      stuffs << item
+    end
+    if !eos?(src, pos)
+      pos += 1 # skip closing token
+    end
+    op = case closing
+         when :close_paren   then :parens
+         when :close_bracket then :brackets
+         when :close_brace   then :braces
+         when :gt            then :angle_brackets
+         end
+    [[op, stuffs], pos]
+  end
+
+  def parse_stuffs(src, pos)
+    # stuffs : | stuff stuffs ;
+    stuffs = []
+    while !eos?(src, pos)
+      stuff, pos = parse_stuff(src, pos)
+      stuffs << stuff unless stuff.nil?
+    end
+    [stuffs, pos]
+  end
+
+  def parens?(stuff)
+    stuff.is_a?(Array) and (stuff.length == 2) and (stuff[0] == :parens)
+  end
+
+  def parens_list(stuff)
+    stuff[1] if parens?(stuff)
+  end
+
+  def brackets?(stuff)
+    stuff.is_a?(Array) and (stuff.length == 2) and (stuff[0] == :brackets)
+  end
+
+  def brackets_list(stuff)
+    stuff[1] if brackets?(stuff)
+  end
+
+  def token?(token)
+    token.is_a?(Symbol) and (CLexer::OPERATOR_SYMS.index(token) or CLexer::KEYWORDS_SYMS.index(token))
+  end
+
+  def identifier?(token, name = nil)
+    if token.is_a?(Array) && (token.length == 2)
+      if name.nil?
+        (token[0] == :identifier)
+      else
+        (token[0] == :identifier) and (token[1] == name)
+      end
+    else
+      false
+    end
+  end
+
+  def identifier_name(token)
+    token[1] if token.is_a?(Array) && (token[0] == :identifier)
+  end
+
+  def token_name(token)
+    if identifier?(token)
+      identifier_name(token)
+    elsif token.is_a?(Symbol)
+      token.to_s
+    elsif token.is_a?(String)
+      token
+    else
+      raise_parse_error "Invalid token #{token.inspect}"
+    end
+  end
+
+  def c_calling_convention?(stuff)
+    # whether stuff is a C calling convention (listed in @c_calling_conventions).
+    # note: stuff may be either a symbol, a string or an :identifier array.
+    res = if stuff.is_a?(Symbol) || token?(stuff) || identifier?(stuff)
+            !@c_calling_conventions.index(token_name(stuff)).nil?
+          else
+            false
+          end
+    res
+  end
+
+  def c_attribute?(token)
+    # whether the token is a C attribute (listed in @c_attributes or in @noreturn_attributes).
+    # note: token may be either a symbol, a string or an :identifier array.
+    if token.is_a?(String)
+      name = token
+    elsif token.is_a?(Symbol)
+      name = token.to_s
+    elsif token?(token) || identifier?(token)
+      name = token_name(token)
+    elsif attribute?(token)
+      name = attribute_name(token)
+    else
+      return false
+    end
+
+    res = (@c_attributes.index(name) ||
+           (!@noreturn_attributes.nil? &&
+            (@noreturn_attributes.any? { |attr_regexp| name =~ /^#{attr_regexp}$/ })))
+    res
+  end
+
+  def make_attribute(namespace, name, arguments, kind)
+    if name.nil?
+      raise_parse_error "Attribute name should not be nil! #{namespace.inspect}, #{name.inspect}, #{arguments.inspect}"
+    end
+    [:attribute, namespace, name, arguments, kind]
+  end
+
+  def attribute?(object)
+    object.is_a?(Array) && (object.length == 5) && (object[0] == :attribute)
+  end
+
+  def attribute_namespace(attribute)
+    raise_parse_error "Not an normalized attribute: #{attribute}" unless attribute?(attribute)
+    attribute[1]
+  end
+
+  def attribute_name(attribute)
+    raise_parse_error "Not an normalized attribute: #{attribute}" unless attribute?(attribute)
+    attribute[2]
+  end
+
+  def attribute_qualified_name(attribute)
+    if attribute_namespace(attribute)
+      attribute_namespace(attribute) + '::' + attribute_name(attribute)
+    else
+      attribute_name(attribute)
+    end
+  end
+
+  def attribute_arguments(attribute)
+    raise_parse_error "Not an normalized attribute: #{attribute}" unless attribute?(attribute)
+    attribute[3]
+  end
+
+  def attribute_kind(attribute)
+    raise_parse_error "Not an normalized attribute: #{attribute}" unless attribute?(attribute)
+    attribute[4]
+  end
+
+  def noreturn?(attribute)
+    if identifier?(attribute)
+      @noreturn_attributes.include?(identifier_name(attribute))
+    elsif attribute?(attribute)
+      @noreturn_attributes.include?(attribute_qualified_name(attribute))
+    else
+      false
+    end
+  end
+
+  def noreturn_attribute?(attributes)
+    attributes.any? do |attribute|
+      noreturn?(attribute)
+    end
+  end
+
+  def gcc_attribute_syntax?(operator, parameters)
+    # gcc atributes are all of the syntax  __attribute__ (...)
+    # where ... is a list of stuffs.
+    # so gcc_attribute_syntax?([:identifier,"__attribute__"],[:parens,stuff_list])
+    identifier?(operator, '__attribute__') && parens?(parameters)
+    # see parse_gcc_attribute
+  end
+
+  def processable_gcc_attribute?(name)
+    c_attribute?(name)
+  end
+
+  def parse_gcc_attribute(op, stuff)
+    # gcc atributes are all of the syntax  __attribute__ (...)
+    # where ... is a list of stuffs.
+    # Here, attribute = [:attribute, [:parens,stuff_list]]
+    # We want to normalize attribute into a list of atributes:
+    #
+    # [:attribute,[:parens,[[:parens,[:identifier,"foo"],:comma,[:identifier,"bar"]]]]]
+    # --> [[:attribute,[:identifier,"foo"],[:parens,[[:identifier,"bar"]])]]]
+    #
+    # [:attribute,[:parens,[[:parens,[[:identifier,"foo"]]],:comma,[:parens,[[:identifier,"bar"]]]]]]
+    # --> [[:attribute,[:identifier "foo"]],nil],[[:attribute,[:identifier,"bar"]],nil]]
+    #
+    # [:attribute, [:parens,[[:parens,
+    #                         [[:identifier,"access"],[:parens,[[:identifier,"read_write"],:comma,[:integer_literal,"1"]]],:comma,
+    #                          [:identifier,"access"],[:parens,[[:identifier,"read_only"],:comma,[:integer_literal,"2"]]]]]]]]]
+    #
+    # --> [[:attribute,[:identifier,"access"],[:parens,[[:identifier,"read_write"],[:integer_literal,"1"]]]],
+    #      [:attribute,[:identifier,"access"],[:parens,[[:identifier,"read_only"],[:integer_literal,"2"]]]]]
+
+    unless identifier?(op, '__attribute__') && parens?(stuff) && parens?(parens_list(stuff)[0])
+      raise_parse_error "Unexpected attribute syntax #{[op, stuff].inspect}"
+    end
+    normalized = []
+    j = 0
+    chunks = parens_list(stuff)
+    while j < chunks.length
+      chunk = chunks[j]
+      j += 1
+      if chunk == :comma
+        next
+      end
+      items = parens_list(chunk)
+      i = 0
+      name = nil
+      while i < items.length
+        thing = items[i]
+        i += 1
+        if name.nil?
+          if thing == :comma
+          # wait for next
+          elsif identifier?(thing)
+            name = thing
+          elsif thing.is_a?(Symbol)
+            name = thing
+          else
+            raise_parse_error "Unexpected attribute syntax #{attribute.inspect}"
+          end
+        else
+          if thing == :comma
+            if processable_gcc_attribute?(token_name(name))
+              normalized << make_attribute(nil, token_name(name), nil, :gcc)
+            end
+            name = nil
+          elsif parens?(thing)
+            if processable_gcc_attribute?(token_name(name))
+              normalized << make_attribute(nil, token_name(name), thing, :gcc)
+            end
+            name = nil
+            if (i < items.length) && (items[i] == :comma)
+              i += 1
+            end
+          else
+            raise_parse_error "Unexpected attribute syntax #{attribute.inspect}"
+          end
+        end
+      end
+      unless name.nil?
+        if processable_gcc_attribute?(token_name(name))
+          normalized << make_attribute(nil, token_name(name), nil, :gcc)
+        end
+        name = nil
+      end
+    end
+    normalized
+  end
+
+  def cpp_attribute_syntax?(stuff)
+    brackets?(stuff) and (brackets_list(stuff).length == 1) and
+      brackets?(brackets_list(stuff)[0])
+  end
+
+  def processable_cpp_attribute?(name)
+    c_attribute?(name)
+  end
+
+  def parse_cpp_attributes(stuff)
+    # stuff = '[[' [ 'using' <namespace_identifier> ':' ] <attribute> { ',' <attribute> } ']]' ;
+    # attribute = [ <namespace_identifier> '::' ] <identifier> [ '(' <argument_list> ')' ] ;
+    attributes = []
+
+    unless brackets?(stuff) && (brackets_list(stuff).length == 1) && brackets?(brackets_list(stuff)[0])
+      raise_parse_error "Unexpected C++ attribute syntax #{stuff.inspect}" +
+                        "\nbrackets?(stuff) = #{brackets?(stuff)}" +
+                        "\nbrackets_list(stuff).length = #{brackets?(stuff) ? brackets_list(stuff).length : nil}" +
+                        "\nbrackets?(brackets_list(stuff)[0]) = #{ (brackets?(stuff) && (brackets_list(stuff).length > 1)) ? (brackets?(brackets_list(stuff)[0])) : nil}"
+    end
+
+    stuff = brackets_list(brackets_list(stuff)[0])
+
+    # Note: for better support for C++, we'd have to update CLexer for C++ tokens.
+    # so using would be :using, and :: would be :double-colon insead of :colon :colon
+    # etc (but C++ lexers must be context-sensitive).
+
+    default_namespace = nil
+    start = 0
+    if (3 < stuff.length) && (identifier?(stuff[0]) || token?(stuff[0])) && (token_name(stuff[0]) == 'using')
+      if identifier?(stuff[1]) && (:colon == stuff[2])
+        default_namespace = identifier_name(stuff[1])
+        start = 3
+      else
+        raise_parse_error "Invalid using syntax in attributes #{stuff.inspect}"
+      end
+    end
+
+    i = start
+    while i < stuff.length
+      namespace = default_namespace
+      name = nil
+      arguments = nil
+
+      if identifier?(stuff[i])
+        if (i + 2 < stuff.length) && (:colon == stuff[i + 1]) && (:colon == stuff[i + 2])
+          namespace = identifier_name(stuff[i])
+          i += 3
+        end
+      end
+      if (i < stuff.length) && identifier?(stuff[i])
+        name = identifier_name(stuff[i])
+        i += 1
+        if (i < stuff.length) && parens?(stuff[i])
+          # we don't further parse the arguments, this may be done lazily if needed.
+          arguments = stuff[i]
+          i += 1
+        end
+        if processable_cpp_attribute?((namespace ? namespace + '::' : '' ) + name)
+          attributes << make_attribute(namespace, name, arguments, :cpp)
+        end
+        if (i < stuff.length) && (:comma == stuff[i])
+          i += 1
+        end
+      elsif (i < stuff.length)
+        raise_parse_error "Unexpected token #{stuff[i].inspect} in C++11 attribute expression #{stuff.inspect}, expected an attribute identifier."
+      end
+    end
+    attributes
+  end
+
+  def guess_ptr_and_const(type)
+    # type is a stuffs list
+    guess = {}
+    starc = type.count(:mul_op)
+    first_const = type.index(:const)
+    last_const = type.rindex(:const)
+    char = type.index(:char)
+    last_star = type.rindex(:mul_op)
+
+    if char.nil?
+      guess[:ptr?] = (starc > 0)
+    else
+      # char* are "strings", not "pointers".
+      guess[:ptr?] = (starc > 1)
+    end
+
+    if first_const.nil?
+      # no const:
+      guess[:const?] = false
+    elsif starc == 0
+      # const, no star
+      guess[:const?] = true
+    else
+      # const, some star:
+      before_last_star = type[0 .. (last_star - 1)].rindex(:mul_op)
+
+      if before_last_star.nil?
+        # a single star:
+        guess[:const?] = (first_const < last_star)
+      else
+        const = type[before_last_star .. last_star].index(:const)
+        guess[:const?] = !const.nil?
+      end
+    end
+
+    # an arg containing "const" after the last * is a constant pointer
+    guess[:const_ptr?] = ((starc > 0) && !last_const.nil? && (last_star < last_const))
+
+    guess
+  end
+
+  def parse_function_signature(src, pos)
+    # Phase 1:
+    #     we parse fun_declaration_1 : { stuff } ;
+    #     -- this takes care of parentheses, et al.
+    items, pos = parse_stuffs(src, pos)
+    raise_parse_error "Unparsed characters from position #{pos}" unless pos == src.length
+
+    # Phase 2:
+    #    then match from the end of the list of stuffs,
+    #    for c_calling_conventions, __attributes__ (...)
+    #    then '(' parameters ')' = '(' stuffs ')'
+    #    then name identifier,
+    #    then the rest is type.
+
+    ccc = []
+    attributes = []
+    parameters = nil
+
+    # match from the end of the list of stuffs,
+    #    for c_calling_conventions, __attributes__ (...)
+    i = items.length - 1
+    while c_calling_convention?(items[i]) || ((3 <= i) && gcc_attribute_syntax?(items[i - 1], items[i]))
+      if c_calling_convention?(items[i])
+        ccc << [:c_calling_convention, token_name(items[i])]
+        i -= 1
+      else
+        attributes += parse_gcc_attribute(items[i - 1], items[i])
+        i -= 2
+      end
+    end
+
+    #    then '(' parameters ')' = '(' stuffs ')'
+    if parens?(items[i])
+      parameters = parens_list(items[i])
+      i -= 1
+    end
+
+    #    then name identifier,
+    unless identifier?(items[i])
+      raise_parse_error "Expected an identifier but got #{items[i].inspect} as function name in #{items.inspect}"
+    end
+    name = identifier_name(items[i])
+    i -= 1
+
+    #    then the rest is type.
+    type = items[0..i]
+
+    [type, name, parameters, attributes, ccc]
+  end
+
+  def parse_type(stuff)
     # Split up words and remove known attributes.  For pointer types, make sure
     # to remove 'const' only when it applies to the pointer itself, not when it
     # applies to the type pointed to.  For non-pointer types, remove any
     # occurrence of 'const'.
-    arg.gsub!(/(\w)\*/, '\1 *') # pull asterisks away from preceding word
-    arg.gsub!(/\*(\w)/, '* \1') # pull asterisks away from following word
-    arg_array = arg.split
-    arg_info = divine_ptr_and_const(arg)
-    arg_info[:name] = arg_array[-1]
+    arg_info = guess_ptr_and_const(stuff)
 
-    attributes = arg.include?('*') ? @c_attr_noconst : @c_attributes
-    attr_array = []
-    type_array = []
+    @attributes = (stuff.any? { |item| item == :mul_op }) ? @c_attr_noconst : @c_attributes
 
-    arg_array[0..-2].each do |word|
-      if attributes.include?(word)
-        attr_array << word
-      elsif @c_calling_conventions.include?(word)
-        arg_info[:c_calling_convention] = word
+    type = []
+    attributes = []
+    ccc = []
+    i = 0
+    while i < stuff.length
+      if (i + 1 < stuff.length) && gcc_attribute_syntax?(stuff[i], stuff[i + 1]) # __attribute__ ( ... )
+        if @process_gcc_attributes
+          attributes += parse_gcc_attribute(stuff[i], stuff[i + 1])
+        end
+        i += 1
+      elsif cpp_attribute_syntax?(stuff[i]) # [[ ... ]]
+        if @process_cpp_attributes
+          attributes += parse_cpp_attributes(stuff[i])
+        end
+      elsif c_attribute?(stuff[i])
+        attributes << make_attribute(nil, token_name(stuff[i]), nil, :c)
+      elsif c_calling_convention?(stuff[i])
+        ccc << [:c_calling_convention, token_name(stuff[i])]
       else
-        type_array << word
+        type << stuff[i]
       end
+      i += 1
     end
 
     if arg_info[:const_ptr?]
-      attr_array << 'const'
-      type_array.delete_at(type_array.rindex('const'))
+      attributes << make_attribute(nil, 'const', nil, :c)
+      cindex = type.rindex(:const)
+      type.delete_at(cindex) unless cindex.nil?
     end
 
-    arg_info[:modifier] = attr_array.join(' ')
-    arg_info[:type] = type_array.join(' ').gsub(/\s+\*/, '*') # remove space before asterisks
-    arg_info
+    arg_info[:type] = unparse(type).gsub(/\s+\*/, '*') # remove space before asterisks
+    arg_info[:modifier] = unparse(attributes.uniq)
+    arg_info[:c_calling_convention] = unparse(ccc)
+
+    [type, attributes, ccc, arg_info]
   end
 
-  def parse_args(arg_list)
-    args = []
-    arg_list.split(',').each do |arg|
-      arg.strip!
-      return args if arg =~ /^\s*((\.\.\.)|(void))\s*$/ # we're done if we reach void by itself or ...
-
-      arg_info = parse_type_and_name(arg)
-      arg_info.delete(:modifier)             # don't care about this
-      arg_info.delete(:c_calling_convention) # don't care about this
-
-      # in C, array arguments implicitly degrade to pointers
-      # make the translation explicit here to simplify later logic
-      if @treat_as_array[arg_info[:type]] && !(arg_info[:ptr?])
-        arg_info[:type] = "#{@treat_as_array[arg_info[:type]]}*"
-        arg_info[:type] = "const #{arg_info[:type]}" if arg_info[:const?]
-        arg_info[:ptr?] = true
+  def unparse_inner(stuff)
+    if CLexer::OPERATOR_SYMS.include?(stuff)
+      CLexer::OPERATOR_SYMBOLS.key(stuff)
+    elsif CLexer::KEYWORDS_SYMS.include?(stuff)
+      stuff.to_s
+    elsif stuff.nil?
+      ''
+    elsif stuff.is_a?(Array)
+      case stuff[0]
+      when :identifier, :string_literal, :char_literal,
+           :integer_literal, :float_literal, :hex_literal then stuff[1]
+      when :c_calling_convention then "#{unparse_inner(stuff[1])}"
+      when :parens then "(#{unparse_inner(stuff[1])})"
+      when :brackets then "[#{unparse_inner(stuff[1])}]"
+      when :braces then "{#{unparse_inner(stuff[1])}}"
+      when :angle_brackets then "<#{unparse_inner(stuff[1])}>"
+      when :attribute then
+        case attribute_kind(stuff)
+        when :gcc then "__attribute__((#{unparse_inner(attribute_qualified_name(stuff))}))"
+        when :cpp then "[[#{unparse_inner(attribute_qualified_name(stuff))}]]"
+        when :c then "#{unparse_inner(attribute_qualified_name(stuff))}"
+        end
+      else stuff.map { |item| unparse_inner(item) }.join(' ')
       end
+    elsif stuff.is_a?(String)
+      stuff
+    else
+      raise_parse_error "Unexpected stuff #{stuff.inspect} while unparsing #{@unparsing.inspect}"
+    end
+  end
 
-      args << arg_info
+  def unparse(stuff)
+    @unparsing = stuff
+    unparse_inner(stuff)
+  end
+
+  def replace_arrays_by_pointers_in_parameters(parameters)
+    # parameter is now a list of parameter declarations each being a lists of tokens.
+    #
+    # eg. for (int* b, int c[5], int (*(*farr)[4])(int x),int a=42) we'd have now (=42 has been removed earlier):
+    #
+    #     [ [ :int, :mul_op, [:identifier, "b"] ],
+    #       [ :int, [:identifier, "c"], [:brackets, [[:integer_literal, "5"]]] ],
+    #       [ :int, [:parens, [:mul_op, [:parens, [:mul_op, [:identifier, "farr"]]],
+    #                                   [:brackets, [[:integer_literal, "4"]]]]],
+    #               [:parens, [:int, [:identifier, "x"]]]] ],
+    #       [ :int, [:identifier, "a"] ] ]
+
+    # we want to turn instances of:  [..., stuff, [:brackets, ... ], ...]  into: [..., :mul_op, stuff]
+    # Note: a single pointer for multidimensionnal arrays:
+    #   foo_t  foo[][][] --> foo_t* foo
+    #   foo_t* foo[][][] --> foo_t** foo
+    if parameters == [[]]
+      parameters
+    else
+      parameters.map do |parameter|
+        if parens?(parameter)
+          [:parens] + replace_arrays_by_pointers_in_parameters([parens_list(parameter)])
+        elsif parameter.is_a?(Array)
+          i = parameter.rindex { |item| !brackets?(item) }
+          if i.nil?
+            # all items are brackets
+            raise_parse_error "All items are brackets parameter=#{parameter.inspect}"
+          elsif i == parameter.length-1
+            # no item is a brackets
+            parameter
+          else
+            # some brackets, remove them and insert * before the name
+            # Note: int foo[3][4][5] --> int* foo
+            parameter[0, i] + [:mul_op] + [parameter[i]]
+          end.map do |item|
+            # recurse into parens groups:
+            if parens?(item)
+              [:parens] + replace_arrays_by_pointers_in_parameters([parens_list(item)])
+            else
+              item
+            end
+          end
+        else
+          parameter
+        end
+      end
+    end
+  end
+
+#   replace_arrays_by_pointers_in_parameters([ [ :int, :mul_op, [:identifier, "b"] ],
+#                                              [ :int, [:identifier, "c"], [:brackets, [[:integer_literal, "5"]]] ],
+#                                              [ :int, [:parens, [:mul_op, [:parens, [:mul_op, [:identifier, "farr"]]],
+#                                                                          [:brackets, [[:integer_literal, "4"]]]]],
+#                                                      [:parens, [:int, [:identifier, "x"]]] ],
+#                                              [ :int, [:identifier, "a"] ] ])
+# ==>
+# [[:int, :mul_op, [:identifier, "b"]],
+#  [:int, :mul_op, [:identifier, "c"]],
+#  [:int,
+#   [:parens, [:mul_op, :mul_op, [:parens, [:mul_op, [:identifier, "farr"]]]]],
+#   [:parens, [:int, [:identifier, "x"]]]],
+#  [:int, [:identifier, "a"]]]
+
+  def replace_function_pointers_by_custom_types(parameters)
+    parameters.map do |parameter|
+      plen = parameter.length
+      if (2 < plen) && parens?(parameter[-1]) # ...x()
+        if parens?(parameter[-2]) # ...()()
+
+          spec = parens_list(parameter[-2])
+          ptrindex = spec.index(:mul_op)
+          if ptrindex # ...(...*...)()
+
+            funcdecl = (ptrindex > 0) ? spec[0 .. ptrindex - 1] : []
+            funcname = spec[ptrindex + 1 .. -1]
+            constindex = funcname.index(:const)
+            if constindex
+              funcname.delete_at(constindex)
+              funcconst = [:const]
+            else
+              funcconst = []
+            end
+
+          else
+            raise_parse_error "Invalid syntax for function parameter #{parameter.inspect}"
+          end
+
+        elsif identifier?(parameter[-2]) # ...foo()
+
+          funcdecl = []
+          funcname = [parameter[-2]]
+          funcconst = []
+
+        else
+          raise_parse_error "Invalid syntax for function parameter #{parameter.inspect}"
+        end
+
+        functype = [:identifier, "cmock_#{@parse_project[:module_name]}_func_ptr#{@parse_project[:typedefs].size + 1}"]
+        funcret = parameter[0..-3]
+        funcargs = parameter[-1]
+
+        # add typedef for function pointer
+        @parse_project[:typedefs] << "typedef #{unparse(funcret)}(#{unparse(funcdecl + [:mul_op] + [functype])})#{unparse(funcargs)};".gsub(/\(\*\s+/,'(*').gsub(/\s+\*/, '*').gsub(/\s+,/, ',')
+        funcname = [[:identifier, "cmock_arg#{@c += 1}"]] if funcname.empty?
+        [functype] + funcconst + funcname
+      else
+        parameter
+      end
+    end
+  end
+
+  def anonymous_parameter?(parameter)
+    parameter = parameter.reject { |token| [:struct, :union, :enum, :const, :mul_op].include?(token) }
+    if parameter.length == 0
+      true
+    elsif parameter.length == 1
+      !(parameter[0] == :ellipsis)
+    else
+      !identifier?(parameter[-1])
+    end
+  end
+
+  def add_names_to_anonymous_parameters(parameters)
+    parameters.map do |parameter|
+      if parameter.nil?
+        nil
+      elsif anonymous_parameter?(parameter)
+        parameter << [:identifier, "cmock_arg#{@c += 1}"]
+      else
+        parameter
+      end
+    end
+  end
+
+  def parameter_unwrap_superfluous_parentheses(parameter)
+    pc = parameter.count { |item| parens?(item) }
+    if (pc == 1) && parens?(parameter[-1]) &&
+      (parens_list(parameter[-1]).length == 1) &&
+      parens?(parens_list(parameter[-1])[0])
+      # ... ((...)) --> unwrap ... (...)
+      parameter_unwrap_superfluous_parentheses(parameter[0..-2] + parens_list(parameter[-1]))
+    elsif (pc == 1) && parens?(parameter[-1]) &&
+         (parens_list(parameter[-1]).length == 2) &&
+         parens?(parens_list(parameter[-1])[0]) &&
+         parens?(parens_list(parameter[-1])[1])
+      # ... ((...)(...)) --> unwrap ... (...)(...)
+      parameter_unwrap_superfluous_parentheses(parameter[0..-2] +
+                                               [parens_list(parameter[-1])[0]] +
+                                               [parens_list(parameter[-1])[1]])
+    elsif (pc == 2) && parens?(parameter[-2])&& parens?(parameter[-1]) &&
+         (parens_list(parameter[-2]).length == 1) &&
+         parens?(parens_list(parameter[-2])[0])
+      # ... ((...)) (...) --> unwrap ... (...) (...)
+      parameter_unwrap_superfluous_parentheses(parameter[0..-3] + parens_list(parameter[-2]) + parameter[-1])
+    else
+      parameter
+    end
+  end
+
+  def clean_args(parameters)
+    # parameter is now a list of parameter declarations each being a lists of tokens.
+    # eg. for (int* b, int c[5], int a=42) we'd have now (=42 has been removed earlier):
+    #     [ [ :int, :mul_op, [:identifier, "b"] ],
+    #       [ :int, [:identifier, "c"], [:brackets, [:integer_literal, "5"]] ],
+    #       [ :int, [:identifier, "a"] ] ]
+
+    if parameters.empty? || ((parameters.length == 1) && @local_as_void.include?(unparse(parameters[0])))
+      [:void]
+    else
+      @c = 0
+
+      # unwrap superfluous parentheses, eg.:
+      #
+      # [:int, [:parens, [[:parens, [[:identity, "foo"],[:parens,[[:int,:comma,:int]]]]]]]]
+      # --> [:int, [:identity, "foo"], [:parens,[[:int,:comma,:int]]]]
+      #
+      # [:int, [:parens, [[:parens, [[:parens, [[:mul_op,[:identity, "foo"]]]], [:parens,[[:int,:comma,:int]]]]]]]]
+      # --> [:int, [:parens, [[:mul_op,[:identity, "foo"]]]], [:parens,[[:int,:comma,:int]]]]
+
+      parameters = parameters.map { |parameter| parameter_unwrap_superfluous_parentheses(parameter) }
+
+      # magically turn brackets into asterisks, also match for parentheses that come from macros
+      parameters = replace_arrays_by_pointers_in_parameters(parameters)
+
+      # scan argument list for function pointers and replace them with custom types
+      # scan argument list for function pointers with shorthand notation and replace them with custom types
+      # Note: if I'm not wrong, this new code using tokens handles both cases, with and without funcdecl.
+      # parameters=[[:unsigned, :int, [:parens, [:mul_op, [:identifier, "func_ptr"]]], [:parens, [:int, :comma, :char]]]]
+      parameters = replace_function_pointers_by_custom_types(parameters)
+
+      # automatically name unnamed arguments (those that only had a type)
+      parameters = add_names_to_anonymous_parameters(parameters)
+
+      if parameters.any?(nil)
+        raise_parse_error "Invalid parameters #{parameters.inspect}"
+      end
+      parameters
+    end
+  end
+
+  def string_type?(type)
+    (type.length >= 2) && (type[0] == :char) && (type[1] == :mul_op)
+  end
+
+  def parse_args(parameters)
+    # parameters have been cleaned (clean_args)
+    # so they're each of the form :void, :ellipsis, or [type... name]
+    args = []
+    parameters.each do |parameter|
+      return args if (parameter == :void) || (parameter == [:ellipsis])
+
+      if parameter.nil? || (parameter.length < 2)
+        raise_parse_error "Invalid parameter #{parameter.inspect} in #{parameters.inspect}"
+      else
+        type = parameter[0..-2]
+        name = parameter[-1]
+        type, _, _, arg_info = parse_type(type)
+        arg_info[:name] = identifier_name(name)
+        arg_info.delete(:modifier)             # don't care about this
+        arg_info.delete(:noreturn)             # don't care about this
+        arg_info.delete(:c_calling_convention) # don't care about this
+
+        # in C, array arguments implicitly degrade to pointers
+        # make the translation explicit here to simplify later logic
+        if @treat_as_array[arg_info[:type]] && !(arg_info[:ptr?])
+          arg_info[:type] = "#{@treat_as_array[arg_info[:type]]}*"
+          arg_info[:ptr?] = true
+          arg_info[:type] = "const #{arg_info[:type]}" if arg_info[:const?]
+        elsif arg_info[:ptr?] || string_type?(type)
+          if arg_info[:const?]
+            arg_info[:type] = "const #{arg_info[:type]}"
+          end
+        end
+
+        args << arg_info
+      end
     end
 
     # Try to find array pair in parameters following this pattern : <type> * <name>, <@array_size_type> <@array_size_name>
@@ -441,112 +1240,27 @@ class CMockHeaderParser
     args
   end
 
-  def divine_ptr(arg)
-    return false unless arg.include? '*'
-    # treat "const char *" and similar as a string, not a pointer
-    return false if /(^|\s)(const\s+)?char(\s+const)?\s*\*(?!.*\*)/ =~ arg
-
-    true
-  end
-
-  def divine_const(arg)
-    # a non-pointer arg containing "const" is a constant
-    # an arg containing "const" before the last * is a pointer to a constant
-    if arg.include?('*') ? (/(^|\s|\*)const(\s(\w|\s)*)?\*(?!.*\*)/ =~ arg) : (/(^|\s)const(\s|$)/ =~ arg)
-      true
-    else
-      false
-    end
-  end
-
-  def divine_ptr_and_const(arg)
-    divination = {}
-
-    divination[:ptr?] = divine_ptr(arg)
-    divination[:const?] = divine_const(arg)
-
-    # an arg containing "const" after the last * is a constant pointer
-    divination[:const_ptr?] = /\*(?!.*\*)\s*const(\s|$)/ =~ arg ? true : false
-
-    divination
-  end
-
-  def clean_args(arg_list, parse_project)
-    if @local_as_void.include?(arg_list.strip) || arg_list.empty?
-      'void'
-    else
-      c = 0
-      # magically turn brackets into asterisks, also match for parentheses that come from macros
-      arg_list.gsub!(/(\w+)(?:\s*\[[^\[\]]*\])+/, '*\1')
-      # remove space to place asterisks with type (where they belong)
-      arg_list.gsub!(/\s+\*/, '*')
-      # pull asterisks away from arg to place asterisks with type (where they belong)
-      arg_list.gsub!(/\*(\w)/, '* \1')
-
-      # scan argument list for function pointers and replace them with custom types
-      arg_list.gsub!(/([\w\s\*]+)\(+([\w\s]*)\*[\*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
-        functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
-        funcret  = Regexp.last_match(1).strip
-        funcdecl = Regexp.last_match(2).strip
-        funcname = Regexp.last_match(3).strip
-        funcargs = Regexp.last_match(4).strip
-        funconst = ''
-        if funcname.include? 'const'
-          funcname.gsub!('const', '').strip!
-          funconst = 'const '
-        end
-        if funcdecl != ''
-          funcdecl += ' '
-        end
-        parse_project[:typedefs] << "typedef #{funcret}(#{funcdecl}*#{functype})(#{funcargs});"
-        funcname = "cmock_arg#{c += 1}" if funcname.empty?
-        "#{functype} #{funconst}#{funcname}"
-      end
-
-      # scan argument list for function pointers with shorthand notation and replace them with custom types
-      arg_list.gsub!(/([\w\s\*]+)\s+(\w+)\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
-        functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
-        funcret  = Regexp.last_match(1).strip
-        funcname = Regexp.last_match(2).strip
-        funcargs = Regexp.last_match(3).strip
-        funconst = ''
-        if funcname.include? 'const'
-          funcname.gsub!('const', '').strip!
-          funconst = 'const '
-        end
-        parse_project[:typedefs] << "typedef #{funcret}(*#{functype})(#{funcargs});"
-        funcname = "cmock_arg#{c += 1}" if funcname.empty?
-        "#{functype} #{funconst}#{funcname}"
-      end
-
-      # automatically name unnamed arguments (those that only had a type)
-      arg_list.split(/\s*,\s*/).map do |arg|
-        parts = (arg.split - ['struct', 'union', 'enum', 'const', 'const*'])
-        if (parts.size < 2) || (parts[-1][-1].chr == '*') || @standards.include?(parts[-1])
-          "#{arg} cmock_arg#{c += 1}"
-        else
-          arg
-        end
-      end.join(', ')
-    end
-  end
-
-  def parse_declaration(parse_project, declaration, namespace = [], classname = nil)
+  def parse_declaration(declaration, namespace = [], classname = nil)
     decl = {}
     decl[:namespace] = namespace
     decl[:class] = classname
 
-    regex_match = @declaration_parse_matcher.match(declaration)
-    raise "Failed parsing function declaration: '#{declaration}'" if regex_match.nil?
+    lexer = CLexer.new(declaration)
+    decl_tokens = lexer.tokenize
 
-    # grab argument list
-    args = regex_match[2].strip
+    # Split declaration into type, name, parameters, attributes, and calling convention
 
-    # process function attributes, return type, and name
-    parsed = parse_type_and_name(regex_match[1])
+    type, name, parameters, p_attributes, _ = parse_function_signature(decl_tokens, 0)
 
+    # Process function attributes, return type, and name
+    # Some attributes may be written after the parameter list, so we need to
+    # check for them and move them to the front of the declaration.
+    type, attributes, _, parsed = parse_type(type)
+    attributes += p_attributes
+    # ccc += p_ccc
+    
     # Record original name without scope prefix
-    decl[:unscoped_name] = parsed[:name]
+    decl[:unscoped_name] = name
 
     # Prefix name with namespace scope (if any) and then class
     decl[:name] = namespace.join('_')
@@ -558,12 +1272,28 @@ class CMockHeaderParser
     decl[:name] << '_' unless decl[:name].empty?
     decl[:name] << decl[:unscoped_name]
 
-    decl[:modifier] = parsed[:modifier]
-    unless parsed[:c_calling_convention].nil?
+    decl[:noreturn] = noreturn_attribute?(attributes)
+    if decl[:noreturn]
+      attributes.delete_if { |attribute| noreturn?(attribute) }
+    end
+
+    if parsed[:ptr?]
+      if parsed[:const?]
+        type = [:const] + type unless type[0] ==:const
+        attributes.delete_if { |attr| attribute_name(attr) == 'const' }
+      end
+    end
+
+    # TODO: perhaps we need a specific configuration, or use strippable to select the __attributes__ to remove.
+    attributes.delete_if { |attribute| attribute?(attribute) && (attribute_kind(attribute) == :gcc) }
+
+    decl[:modifier] = unparse(attributes.uniq)
+
+    if !(parsed[:c_calling_convention].nil? || parsed[:c_calling_convention].empty?)
       decl[:c_calling_convention] = parsed[:c_calling_convention]
     end
 
-    rettype = parsed[:type]
+    rettype = unparse(type).gsub(/\s+\*/, '*')
     rettype = 'void' if @local_as_void.include?(rettype.strip)
     decl[:return] = { :type       => rettype,
                       :name       => 'cmock_to_return',
@@ -573,34 +1303,51 @@ class CMockHeaderParser
                       :const?     => parsed[:const?]     || false,
                       :const_ptr? => parsed[:const_ptr?] || false }
 
+    parameters = parameters.slice_before { |element| element == :comma }.map { |subarray| subarray.reject { |e| e == :comma } }.to_a
+    # parameter is now a list of parameter declarations each being a lists of tokens.
+    # eg. for (int* b, int c[5], int a=42) we'd have now (=42 has been removed earlier):
+    #     [ [ :int, :mul_op, [:identifier, "b"] ],
+    #       [ :int, [:identifier, "c"], [:brackets, [:integer_literal, "5"]] ],
+    #       [ :int, [:identifier, "a"], :assign, [:integer_literal, "42"] ] ]
+
     # remove default argument statements from mock definitions
-    args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
+    parameters = parameters.map { |parameter|
+      # type name [ = expression ]
+      passign = parameter.index(:assign)
+      if passign.nil?
+        parameter
+      else
+        parameter[0 .. passign - 1]
+      end }
 
     # check for var args
-    if args =~ /\.\.\./
-      decl[:var_arg] = args.match(/[\w\s]*\.\.\./).to_s.strip
-      args = if args =~ /\,[\w\s]*\.\.\./
-               args.gsub!(/\,[\w\s]*\.\.\./, '')
-             else
-               'void'
-             end
+    if parameters[-1] == [:ellipsis]
+      decl[:var_arg] = '...'
+      parameters.pop
+      if parameters.empty?
+        parameters = [:void]
+      end
     else
       decl[:var_arg] = nil
     end
-    args = clean_args(args, parse_project)
-    decl[:args_string] = args
-    decl[:args] = parse_args(args)
+
+    if parameters.any?(nil)
+      raise_parse_error "Invalid parameters #{parameters.inspect}"
+    end
+    parameters = clean_args(parameters)
+    decl[:args_string] = parameters.map { |parameter| unparse(parameter) }.join(', ').gsub(/\s+\*/, '*')
+    decl[:args] = parse_args(parameters)
     decl[:args_call] = decl[:args].map { |a| a[:name] }.join(', ')
     decl[:contains_ptr?] = decl[:args].inject(false) { |ptr, arg| arg[:ptr?] ? true : ptr }
 
     if decl[:return][:type].nil? || decl[:name].nil? || decl[:args].nil? ||
        decl[:return][:type].empty? || decl[:name].empty?
-      raise "Failed Parsing Declaration Prototype!\n" \
-            "  declaration: '#{declaration}'\n" \
-            "  modifier: '#{decl[:modifier]}'\n" \
-            "  return: #{prototype_inspect_hash(decl[:return])}\n" \
-            "  function: '#{decl[:name]}'\n" \
-            "  args: #{prototype_inspect_array_of_hashes(decl[:args])}\n"
+      raise_parse_error "  declaration: '#{declaration}'\n" \
+                        "  modifier: '#{decl[:modifier]}'\n" \
+                        "  noreturn: '#{decl[:noreturn]}'\n" \
+                        "  return: #{prototype_inspect_hash(decl[:return])}\n" \
+                        "  function: '#{decl[:name]}'\n" \
+                        "  args: #{prototype_inspect_array_of_hashes(decl[:args])}\n"
     end
 
     decl
@@ -617,11 +1364,12 @@ class CMockHeaderParser
     array.each { |hash| hashes << prototype_inspect_hash(hash) }
     case array.size
     when 0
-      return '[]'
+      '[]'
     when 1
-      return "[#{hashes[0]}]"
+      "[#{hashes[0]}]"
     else
-      return "[\n    #{hashes.join("\n    ")}\n  ]\n"
+      "[\n    #{hashes.join("\n    ")}\n  ]\n"
     end
   end
+
 end
