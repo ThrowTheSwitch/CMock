@@ -8,6 +8,9 @@ useful and usable mock interfaces for unit testing. Give it a try!
 If you don't care to manage unit testing builds yourself, consider checking out Ceedling, 
 a test-centered build manager for unit testing C code.
 
+ - [Known Issues](docs/CMockKnownIssues.md)
+ - [Change Log](docs/CMockChangeLog.md)
+
 Getting Started
 ================
 

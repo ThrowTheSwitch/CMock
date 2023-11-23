@@ -1,10 +1,12 @@
 CMock: A Summary
 ================
 
-*[ThrowTheSwitch.org](http://throwtheswitch.org)*
+*[ThrowTheSwitch.org](http://throwtheswitch.org)* 
 
 *This documentation is released under a Creative Commons 3.0 Attribution Share-Alike License*
 
+ - [Known Issues](docs/CMockKnownIssues.md)
+ - [Change Log](docs/CMockChangeLog.md)
 
 What Exactly Are We Talking About Here?
 ---------------------------------------
@@ -61,7 +63,7 @@ call DoesSomething enough, or too much, or with the wrong arguments,
 or in the wrong order.
 
 CMock is based on Unity, which it uses for all internal testing.
-It uses Ruby to do all the main work (versions 2.0.0 and above).
+It uses Ruby to do all the main work (versions 3.0.0 and above).
 
 
 Installing
@@ -77,7 +79,7 @@ have it. You can prove it by typing the following:
 If it replied in a way that implies ignorance, then you're going to
 need to install it. You can go to [ruby-lang](https://ruby-lang.org)
 to get the latest version. You're also going to need to do that if it
-replied with a version that is older than 2.0.0. Go ahead. We'll wait.
+replied with a version that is older than 3.0.0. Go ahead. We'll wait.
 
 Once you have Ruby, you have three options:
 
