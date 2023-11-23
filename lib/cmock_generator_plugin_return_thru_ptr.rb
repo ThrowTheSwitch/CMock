@@ -8,13 +8,18 @@ class CMockGeneratorPluginReturnThruPtr
     @config       = config
   end
 
+  def ptr_to_const(arg_type)
+    # replace last "*" with " const*"
+    arg_type.gsub(/(.*)\*/, '\1 const*')
+  end
+
   def instance_typedefs(function)
     lines = ''
     function[:args].each do |arg|
       next unless @utils.ptr_or_str?(arg[:type]) && !(arg[:const?])
 
       lines << "  char ReturnThruPtr_#{arg[:name]}_Used;\n"
-      lines << "  #{arg[:type]} ReturnThruPtr_#{arg[:name]}_Val;\n"
+      lines << "  #{ptr_to_const(arg[:type])} ReturnThruPtr_#{arg[:name]}_Val;\n"
       lines << "  size_t ReturnThruPtr_#{arg[:name]}_Size;\n"
     end
     lines
@@ -47,7 +52,7 @@ class CMockGeneratorPluginReturnThruPtr
       lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, cmock_len * sizeof(*#{arg[:name]}))\n"
       lines << "#define #{function[:name]}_ReturnMemThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_size)"
       lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, cmock_size)\n"
-      lines << "void #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg[:name]}, size_t cmock_size);\n"
+      lines << "void #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(UNITY_LINE_TYPE cmock_line, #{ptr_to_const(arg[:type])} #{arg[:name]}, size_t cmock_size);\n"
     end
     lines
   end
@@ -59,7 +64,7 @@ class CMockGeneratorPluginReturnThruPtr
       arg_name = arg[:name]
       next unless @utils.ptr_or_str?(arg[:type]) && !(arg[:const?])
 
-      lines << "void #{func_name}_CMockReturnMemThruPtr_#{arg_name}(UNITY_LINE_TYPE cmock_line, #{arg[:type]} #{arg_name}, size_t cmock_size)\n"
+      lines << "void #{func_name}_CMockReturnMemThruPtr_#{arg_name}(UNITY_LINE_TYPE cmock_line, #{ptr_to_const(arg[:type])} #{arg_name}, size_t cmock_size)\n"
       lines << "{\n"
       lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " \
                "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
@@ -81,7 +86,7 @@ class CMockGeneratorPluginReturnThruPtr
       lines << "  if (cmock_call_instance->ReturnThruPtr_#{arg_name}_Used)\n"
       lines << "  {\n"
       lines << "    UNITY_TEST_ASSERT_NOT_NULL(#{arg_name}, cmock_line, CMockStringPtrIsNULL);\n"
-      lines << "    memcpy((void*)#{arg_name}, (void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
+      lines << "    memcpy((void*)#{arg_name}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
       lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Size);\n"
       lines << "  }\n"
     end
