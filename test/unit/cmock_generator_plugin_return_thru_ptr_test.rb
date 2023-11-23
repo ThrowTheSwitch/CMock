@@ -21,7 +21,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
                     :return  => test_return[:string],
                     :contains_ptr? => false}
 
-    # void Pine(int chicken, const int beef, int *tofu)
+    # void Pine(int chicken, const int beef, int *tofu, const char** buffer)
     @complex_func = {:name => "Pine",
                      :args => [{ :type => "int",
                                  :name => "chicken",
@@ -34,6 +34,10 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
                                },
                                { :type => "int*",
                                  :name => "tofu",
+                                 :ptr? => true,
+                               },
+                               { :type => "char**",
+                                 :name => "bean_buffer",
                                  :ptr? => true,
                                }],
                      :return => test_return[:void],
@@ -66,6 +70,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     @utils.expect :ptr_or_str?, false, ['int']
     @utils.expect :ptr_or_str?, true, ['const int*']
     @utils.expect :ptr_or_str?, true, ['int*']
+    @utils.expect :ptr_or_str?, true, ['char**']
   end
 
   def void_ptr_func_expect
@@ -88,11 +93,14 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     assert_equal("", returned)
   end
 
-  it "add to tyepdef structure mock needs of functions of style 'void func(int chicken, int* pork)'" do
+  it "add to tyepdef structure mock needs of functions of style 'void func(int chicken, const int beef, int* pork, char** bean_buffer)'" do
     complex_func_expect()
     expected = "  char ReturnThruPtr_tofu_Used;\n" +
-               "  int* ReturnThruPtr_tofu_Val;\n" +
-               "  size_t ReturnThruPtr_tofu_Size;\n"
+               "  int const* ReturnThruPtr_tofu_Val;\n" +
+               "  size_t ReturnThruPtr_tofu_Size;\n" +
+               "  char ReturnThruPtr_bean_buffer_Used;\n" +
+               "  char* const* ReturnThruPtr_bean_buffer_Val;\n" +
+               "  size_t ReturnThruPtr_bean_buffer_Size;\n"
     returned = @cmock_generator_plugin_return_thru_ptr.instance_typedefs(@complex_func)
     assert_equal(expected, returned)
   end
@@ -113,7 +121,14 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, cmock_len * sizeof(*tofu))\n" +
       "#define Pine_ReturnMemThruPtr_tofu(tofu, cmock_size)" +
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, cmock_size)\n" +
-      "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int* tofu, size_t cmock_size);\n"
+      "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int const* tofu, size_t cmock_size);\n"+
+      "#define Pine_ReturnThruPtr_bean_buffer(bean_buffer)" +
+      " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, sizeof(char*))\n" +
+      "#define Pine_ReturnArrayThruPtr_bean_buffer(bean_buffer, cmock_len)" +
+      " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, cmock_len * sizeof(*bean_buffer))\n" +
+      "#define Pine_ReturnMemThruPtr_bean_buffer(bean_buffer, cmock_size)" +
+      " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, cmock_size)\n" +
+      "void Pine_CMockReturnMemThruPtr_bean_buffer(UNITY_LINE_TYPE cmock_line, char* const* bean_buffer, size_t cmock_size);\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_function_declarations(@complex_func)
     assert_equal(expected, returned)
@@ -146,7 +161,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     complex_func_expect();
 
     expected =
-      "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int* tofu, size_t cmock_size)\n" +
+      "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int const* tofu, size_t cmock_size)\n" +
       "{\n" +
       "  CMOCK_Pine_CALL_INSTANCE* cmock_call_instance = " +
       "(CMOCK_Pine_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.Pine_CallInstance));\n" +
@@ -154,6 +169,15 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "  cmock_call_instance->ReturnThruPtr_tofu_Used = 1;\n" +
       "  cmock_call_instance->ReturnThruPtr_tofu_Val = tofu;\n" +
       "  cmock_call_instance->ReturnThruPtr_tofu_Size = cmock_size;\n" +
+      "}\n\n" +
+      "void Pine_CMockReturnMemThruPtr_bean_buffer(UNITY_LINE_TYPE cmock_line, char* const* bean_buffer, size_t cmock_size)\n" +
+      "{\n" +
+      "  CMOCK_Pine_CALL_INSTANCE* cmock_call_instance = " +
+      "(CMOCK_Pine_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.Pine_CallInstance));\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringPtrPreExp);\n" +
+      "  cmock_call_instance->ReturnThruPtr_bean_buffer_Used = 1;\n" +
+      "  cmock_call_instance->ReturnThruPtr_bean_buffer_Val = bean_buffer;\n" +
+      "  cmock_call_instance->ReturnThruPtr_bean_buffer_Size = cmock_size;\n" +
       "}\n\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_interfaces(@complex_func).join("")
@@ -167,8 +191,14 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "  if (cmock_call_instance->ReturnThruPtr_tofu_Used)\n" +
       "  {\n" +
       "    UNITY_TEST_ASSERT_NOT_NULL(tofu, cmock_line, CMockStringPtrIsNULL);\n" +
-      "    memcpy((void*)tofu, (void*)cmock_call_instance->ReturnThruPtr_tofu_Val,\n" +
+      "    memcpy((void*)tofu, (const void*)cmock_call_instance->ReturnThruPtr_tofu_Val,\n" +
       "      cmock_call_instance->ReturnThruPtr_tofu_Size);\n" +
+      "  }\n" +
+      "  if (cmock_call_instance->ReturnThruPtr_bean_buffer_Used)\n" +
+      "  {\n" +
+      "    UNITY_TEST_ASSERT_NOT_NULL(bean_buffer, cmock_line, CMockStringPtrIsNULL);\n" +
+      "    memcpy((void*)bean_buffer, (const void*)cmock_call_instance->ReturnThruPtr_bean_buffer_Val,\n" +
+      "      cmock_call_instance->ReturnThruPtr_bean_buffer_Size);\n" +
       "  }\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_implementation(@complex_func).join("")
