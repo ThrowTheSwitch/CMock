@@ -7,6 +7,7 @@ CMock: A Summary
 
  - [Known Issues](docs/CMockKnownIssues.md)
  - [Change Log](docs/CMockChangeLog.md)
+ - [How Does CMock Validate Arguments](docs/CMock_ArgumentValidation.md)
 
 What Exactly Are We Talking About Here?
 ---------------------------------------
@@ -818,7 +819,8 @@ and start over clean. This is really useful when wanting to test a function in
 an iterative manner with different arguments.
 
 C++ Support
----------
+-----------
+
 C++ unit test/mocking frameworks often use a completely different approach (vs.
 CMock) that relies on overloading virtual class members and does not support
 directly mocking static class member methods or free functions (i.e., functions
@@ -852,6 +854,7 @@ class. For example:
 Will generate functions like
 
     void MyNamespace_MyClass_DoesSomething_ExpectAndReturn(int a, int b, int toReturn);
+
 
 Examples
 ========
