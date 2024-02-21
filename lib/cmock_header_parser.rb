@@ -364,9 +364,9 @@ class CMockHeaderParser
     if funcs.empty?
       case @when_no_prototypes
       when :error
-        raise 'ERROR: No function prototypes found by CMock in #{filename}'
+        raise "ERROR: No function prototypes found by CMock in #{filename}"
       when :warn
-        puts 'WARNING: No function prototypes found by CMock in #{filename}' unless @verbosity < 1
+        puts "WARNING: No function prototypes found by CMock in #{filename}" unless @verbosity < 1
       end
     end
     funcs
