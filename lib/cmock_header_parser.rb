@@ -39,7 +39,7 @@ class CMockHeaderParser
 
     function_names = []
 
-    all_funcs = parse_functions(import_source(source, parse_project)).map { |item| [item] }
+    all_funcs = parse_functions(name, import_source(source, parse_project)).map { |item| [item] }
     all_funcs += parse_cpp_functions(import_source(source, parse_project, true))
     all_funcs.map do |decl|
       func = parse_declaration(parse_project, *decl)
@@ -358,15 +358,15 @@ class CMockHeaderParser
     funcs
   end
 
-  def parse_functions(source)
+  def parse_functions(filename, source)
     funcs = []
     source.each { |line| funcs << line.strip.gsub(/\s+/, ' ') if line =~ @declaration_parse_matcher }
     if funcs.empty?
       case @when_no_prototypes
       when :error
-        raise 'ERROR: No function prototypes found!'
+        raise 'ERROR: No function prototypes found by CMock in #{filename}'
       when :warn
-        puts 'WARNING: No function prototypes found!' unless @verbosity < 1
+        puts 'WARNING: No function prototypes found by CMock in #{filename}' unless @verbosity < 1
       end
     end
     funcs

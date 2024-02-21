@@ -383,7 +383,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
@@ -407,7 +407,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
@@ -435,7 +435,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
@@ -676,7 +676,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
@@ -705,7 +705,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
