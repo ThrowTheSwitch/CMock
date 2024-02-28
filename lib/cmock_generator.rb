@@ -140,7 +140,10 @@ class CMockGenerator
       if existing.empty?
         create_source_header_section(file, fullname, blank_project)
       else
-        file << existing << "\n"
+        file << existing
+        if existing[-1] != "\n"
+          file << "\n"
+        end
       end
       mock_project[:parsed_stuff][:functions].each do |function|
         create_function_skeleton(file, function, existing)
