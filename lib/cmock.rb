@@ -86,10 +86,13 @@ if $0 == __FILE__
 
   options = {}
   filelist = []
+  opt_flag = false
   ARGV.each do |arg|
     case arg
     when /^-o"?([a-zA-Z0-9@._\\\/:\s]+)"?/
       options.merge! CMockConfig.load_config_file_from_yaml(arg.gsub(/^-o/, ''))
+    when /^-o$/
+      opt_flag = true
     when '--skeleton'
       options[:skeleton] = true
     when /^--strippables="?(.*)"?/
@@ -100,7 +103,12 @@ if $0 == __FILE__
       options = option_maker(options, Regexp.last_match(1),
                              Regexp.last_match(2))
     else
-      filelist << arg
+      if opt_flag
+        options.merge! CMockConfig.load_config_file_from_yaml(arg)
+        opt_flag = false
+      else
+        filelist << arg
+      end
     end
   end
 

@@ -1,5 +1,6 @@
 CMock ![CI](https://github.com/ThrowTheSwitch/CMock/workflows/CI/badge.svg)
 =====
+
 CMock is a mock and stub generator and runtime for unit testing C. It's been designed
 to work smoothly with Unity Test, another of the embedded-software testing tools 
 developed by ThrowTheSwitch.org. CMock automagically parses your C headers and creates
@@ -12,22 +13,28 @@ a test-centered build manager for unit testing C code.
  - [Change Log](docs/CMockChangeLog.md)
 
 Getting Started
-================
+===============
 
 If you're using Ceedling, there is no need to install CMock. It will handle it for you.
 For everyone else, the simplest way is to grab it off github. You can also download it
 as a zip if you prefer. The Github method looks something like this:
 
     > git clone --recursive https://github.com/throwtheswitch/cmock.git
-    > cd cmock
-    > bundle install # Ensures you have all RubyGems needed
+
+Contributing to this Project
+============================
 
 If you plan to help with the development of CMock (or just want to verify that it can
-perform its self tests on your system) then you can enter the test directory and then
-ask it to test:
+perform its self tests on your system) then you can grab its self-testing dependencies, 
+then run its self-tests:
 
+    > cd cmock
+    > bundle install   # Ensures you have all RubyGems needed
     > cd test
-    > rake # Run all CMock self tests
+    > rake             # Run all CMock self tests
+
+Before working on this project, you're going to want to read our guidelines on 
+[contributing](docs/CONTRIBUTING.md). 
 
 API Documentation
 =================
