@@ -23,9 +23,11 @@ class CMockGeneratorPluginIgnoreStateless
 
   def mock_function_declarations(function)
     lines = if function[:return][:void?]
+              "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Ignore (not AndReturn)\");\n" \
               "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" \
               "void #{function[:name]}_CMockIgnore(void);\n"
             else
+              "#define #{function[:name]}_Ignore() TEST_FAIL_MESSAGE(\"#{function[:name]} requires _IgnoreAndReturn\");\n" \
               "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(cmock_retval)\n" \
               "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]});\n"
             end

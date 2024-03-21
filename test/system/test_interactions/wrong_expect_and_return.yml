@@ -1,7 +1,8 @@
 ---
 :cmock:
   :plugins:
-  - # none
+  - :ignore
+  - :expect_any_args
 
 :systest:
   :types: |
@@ -94,6 +95,46 @@
         {
           do_it_ExpectAndReturn(6);
           do_another_Expect(2);
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using ExpectAnyArgs instead of ExpectAnyArgsAndReturn'
+      :code: |
+        test()
+        {
+          foo_ExpectAnyArgs();
+          bar_ExpectAndReturn(2);
+          function_a(1);
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using ExpectAnyArgsAndReturn instead of ExpectAnyArgs'
+      :code: |
+        test()
+        {
+          do_it_Expect();
+          do_another_ExpectAnyArgsAndReturn(2);
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using Ignore instead of IgnoreAndReturn'
+      :code: |
+        test()
+        {
+          foo_Ignore();
+          bar_IgnoreAndReturn(2);
+          function_a(1);
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using IgnoreAndReturn instead of Ignore'
+      :code: |
+        test()
+        {
+          do_it_Ignore();
+          do_another_IgnoreAndReturn(2);
           function_d();
         }
 
