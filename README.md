@@ -15,11 +15,17 @@ a test-centered build manager for unit testing C code.
 Getting Started
 ===============
 
-If you're using Ceedling, there is no need to install CMock. It will handle it for you.
-For everyone else, the simplest way is to grab it off github. You can also download it
-as a zip if you prefer. The Github method looks something like this:
+Your first step is to get yourself a copy of CMock. There are a number of ways to do this:
+
+1. If you're using Ceedling, there is no need to install CMock. It will handle it for you.
+
+2. The simplest way is to grab it off github. The Github method looks something like this:
 
     > git clone --recursive https://github.com/throwtheswitch/cmock.git
+
+3. You can also grab the `zip` file from github. If you do this, you'll also need to grab yourself a
+copy of Unity and CException, because github unfortunately doesn't bake dependencies into the zip
+files. 
 
 Contributing to this Project
 ============================
@@ -41,7 +47,7 @@ API Documentation
 
 * Not sure what you're doing?
 	* [View docs/CMock_Summary.md](docs/CMock_Summary.md)
-* Interested in our MIT-style license?
+* Interested in our MIT license?
 	* [View docs/license.txt](LICENSE.txt)
 * Are there examples?
 	* They are all in [/examples](examples/)

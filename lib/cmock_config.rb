@@ -88,6 +88,9 @@ class CMockConfig
 
     options[:plugins].compact!
     options[:plugins].map!(&:to_sym)
+
+    raise 'The :ignore plugin is required to disable :fail_on_unexpected_calls' if (!options[:plugins].include? :ignore) && (!options[:fail_on_unexpected_calls])
+
     @options = options
 
     treat_as_map = standard_treat_as_map # .clone
