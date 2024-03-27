@@ -251,9 +251,6 @@ class CMockGenerator
   end
 
   def create_extern_declarations(file)
-    unless @exclude_setjmp_h
-      file << "extern jmp_buf AbortFrame;\n"
-    end
     if @ordered
       file << "extern int GlobalExpectCount;\n"
       file << "extern int GlobalVerifyOrder;\n"

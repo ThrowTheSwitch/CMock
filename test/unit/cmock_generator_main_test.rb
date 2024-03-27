@@ -412,8 +412,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
   it "create extern declarations for source file" do
     output = []
-    expected = [ "extern jmp_buf AbortFrame;\n",
-                 "\n" ]
+    expected = [ "\n" ]
 
     @cmock_generator.create_extern_declarations(output)
 
@@ -422,8 +421,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
   it "create extern declarations for source file when using strict ordering" do
     output = []
-    expected = [ "extern jmp_buf AbortFrame;\n",
-                 "extern int GlobalExpectCount;\n",
+    expected = [ "extern int GlobalExpectCount;\n",
                  "extern int GlobalVerifyOrder;\n",
                  "\n" ]
 
