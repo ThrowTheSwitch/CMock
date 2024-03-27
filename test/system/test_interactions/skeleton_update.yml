@@ -37,7 +37,7 @@
     :common: |
       void setUp(void) {}
       void tearDown(void) {}
-      extern int function_d();
+      extern int function_d(void);
 
     :units:
     - :pass: TRUE

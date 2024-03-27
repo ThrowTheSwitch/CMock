@@ -12,7 +12,7 @@ class CMockPluginManager
     plugins_to_load = [:expect, config.plugins].flatten.uniq.compact
     plugins_to_load.each do |plugin|
       plugin_name = plugin.to_s
-      object_name = 'CMockGeneratorPlugin' + camelize(plugin_name)
+      object_name = "CMockGeneratorPlugin#{camelize(plugin_name)}"
       self.class.mutex.synchronize { load_plugin(plugin_name, object_name, config, utils) }
     end
     @plugins.sort! { |a, b| a.priority <=> b.priority }
@@ -27,7 +27,7 @@ class CMockPluginManager
   end
 
   def camelize(lower_case_and_underscored_word)
-    lower_case_and_underscored_word.gsub(/\/(.?)/) { '::' + Regexp.last_match(1).upcase }.gsub(/(^|_)(.)/) { Regexp.last_match(2).upcase }
+    lower_case_and_underscored_word.gsub(/\/(.?)/) { "::#{Regexp.last_match(1).upcase}" }.gsub(/(^|_)(.)/) { Regexp.last_match(2).upcase }
   end
 
   def self.mutex

@@ -50,7 +50,7 @@ class CMockConfig
       # - The keywords can appear before or after the return type (this is a compiler warning but people do weird stuff),
       #   so we check for word boundaries when searching for them
       # - We first remove "static inline" combinations and boil down to single inline or static statements
-      :inline_function_patterns    => ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*', '(?:static\s*)?(?:__inline__)?__attribute__\s*\([ (]*always_inline[ )]*\)', 'static __inline__'] # Last part (\s*) is just to remove whitespaces (only to prettify the output)
+      :inline_function_patterns    => ['(static\s+inline|inline\s+static)\s*', '(\binline\b)\s*', '(?:static\s*)?(?:__inline__)?__attribute__\s*\([ (]*always_inline[ )]*\)', 'static __inline__'] # Last part (\s*) is just to remove whitespaces (only to prettify the output)
     }.freeze
 
   def initialize(options = nil)
@@ -63,13 +63,13 @@ class CMockConfig
 
     # do some quick type verification
     %i[plugins attributes treat_as_void].each do |opt|
-      unless options[opt].class == Array
+      unless options[opt].instance_of?(Array)
         options[opt] = []
         puts "WARNING: :#{opt} should be an array." unless options[:verbosity] < 1
       end
     end
     %i[includes includes_h_pre_orig_header includes_h_post_orig_header includes_c_pre_header includes_c_post_header].each do |opt|
-      unless options[opt].nil? || (options[opt].class == Array)
+      unless options[opt].nil? || options[opt].instance_of?(Array)
         options[opt] = []
         puts "WARNING: :#{opt} should be an array." unless options[:verbosity] < 1
       end
@@ -88,6 +88,9 @@ class CMockConfig
 
     options[:plugins].compact!
     options[:plugins].map!(&:to_sym)
+
+    raise 'The :ignore plugin is required to disable :fail_on_unexpected_calls' if (!options[:plugins].include? :ignore) && (!options[:fail_on_unexpected_calls])
+
     @options = options
 
     treat_as_map = standard_treat_as_map # .clone
@@ -108,7 +111,11 @@ class CMockConfig
   def self.load_config_file_from_yaml(yaml_filename)
     require 'yaml'
     require 'fileutils'
-    YAML.load_file(yaml_filename)[:cmock]
+    begin
+      YAML.load_file(yaml_filename, aliases: true)[:cmock]
+    rescue ArgumentError
+      YAML.load_file(yaml_filename)[:cmock]
+    end
   end
 
   def path(new_path)
@@ -119,7 +126,7 @@ class CMockConfig
     return nil unless @options[:unity_helper_path]
 
     @options[:unity_helper_path].inject('') do |unity_helper, filename|
-      unity_helper + "\n" + File.new(filename).read
+      unity_helper + "\n#{File.new(filename).read}"
     end
   end
 
