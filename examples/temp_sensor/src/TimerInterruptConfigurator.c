@@ -36,7 +36,7 @@ void Timer_EnableInterrupt(void)
 
 static inline void SetInterruptHandler(void)
 {
-  AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TC0] = (uint32)Timer_InterruptHandler;
+  AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TC0] = Timer_InterruptHandler;
 }
 
 static inline void ConfigureInterruptSourceModeRegister(void)
