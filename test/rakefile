@@ -91,7 +91,7 @@ namespace :test do
 
   desc "Test cmock examples"
   task :examples => [:prep_system_tests] do
-    run_examples()
+    run_examples(true)
   end
 
   #individual system tests

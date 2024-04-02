@@ -236,7 +236,7 @@ module RakefileHelpers
                 else
                   "#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}"
                 end
-      output = execute(cmd_str, true, true)
+      output = execute(cmd_str, true)
       test_results = $cfg['compiler']['build_path'] + test_base
       test_results += if output.match(/OK$/m).nil?
                         '.testfail'

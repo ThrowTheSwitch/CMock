@@ -99,7 +99,7 @@ if $0 == __FILE__
       # --strippables are dealt with separately since the user is allowed to
       # enter any valid regular expression as argument
       options = option_maker(options, 'strippables', Regexp.last_match(1))
-    when /^--([a-zA-Z0-9._\\\/:\s]+)="?([a-zA-Z0-9._\-\\\/:\s;]*)"?/x
+    when /^--([a-zA-Z0-9._\\\/:\s]+)="?([a-zA-Z0-9._\-\\\/:\s;@#%!$&\(\)\*]*)"?/x
       options = option_maker(options, Regexp.last_match(1),
                              Regexp.last_match(2))
     else

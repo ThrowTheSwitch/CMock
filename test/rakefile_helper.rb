@@ -395,7 +395,7 @@ module RakefileHelpers
     end
   end
 
-  def run_examples()
+  def run_examples(verbose=false, raise_on_failure=true)
     report "\n"
     report "-----------------\n"
     report "VALIDATE EXAMPLES\n"
@@ -404,7 +404,7 @@ module RakefileHelpers
       "cd #{File.join("..","examples","temp_sensor")} && rake ci"
     ].each do |cmd|
       report "Testing '#{cmd}'"
-      execute(cmd, false)
+      execute(cmd, verbose, raise_on_failure)
     end
   end
 
