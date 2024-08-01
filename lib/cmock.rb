@@ -1,3 +1,4 @@
+#!/bin/ruby
 # ==========================================
 #   CMock Project - Automatic Mock Generation for C
 #   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
@@ -95,6 +96,11 @@ if $0 == __FILE__
       opt_flag = true
     when '--skeleton'
       options[:skeleton] = true
+    when '--version'
+      require 'cmock_version'
+      include CMockVersion
+      puts CMOCK_VERSION
+      exit(0)
     when /^--strippables="?(.*)"?/
       # --strippables are dealt with separately since the user is allowed to
       # enter any valid regular expression as argument
