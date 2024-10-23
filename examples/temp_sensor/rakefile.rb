@@ -1,4 +1,4 @@
-HERE = __dir__ + '/'
+HERE = "#{__dir__}//".freeze
 
 require 'rake'
 require 'rake/clean'

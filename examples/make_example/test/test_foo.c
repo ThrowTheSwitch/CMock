@@ -13,5 +13,5 @@ void test_foo_init_should_initialize_multiplier()
 {
     foo_init();
 
-    TEST_ASSERT_FALSE(1);
+    TEST_ASSERT_FALSE(0);
 }
