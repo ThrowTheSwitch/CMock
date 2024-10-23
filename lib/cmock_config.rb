@@ -81,11 +81,9 @@ class CMockConfig
       require 'pathname'
       includes1 = options[:includes_c_post_header] || []
       includes2 = options[:unity_helper_path].map do |path|
-        begin
-          Pathname(File.expand_path(path)).relative_path_from(Pathname(File.expand_path(options[:mock_path]))).to_s
-        rescue
-          path
-        end
+        Pathname(File.expand_path(path)).relative_path_from(Pathname(File.expand_path(options[:mock_path]))).to_s
+      rescue StandardError
+        path
       end
       options[:includes_c_post_header] = (includes1 + includes2).uniq
     end
