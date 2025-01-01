@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 class CMockHeaderParser
   attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns

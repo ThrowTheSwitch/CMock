@@ -1,3 +1,10 @@
+/* =========================================================================
+    CMock - Automatic Mock Generation for C
+    ThrowTheSwitch.org
+    Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+    SPDX-License-Identifier: MIT
+========================================================================= */
+
 #ifndef _EXECUTOR_H
 #define _EXECUTOR_H
 

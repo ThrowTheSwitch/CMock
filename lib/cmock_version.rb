@@ -1,3 +1,10 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
 module CMockVersion
   # Where is the header file from here?
   path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'src', 'cmock.h'))
