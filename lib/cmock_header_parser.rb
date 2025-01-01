@@ -30,7 +30,7 @@ class CMockHeaderParser
     @c_strippables += ['inline'] if @treat_inlines == :include # we'll need to remove the attribute if we're allowing inlines
   end
 
-  def parse(name, source)
+  def parse(name, source, orig_file)
     parse_project = {
       :module_name       => name.gsub(/\W/, ''),
       :typedefs          => [],
@@ -50,11 +50,17 @@ class CMockHeaderParser
       end
     end
 
-    parse_project[:normalized_source] = if @treat_inlines == :include
-                                          transform_inline_functions(source)
-                                        else
-                                          ''
-                                        end
+    if @treat_inlines == :include
+      if orig_file == nil
+        raise "Treat inlines is active but not-preprocessed original file is missing for " + name
+      elsif File.file?(orig_file)
+        # Run the inline transform on the original and never on the preprocessed source.
+        parse_project[:normalized_source] = transform_inline_functions(File.read(orig_file))
+      else
+        # CMock.rb directly calls with orig_file="". In this case restore the original behavior.
+        parse_project[:normalized_source] = transform_inline_functions(source)
+      end
+    end
 
     { :includes  => nil,
       :functions => parse_project[:functions],
