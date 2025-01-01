@@ -1,3 +1,10 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
 if $0 == __FILE__
 
   # make sure there is at least one parameter left (the input file)

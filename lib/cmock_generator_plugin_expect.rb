@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 class CMockGeneratorPluginExpect
   attr_reader :priority
@@ -36,18 +37,22 @@ class CMockGeneratorPluginExpect
   def mock_function_declarations(function)
     if function[:args].empty?
       if function[:return][:void?]
+        "#define #{function[:name]}_ExpectAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Expect (not AndReturn)\");\n" \
         "#define #{function[:name]}_Expect() #{function[:name]}_CMockExpect(__LINE__)\n" \
-               "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line);\n"
+        "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line);\n"
       else
+        "#define #{function[:name]}_Expect() TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectAndReturn\");\n" \
         "#define #{function[:name]}_ExpectAndReturn(cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, cmock_retval)\n" \
-               "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
+        "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
       end
     elsif function[:return][:void?]
+      "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Expect (not AndReturn)\");\n" \
       "#define #{function[:name]}_Expect(#{function[:args_call]}) #{function[:name]}_CMockExpect(__LINE__, #{function[:args_call]})\n" \
-             "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n"
+      "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n"
     else
+      "#define #{function[:name]}_Expect(#{function[:args_call]}) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectAndReturn\");\n" \
       "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, #{function[:args_call]}, cmock_retval)\n" \
-             "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]});\n"
+      "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]});\n"
     end
   end
 

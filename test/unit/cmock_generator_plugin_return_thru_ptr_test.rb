@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_return_thru_ptr'
@@ -118,16 +119,16 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "#define Pine_ReturnThruPtr_tofu(tofu)" +
       " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, sizeof(int))\n" +
       "#define Pine_ReturnArrayThruPtr_tofu(tofu, cmock_len)" +
-      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, cmock_len * sizeof(*tofu))\n" +
+      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, (cmock_len * sizeof(*tofu)))\n" +
       "#define Pine_ReturnMemThruPtr_tofu(tofu, cmock_size)" +
-      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, cmock_size)\n" +
+      " Pine_CMockReturnMemThruPtr_tofu(__LINE__, tofu, (cmock_size))\n" +
       "void Pine_CMockReturnMemThruPtr_tofu(UNITY_LINE_TYPE cmock_line, int const* tofu, size_t cmock_size);\n"+
       "#define Pine_ReturnThruPtr_bean_buffer(bean_buffer)" +
       " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, sizeof(char*))\n" +
       "#define Pine_ReturnArrayThruPtr_bean_buffer(bean_buffer, cmock_len)" +
-      " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, cmock_len * sizeof(*bean_buffer))\n" +
+      " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, (cmock_len * sizeof(*bean_buffer)))\n" +
       "#define Pine_ReturnMemThruPtr_bean_buffer(bean_buffer, cmock_size)" +
-      " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, cmock_size)\n" +
+      " Pine_CMockReturnMemThruPtr_bean_buffer(__LINE__, bean_buffer, (cmock_size))\n" +
       "void Pine_CMockReturnMemThruPtr_bean_buffer(UNITY_LINE_TYPE cmock_line, char* const* bean_buffer, size_t cmock_size);\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_function_declarations(@complex_func)
@@ -141,17 +142,17 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     "#define Spruce_ReturnThruPtr_pork(pork)" +
     " Spruce_CMockReturnMemThruPtr_pork(__LINE__, pork, sizeof(*pork))\n" +
     "#define Spruce_ReturnArrayThruPtr_pork(pork, cmock_len)" +
-    " Spruce_CMockReturnMemThruPtr_pork(__LINE__, pork, cmock_len * sizeof(*pork))\n" +
+    " Spruce_CMockReturnMemThruPtr_pork(__LINE__, pork, (cmock_len * sizeof(*pork)))\n" +
     "#define Spruce_ReturnMemThruPtr_pork(pork, cmock_size)" +
-    " Spruce_CMockReturnMemThruPtr_pork(__LINE__, pork, cmock_size)\n" +
-    "void Spruce_CMockReturnMemThruPtr_pork(UNITY_LINE_TYPE cmock_line, void* pork, size_t cmock_size);\n" + 
+    " Spruce_CMockReturnMemThruPtr_pork(__LINE__, pork, (cmock_size))\n" +
+    "void Spruce_CMockReturnMemThruPtr_pork(UNITY_LINE_TYPE cmock_line, void const* pork, size_t cmock_size);\n" + 
     "#define Spruce_ReturnThruPtr_salad(salad)" +
     " Spruce_CMockReturnMemThruPtr_salad(__LINE__, salad, sizeof(*salad))\n" +
     "#define Spruce_ReturnArrayThruPtr_salad(salad, cmock_len)" +
-    " Spruce_CMockReturnMemThruPtr_salad(__LINE__, salad, cmock_len * sizeof(*salad))\n" +
+    " Spruce_CMockReturnMemThruPtr_salad(__LINE__, salad, (cmock_len * sizeof(*salad)))\n" +
     "#define Spruce_ReturnMemThruPtr_salad(salad, cmock_size)" +
-    " Spruce_CMockReturnMemThruPtr_salad(__LINE__, salad, cmock_size)\n" +
-    "void Spruce_CMockReturnMemThruPtr_salad(UNITY_LINE_TYPE cmock_line, MY_FANCY_VOID* salad, size_t cmock_size);\n"
+    " Spruce_CMockReturnMemThruPtr_salad(__LINE__, salad, (cmock_size))\n" +
+    "void Spruce_CMockReturnMemThruPtr_salad(UNITY_LINE_TYPE cmock_line, MY_FANCY_VOID const* salad, size_t cmock_size);\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_function_declarations(@void_ptr_func)
     assert_equal(expected, returned)

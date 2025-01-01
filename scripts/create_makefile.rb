@@ -1,3 +1,10 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
 require 'fileutils'
 ABS_ROOT = FileUtils.pwd
 CMOCK_DIR = File.expand_path(ENV.fetch('CMOCK_DIR', File.join(ABS_ROOT, '..', '..')))
@@ -20,7 +27,7 @@ TEST_BIN_DIR = TEST_BUILD_DIR
 MOCK_PREFIX = ENV.fetch('TEST_MOCK_PREFIX', 'mock_')
 MOCK_SUFFIX = ENV.fetch('TEST_MOCK_SUFFIX', '')
 TEST_MAKEFILE = ENV.fetch('TEST_MAKEFILE', File.join(TEST_BUILD_DIR, 'MakefileTestSupport'))
-MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-\.]+#{MOCK_SUFFIX}/
+MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-.]+#{MOCK_SUFFIX}/
 
 [TEST_BUILD_DIR, OBJ_DIR, RUNNERS_DIR, MOCKS_DIR, TEST_BIN_DIR].each do |dir|
   FileUtils.mkdir_p dir
@@ -83,7 +90,7 @@ File.open(TEST_MAKEFILE, 'w') do |mkfile|
     runner_source = File.join(RUNNERS_DIR, "runner_#{module_name}.c")
     runner_obj = File.join(OBJ_DIR, "runner_#{module_name}.o")
     test_bin = File.join(TEST_BIN_DIR, module_name)
-    test_results = File.join(TEST_BIN_DIR, module_name + '.testresult')
+    test_results = File.join(TEST_BIN_DIR, "#{module_name}.testresult")
 
     cfg = {
       src: test,
@@ -151,7 +158,7 @@ File.open(TEST_MAKEFILE, 'w') do |mkfile|
     all_headers_to_mock += headers_to_mock
     mock_objs = headers_to_mock.map do |hdr|
       mock_name = MOCK_PREFIX + File.basename(hdr, '.*')
-      File.join(MOCKS_DIR, mock_name + '.o')
+      File.join(MOCKS_DIR, "#{mock_name}.o")
     end
     all_headers_to_mock.uniq!
 
@@ -178,8 +185,8 @@ File.open(TEST_MAKEFILE, 'w') do |mkfile|
   all_headers_to_mock.each do |hdr|
     mock_name = MOCK_PREFIX + File.basename(hdr, '.*')
     mock_header = File.join(MOCKS_DIR, mock_name + File.extname(hdr))
-    mock_src = File.join(MOCKS_DIR, mock_name + '.c')
-    mock_obj = File.join(MOCKS_DIR, mock_name + '.o')
+    mock_src = File.join(MOCKS_DIR, "#{mock_name}.c")
+    mock_obj = File.join(MOCKS_DIR, "#{mock_name}.o")
 
     mkfile.puts "#{mock_src}: #{hdr}"
     mkfile.puts "\t@CMOCK_DIR=${CMOCK_DIR} ruby ${CMOCK_DIR}/scripts/create_mock.rb #{hdr}"
@@ -198,6 +205,6 @@ File.open(TEST_MAKEFILE, 'w') do |mkfile|
   mkfile.puts ''
 
   # Create target to run all tests
-  mkfile.puts "test: #{test_targets.map { |t| t + '.testresult' }.join(' ')} test_summary"
+  mkfile.puts "test: #{test_targets.map { |t| "#{t}.testresult" }.join(' ')} test_summary"
   mkfile.puts ''
 end

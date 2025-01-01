@@ -1,12 +1,12 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 class CMockGeneratorPluginIgnoreStateless
-  attr_reader :priority
-  attr_reader :config, :utils
+  attr_reader :priority, :config, :utils
 
   def initialize(config, utils)
     @config = config
@@ -24,9 +24,11 @@ class CMockGeneratorPluginIgnoreStateless
 
   def mock_function_declarations(function)
     lines = if function[:return][:void?]
+              "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Ignore (not AndReturn)\");\n" \
               "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" \
               "void #{function[:name]}_CMockIgnore(void);\n"
             else
+              "#define #{function[:name]}_Ignore() TEST_FAIL_MESSAGE(\"#{function[:name]} requires _IgnoreAndReturn\");\n" \
               "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(cmock_retval)\n" \
               "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]});\n"
             end
@@ -45,7 +47,7 @@ class CMockGeneratorPluginIgnoreStateless
     else
       retval = function[:return].merge(:name => 'cmock_call_instance->ReturnVal')
       lines << "    if (cmock_call_instance == NULL)\n      return Mock.#{function[:name]}_FinalReturn;\n"
-      lines << '  ' + @utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval) unless retval[:void?]
+      lines << "  #{@utils.code_assign_argument_quickly("Mock.#{function[:name]}_FinalReturn", retval)}" unless retval[:void?]
       lines << "    return cmock_call_instance->ReturnVal;\n  }\n"
     end
     lines

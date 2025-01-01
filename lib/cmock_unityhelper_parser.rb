@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 class CMockUnityHelperParser
   attr_accessor :c_types
@@ -38,12 +39,13 @@ class CMockUnityHelperParser
       if ctype.is_a?(Symbol)
         raise ":treat_as expects a list of  identifier: identifier  mappings, but got a symbol: #{ctype}. Check the indentation in your project.yml"
       end
+
       c_type = ctype.gsub(/\s+/, '_')
       if expecttype =~ /\*/
         c_types[c_type] = "UNITY_TEST_ASSERT_EQUAL_#{expecttype.delete('*')}_ARRAY"
       else
         c_types[c_type] = "UNITY_TEST_ASSERT_EQUAL_#{expecttype}"
-        c_types[c_type + '*'] ||= "UNITY_TEST_ASSERT_EQUAL_#{expecttype}_ARRAY"
+        c_types["#{c_type}*"] ||= "UNITY_TEST_ASSERT_EQUAL_#{expecttype}_ARRAY"
       end
     end
     c_types
@@ -58,7 +60,7 @@ class CMockUnityHelperParser
     source = source.gsub(/\/\*.*?\*\//m, '') # remove block comments
 
     # scan for comparison helpers
-    match_regex = Regexp.new('^\s*#define\s+(UNITY_TEST_ASSERT_EQUAL_(\w+))\s*\(' + Array.new(4, '\s*\w+\s*').join(',') + '\)')
+    match_regex = Regexp.new("^\\s*#define\\s+(UNITY_TEST_ASSERT_EQUAL_(\\w+))\\s*\\(#{Array.new(4, '\s*\w+\s*').join(',')}\\)")
     pairs = source.scan(match_regex).flatten.compact
     (pairs.size / 2).times do |i|
       expect = pairs[i * 2]
@@ -67,7 +69,7 @@ class CMockUnityHelperParser
     end
 
     # scan for array variants of those helpers
-    match_regex = Regexp.new('^\s*#define\s+(UNITY_TEST_ASSERT_EQUAL_(\w+_ARRAY))\s*\(' + Array.new(5, '\s*\w+\s*').join(',') + '\)')
+    match_regex = Regexp.new("^\\s*#define\\s+(UNITY_TEST_ASSERT_EQUAL_(\\w+_ARRAY))\\s*\\(#{Array.new(5, '\s*\w+\s*').join(',')}\\)")
     pairs = source.scan(match_regex).flatten.compact
     (pairs.size / 2).times do |i|
       expect = pairs[i * 2]

@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 class CMockHeaderParser
   attr_accessor :funcs, :c_attr_noconst, :c_attributes, :treat_as_void, :treat_externs, :treat_inlines, :inline_function_patterns
@@ -39,7 +40,7 @@ class CMockHeaderParser
 
     function_names = []
 
-    all_funcs = parse_functions(import_source(source, parse_project)).map { |item| [item] }
+    all_funcs = parse_functions(name, import_source(source, parse_project)).map { |item| [item] }
     all_funcs += parse_cpp_functions(import_source(source, parse_project, true))
     all_funcs.map do |decl|
       func = parse_declaration(parse_project, *decl)
@@ -79,7 +80,7 @@ class CMockHeaderParser
       r = '\\{([^\\{\\}]*|\\g<0>)*\\}'
       source.gsub!(/#{r}/m, '{ }')
     else
-      while source.gsub!(/\{[^\{\}]*\{[^\{\}]*\}[^\{\}]*\}/m, '{ }')
+      while source.gsub!(/\{[^{}]*\{[^{}]*\}[^{}]*\}/m, '{ }')
       end
     end
 
@@ -94,11 +95,12 @@ class CMockHeaderParser
     total_pairs = 0
 
     source.each_char do |c|
-      if c == '{'
+      case c
+      when '{'
         curr_level += 1
         total_pairs += 1
         is_function_start_found = true
-      elsif c == '}'
+      when '}'
         curr_level -= 1
       end
 
@@ -116,14 +118,14 @@ class CMockHeaderParser
   # +source+:: String containing the source to be processed
   def transform_inline_functions(source)
     inline_function_regex_formats = []
-    square_bracket_pair_regex_format = /\{[^\{\}]*\}/ # Regex to match one whole block enclosed by two square brackets
+    square_bracket_pair_regex_format = /\{[^{}]*\}/ # Regex to match one whole block enclosed by two square brackets
 
     # Convert user provided string patterns to regex
     # Use word bounderies before and after the user regex to limit matching to actual word iso part of a word
     @inline_function_patterns.each do |user_format_string|
       user_regex = Regexp.new(user_format_string)
       word_boundary_before_user_regex = /\b/
-      cleanup_spaces_after_user_regex = /[ ]*\b/
+      cleanup_spaces_after_user_regex = / *\b/
       inline_function_regex_formats << Regexp.new(word_boundary_before_user_regex.source + user_regex.source + cleanup_spaces_after_user_regex.source)
     end
 
@@ -170,7 +172,7 @@ class CMockHeaderParser
         if /(#define\s*)\z/ =~ inline_function_match.pre_match
           # Remove the macro from the source
           stripped_pre_match = inline_function_match.pre_match.sub(/(#define\s*)\z/, '')
-          stripped_post_match = inline_function_match.post_match.sub(/\A(.*[\n]?)/, '')
+          stripped_post_match = inline_function_match.post_match.sub(/\A(.*\n?)/, '')
           inspected_source += stripped_pre_match
           source = stripped_post_match
           next
@@ -220,7 +222,7 @@ class CMockHeaderParser
     # void must be void for cmock _ExpectAndReturn calls to process properly, not some weird typedef which equates to void
     # to a certain extent, this action assumes we're chewing on pre-processed header files, otherwise we'll most likely just get stuff from @treat_as_void
     @local_as_void = @treat_as_void
-    void_types = source.scan(/typedef\s+(?:\(\s*)?void(?:\s*\))?\s+([\w]+)\s*;/)
+    void_types = source.scan(/typedef\s+(?:\(\s*)?void(?:\s*\))?\s+(\w+)\s*;/)
     if void_types
       @local_as_void += void_types.flatten.uniq.compact
     end
@@ -245,18 +247,18 @@ class CMockHeaderParser
     source.gsub!(/__attribute(?:__)?\s*\(\(+.*\)\)+/, '')
 
     # remove preprocessor statements and extern "C"
-    source.gsub!(/extern\s+\"C\"\s*\{/, '')
+    source.gsub!(/extern\s+"C"\s*\{/, '')
     source.gsub!(/^\s*#.*/, '')
 
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
-    source.gsub!(/^[\w\s]*struct[^;\{\}\(\)]+;/m, '')                                      # remove forward declared structs
-    source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s]*\{[^\}]+\}[\w\s\*\,]*;/m, '')  # remove struct, union, and enum definitions and typedefs with braces
+    source.gsub!(/^[\w\s]*struct[^;{}()]+;/m, '') # remove forward declared structs
+    source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s]*\{[^}]+\}[\w\s*,]*;/m, '') # remove struct, union, and enum definitions and typedefs with braces
     # remove problem keywords
     source.gsub!(/(\W)(?:register|auto|restrict)(\W)/, '\1\2')
     source.gsub!(/(\W)(?:static)(\W)/, '\1\2') unless cpp
 
-    source.gsub!(/\s*=\s*['"a-zA-Z0-9_\.]+\s*/, '')                                        # remove default value statements from argument lists
+    source.gsub!(/\s*=\s*['"a-zA-Z0-9_.]+\s*/, '') # remove default value statements from argument lists
     source.gsub!(/^(?:[\w\s]*\W)?typedef\W[^;]*/m, '')                                     # remove typedef statements
     source.gsub!(/\)(\w)/, ') \1')                                                         # add space between parenthese and alphanumeric
     source.gsub!(/(^|\W+)(?:#{@c_strippables.join('|')})(?=$|\W+)/, '\1') unless @c_strippables.empty? # remove known attributes slated to be stripped
@@ -265,7 +267,7 @@ class CMockHeaderParser
     source.gsub!(/\w+\s*\(\s*\*\s*\w+\s*\)\s*\([^)]*\)\s*;/, ';')
 
     # scan for functions which return function pointers, because they are a pain
-    source.gsub!(/([\w\s\*]+)\(*\(\s*\*([\w\s\*]+)\s*\(([\w\s\*,]*)\)\)\s*\(([\w\s\*,]*)\)\)*/) do |_m|
+    source.gsub!(/([\w\s*]+)\(*\(\s*\*([\w\s*]+)\s*\(([\w\s*,]*)\)\)\s*\(([\w\s*,]*)\)\)*/) do |_m|
       functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
       unless cpp # only collect once
         parse_project[:typedefs] << "typedef #{Regexp.last_match(1).strip}(*#{functype})(#{Regexp.last_match(4)});"
@@ -282,7 +284,7 @@ class CMockHeaderParser
     end
 
     # remove function definitions by stripping off the arguments right now
-    source.gsub!(/\([^\)]*\)\s*\{[^\}]*\}/m, ';')
+    source.gsub!(/\([^)]*\)\s*\{[^}]*\}/m, ';')
 
     # drop extra white space to make the rest go faster
     source.gsub!(/^\s+/, '')          # remove extra white space from beginning of line
@@ -295,7 +297,7 @@ class CMockHeaderParser
     src_lines = source.split(/\s*;\s*/)
     src_lines = src_lines.uniq unless cpp # must retain closing braces for class/namespace
     src_lines.delete_if { |line| line.strip.empty? } # remove blank lines
-    src_lines.delete_if { |line| !(line =~ /[\w\s\*]+\(+\s*\*[\*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s\*]*,?)*\s*\)/).nil? } # remove function pointer arrays
+    src_lines.delete_if { |line| !(line =~ /[\w\s*]+\(+\s*\*[*\s]*[\w\s]+(?:\[[\w\s]*\]\s*)+\)+\s*\((?:[\w\s*]*,?)*\s*\)/).nil? } # remove function pointer arrays
 
     unless @treat_externs == :include
       src_lines.delete_if { |line| !(line =~ /(?:^|\s+)(?:extern)\s+/).nil? } # remove extern functions
@@ -357,15 +359,15 @@ class CMockHeaderParser
     funcs
   end
 
-  def parse_functions(source)
+  def parse_functions(filename, source)
     funcs = []
     source.each { |line| funcs << line.strip.gsub(/\s+/, ' ') if line =~ @declaration_parse_matcher }
     if funcs.empty?
       case @when_no_prototypes
       when :error
-        raise 'ERROR: No function prototypes found!'
+        raise "ERROR: No function prototypes found by CMock in #{filename}"
       when :warn
-        puts 'WARNING: No function prototypes found!' unless @verbosity < 1
+        puts "WARNING: No function prototypes found by CMock in #{filename}" unless @verbosity < 1
       end
     end
     funcs
@@ -484,7 +486,7 @@ class CMockHeaderParser
       arg_list.gsub!(/\*(\w)/, '* \1')
 
       # scan argument list for function pointers and replace them with custom types
-      arg_list.gsub!(/([\w\s\*]+)\(+([\w\s]*)\*[\*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
+      arg_list.gsub!(/([\w\s*]+)\(+([\w\s]*)\*[*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s*]*,?)*)\s*\)*/) do |_m|
         functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
         funcret  = Regexp.last_match(1).strip
         funcdecl = Regexp.last_match(2).strip
@@ -504,7 +506,7 @@ class CMockHeaderParser
       end
 
       # scan argument list for function pointers with shorthand notation and replace them with custom types
-      arg_list.gsub!(/([\w\s\*]+)\s+(\w+)\s*\(((?:[\w\s\*]*,?)*)\s*\)*/) do |_m|
+      arg_list.gsub!(/([\w\s*]+)\s+(\w+)\s*\(((?:[\w\s*]*,?)*)\s*\)*/) do |_m|
         functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
         funcret  = Regexp.last_match(1).strip
         funcname = Regexp.last_match(2).strip
@@ -574,13 +576,13 @@ class CMockHeaderParser
                       :const_ptr? => parsed[:const_ptr?] || false }
 
     # remove default argument statements from mock definitions
-    args.gsub!(/=\s*[a-zA-Z0-9_\.]+\s*/, ' ')
+    args.gsub!(/=\s*[a-zA-Z0-9_.]+\s*/, ' ')
 
     # check for var args
     if args =~ /\.\.\./
       decl[:var_arg] = args.match(/[\w\s]*\.\.\./).to_s.strip
-      args = if args =~ /\,[\w\s]*\.\.\./
-               args.gsub!(/\,[\w\s]*\.\.\./, '')
+      args = if args =~ /,[\w\s]*\.\.\./
+               args.gsub!(/,[\w\s]*\.\.\./, '')
              else
                'void'
              end
@@ -608,7 +610,7 @@ class CMockHeaderParser
 
   def prototype_inspect_hash(hash)
     pairs = []
-    hash.each_pair { |name, value| pairs << ":#{name} => #{"'" if value.class == String}#{value}#{"'" if value.class == String}" }
+    hash.each_pair { |name, value| pairs << ":#{name} => #{"'" if value.instance_of?(String)}#{value}#{"'" if value.instance_of?(String)}" }
     "{#{pairs.join(', ')}}"
   end
 
@@ -617,11 +619,11 @@ class CMockHeaderParser
     array.each { |hash| hashes << prototype_inspect_hash(hash) }
     case array.size
     when 0
-      return '[]'
+      '[]'
     when 1
-      return "[#{hashes[0]}]"
+      "[#{hashes[0]}]"
     else
-      return "[\n    #{hashes.join("\n    ")}\n  ]\n"
+      "[\n    #{hashes.join("\n    ")}\n  ]\n"
     end
   end
 end

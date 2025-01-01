@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 class CMockGeneratorUtils
   attr_accessor :config, :helpers, :ordered, :ptr_handling, :arrays, :cexception
@@ -63,7 +64,7 @@ class CMockGeneratorUtils
 
   def code_add_an_arg_expectation(arg, depth = 1)
     lines =  code_assign_argument_quickly("cmock_call_instance->Expected_#{arg[:name]}", arg)
-    lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{arg[:name]}_Depth;\n" if @arrays && (depth.class == String)
+    lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{arg[:name]}_Depth;\n" if @arrays && depth.instance_of?(String)
     lines << "  cmock_call_instance->IgnoreArg_#{arg[:name]} = 0;\n" if @ignore_arg
     lines << "  cmock_call_instance->ReturnThruPtr_#{arg[:name]}_Used = 0;\n" if @return_thru_ptr && ptr_or_str?(arg[:type]) && !(arg[:const?])
     lines
@@ -88,13 +89,13 @@ class CMockGeneratorUtils
           m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
         end.join(', ')
         "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string});\n" \
-          "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" +
-          function[:args].inject('') { |all, arg| all + code_add_an_arg_expectation(arg, (arg[:ptr?] ? "#{arg[:name]}_Depth" : 1)) } +
+          "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" \
+          "#{function[:args].inject('') { |all, arg| all + code_add_an_arg_expectation(arg, (arg[:ptr?] ? "#{arg[:name]}_Depth" : 1)) }}" \
           "}\n\n"
       else
         "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]});\n" \
-          "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]})\n{\n" +
-          function[:args].inject('') { |all, arg| all + code_add_an_arg_expectation(arg) } +
+          "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]})\n{\n" \
+          "#{function[:args].inject('') { |all, arg| all + code_add_an_arg_expectation(arg) }}" \
           "}\n\n"
       end
     else

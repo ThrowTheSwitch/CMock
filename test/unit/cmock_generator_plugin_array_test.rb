@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_array'
@@ -73,7 +74,8 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
                 :return => test_return[:void],
                 :contains_ptr? => true }
 
-    expected = "#define #{function[:name]}_ExpectWithArray(tofu, tofu_Depth) #{function[:name]}_CMockExpectWithArray(__LINE__, tofu, tofu_Depth)\n" +
+    expected = "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArray (not AndReturn)\");\n" +
+               "#define #{function[:name]}_ExpectWithArray(tofu, tofu_Depth) #{function[:name]}_CMockExpectWithArray(__LINE__, tofu, (tofu_Depth))\n" +
                "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, int* tofu, int tofu_Depth);\n"
     returned = @cmock_generator_plugin_array.mock_function_declarations(function)
     assert_equal(expected, returned)
@@ -88,7 +90,8 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
                 :return => test_return[:string],
                 :contains_ptr? => true }
 
-    expected = "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, tofu, tofu_Depth, cmock_retval)\n" +
+    expected = "#define #{function[:name]}_ExpectWithArray(tofu, tofu_Depth) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArrayAndReturn\");\n" +
+               "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, tofu, (tofu_Depth), cmock_retval)\n" +
                "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, int* tofu, int tofu_Depth, const char* cmock_to_return);\n"
     returned = @cmock_generator_plugin_array.mock_function_declarations(function)
     assert_equal(expected, returned)
@@ -104,7 +107,8 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
                 :return => test_return[:string],
                 :contains_ptr? => true }
 
-    expected = "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, tofu, tofu_Depth, cmock_retval)\n" +
+    expected = "#define #{function[:name]}_ExpectWithArray(tofu, tofu_Depth) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArrayAndReturn\");\n" +
+               "#define #{function[:name]}_ExpectWithArrayAndReturn(tofu, tofu_Depth, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, tofu, (tofu_Depth), cmock_retval)\n" +
                "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, const int* tofu, int tofu_Depth, const char* cmock_to_return);\n"
     returned = @cmock_generator_plugin_array.mock_function_declarations(function)
     assert_equal(expected, returned)

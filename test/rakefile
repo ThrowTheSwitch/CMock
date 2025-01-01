@@ -91,7 +91,7 @@ namespace :test do
 
   desc "Test cmock examples"
   task :examples => [:prep_system_tests] do
-    run_examples()
+    run_examples(true)
   end
 
   #individual system tests
@@ -117,7 +117,10 @@ end
 namespace :style do
   desc "Check style"
   task :check do
-    report "\nVERIFYING RUBY STYLE"
+    report "\n"
+    report "--------------------\n"
+    report "VERIFYING RUBY STYLE\n"
+    report "--------------------\n"
     report execute("rubocop ../lib ../examples ../config ../scripts --config ../vendor/unity/test/.rubocop.yml", true)
     report "Styling Ruby:PASS"
   end
@@ -140,7 +143,7 @@ namespace :style do
   end
 
   task :clean do
-    File.delete(".rubocop_todo.yml") if File.exists?(".rubocop_todo.yml")
+    File.delete(".rubocop_todo.yml") if File.exist?(".rubocop_todo.yml")
   end
 end
 

@@ -1,9 +1,3 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
-
 $ThisIsOnlyATest = true
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
@@ -412,8 +406,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
   it "create extern declarations for source file" do
     output = []
-    expected = [ "extern jmp_buf AbortFrame;\n",
-                 "\n" ]
+    expected = [ "\n" ]
 
     @cmock_generator.create_extern_declarations(output)
 
@@ -422,8 +415,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
 
   it "create extern declarations for source file when using strict ordering" do
     output = []
-    expected = [ "extern jmp_buf AbortFrame;\n",
-                 "extern int GlobalExpectCount;\n",
+    expected = [ "extern int GlobalExpectCount;\n",
                  "extern int GlobalVerifyOrder;\n",
                  "\n" ]
 
@@ -550,7 +542,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
     @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
-    @cmock_generator.create_mock_implementation(output, function)
+    @cmock_generator.create_mock_implementation(file = output, function = function)
 
     assert_equal(expected.join, output.join)
   end
@@ -588,7 +580,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
     @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
-    @cmock_generator.create_mock_implementation(output, function)
+    @cmock_generator.create_mock_implementation(file = output, function = function)
 
     assert_equal(expected.join, output.join)
   end
@@ -629,7 +621,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
     @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
-    @cmock_generator.create_mock_implementation(output, function)
+    @cmock_generator.create_mock_implementation(file = output, function = function)
 
     assert_equal(expected.join, output.join)
   end
@@ -667,7 +659,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @plugins.expect :run, ["  uno"],          [:mock_implementation_precheck, function]
     @plugins.expect :run, ["  dos","  tres"], [:mock_implementation, function]
 
-    @cmock_generator.create_mock_implementation(output, function)
+    @cmock_generator.create_mock_implementation(file = output, function = function)
 
     assert_equal(expected.join, output.join)
   end
@@ -687,7 +679,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = "using namespace ns1;\n"
 
-    @cmock_generator.create_using_statement(output, function)
+    @cmock_generator.create_using_statement(file = output, function = function)
 
     assert_equal(expected, output.join)
   end
@@ -707,7 +699,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     output = []
     expected = "using namespace ns1::ns2;\n"
 
-    @cmock_generator.create_using_statement(output, function)
+    @cmock_generator.create_using_statement(file = output, function = function)
 
     assert_equal(expected, output.join)
   end

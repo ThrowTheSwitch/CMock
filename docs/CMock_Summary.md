@@ -1,10 +1,13 @@
 CMock: A Summary
 ================
 
-*[ThrowTheSwitch.org](http://throwtheswitch.org)*
+*[ThrowTheSwitch.org](http://throwtheswitch.org)* 
 
 *This documentation is released under a Creative Commons 3.0 Attribution Share-Alike License*
 
+ - [Known Issues](docs/CMockKnownIssues.md)
+ - [Change Log](docs/CMockChangeLog.md)
+ - [How Does CMock Validate Arguments](docs/CMock_ArgumentValidation.md)
 
 What Exactly Are We Talking About Here?
 ---------------------------------------
@@ -61,7 +64,7 @@ call DoesSomething enough, or too much, or with the wrong arguments,
 or in the wrong order.
 
 CMock is based on Unity, which it uses for all internal testing.
-It uses Ruby to do all the main work (versions 2.0.0 and above).
+It uses Ruby to do all the main work (versions 3.0.0 and above).
 
 
 Installing
@@ -77,7 +80,7 @@ have it. You can prove it by typing the following:
 If it replied in a way that implies ignorance, then you're going to
 need to install it. You can go to [ruby-lang](https://ruby-lang.org)
 to get the latest version. You're also going to need to do that if it
-replied with a version that is older than 2.0.0. Go ahead. We'll wait.
+replied with a version that is older than 3.0.0. Go ahead. We'll wait.
 
 Once you have Ruby, you have three options:
 
@@ -608,17 +611,19 @@ from the defaults. We've tried to specify what the defaults are below.
   - "static inline"
   - "inline static"
   - "inline"
-  - "static"
+
   You can override these patterns, check out :inline_function_patterns.
 
   Enabling this feature does require a change in the build system that
   is using CMock.  To understand why, we need to give some more info
   on how we are handling inline functions internally.
+
   Let's say we want to mock a header called example.h.  example.h
   contains inline functions, we cannot include this header in the
   mocks or test code if we want to mock the inline functions simply
   because the inline functions contain an implementation that we want
   to override in our mocks!
+
   So, to circumvent this, we generate a new header, also named
   example.h, in the same directory as mock_example.h/c .  This newly
   generated header should/is exactly the same as the original header,
@@ -626,11 +631,13 @@ from the defaults. We've tried to specify what the defaults are below.
   functions declarations.  Placing the new header in the same
   directory as mock_example.h/c ensures that they will include the new
   header and not the old one.
+
   However, CMock has no control in how the build system is configured
   and which include paths the test code is compiled with.  In order
   for the test code to also see the newly generated header ,and not
   the old header with inline functions, the build system has to add
   the mock folder to the include paths.
+  
   Furthermore, we need to keep the order of include paths in mind. We
   have to set the mock folder before the other includes to avoid the
   test code including the original header instead of the newly
@@ -812,7 +819,8 @@ and start over clean. This is really useful when wanting to test a function in
 an iterative manner with different arguments.
 
 C++ Support
----------
+-----------
+
 C++ unit test/mocking frameworks often use a completely different approach (vs.
 CMock) that relies on overloading virtual class members and does not support
 directly mocking static class member methods or free functions (i.e., functions
@@ -846,6 +854,7 @@ class. For example:
 Will generate functions like
 
     void MyNamespace_MyClass_DoesSomething_ExpectAndReturn(int a, int b, int toReturn);
+
 
 Examples
 ========

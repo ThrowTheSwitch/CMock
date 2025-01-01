@@ -1,0 +1,149 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+  :plugins:
+  - :ignore
+  - :expect_any_args
+
+:systest:
+  :types: |
+    #define UINT32 unsigned int
+
+    typedef signed int custom_type;
+
+  :mockable: |
+    UINT32 foo(custom_type a);
+    UINT32 bar(void);
+    UINT32 foo_varargs(custom_type a, ...);
+    void do_it(void);
+    void do_another(int i);
+
+  :source:
+    :header: |
+      UINT32 function_a(int a);
+      void function_b(void);
+      UINT32 function_c(int a);
+      void function_d(void);
+
+    :code: |
+      UINT32 function_a(int a)
+      {
+        return foo((custom_type)a) + bar();
+      }
+
+      void function_b(void) { }
+
+      UINT32 function_c(int a)
+      {
+        return foo_varargs((custom_type)a, "ignored", 5);
+      }
+
+      void function_d(void)
+      {
+        do_it();
+        do_another(2);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: FALSE
+      :should: 'successfully report using Expect instead of ExpectAndReturn with args'
+      :code: |
+        test()
+        {
+          foo_Expect((custom_type)1);
+          bar_ExpectAndReturn(2);
+          function_a(1);
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using Expect instead of ExpectAndReturn without args'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn((custom_type)1, 4);
+          bar_Expect();
+          function_a(1);
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using Expect instead of ExpectAndReturn with varargs'
+      :code: |
+        test()
+        {
+          foo_varargs_Expect((custom_type)3);
+          function_c(3);
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using ExpectAndReturn instead of Expect with args'
+      :code: |
+        test()
+        {
+          do_it_Expect();
+          do_another_ExpectAndReturn(2, 2);
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using ExpectAndReturn instead of Expect without args'
+      :code: |
+        test()
+        {
+          do_it_ExpectAndReturn(6);
+          do_another_Expect(2);
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using ExpectAnyArgs instead of ExpectAnyArgsAndReturn'
+      :code: |
+        test()
+        {
+          foo_ExpectAnyArgs();
+          bar_ExpectAndReturn(2);
+          function_a(1);
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using ExpectAnyArgsAndReturn instead of ExpectAnyArgs'
+      :code: |
+        test()
+        {
+          do_it_Expect();
+          do_another_ExpectAnyArgsAndReturn(2);
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using Ignore instead of IgnoreAndReturn'
+      :code: |
+        test()
+        {
+          foo_Ignore();
+          bar_IgnoreAndReturn(2);
+          function_a(1);
+        }
+
+    - :pass: FALSE
+      :should: 'successfully report using IgnoreAndReturn instead of Ignore'
+      :code: |
+        test()
+        {
+          do_it_Ignore();
+          do_another_IgnoreAndReturn(2);
+          function_d();
+        }
+
+
+...

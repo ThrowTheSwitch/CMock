@@ -1,3 +1,10 @@
+/* =========================================================================
+    CMock - Automatic Mock Generation for C
+    ThrowTheSwitch.org
+    Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+    SPDX-License-Identifier: MIT
+========================================================================= */
+
 #include "Types.h"
 #include "TimerInterruptConfigurator.h"
 #include "TimerInterruptHandler.h"
@@ -36,7 +43,7 @@ void Timer_EnableInterrupt(void)
 
 static inline void SetInterruptHandler(void)
 {
-  AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TC0] = (uint32)Timer_InterruptHandler;
+  AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TC0] = Timer_InterruptHandler;
 }
 
 static inline void ConfigureInterruptSourceModeRegister(void)

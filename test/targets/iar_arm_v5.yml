@@ -1,3 +1,10 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
 tools_root: &tools_root 'C:\Program Files\IAR Systems\Embedded Workbench 5.3\'
 compiler:
   path:             [*tools_root, 'arm\bin\iccarm.exe']

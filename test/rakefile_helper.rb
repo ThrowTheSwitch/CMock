@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 require 'yaml'
 require 'fileutils'
@@ -19,9 +20,18 @@ module RakefileHelpers
   C_EXTENSION = '.c'
   RESULT_EXTENSION = '.result'
 
+  def load_yaml(yaml_filename)
+    yaml_string = File.read(yaml_filename)
+    begin
+      return YAML.load(yaml_string, aliases: true)
+    rescue ArgumentError
+      return YAML.load(yaml_string)
+    end
+  end
+
   def load_configuration(config_file)
     $cfg_file = config_file
-    $cfg = YAML.load(File.read('./targets/' + $cfg_file))
+    $cfg = load_yaml('./targets/' + $cfg_file)
     $colour_output = false unless $cfg['colour']
   end
 
@@ -57,7 +67,7 @@ module RakefileHelpers
   def find_source_file(header, paths)
     paths.each do |dir|
       src_file = dir + header.ext(C_EXTENSION)
-      if (File.exists?(src_file))
+      if (File.exist?(src_file))
         return src_file
       end
     end
@@ -252,7 +262,7 @@ module RakefileHelpers
     failure_messages = []
 
     test_case_files.each do |test_case|
-      tests = (YAML.load_file(test_case))[:systest][:tests][:units]
+      tests = (load_yaml(test_case))[:systest][:tests][:units]
       total_tests += tests.size
 
       test_file    = 'test_' + File.basename(test_case).ext(C_EXTENSION)
@@ -367,7 +377,7 @@ module RakefileHelpers
     report "----------------\n"
     errors = false
     FileList.new("c/*.yml").each do |yaml_file|
-      test = YAML.load(File.read(yaml_file))
+      test = load_yaml(yaml_file)
       report "\nTesting #{yaml_file.sub('.yml','')}"
       report "(#{test[:options].join(', ')})"
       test[:files].each { |f| compile(f, test[:options]) }
@@ -386,12 +396,16 @@ module RakefileHelpers
     end
   end
 
-  def run_examples()
+  def run_examples(verbose=false, raise_on_failure=true)
+    report "\n"
+    report "-----------------\n"
+    report "VALIDATE EXAMPLES\n"
+    report "-----------------\n"
     [ "cd #{File.join("..","examples","make_example")} && make clean && make setup && make test",
       "cd #{File.join("..","examples","temp_sensor")} && rake ci"
     ].each do |cmd|
       report "Testing '#{cmd}'"
-      execute(cmd, false)
+      execute(cmd, verbose, raise_on_failure)
     end
   end
 

@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_expect_any_args.rb'
@@ -35,14 +36,17 @@ describe CMockGeneratorPluginExpectAnyArgs, "Verify CMockGeneratorPluginExpectAn
 
   it "handle function declarations for functions without return values" do
     function = {:name => "Mold", :args_string => "int meh", :args => [ :stuff ], :return => test_return[:void]}
-    expected = "#define Mold_ExpectAnyArgs() Mold_CMockExpectAnyArgs(__LINE__)\nvoid Mold_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line);\n"
+    expected = "#define Mold_ExpectAnyArgsAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"Mold requires _ExpectAnyArgs (not AndReturn)\");\n"+
+               "#define Mold_ExpectAnyArgs() Mold_CMockExpectAnyArgs(__LINE__)\n"+
+               "void Mold_CMockExpectAnyArgs(UNITY_LINE_TYPE cmock_line);\n"
     returned = @cmock_generator_plugin_expect_any_args.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
 
   it "handle function declarations for functions that returns something" do
     function = {:name => "Fungus", :args_string => "int meh", :args => [ :stuff ], :return => test_return[:string]}
-    expected = "#define Fungus_ExpectAnyArgsAndReturn(cmock_retval) Fungus_CMockExpectAnyArgsAndReturn(__LINE__, cmock_retval)\n"+
+    expected = "#define Fungus_ExpectAnyArgs() TEST_FAIL_MESSAGE(\"Fungus requires _ExpectAnyArgsAndReturn\");\n"+
+               "#define Fungus_ExpectAnyArgsAndReturn(cmock_retval) Fungus_CMockExpectAnyArgsAndReturn(__LINE__, cmock_retval)\n"+
                "void Fungus_CMockExpectAnyArgsAndReturn(UNITY_LINE_TYPE cmock_line, const char* cmock_to_return);\n"
     returned = @cmock_generator_plugin_expect_any_args.mock_function_declarations(function)
     assert_equal(expected, returned)

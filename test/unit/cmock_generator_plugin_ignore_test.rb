@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 require File.expand_path(File.dirname(__FILE__)) + "/../test_helper"
 require File.expand_path(File.dirname(__FILE__)) + '/../../lib/cmock_generator_plugin_ignore'
@@ -35,15 +36,19 @@ describe CMockGeneratorPluginIgnore, "Verify CMockGeneratorPluginIgnore Module" 
 
   it "handle function declarations for functions without return values" do
     function = {:name => "Mold", :args_string => "void", :return => test_return[:void]}
-    expected = "#define Mold_Ignore() Mold_CMockIgnore()\nvoid Mold_CMockIgnore(void);\n" +
-               "#define Mold_StopIgnore() Mold_CMockStopIgnore()\nvoid Mold_CMockStopIgnore(void);\n"
+    expected = "#define Mold_IgnoreAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"Mold requires _Ignore (not AndReturn)\");\n" +
+               "#define Mold_Ignore() Mold_CMockIgnore()\n" +
+               "void Mold_CMockIgnore(void);\n" +
+               "#define Mold_StopIgnore() Mold_CMockStopIgnore()\n" +
+               "void Mold_CMockStopIgnore(void);\n"
     returned = @cmock_generator_plugin_ignore.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
 
   it "handle function declarations for functions that returns something" do
     function = {:name => "Fungus", :args_string => "void", :return => test_return[:string]}
-    expected = "#define Fungus_IgnoreAndReturn(cmock_retval) Fungus_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n"+
+    expected = "#define Fungus_Ignore() TEST_FAIL_MESSAGE(\"Fungus requires _IgnoreAndReturn\");\n"+
+               "#define Fungus_IgnoreAndReturn(cmock_retval) Fungus_CMockIgnoreAndReturn(__LINE__, cmock_retval)\n"+
                "void Fungus_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, const char* cmock_to_return);\n" +
                "#define Fungus_StopIgnore() Fungus_CMockStopIgnore()\n"+
                "void Fungus_CMockStopIgnore(void);\n"

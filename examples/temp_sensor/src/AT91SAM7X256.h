@@ -1,3 +1,10 @@
+/* =========================================================================
+    CMock - Automatic Mock Generation for C
+    ThrowTheSwitch.org
+    Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+    SPDX-License-Identifier: MIT
+========================================================================= */
+
 //  ----------------------------------------------------------------------------
 //          ATMEL Microcontroller Software Support  -  ROUSSET  -
 //  ----------------------------------------------------------------------------
@@ -45,15 +52,16 @@
 #define AT91SAM7X256_H
 
 typedef volatile unsigned int AT91_REG;// Hardware register definition
+typedef volatile void*        AT91_PTR;// Hardware register pointer
 
 // *****************************************************************************
 //              SOFTWARE API DEFINITION  FOR System Peripherals
 // *****************************************************************************
 typedef struct _AT91S_SYS {
     AT91_REG     AIC_SMR[32];     // Source Mode Register
-    AT91_REG     AIC_SVR[32];     // Source Vector Register
-    AT91_REG     AIC_IVR;     // IRQ Vector Register
-    AT91_REG     AIC_FVR;     // FIQ Vector Register
+    AT91_PTR     AIC_SVR[32];     // Source Vector Register
+    AT91_PTR     AIC_IVR;     // IRQ Vector Register
+    AT91_PTR     AIC_FVR;     // FIQ Vector Register
     AT91_REG     AIC_ISR;     // Interrupt Status Register
     AT91_REG     AIC_IPR;     // Interrupt Pending Register
     AT91_REG     AIC_IMR;     // Interrupt Mask Register
@@ -64,7 +72,7 @@ typedef struct _AT91S_SYS {
     AT91_REG     AIC_ICCR;     // Interrupt Clear Command Register
     AT91_REG     AIC_ISCR;     // Interrupt Set Command Register
     AT91_REG     AIC_EOICR;     // End of Interrupt Command Register
-    AT91_REG     AIC_SPU;     // Spurious Vector Register
+    AT91_PTR     AIC_SPU;     // Spurious Vector Register
     AT91_REG     AIC_DCR;     // Debug Control Register (Protect)
     AT91_REG     Reserved1[1];     // 
     AT91_REG     AIC_FFER;     // Fast Forcing Enable Register
@@ -214,9 +222,9 @@ typedef struct _AT91S_SYS {
 // *****************************************************************************
 typedef struct _AT91S_AIC {
     AT91_REG     AIC_SMR[32];     // Source Mode Register
-    AT91_REG     AIC_SVR[32];     // Source Vector Register
-    AT91_REG     AIC_IVR;     // IRQ Vector Register
-    AT91_REG     AIC_FVR;     // FIQ Vector Register
+    AT91_PTR     AIC_SVR[32];     // Source Vector Register
+    AT91_PTR     AIC_IVR;     // IRQ Vector Register
+    AT91_PTR     AIC_FVR;     // FIQ Vector Register
     AT91_REG     AIC_ISR;     // Interrupt Status Register
     AT91_REG     AIC_IPR;     // Interrupt Pending Register
     AT91_REG     AIC_IMR;     // Interrupt Mask Register
@@ -227,7 +235,7 @@ typedef struct _AT91S_AIC {
     AT91_REG     AIC_ICCR;     // Interrupt Clear Command Register
     AT91_REG     AIC_ISCR;     // Interrupt Set Command Register
     AT91_REG     AIC_EOICR;     // End of Interrupt Command Register
-    AT91_REG     AIC_SPU;     // Spurious Vector Register
+    AT91_PTR     AIC_SPU;     // Spurious Vector Register
     AT91_REG     AIC_DCR;     // Debug Control Register (Protect)
     AT91_REG     Reserved1[1];     // 
     AT91_REG     AIC_FFER;     // Fast Forcing Enable Register
@@ -1727,14 +1735,14 @@ typedef struct _AT91S_ADC {
 #define AT91C_AIC_EOICR ((AT91_REG *)     0xFFFFF130) // (AIC) End of Interrupt Command Register
 #define AT91C_AIC_DCR   ((AT91_REG *)     0xFFFFF138) // (AIC) Debug Control Register (Protect)
 #define AT91C_AIC_FFER  ((AT91_REG *)     0xFFFFF140) // (AIC) Fast Forcing Enable Register
-#define AT91C_AIC_SVR   ((AT91_REG *)     0xFFFFF080) // (AIC) Source Vector Register
-#define AT91C_AIC_SPU   ((AT91_REG *)     0xFFFFF134) // (AIC) Spurious Vector Register
+#define AT91C_AIC_SVR   ((AT91_PTR *)     0xFFFFF080) // (AIC) Source Vector Register
+#define AT91C_AIC_SPU   ((AT91_PTR *)     0xFFFFF134) // (AIC) Spurious Vector Register
 #define AT91C_AIC_FFDR  ((AT91_REG *)     0xFFFFF144) // (AIC) Fast Forcing Disable Register
-#define AT91C_AIC_FVR   ((AT91_REG *)     0xFFFFF104) // (AIC) FIQ Vector Register
+#define AT91C_AIC_FVR   ((AT91_PTR *)     0xFFFFF104) // (AIC) FIQ Vector Register
 #define AT91C_AIC_FFSR  ((AT91_REG *)     0xFFFFF148) // (AIC) Fast Forcing Status Register
 #define AT91C_AIC_IMR   ((AT91_REG *)     0xFFFFF110) // (AIC) Interrupt Mask Register
 #define AT91C_AIC_ISR   ((AT91_REG *)     0xFFFFF108) // (AIC) Interrupt Status Register
-#define AT91C_AIC_IVR   ((AT91_REG *)     0xFFFFF100) // (AIC) IRQ Vector Register
+#define AT91C_AIC_IVR   ((AT91_PTR *)     0xFFFFF100) // (AIC) IRQ Vector Register
 #define AT91C_AIC_IDCR  ((AT91_REG *)     0xFFFFF124) // (AIC) Interrupt Disable Command Register
 #define AT91C_AIC_CISR  ((AT91_REG *)     0xFFFFF114) // (AIC) Core Interrupt Status Register
 #define AT91C_AIC_IPR   ((AT91_REG *)     0xFFFFF10C) // (AIC) Interrupt Pending Register

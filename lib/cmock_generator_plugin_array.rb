@@ -1,12 +1,14 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 class CMockGeneratorPluginArray
   attr_reader :priority
   attr_accessor :config, :utils, :unity_helper, :ordered
+
   def initialize(config, utils)
     @config       = config
     @ptr_handling = @config.when_ptr
@@ -25,17 +27,20 @@ class CMockGeneratorPluginArray
   def mock_function_declarations(function)
     return nil unless function[:contains_ptr?]
 
-    args_call   = function[:args].map { |m| m[:ptr?] ? "#{m[:name]}, #{m[:name]}_Depth" : (m[:name]).to_s }.join(', ')
+    args_call_i = function[:args].map { |m| m[:ptr?] ? "#{m[:name]}, #{m[:name]}_Depth" : (m[:name]).to_s }.join(', ')
+    args_call_o = function[:args].map { |m| m[:ptr?] ? "#{m[:name]}, (#{m[:name]}_Depth)" : (m[:name]).to_s }.join(', ')
     args_string = function[:args].map do |m|
       type = @utils.arg_type_with_const(m)
       m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
     end.join(', ')
     if function[:return][:void?]
-      return "#define #{function[:name]}_ExpectWithArray(#{args_call}) #{function[:name]}_CMockExpectWithArray(__LINE__, #{args_call})\n" \
-             "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string});\n"
+      "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call_i}, cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArray (not AndReturn)\");\n" \
+      "#define #{function[:name]}_ExpectWithArray(#{args_call_i}) #{function[:name]}_CMockExpectWithArray(__LINE__, #{args_call_o})\n" \
+      "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string});\n"
     else
-      return "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call}, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call}, cmock_retval)\n" \
-             "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]});\n"
+      "#define #{function[:name]}_ExpectWithArray(#{args_call_i}) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArrayAndReturn\");\n" \
+      "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call_i}, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call_o}, cmock_retval)\n" \
+      "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]});\n"
     end
   end
 

@@ -1,4 +1,11 @@
-HERE = __dir__ + '/'
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+HERE = "#{__dir__}//".freeze
 
 require 'rake'
 require 'rake/clean'

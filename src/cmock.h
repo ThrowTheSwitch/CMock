@@ -1,3 +1,10 @@
+/* =========================================================================
+    CMock - Automatic Mock Generation for C
+    ThrowTheSwitch.org
+    Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+    SPDX-License-Identifier: MIT
+========================================================================= */
+
 /* ==========================================
     CMock Project - Automatic Mock Generation for C
     Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
@@ -10,8 +17,8 @@
 #include "cmock_internals.h"
 
 #define CMOCK_VERSION_MAJOR    2
-#define CMOCK_VERSION_MINOR    5
-#define CMOCK_VERSION_BUILD    4
+#define CMOCK_VERSION_MINOR    6
+#define CMOCK_VERSION_BUILD    0
 #define CMOCK_VERSION          ((CMOCK_VERSION_MAJOR << 16) | (CMOCK_VERSION_MINOR << 8) | CMOCK_VERSION_BUILD)
 
 /* should be big enough to index full range of CMOCK_MEM_MAX */

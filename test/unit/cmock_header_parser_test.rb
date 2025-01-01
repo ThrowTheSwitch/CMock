@@ -1,8 +1,9 @@
-# ==========================================
-#   CMock Project - Automatic Mock Generation for C
-#   Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
-#   [Released under MIT License. Please refer to license.txt for details]
-# ==========================================
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
 
 $ThisIsOnlyATest = true
 
@@ -383,7 +384,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
@@ -407,7 +408,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
@@ -435,7 +436,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
@@ -676,7 +677,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
@@ -705,7 +706,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     begin
       @parser.parse("module", source)
     rescue RuntimeError => e
-      assert_equal("ERROR: No function prototypes found!", e.message)
+      assert_match("ERROR: No function prototypes found", e.message)
     end
   end
 
