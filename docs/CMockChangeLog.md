@@ -13,7 +13,7 @@ Prior to 2008, the project was an internal project and not released to the publi
 
 ## Log
 
-### CMock 2.6.0 ()
+### CMock 2.6.0 (January 2025)
 
 New Features:
 
