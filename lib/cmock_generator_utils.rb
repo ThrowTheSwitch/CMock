@@ -76,7 +76,7 @@ class CMockGeneratorUtils
     else
       assert_expr = "sizeof(#{arg[:name]}) == sizeof(#{arg[:type]}) ? 1 : -1"
       comment = "/* add #{arg[:type]} to :treat_as_array if this causes an error */"
-      "  memcpy((void*)(&#{dest}), (void*)(&#{arg[:name]}),\n" \
+      "  memcpy((void*)(&#{dest}), (const void*)(&#{arg[:name]}),\n" \
         "         sizeof(#{arg[:type]}[#{assert_expr}])); #{comment}\n"
     end
   end

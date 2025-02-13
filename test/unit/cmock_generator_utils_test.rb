@@ -109,7 +109,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     expected3 = "  cmock_call_instance->Expected_Kiwi = Kiwi;\n"
 
     arg4 = { :name => "Lime", :const? => false, :type => 'LIME_T', :ptr? => false }
-    expected4 = "  memcpy((void*)(&cmock_call_instance->Expected_Lime), (void*)(&Lime),\n" +
+    expected4 = "  memcpy((void*)(&cmock_call_instance->Expected_Lime), (const void*)(&Lime),\n" +
                 "         sizeof(LIME_T[sizeof(Lime) == sizeof(LIME_T) ? 1 : -1])); /* add LIME_T to :treat_as_array if this causes an error */\n"
 
     assert_equal(expected1, @cmock_generator_utils_simple.code_add_an_arg_expectation(arg1))
@@ -135,7 +135,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                 "  cmock_call_instance->ReturnThruPtr_Kiwi_Used = 0;\n"
 
     arg4 = { :name => "Lime", :const? => false, :type => 'LIME_T', :ptr? => false }
-    expected4 = "  memcpy((void*)(&cmock_call_instance->Expected_Lime), (void*)(&Lime),\n" +
+    expected4 = "  memcpy((void*)(&cmock_call_instance->Expected_Lime), (const void*)(&Lime),\n" +
                 "         sizeof(LIME_T[sizeof(Lime) == sizeof(LIME_T) ? 1 : -1])); /* add LIME_T to :treat_as_array if this causes an error */\n" +
                 "  cmock_call_instance->IgnoreArg_Lime = 0;\n"
 
@@ -159,7 +159,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     expected = "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, stuff);\n" +
                "void CMockExpectParameters_Melon(CMOCK_Melon_CALL_INSTANCE* cmock_call_instance, stuff)\n{\n" +
                "  cmock_call_instance->Expected_MyIntPtr = MyIntPtr;\n" +
-               "  memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType),\n" +
+               "  memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (const void*)(&MyMyType),\n" +
                "         sizeof(MY_TYPE[sizeof(MyMyType) == sizeof(MY_TYPE) ? 1 : -1])); /* add MY_TYPE to :treat_as_array if this causes an error */\n" +
                "  cmock_call_instance->Expected_MyStr = MyStr;\n" +
                "}\n\n"
@@ -177,7 +177,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "  cmock_call_instance->Expected_MyIntPtr_Depth = MyIntPtr_Depth;\n" +
                "  cmock_call_instance->IgnoreArg_MyIntPtr = 0;\n" +
                "  cmock_call_instance->ReturnThruPtr_MyIntPtr_Used = 0;\n" +
-               "  memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType),\n" +
+               "  memcpy((void*)(&cmock_call_instance->Expected_MyMyType), (const void*)(&MyMyType),\n" +
                "         sizeof(MY_TYPE[sizeof(MyMyType) == sizeof(MY_TYPE) ? 1 : -1])); /* add MY_TYPE to :treat_as_array if this causes an error */\n" +
                "  cmock_call_instance->IgnoreArg_MyMyType = 0;\n" +
                "  cmock_call_instance->Expected_MyStr = MyStr;\n" +
