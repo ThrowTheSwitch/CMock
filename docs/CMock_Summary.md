@@ -738,6 +738,10 @@ from the defaults. We've tried to specify what the defaults are below.
 
         GoBananas_ExpectWithArray(b, 2, 2);
 
+  `:array_as_byte`:
+  When checking arrays, the element size will always be 1, ie depth is the number
+  of bytes to check.
+
 * `:fail_on_unexpected_calls`:
   By default, CMock will fail a test if a mock is called without `_Expect` and `_Ignore`
   called first. While this forces test writers to be more explicit in their expectations,

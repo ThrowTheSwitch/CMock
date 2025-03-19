@@ -21,6 +21,7 @@ class CMockGeneratorUtils
     @ignore_stateless = @config.plugins.include? :ignore_stateless
     @treat_as = @config.treat_as
     @helpers = helpers
+    @array_as_byte = @config.array_as_byte   
   end
 
   def self.arg_type_with_const(arg)
@@ -230,7 +231,11 @@ class CMockGeneratorUtils
         lines << "      { UNITY_TEST_ASSERT_NULL(#{arg_name}, cmock_line, CMockStringExpNULL); }\n"
         lines << (depth_name != 1 ? "    else if (#{depth_name} == 0)\n      { UNITY_TEST_ASSERT_EQUAL_PTR(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch); }\n" : '')
         lines << "    else\n"
-        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch); }\n"
+        if @array_as_byte 
+          lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), 1, #{depth_name}, cmock_line, CMockStringMismatch); }\n"
+        else
+          lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch); }\n"
+        end
       end
     when /_ARRAY/
       if pre == '&'
