@@ -267,7 +267,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     arg      = test_arg[:mytype]
     expected = "  {\n" +
                "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyMyType);\n" +
-               "    UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(&cmock_call_instance->Expected_MyMyType), (void*)(&MyMyType), sizeof(MY_TYPE), cmock_line, CMockStringMismatch);\n" +
+               "    UNITY_TEST_ASSERT_EQUAL_MEMORY(&cmock_call_instance->Expected_MyMyType, &MyMyType, sizeof(MY_TYPE), cmock_line, CMockStringMismatch);\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
     @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_MEMORY','&'], ['MY_TYPE']
@@ -351,7 +351,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "    if (cmock_call_instance->Expected_MyMyType == NULL)\n" +
                "      { UNITY_TEST_ASSERT_NULL(MyMyType, cmock_line, CMockStringExpNULL); }\n" +
                "    else\n" +
-               "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(cmock_call_instance->Expected_MyMyType), (void*)(MyMyType), sizeof(MY_TYPE), 1, cmock_line, CMockStringMismatch); }\n" +
+               "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(cmock_call_instance->Expected_MyMyType, MyMyType, sizeof(MY_TYPE), 1, cmock_line, CMockStringMismatch); }\n" +
                "  }\n"
     @unity_helper.expect :nil?, false
     @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY', ''],  ['MY_TYPE']
