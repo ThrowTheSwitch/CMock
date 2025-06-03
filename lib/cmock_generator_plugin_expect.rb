@@ -53,7 +53,7 @@ class CMockGeneratorPluginExpect
       lines << "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n"
     else
       lines << "#define #{function[:name]}_Expect(#{function[:args_call]}) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectAndReturn\");\n" if @error_stubs
-      lines << "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, #{function[:args_call]}, cmock_retval)\n" 
+      lines << "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, #{function[:args_call]}, cmock_retval)\n"
       lines << "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]});\n"
     end
     lines

@@ -13,7 +13,7 @@ class CMockGeneratorPluginArray
     @config       = config
     @ptr_handling = @config.when_ptr
     @ordered      = @config.enforce_strict_ordering
-    @error_stubs  = @config.create_error_stubs    
+    @error_stubs  = @config.create_error_stubs
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
     @priority     = 8

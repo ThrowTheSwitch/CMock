@@ -10,7 +10,7 @@ class CMockGeneratorPluginIgnoreStateless
 
   def initialize(config, utils)
     @config = config
-    @error_stubs  = @config.create_error_stubs
+    @error_stubs = @config.create_error_stubs
     @utils = utils
     @priority = 2
   end
