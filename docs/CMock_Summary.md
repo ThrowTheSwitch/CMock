@@ -420,6 +420,27 @@ from the defaults. We've tried to specify what the defaults are below.
 
   * default: *nil*
 
+* `:create_error_stubs`:
+  New users of CMock sometimes struggle with the concept that CMock is 
+  generating differently named interface functions for a mock depending 
+  on whether a function to be mocked has a return value or not (see
+  description of the plugins *Expect*, *ExpectAnyArgs*, *Array*, *Ignore*,
+  *IgnoreStateless* above). They are looking e.g. for a function `func_Expect()`
+  while CMock generated the function `func_ExpectAndReturn()` instead.
+  This has proven to be a significant hurdle, because it is not easy to 
+  spot the slightly different named function within the generated mock.
+  Therefore since release v2.6.0 CMock is generating *both* functions
+  per default, although one of them has only a "stub" functionality:
+  it is aborting the testcase when called with a helpful error message
+  pointing towards the correct function.
+  
+  Experienced CMock users on the other hand might prefer the original
+  behavior, where no additional error stubs are generated - e.g. to 
+  ensure code completion offers only "real" functionality of the mock.
+  In this case the option `:create_error_stubs` should be set to false.
+
+  * default: true
+
 * `:enforce_strict_ordering`:
   CMock always enforces the order that you call a particular function,
   so if you expect GrabNabber(int size) to be called three times, it
