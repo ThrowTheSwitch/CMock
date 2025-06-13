@@ -6,7 +6,7 @@ name: CI
 # Triggers the workflow on push or pull request events but only for the master branch
 on:
   push:
-    branches: [ master, rstahn-patch-* ]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
