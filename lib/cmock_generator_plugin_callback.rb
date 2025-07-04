@@ -43,7 +43,8 @@ class CMockGeneratorPluginCallback
   end
 
   def mock_implementation(function)
-    "  if (Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" +
+    "  if (Mock.#{function[:name]}_CallbackFunctionPointer != NULL)\n  {\n" \
+    "    UNITY_SET_DETAIL(CMockString_#{function[:name]});\n" +
       if function[:return][:void?]
         "    #{generate_call(function)};\n  }\n"
       else
