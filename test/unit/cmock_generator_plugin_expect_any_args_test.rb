@@ -12,7 +12,7 @@ describe CMockGeneratorPluginExpectAnyArgs, "Verify CMockGeneratorPluginExpectAn
 
   before do
     create_mocks :config, :utils
-    @config = create_stub(:respond_to? => true)
+    @config = create_stub(:respond_to? => true, :create_error_stubs => true)
     @cmock_generator_plugin_expect_any_args = CMockGeneratorPluginExpectAnyArgs.new(@config, @utils)
   end
 

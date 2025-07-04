@@ -13,6 +13,7 @@ class CMockGeneratorPluginExpect
     @config       = config
     @ptr_handling = @config.when_ptr
     @ordered      = @config.enforce_strict_ordering
+    @error_stubs  = @config.create_error_stubs
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
     @priority     = 5
@@ -35,25 +36,27 @@ class CMockGeneratorPluginExpect
   end
 
   def mock_function_declarations(function)
+    lines = ''
     if function[:args].empty?
       if function[:return][:void?]
-        "#define #{function[:name]}_ExpectAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Expect (not AndReturn)\");\n" \
-        "#define #{function[:name]}_Expect() #{function[:name]}_CMockExpect(__LINE__)\n" \
-        "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line);\n"
+        lines << "#define #{function[:name]}_ExpectAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Expect (not AndReturn)\");\n" if @error_stubs
+        lines << "#define #{function[:name]}_Expect() #{function[:name]}_CMockExpect(__LINE__)\n"
+        lines << "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line);\n"
       else
-        "#define #{function[:name]}_Expect() TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectAndReturn\");\n" \
-        "#define #{function[:name]}_ExpectAndReturn(cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, cmock_retval)\n" \
-        "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
+        lines << "#define #{function[:name]}_Expect() TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectAndReturn\");\n" if @error_stubs
+        lines << "#define #{function[:name]}_ExpectAndReturn(cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, cmock_retval)\n"
+        lines << "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]});\n"
       end
     elsif function[:return][:void?]
-      "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Expect (not AndReturn)\");\n" \
-      "#define #{function[:name]}_Expect(#{function[:args_call]}) #{function[:name]}_CMockExpect(__LINE__, #{function[:args_call]})\n" \
-      "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n"
+      lines << "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Expect (not AndReturn)\");\n" if @error_stubs
+      lines << "#define #{function[:name]}_Expect(#{function[:args_call]}) #{function[:name]}_CMockExpect(__LINE__, #{function[:args_call]})\n"
+      lines << "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n"
     else
-      "#define #{function[:name]}_Expect(#{function[:args_call]}) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectAndReturn\");\n" \
-      "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, #{function[:args_call]}, cmock_retval)\n" \
-      "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]});\n"
+      lines << "#define #{function[:name]}_Expect(#{function[:args_call]}) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectAndReturn\");\n" if @error_stubs
+      lines << "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, #{function[:args_call]}, cmock_retval)\n"
+      lines << "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]});\n"
     end
+    lines
   end
 
   def mock_implementation_always_check_args(function)

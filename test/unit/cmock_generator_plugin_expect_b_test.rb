@@ -17,6 +17,7 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
       :when_ptr => :compare_data,
       :enforce_strict_ordering => true,
       :respond_to? => true,
+      :create_error_stubs => true,
       :plugins => [ :expect, :expect_any_args ] )
 
     @utils.expect :helpers, {}

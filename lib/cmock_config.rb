@@ -43,6 +43,7 @@ class CMockConfig
       :array_size_name             => 'size|len',
       :skeleton                    => false,
       :exclude_setjmp_h            => false,
+      :create_error_stubs          => true,
 
       # Format to look for inline functions.
       # This is a combination of "static" and "inline" keywords ("static inline", "inline static", "inline", "static")
