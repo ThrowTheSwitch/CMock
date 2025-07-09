@@ -149,15 +149,15 @@ class CMockGeneratorUtils
     case unity_func
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY'
       c_type_local = c_type.gsub(/\*$/, '')
-      lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
+      lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY'
       if pre == '&'
-        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch);\n"
+        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch);\n"
       else
         lines << "    if (#{pre}#{expected} == NULL)\n"
         lines << "      { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, CMockStringExpNULL); }\n"
         lines << "    else\n"
-        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch); }\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch); }\n"
       end
     when /_ARRAY/
       if pre == '&'
@@ -185,15 +185,15 @@ class CMockGeneratorUtils
     case unity_func
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY'
       c_type_local = c_type.gsub(/\*$/, '')
-      lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
+      lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY'
       if pre == '&'
-        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch);\n"
+        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch);\n"
       else
         lines << "    if (#{pre}#{expected} == NULL)\n"
         lines << "      { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, CMockStringExpNULL); }\n"
         lines << "    else\n"
-        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch); }\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch); }\n"
       end
     when /_ARRAY/
       if pre == '&'
@@ -221,16 +221,16 @@ class CMockGeneratorUtils
     case unity_func
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY'
       c_type_local = c_type.gsub(/\*$/, '')
-      lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
+      lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY'
       if pre == '&'
-        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch);\n"
+        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch);\n"
       else
         lines << "    if (#{pre}#{expected} == NULL)\n"
         lines << "      { UNITY_TEST_ASSERT_NULL(#{arg_name}, cmock_line, CMockStringExpNULL); }\n"
         lines << (depth_name != 1 ? "    else if (#{depth_name} == 0)\n      { UNITY_TEST_ASSERT_EQUAL_PTR(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch); }\n" : '')
         lines << "    else\n"
-        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY((void*)(#{pre}#{expected}), (void*)(#{pre}#{arg_name}), sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch); }\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch); }\n"
       end
     when /_ARRAY/
       if pre == '&'
