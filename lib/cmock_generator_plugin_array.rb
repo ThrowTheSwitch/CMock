@@ -13,6 +13,7 @@ class CMockGeneratorPluginArray
     @config       = config
     @ptr_handling = @config.when_ptr
     @ordered      = @config.enforce_strict_ordering
+    @error_stubs  = @config.create_error_stubs
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
     @priority     = 8
@@ -33,15 +34,17 @@ class CMockGeneratorPluginArray
       type = @utils.arg_type_with_const(m)
       m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
     end.join(', ')
+    lines = ''
     if function[:return][:void?]
-      "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call_i}, cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArray (not AndReturn)\");\n" \
-      "#define #{function[:name]}_ExpectWithArray(#{args_call_i}) #{function[:name]}_CMockExpectWithArray(__LINE__, #{args_call_o})\n" \
-      "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string});\n"
+      lines << "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call_i}, cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArray (not AndReturn)\");\n" if @error_stubs
+      lines << "#define #{function[:name]}_ExpectWithArray(#{args_call_i}) #{function[:name]}_CMockExpectWithArray(__LINE__, #{args_call_o})\n"
+      lines << "void #{function[:name]}_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, #{args_string});\n"
     else
-      "#define #{function[:name]}_ExpectWithArray(#{args_call_i}) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArrayAndReturn\");\n" \
-      "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call_i}, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call_o}, cmock_retval)\n" \
-      "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]});\n"
+      lines << "#define #{function[:name]}_ExpectWithArray(#{args_call_i}) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectWithArrayAndReturn\");\n" if @error_stubs
+      lines << "#define #{function[:name]}_ExpectWithArrayAndReturn(#{args_call_i}, cmock_retval) #{function[:name]}_CMockExpectWithArrayAndReturn(__LINE__, #{args_call_o}, cmock_retval)\n"
+      lines << "void #{function[:name]}_CMockExpectWithArrayAndReturn(UNITY_LINE_TYPE cmock_line, #{args_string}, #{function[:return][:str]});\n"
     end
+    lines
   end
 
   def mock_interfaces(function)

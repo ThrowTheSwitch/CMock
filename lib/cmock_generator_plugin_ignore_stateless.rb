@@ -10,6 +10,7 @@ class CMockGeneratorPluginIgnoreStateless
 
   def initialize(config, utils)
     @config = config
+    @error_stubs = @config.create_error_stubs
     @utils = utils
     @priority = 2
   end
@@ -23,15 +24,16 @@ class CMockGeneratorPluginIgnoreStateless
   end
 
   def mock_function_declarations(function)
-    lines = if function[:return][:void?]
-              "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Ignore (not AndReturn)\");\n" \
-              "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n" \
-              "void #{function[:name]}_CMockIgnore(void);\n"
-            else
-              "#define #{function[:name]}_Ignore() TEST_FAIL_MESSAGE(\"#{function[:name]} requires _IgnoreAndReturn\");\n" \
-              "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(cmock_retval)\n" \
-              "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]});\n"
-            end
+    lines = ''
+    if function[:return][:void?]
+      lines << "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Ignore (not AndReturn)\");\n" if @error_stubs
+      lines << "#define #{function[:name]}_Ignore() #{function[:name]}_CMockIgnore()\n"
+      lines << "void #{function[:name]}_CMockIgnore(void);\n"
+    else
+      lines << "#define #{function[:name]}_Ignore() TEST_FAIL_MESSAGE(\"#{function[:name]} requires _IgnoreAndReturn\");\n" if @error_stubs
+      lines << "#define #{function[:name]}_IgnoreAndReturn(cmock_retval) #{function[:name]}_CMockIgnoreAndReturn(cmock_retval)\n"
+      lines << "void #{function[:name]}_CMockIgnoreAndReturn(#{function[:return][:str]});\n"
+    end
 
     # Add stop ignore function. it does not matter if there are any args
     lines << "#define #{function[:name]}_StopIgnore() #{function[:name]}_CMockStopIgnore()\n" \

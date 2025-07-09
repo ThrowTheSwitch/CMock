@@ -1,7 +1,7 @@
 CMock: A Summary
 ================
 
-*[ThrowTheSwitch.org](http://throwtheswitch.org)* 
+*[ThrowTheSwitch.org](http://throwtheswitch.org)*
 
 *This documentation is released under a Creative Commons 3.0 Attribution Share-Alike License*
 
@@ -138,7 +138,7 @@ that resembles a pointer or array, it breaks the argument into TWO arguments.
 The first is the original pointer. The second specify the number of elements
 it is to verify of that array. If you specify 1, it'll check one object. If 2,
 it'll assume your pointer is pointing at the first of two elements in an array.
-If you specify zero elements and `UNITY_COMPARE_PTRS_ON_ZERO_ARRAY` is defined, 
+If you specify zero elements and `UNITY_COMPARE_PTRS_ON_ZERO_ARRAY` is defined,
 then this assertion can also be used to directly compare the pointers to verify
 that they are pointing to the same memory address.
 
@@ -420,6 +420,27 @@ from the defaults. We've tried to specify what the defaults are below.
 
   * default: *nil*
 
+* `:create_error_stubs`:
+  New users of CMock sometimes struggle with the concept that CMock is
+  generating differently named interface functions for a mock depending
+  on whether a function to be mocked has a return value or not (see
+  description of the plugins `:Expect`, `:ExpectAnyArgs`, `:Array`, `:Ignore`,
+  `:IgnoreStateless` above). They are looking e.g. for a function `func_Expect()`
+  while CMock generated the function `func_ExpectAndReturn()` instead.
+  This has proven to be a significant hurdle, because it is not easy to
+  spot the slightly different named function within the generated mock.
+  Therefore CMock (v2.6.0 and newer) is generating *both* functions
+  per default, although one of them has only a "stub" functionality:
+  on call it will always fail the test emitting a helpful error message
+  pointing towards the correct function.
+
+  Experienced CMock users on the other hand might prefer the original
+  behavior, where no additional error stubs are generated - e.g. to
+  ensure code completion offers only "real" functionality of the mock.
+  In this case, the option `:create_error_stubs` can be set to false.
+
+  * default: true
+
 * `:enforce_strict_ordering`:
   CMock always enforces the order that you call a particular function,
   so if you expect GrabNabber(int size) to be called three times, it
@@ -637,7 +658,7 @@ from the defaults. We've tried to specify what the defaults are below.
   for the test code to also see the newly generated header ,and not
   the old header with inline functions, the build system has to add
   the mock folder to the include paths.
-  
+
   Furthermore, we need to keep the order of include paths in mind. We
   have to set the mock folder before the other includes to avoid the
   test code including the original header instead of the newly
