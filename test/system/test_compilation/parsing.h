@@ -84,6 +84,15 @@ typedef struct
   int (*another_function_pointer_in_a_struct) (void);
 } another_thing_that_should_get_ignored;
 
+typedef enum
+{
+  A_ENUM_VALUE = -18,   /**< Comment */
+  ANOTHER_ENUM_VALUE = -19 /**< Another comment.
+                                This one goes on and on. */
+} SET_OF_ENUM_VALUES_T;
+
+void DoesStuffWithEnum(SET_OF_ENUM_VALUES_T enumVal);
+
 inline int stuff(int num)
 {
     int reg = 0x12;
