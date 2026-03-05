@@ -5,9 +5,9 @@ CMock: A Summary
 
 *This documentation is released under a Creative Commons 3.0 Attribution Share-Alike License*
 
- - [Known Issues](docs/CMockKnownIssues.md)
- - [Change Log](docs/CMockChangeLog.md)
- - [How Does CMock Validate Arguments](docs/CMock_ArgumentValidation.md)
+ - [Known Issues](CMockKnownIssues.md)
+ - [Change Log](CMockChangeLog.md)
+ - [How Does CMock Validate Arguments](CMock_ArgumentValidation.md)
 
 What Exactly Are We Talking About Here?
 ---------------------------------------
