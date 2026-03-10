@@ -1,0 +1,28 @@
+add_newline = true
+
+[username]
+format = " [\\u256D\\u2500$user]($style)@"
+style_user = "bold red"
+show_always = true
+
+[hostname]
+format = "[$hostname]($style) in "
+style = "bold dimmed red"
+
+[directory]
+style = "purple"
+truncate_to_repo = true
+
+[git_branch]
+style = "bold cyan"
+
+[git_status]
+style = "white"
+
+[cmd_duration]
+format = " took [$duration]($style)"
+
+[character]
+success_symbol = " [\\u2570\\u2500\\u03BB](bold red)"
+error_symbol = " [\\u0D7](bold red)"
+use_symbol_for_status = true
