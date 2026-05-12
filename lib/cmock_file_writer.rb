@@ -42,7 +42,13 @@ class CMockFileWriter
 
   def update_file(dest, src)
     require 'fileutils'
-    FileUtils.rm(dest, :force => true)
-    FileUtils.mv(src, dest)
+
+    # Only write files if the contents differ, may prevent unnecessary compilation
+    if File.exist?(dest) && File.binread(dest) == File.binread(src)
+        FileUtils.rm(src, :force => true)
+    else
+        FileUtils.rm(dest, :force => true)
+        FileUtils.mv(src, dest)
+    end
   end
 end
