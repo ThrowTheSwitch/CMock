@@ -14,7 +14,7 @@ require './rakefile_helper'
 
 include RakefileHelpers
 
-DEFAULT_CONFIG_FILE = 'gcc.yml'
+DEFAULT_CONFIG_FILE = 'gcc_64.yml'
 CMOCK_TEST_ROOT = File.expand_path(File.dirname(__FILE__))
 
 SYSTEM_TEST_SUPPORT_DIRS = [
@@ -30,7 +30,6 @@ end
 
 task :prep_system_tests => SYSTEM_TEST_SUPPORT_DIRS
 
-configure_clean
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
 task :default => [:test]
@@ -67,7 +66,7 @@ namespace :test do
 
   desc "Run C Unit Tests"
   task :c => [:prep_system_tests] do
-    unless ($cfg['unsupported'].include? "C")
+    unless (unsupported_tests.include? "C")
       build_and_test_c_files
     end
   end
@@ -75,9 +74,9 @@ namespace :test do
   desc "Run System Tests"
   task :system => [:clobber, :prep_system_tests] do
     #get a list of all system tests, removing unsupported tests for this compiler
-    sys_unsupported  = $cfg['unsupported'].map {|a| 'system/test_interactions/'+a+'.yml'}
+    sys_unsupported  = unsupported_tests.map {|a| 'system/test_interactions/'+a+'.yml'}
     sys_tests_to_run = FileList['system/test_interactions/*.yml'] - sys_unsupported
-    compile_unsupported  = $cfg['unsupported'].map {|a| SYSTEST_COMPILE_MOCKABLES_PATH+a+'.h'}
+    compile_unsupported  = unsupported_tests.map {|a| SYSTEST_COMPILE_MOCKABLES_PATH+a+'.h'}
     compile_tests_to_run = FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'] - compile_unsupported
     unless (sys_unsupported.empty? and compile_unsupported.empty?)
       report "\nIgnoring these system tests..."
@@ -134,7 +133,7 @@ namespace :style do
 
   desc "Attempt to Autocorrect style"
   task :auto  => ['style:clean'] do
-    report execute("rubocop ../lib ../examples ../config ../scripts --auto-correct --config ../vendor/unity/test/.rubocop.yml", true)
+    report execute("rubocop ../lib ../examples ../config ../scripts --autocorrect --config ../vendor/unity/test/.rubocop.yml", true)
     report "Autocorrected What We Could."
   end
 

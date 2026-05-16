@@ -5,41 +5,13 @@
 #   SPDX-License-Identifier: MIT
 # =========================================================================
 
----
-compiler:
-  path: gcc
-  options:
-    - '-c'
-    - '-m64'
-    - '-Wall'
-    - '-Wunused-parameter'
-    - '-Wno-address'
-    - '-Wno-invalid-token-paste'
-    - '-std=c99'
-    - '-pedantic'
-  includes:
-    prefix: '-I'
-  defines:
-    prefix: '-D'
-    items:
-      - CMOCK
-      - 'UNITY_SUPPORT_64'
-      - 'UNITY_POINTER_WIDTH=64'
-  object_files:
-    prefix: '-o'
-    extension: '.o'
+# CMock overlay for vendor/unity/test/targets/gcc_64.yml
+# Only contains additions not present in the Unity base target.
 
-linker:
-  path: gcc
-  options:
-    - -lm
-    - '-m64'
-  object_files:
-    extension: '.o'
-  bin_files:
-    prefix: '-o'
-    extension: '.exe'
+:defines:
+  :test:
+  - UNITY_POINTER_WIDTH=64
 
-unsupported:
+:unsupported:
   - out_of_memory
   - callingconv

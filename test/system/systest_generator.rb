@@ -151,7 +151,7 @@ class SystemTestGenerator
 
     require 'cmock.rb'
     cmock = CMock.new(GENERATED_PATH + namix + 'cmock' + YAML_EXTENSION)
-    cmock.setup_skeletons("#{$cfg['compiler']['source_path']}#{name}.h")
+    cmock.setup_skeletons("#{$proj[:paths][:source].first}#{name}.h")
   end
 
   def write_header_file(filename, upcase_name, include_list=[])

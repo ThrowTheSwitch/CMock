@@ -30,5 +30,4 @@
 :defines:
   :common:
     - CMOCK
-    - UNITY_SUPPORT_64
 

@@ -6,40 +6,40 @@
 # =========================================================================
 
 ---
-compiler:
-  path: gcc
-  options:
-    - '-c'
-    - '-Wall'
-    - '-Wextra'
-    - '-Wunused-parameter'
-    - '-Wno-address'
-    - '-Wno-invalid-token-paste'
-    - '-std=c99'
-    - '-pedantic'
-    - '-O0'
-  includes:
-    prefix: '-I'
-  defines:
-    prefix: '-D'
-    items:
-      - CMOCK
-      - 'UNITY_SUPPORT_64'
-  object_files:
-    prefix: '-o'
-    extension: '.o'
-
-linker:
-  path: gcc
-  options:
-    - -lm
-  object_files:
-    extension: '.o'
-  bin_files:
-    prefix: '-o'
-    extension: '.exe'
-
-unsupported:
+colour: true
+:tools:
+  :test_compiler:
+    :name: compiler
+    :executable: gcc
+    :arguments:
+    - "-c"
+    - "-Wall"
+    - "-Wextra"
+    - "-Wunused-parameter"
+    - "-Wno-address"
+    - "-Wno-invalid-token-paste"
+    - "-std=c99"
+    - "-pedantic"
+    - "-O0"
+    - '-I"$": COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE'
+    - '-I"$": COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR'
+    - "-D$: COLLECTION_DEFINES_TEST_AND_VENDOR"
+    - "${1}"
+    - "-o ${2}"
+  :test_linker:
+    :name: linker
+    :executable: gcc
+    :arguments:
+    - "${1}"
+    - "-lm"
+    - "-o ${2}"
+:extension:
+  :object: ".o"
+  :executable: ".exe"
+:defines:
+  :test:
+  - UNITY_SUPPORT_64
+:unsupported:
   - out_of_memory
   - unity_64bit_support
   - callingconv

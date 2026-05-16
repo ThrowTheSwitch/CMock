@@ -5,73 +5,13 @@
 #   SPDX-License-Identifier: MIT
 # =========================================================================
 
----
-compiler:
-  path: clang
-  options:
-    - '-c'
-    - '-Wall'
-    - '-Wextra'
-    - '-Werror'
-    #- '-Wcast-qual'
-    - '-Wconversion'
-    - '-Wtautological-compare'
-    #- '-Wtautological-pointer-compare'
-    - '-Wdisabled-optimization'
-    - '-Wformat=2'
-    - '-Winit-self'
-    - '-Winline'
-    - '-Winvalid-pch'
-    - '-Wmissing-declarations'
-    - '-Wmissing-include-dirs'
-    - '-Wmissing-prototypes'
-    - '-Wnonnull'
-    - '-Wpacked'
-    - '-Wpointer-arith'
-    - '-Wredundant-decls'
-    - '-Wswitch-default'
-    - '-Wstrict-aliasing=2'
-    - '-Wstrict-overflow=5'
-    - '-Wuninitialized'
-    - '-Wunused'
-    - '-Wunreachable-code'
-    - '-Wreturn-type'
-    - '-Wshadow'
-    - '-Wundef'
-    - '-Wwrite-strings'
-    - '-Wbad-function-cast'
-    - '-Wno-missing-prototypes' #we've been lazy about things like setUp and tearDown
-    - '-Wno-invalid-token-paste'
-    - '-fms-extensions'
-    - '-fno-omit-frame-pointer'
-    #- '-ffloat-store'
-    - '-fno-common'
-    - '-fstrict-aliasing'
-    - '-std=gnu99'
-    - '-pedantic'
-    - '-O0'
-  includes:
-    prefix: '-I'
-  defines:
-    prefix: '-D'
-    items:
-      - CMOCK
-      - 'UNITY_SUPPORT_64'
-      - 'UNITY_POINTER_WIDTH=64'
-  object_files:
-    prefix: '-o'
-    extension: '.o'
+# CMock overlay for vendor/unity/test/targets/clang_strict.yml
+# Only contains additions not present in the Unity base target.
 
-linker:
-  path: gcc
-  options:
-    - -lm
-  object_files:
-    extension: '.o'
-  bin_files:
-    prefix: '-o'
-    extension: '.exe'
+:defines:
+  :test:
+  - UNITY_POINTER_WIDTH=64
 
-unsupported:
+:unsupported:
   - out_of_memory
   - callingconv

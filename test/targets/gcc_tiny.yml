@@ -6,41 +6,41 @@
 # =========================================================================
 
 ---
-compiler:
-  path: gcc
-  options:
-    - '-c'
-    - '-Wall'
-    - '-Wextra'
-    - '-Wunused-parameter'
-    - '-Wno-address'
-    - '-Wno-invalid-token-paste'
-    - '-std=c99'
-    - '-pedantic'
-    - '-O0'
-  includes:
-    prefix: '-I'
-  defines:
-    prefix: '-D'
-    items:
-      - CMOCK
-      - 'CMOCK_MEM_STATIC'
-      - 'CMOCK_MEM_SIZE=1024'
-  object_files:
-    prefix: '-o'
-    extension: '.o'
-
-linker:
-  path: gcc
-  options:
-    - -lm
-  object_files:
-    extension: '.o'
-  bin_files:
-    prefix: '-o'
-    extension: '.exe'
-
-unsupported:
+colour: true
+:tools:
+  :test_compiler:
+    :name: compiler
+    :executable: gcc
+    :arguments:
+    - "-c"
+    - "-Wall"
+    - "-Wextra"
+    - "-Wunused-parameter"
+    - "-Wno-address"
+    - "-Wno-invalid-token-paste"
+    - "-std=c99"
+    - "-pedantic"
+    - "-O0"
+    - '-I"$": COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE'
+    - '-I"$": COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR'
+    - "-D$: COLLECTION_DEFINES_TEST_AND_VENDOR"
+    - "${1}"
+    - "-o ${2}"
+  :test_linker:
+    :name: linker
+    :executable: gcc
+    :arguments:
+    - "${1}"
+    - "-lm"
+    - "-o ${2}"
+:extension:
+  :object: ".o"
+  :executable: ".exe"
+:defines:
+  :test:
+  - CMOCK_MEM_STATIC
+  - CMOCK_MEM_SIZE=1024
+:unsupported:
   - all_plugins_but_other_limits
   - all_plugins_coexist
   - array_and_pointer_handling
