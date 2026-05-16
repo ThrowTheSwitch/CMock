@@ -41,9 +41,9 @@ module RakefileHelpers
     $cfg['linker']['object_files']['path']          = $proj[:project][:build_root]
     $cfg['linker']['bin_files']['destination']      = $proj[:project][:build_root]
 
-    # Merge includes: keep Array items from target (e.g., IAR tool paths), use project.yml for strings
-    tool_includes = $cfg['compiler']['includes']['items'].select { |i| i.is_a?(Array) }
-    $cfg['compiler']['includes']['items'] = tool_includes + $proj[:paths][:include]
+    # Merge includes: preserve any target-specific items (tool paths, local headers),
+    # then add project.yml paths (| deduplicates)
+    $cfg['compiler']['includes']['items'] = ($cfg['compiler']['includes']['items'] || []) | $proj[:paths][:include]
 
     # Merge defines: target-specific first, then project common defines
     $cfg['compiler']['defines']['items'] ||= []

@@ -8,10 +8,6 @@
 tools_root: &tools_root 'C:\Program Files\IAR Systems\Embedded Workbench 5.3\'
 compiler:
   path:             [*tools_root, 'arm\bin\iccarm.exe']
-  source_path:     &systest_generated_path './system/generated/'
-  unit_tests_path: &unit_tests_path '../examples/test/'
-  mocks_path:      &systest_mocks_path './system/generated/'
-  build_path:      &systest_build_path './system/build/'
   options:
     - --dlib_config
     - [*tools_root, 'arm\inc\DLib_Config_Normal.h']
@@ -40,14 +36,6 @@ compiler:
     prefix: '-I'
     items:
       - [*tools_root, 'arm\inc\']
-      - *systest_generated_path
-      - *unit_tests_path
-      - *systest_mocks_path
-      - '../src/'
-      - '../vendor/unity/src/'
-      - '../vendor/c_exception/lib/'
-      - './system/test_compilation/'
-      - './'
       - '.\iar\iar_v5\incIAR\'
   defines:
     prefix: '-D'
@@ -56,7 +44,6 @@ compiler:
   object_files:
     prefix: '-o'
     extension: '.r79'
-    destination: *systest_build_path
 
 linker:
   path: [*tools_root, 'arm\bin\ilinkarm.exe']
@@ -67,12 +54,10 @@ linker:
     - --entry __iar_program_start
     - --config iar\iar_v5\Resource\at91SAM7X256_RAM.icf
   object_files:
-    path: *systest_build_path
     extension: '.o'
   bin_files:
     prefix: '-o'
     extension: '.out'
-    destination: *systest_build_path
 
 simulator:
   path: [*tools_root, 'common\bin\CSpyBat.exe']
@@ -98,5 +83,3 @@ unsupported:
   - const
   - callingconv
   - unity_64bit_support
-
-colour: true
