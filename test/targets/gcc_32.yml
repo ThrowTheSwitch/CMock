@@ -1,0 +1,18 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+# CMock overlay for vendor/unity/test/targets/gcc_32.yml
+# Only contains additions not present in the Unity base target.
+---
+:defines:
+  :test:
+  - UNITY_SUPPORT_64
+
+:unsupported:
+  - out_of_memory
+  - unity_64bit_support
+  - callingconv
