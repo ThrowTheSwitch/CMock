@@ -1,0 +1,75 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+:project:
+  :build_root: 'build/'
+  :colour: true
+
+:paths:
+  :source:
+    - 'src/'
+  :include:
+    - 'src/'
+    - '../../src/'
+    - '../../vendor/unity/src/'
+    - '../../vendor/unity/examples/example_3/helper/'
+    - 'build/mocks/'
+    - 'test/'
+  :test: 'test/'
+  :build: 'build/'
+  :mocks: 'build/mocks/'
+
+:extension:
+  :object: '.o'
+  :executable: '.exe'
+
+:defines:
+  :common:
+    - __monitor
+    - UNITY_SUPPORT_64
+
+:cmock:
+  # Core configuration
+  :plugins: []
+  :verbosity: 2
+  :when_no_prototypes: :warn
+
+  # File configuration
+  :mock_path: 'build/mocks'
+  :skeleton_path: ''
+  :mock_prefix: 'Mock'
+  :mock_suffix: ''
+
+  # Parser configuration
+  :strippables:
+    - '(?:__attribute__\s*\([ (]*.*?[ )]*\)+)'
+  :attributes:
+    - __ramfunc
+    - __irq
+    - __fiq
+    - register
+    - extern
+  :c_calling_conventions:
+    - __stdcall
+    - __cdecl
+    - __fastcall
+  :treat_externs: :exclude
+  :treat_inlines: :exclude
+
+  # Type handling configuration
+  :memcmp_if_unknown: true
+  :when_ptr: :compare_data
+
+  # Mock generation configuration
+  :weak: ''
+  :enforce_strict_ordering: false
+  :fail_on_unexpected_calls: true
+  :callback_include_count: true
+  :callback_after_arg_check: false
+  :includes:
+    - Types.h
+  :exclude_setjmp_h: false

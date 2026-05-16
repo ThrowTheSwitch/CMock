@@ -1,0 +1,34 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+:project:
+  :build_root: './system/build/'
+  :colour: true
+
+:paths:
+  :source:
+    - './system/generated/'
+  :include:
+    - './system/generated/'
+    - '../examples/test/'
+    - '../src/'
+    - '../vendor/unity/src/'
+    - '../vendor/c_exception/lib/'
+    - './system/test_compilation/'
+    - './'
+  :build: './system/build/'
+  :test_compilation: './system/test_compilation/'
+
+:extension:
+  :object: '.o'
+  :executable: '.exe'
+
+:defines:
+  :common:
+    - CMOCK
+    - UNITY_SUPPORT_64
+

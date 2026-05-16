@@ -32,7 +32,24 @@ module RakefileHelpers
   def load_configuration(config_file)
     $cfg_file = config_file
     $cfg = load_yaml('./targets/' + $cfg_file)
-    $colour_output = false unless $cfg['colour']
+    $proj = load_yaml('./project.yml')
+
+    # Apply project-level paths, overriding any hardcoded paths in the target file
+    $cfg['compiler']['source_path']                 = $proj[:paths][:source].first
+    $cfg['compiler']['build_path']                  = $proj[:project][:build_root]
+    $cfg['compiler']['object_files']['destination'] = $proj[:project][:build_root]
+    $cfg['linker']['object_files']['path']          = $proj[:project][:build_root]
+    $cfg['linker']['bin_files']['destination']      = $proj[:project][:build_root]
+
+    # Merge includes: keep Array items from target (e.g., IAR tool paths), use project.yml for strings
+    tool_includes = $cfg['compiler']['includes']['items'].select { |i| i.is_a?(Array) }
+    $cfg['compiler']['includes']['items'] = tool_includes + $proj[:paths][:include]
+
+    # Merge defines: target-specific first, then project common defines
+    $cfg['compiler']['defines']['items'] ||= []
+    $cfg['compiler']['defines']['items'] |= $proj[:defines][:common]
+
+    $colour_output = $proj[:project][:colour]
   end
 
   def configure_clean

@@ -24,8 +24,26 @@ module RakefileHelpers
 
   def load_configuration(config_file)
     $cfg_file = config_file
-    $cfg = load_yaml(File.read("./targets/#{$cfg_file}"))
-    $colour_output = false unless $cfg['colour']
+    $cfg = load_yaml(File.read("../../test/targets/#{$cfg_file}"))
+    $proj = load_yaml(File.read('./project.yml'))
+
+    # Apply project-level paths, overriding the test-system paths in the target file
+    $cfg['compiler']['source_path']                 = $proj[:paths][:source].first
+    $cfg['compiler']['unit_tests_path']             = $proj[:paths][:test]
+    $cfg['compiler']['build_path']                  = $proj[:project][:build_root]
+    $cfg['compiler']['object_files']['destination'] = $proj[:project][:build_root]
+    $cfg['linker']['object_files']['path']          = $proj[:project][:build_root]
+    $cfg['linker']['bin_files']['destination']      = $proj[:project][:build_root]
+
+    # Merge includes: keep Array items from target (e.g., IAR tool paths), use project.yml for strings
+    tool_includes = $cfg['compiler']['includes']['items'].select { |i| i.is_a?(Array) }
+    $cfg['compiler']['includes']['items'] = tool_includes + $proj[:paths][:include]
+
+    # Merge defines: target-specific first, then project common defines
+    $cfg['compiler']['defines']['items'] ||= []
+    $cfg['compiler']['defines']['items'] |= $proj[:defines][:common]
+
+    $colour_output = $proj[:project][:colour]
   end
 
   def configure_clean
@@ -196,13 +214,13 @@ module RakefileHelpers
     # Build and execute each unit test
     test_files.each do |test|
       # Detect dependencies and build required required modules
-      header_list = (extract_headers(test) + ['cmock.h'] + [$cfg[:cmock][:unity_helper_path]]).compact.uniq
+      header_list = (extract_headers(test) + ['cmock.h'] + [($proj[:cmock] || {})[:unity_helper_path]]).compact.uniq
       header_list.each do |header|
         # create mocks if needed
         next unless header =~ /Mock/
 
         require '../../lib/cmock'
-        @cmock ||= CMock.new(".//targets//#{$cfg_file}")
+        @cmock ||= CMock.new($proj[:cmock])
         @cmock.setup_mocks([$cfg['compiler']['source_path'] + header.gsub('Mock', '')])
       end
 
@@ -221,7 +239,7 @@ module RakefileHelpers
       runner_name = "#{test_base}_Runner.c"
       if $cfg['compiler']['runner_path'].nil?
         runner_path = "#{$cfg['compiler']['build_path']}#{runner_name}"
-        test_gen = UnityTestRunnerGenerator.new(".//targets//#{$cfg_file}")
+        test_gen = UnityTestRunnerGenerator.new($cfg)
         test_gen.run(test, runner_path)
       else
         runner_path = $cfg['compiler']['runner_path'] + runner_name
@@ -258,7 +276,7 @@ module RakefileHelpers
     report 'Building application...'
 
     obj_list = []
-    load_configuration(".//targets//#{$cfg_file}")
+    load_configuration($cfg_file)
     main_path = $cfg['compiler']['source_path'] + main + C_EXTENSION
 
     # Detect dependencies and build required required modules
