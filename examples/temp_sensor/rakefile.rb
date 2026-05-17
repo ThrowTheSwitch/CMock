@@ -39,8 +39,8 @@ task :ci => [:default]
 task :cruise => [:default]
 
 desc 'Load configuration'
-task :config, :config_file do |_t, args|
-  configure_toolchain(args[:config_file])
+task :config, [:config_file, :cmock_overlay] do |_t, args|
+  configure_toolchain(args[:config_file], args[:cmock_overlay])
 end
 
 desc 'Return error on Failures'

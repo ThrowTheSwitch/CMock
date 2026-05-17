@@ -42,7 +42,7 @@ module RakefileHelpers
     nil
   end
 
-  def load_configuration(config_file)
+  def load_configuration(config_file, cmock_overlay = nil)
     $cfg_file = config_file
     $proj = load_yaml('./project.yml')
 
@@ -54,7 +54,7 @@ module RakefileHelpers
       puts "Loading Unity target:  #{unity_target}"
       $unity_cfg = load_yaml(unity_target)
 
-      cmock_file = find_cmock_target(cmock_targets_dir, $cfg_file)
+      cmock_file = cmock_overlay || find_cmock_target(cmock_targets_dir, $cfg_file)
       if cmock_file
         puts "Loading CMock overlay: #{cmock_targets_dir}/#{cmock_file}"
         $cmock_cfg = load_yaml("#{cmock_targets_dir}/#{cmock_file}")
@@ -76,8 +76,11 @@ module RakefileHelpers
     CLEAN.include($proj[:project][:build_root] + '*.*')
   end
 
-  def configure_toolchain(config_file)
-    load_configuration(config_file)
+  def configure_toolchain(config_file = DEFAULT_CONFIG_FILE, cmock_overlay = nil)
+    config_file = config_file || DEFAULT_CONFIG_FILE
+    config_file += '.yml' unless config_file =~ /\.yml$/i
+    cmock_overlay += '.yml' if cmock_overlay && cmock_overlay !~ /\.yml$/i
+    load_configuration(config_file, cmock_overlay)
     configure_clean
   end
 

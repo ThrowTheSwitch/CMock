@@ -37,10 +37,8 @@ task :ci      => [:no_color, :default, 'test:examples', 'style:check']
 task :cruise  => :ci
 
 desc "Load configuration"
-task :config, :config_file do |t, args|
-  args = {:config_file => DEFAULT_CONFIG_FILE} if args[:config_file].nil?
-  args = {:config_file => args[:config_file] + '.yml'} unless args[:config_file] =~ /\.yml$/i
-  configure_toolchain(args[:config_file])
+task :config, [:config_file, :cmock_overlay] do |t, args|
+  configure_toolchain(args[:config_file], args[:cmock_overlay])
 end
 
 # Still support testing everything with just 'test' but switch default to ceedling-like test:all
