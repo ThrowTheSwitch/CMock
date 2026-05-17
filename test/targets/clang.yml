@@ -5,12 +5,8 @@
 #   SPDX-License-Identifier: MIT
 # =========================================================================
 
-# CMock overlay for vendor/unity/test/targets/iar_arm_v5.yml
+# CMock overlay for vendor/unity/test/targets/clang_strict.yml
 # Only contains additions not present in the Unity base target.
-
 :unsupported:
   - out_of_memory
-  - nonstandard_parsed_stuff_1
-  - const
   - callingconv
-  - unity_64bit_support
