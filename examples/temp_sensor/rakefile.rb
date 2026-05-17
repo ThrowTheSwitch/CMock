@@ -20,7 +20,7 @@ REQUIRED_DIRS.each do |v|
 end
 
 # Load default configuration, for now
-DEFAULT_CONFIG_FILE = 'gcc.yml'.freeze
+DEFAULT_CONFIG_FILE = 'gcc_64.yml'.freeze
 configure_toolchain(DEFAULT_CONFIG_FILE)
 
 task :unit do

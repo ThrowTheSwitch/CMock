@@ -22,18 +22,41 @@ module RakefileHelpers
     YAML.load(yaml_string)
   end
 
+  def find_cmock_target(targets_dir, config_file)
+    return config_file if File.exist?("#{targets_dir}/#{config_file}")
+
+    basename = File.basename(config_file, '.yml')
+    while basename.include?('_')
+      basename = basename.rpartition('_').first
+      candidate = "#{basename}.yml"
+      return candidate if File.exist?("#{targets_dir}/#{candidate}")
+    end
+
+    nil
+  end
+
   def load_configuration(config_file)
     $cfg_file = config_file
     $proj = load_yaml(File.read('./project.yml'))
 
-    unity_target = "../../vendor/unity/test/targets/#{$cfg_file}"
-    cmock_target = "../../test/targets/#{$cfg_file}"
+    unity_target      = "../../vendor/unity/test/targets/#{$cfg_file}"
+    cmock_targets_dir = '../../test/targets'
 
     if File.exist?(unity_target)
+      puts "Loading Unity target:  #{unity_target}"
       $unity_cfg = load_yaml(File.read(unity_target))
-      $cmock_cfg = File.exist?(cmock_target) ? load_yaml(File.read(cmock_target)) : {}
+
+      cmock_file = find_cmock_target(cmock_targets_dir, $cfg_file)
+      if cmock_file
+        puts "Loading CMock overlay: #{cmock_targets_dir}/#{cmock_file}"
+        $cmock_cfg = load_yaml(File.read("#{cmock_targets_dir}/#{cmock_file}"))
+      else
+        puts "No CMock overlay found for #{$cfg_file}"
+        $cmock_cfg = {}
+      end
     else
-      $unity_cfg = load_yaml(File.read(cmock_target))
+      puts "Loading CMock-only target: #{cmock_targets_dir}/#{$cfg_file}"
+      $unity_cfg = load_yaml(File.read("#{cmock_targets_dir}/#{$cfg_file}"))
       $cmock_cfg = {}
     end
 
