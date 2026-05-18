@@ -29,26 +29,63 @@ module RakefileHelpers
     end
   end
 
-  def load_configuration(config_file)
+  def find_cmock_target(targets_dir, config_file)
+    return config_file if File.exist?("#{targets_dir}/#{config_file}")
+
+    basename = File.basename(config_file, '.yml')
+    while basename.include?('_')
+      basename = basename.rpartition('_').first
+      candidate = "#{basename}.yml"
+      return candidate if File.exist?("#{targets_dir}/#{candidate}")
+    end
+
+    nil
+  end
+
+  def load_configuration(config_file, cmock_overlay = nil)
     $cfg_file = config_file
-    $cfg = load_yaml('./targets/' + $cfg_file)
-    $colour_output = false unless $cfg['colour']
+    $proj = load_yaml('./project.yml')
+
+    unity_target    = "../vendor/unity/test/targets/#{$cfg_file}"
+    cmock_targets_dir = './targets'
+
+    if File.exist?(unity_target)
+      # Load Unity base target, then CMock overlay (unsupported list, extra defines)
+      puts "Loading Unity target:  #{unity_target}"
+      $unity_cfg = load_yaml(unity_target)
+
+      cmock_file = cmock_overlay || find_cmock_target(cmock_targets_dir, $cfg_file)
+      if cmock_file
+        puts "Loading CMock overlay: #{cmock_targets_dir}/#{cmock_file}"
+        $cmock_cfg = load_yaml("#{cmock_targets_dir}/#{cmock_file}")
+      else
+        puts "No CMock overlay found for #{$cfg_file}"
+        $cmock_cfg = {}
+      end
+    else
+      # CMock-only target (no Unity equivalent); it uses Unity format directly
+      puts "Loading CMock-only target: #{cmock_targets_dir}/#{$cfg_file}"
+      $unity_cfg = load_yaml("#{cmock_targets_dir}/#{$cfg_file}")
+      $cmock_cfg = {}
+    end
+
+    $colour_output = $proj[:project][:colour]
   end
 
   def configure_clean
-    CLEAN.include(SYSTEST_GENERATED_FILES_PATH + '*.*')
-    CLEAN.include(SYSTEST_BUILD_FILES_PATH + '*.*')
+    CLEAN.include($proj[:project][:build_root] + '*.*')
   end
 
-  def configure_toolchain(config_file)
-    load_configuration(config_file)
+  def configure_toolchain(config_file = DEFAULT_CONFIG_FILE, cmock_overlay = nil)
+    config_file = config_file || DEFAULT_CONFIG_FILE
+    config_file += '.yml' unless config_file =~ /\.yml$/i
+    cmock_overlay += '.yml' if cmock_overlay && cmock_overlay !~ /\.yml$/i
+    load_configuration(config_file, cmock_overlay)
     configure_clean
   end
 
   def get_local_include_dirs
-    include_dirs = $cfg['compiler']['includes']['items'].dup
-    include_dirs.delete_if {|dir| dir.is_a?(Array)}
-    return include_dirs
+    $proj[:paths][:include].reject { |dir| dir.is_a?(Array) }
   end
 
   def extract_headers(filename)
@@ -56,119 +93,129 @@ module RakefileHelpers
     lines = File.readlines(filename)
     lines.each do |line|
       m = line.match(/^\s*#include\s+\"\s*(.+\.[hH])\s*\"/)
-      if not m.nil?
-        includes << m[1]
-      end
+      includes << m[1] unless m.nil?
     end
-    includes << File.basename(filename,".c").slice(5,256) + "_unity_helper.h"
+    includes << File.basename(filename, ".c").slice(5, 256) + "_unity_helper.h"
     return includes
   end
 
   def find_source_file(header, paths)
     paths.each do |dir|
       src_file = dir + header.ext(C_EXTENSION)
-      if (File.exist?(src_file))
-        return src_file
+      return src_file if File.exist?(src_file)
+    end
+    nil
+  end
+
+  def tackit(strings)
+    case strings
+    when Array
+      "\"#{strings.join}\""
+    when /^-/
+      strings
+    when /\s/
+      "\"#{strings}\""
+    else
+      strings
+    end
+  end
+
+  # All defines: project common + Unity target + CMock overlay + any extras
+  def all_defines(extra = [])
+    (($proj[:defines][:common] || []) +
+     ($unity_cfg[:defines][:test] || []) +
+     (($cmock_cfg[:defines] || {})[:test] || []) +
+     extra).uniq
+  end
+
+  # Toolchain-specific include paths: Array items in Unity's :paths: :test:
+  # (e.g., IAR compiler include directories encoded as path-concatenation arrays)
+  def toolchain_include_paths
+    ($unity_cfg[:paths][:test] || []).select { |p| p.is_a?(Array) }
+  end
+
+  # Returns the unsupported test list, regardless of whether it came from
+  # a CMock overlay or a CMock-only target file.
+  def unsupported_tests
+    $cmock_cfg[:unsupported] || $unity_cfg[:unsupported] || []
+  end
+
+  # Resolve Unity's argument template tokens and produce a flat argument string.
+  #   COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE  → -I per toolchain path (Arrays from :paths: :test:)
+  #   COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR → -I per project include path
+  #   COLLECTION_DEFINES_TEST_AND_VENDOR       → -D per define
+  #   ${1}  → input file(s)
+  #   ${2}  → output file
+  def build_argument_list(raw_args, toolchain_paths, project_paths, defines, input, output)
+    result = []
+    raw_args.each do |arg|
+      if arg.is_a?(Array)
+        result << arg.join
+      elsif arg.include?('COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE')
+        toolchain_paths.each { |p| result << "-I\"#{p.is_a?(Array) ? p.join : p}\"" }
+      elsif arg.include?('COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR')
+        project_paths.each { |p| result << "-I\"#{p}\"" }
+      elsif arg.include?('COLLECTION_DEFINES_TEST_AND_VENDOR')
+        defines.each { |d| result << "-D#{d}" }
+      else
+        result << arg.gsub('${1}', input.to_s).gsub('${2}', output.to_s)
       end
     end
-    return nil
+    result.join(' ')
   end
 
-  def squash(prefix, items)
-    result = ''
-    items.each { |item| result += " #{prefix}#{tackit(item)}" }
-    return result
-  end
+  def compile(file, extra_defines = [])
+    tool       = $unity_cfg[:tools][:test_compiler]
+    ext        = $unity_cfg[:extension][:object]
+    build_root = $proj[:project][:build_root]
+    obj_file   = build_root + File.basename(file, C_EXTENSION) + ext
 
-  def build_compiler_fields
-    command  = tackit($cfg['compiler']['path'])
-    if $cfg['compiler']['defines']['items'].nil?
-      defines  = ''
-    else
-      defines  = squash($cfg['compiler']['defines']['prefix'], $cfg['compiler']['defines']['items'])
-    end
-    options  = squash('', $cfg['compiler']['options'])
-    includes = squash($cfg['compiler']['includes']['prefix'], $cfg['compiler']['includes']['items'])
-    includes = includes.gsub(/\\ /, ' ').gsub(/\\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
-    return {:command => command, :defines => defines, :options => options, :includes => includes}
-  end
-
-  def compile(file, defines=[])
-    compiler = build_compiler_fields
-    cmd_str = "#{compiler[:command]}#{compiler[:defines]}#{defines.inject(''){|all, a| ' -D'+a+all }}#{compiler[:options]}#{compiler[:includes]} #{file} " +
-      "#{$cfg['compiler']['object_files']['prefix']}#{$cfg['compiler']['object_files']['destination']}"
-    obj_file = "#{File.basename(file, C_EXTENSION)}#{$cfg['compiler']['object_files']['extension']}"
-    execute(cmd_str + obj_file)
-    return obj_file
-  end
-
-  def build_linker_fields
-    command  = tackit($cfg['linker']['path'])
-    if $cfg['linker']['options'].nil?
-      options  = ''
-    else
-      options  = squash('', $cfg['linker']['options'])
-    end
-    if ($cfg['linker']['includes'].nil? || $cfg['linker']['includes']['items'].nil?)
-      includes = ''
-    else
-      includes = squash($cfg['linker']['includes']['prefix'], $cfg['linker']['includes']['items'])
-    end
-    includes = includes.gsub(/\\ /, ' ').gsub(/\\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
-    return {:command => command, :options => options, :includes => includes}
+    cmd_str = tackit(tool[:executable]) + ' ' +
+              build_argument_list(tool[:arguments],
+                                  toolchain_include_paths,
+                                  $proj[:paths][:include],
+                                  all_defines(extra_defines),
+                                  file, obj_file)
+    execute(cmd_str)
+    File.basename(obj_file)
   end
 
   def link_it(exe_name, obj_list)
-    linker = build_linker_fields
-    cmd_str = "#{linker[:command]}#{linker[:options]}#{linker[:includes]} " +
-      (obj_list.map{|obj|"#{$cfg['linker']['object_files']['path']}#{obj} "}).uniq.join +
-      $cfg['linker']['bin_files']['prefix'] + ' ' +
-      $cfg['linker']['bin_files']['destination'] +
-      exe_name + $cfg['linker']['bin_files']['extension']
+    tool       = $unity_cfg[:tools][:test_linker]
+    ext        = $unity_cfg[:extension][:executable]
+    build_root = $proj[:project][:build_root]
+
+    input_files = obj_list.uniq.map { |obj| build_root + obj }.join(' ')
+    output_file = build_root + exe_name + ext
+
+    cmd_str = tackit(tool[:executable]) + ' ' +
+              build_argument_list(tool[:arguments], [], [], [], input_files, output_file)
     execute(cmd_str)
   end
 
   def build_simulator_fields
-    return nil if $cfg['simulator'].nil?
-    if $cfg['simulator']['path'].nil?
-      command = ''
+    return nil unless $unity_cfg[:tools][:test_fixture]
+    tool      = $unity_cfg[:tools][:test_fixture]
+    executable = tackit(tool[:executable])
+    raw_args   = tool[:arguments] || []
+    idx        = raw_args.index('${1}')
+    if idx
+      pre  = raw_args[0...idx].map { |a| a.is_a?(Array) ? a.join : a }.join(' ')
+      post = raw_args[(idx + 1)..].map { |a| a.is_a?(Array) ? a.join : a }.join(' ')
     else
-      command = (tackit($cfg['simulator']['path']) + ' ')
+      pre  = ''
+      post = raw_args.map { |a| a.is_a?(Array) ? a.join : a }.join(' ')
     end
-    if $cfg['simulator']['pre_support'].nil?
-      pre_support = ''
-    else
-      pre_support = squash('', $cfg['simulator']['pre_support'])
-    end
-    if $cfg['simulator']['post_support'].nil?
-      post_support = ''
-    else
-      post_support = squash('', $cfg['simulator']['post_support'])
-    end
-    return {:command => command, :pre_support => pre_support, :post_support => post_support}
+    { command: "#{executable} ", pre_support: pre, post_support: post }
   end
 
   def execute(command_string, verbose=true, raise_on_failure=true)
-    #report command_string
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
     if ($?.exitstatus != 0) and (raise_on_failure)
       raise "#{command_string} failed. (Returned #{$?.exitstatus})"
     end
     return output
-  end
-
-  def tackit(strings)
-    case(strings)
-      when Array
-        "\"#{strings.join}\""
-      when /^-/
-        strings
-      when /\s/
-        "\"#{strings}\""
-      else
-        strings
-    end
   end
 
   def run_astyle(style_what)
@@ -183,14 +230,70 @@ module RakefileHelpers
     report "Styling C:PASS"
   end
 
+  def save_test_results(test_base, output)
+    build_root = $proj[:project][:build_root]
+    test_results = build_root + test_base
+    test_results += output.match(/OK\s*$/m) ? '.testpass' : '.testfail'
+    File.open(test_results, 'w') { |f| f.print output }
+  end
+
+  def collect_test_output(output)
+    total_tests    = 0
+    total_failures = 0
+    total_ignored  = 0
+    detail_lines   = []
+
+    output.each_line do |line|
+      stripped = line.chomp
+      if stripped =~ /(\d+) Tests (\d+) Failures (\d+) Ignored/
+        total_tests    += Regexp.last_match(1).to_i
+        total_failures += Regexp.last_match(2).to_i
+        total_ignored  += Regexp.last_match(3).to_i
+      elsif stripped =~ /^[^:]+:[^:]+:\w+(?:\([^)]*\))?:(?:PASS|FAIL|IGNORE)/
+        detail_lines << stripped
+      end
+    end
+
+    synthesized  = detail_lines.join("\n")
+    synthesized += "\n" unless detail_lines.empty?
+    synthesized += "#{total_tests} Tests #{total_failures} Failures #{total_ignored} Ignored\n"
+    synthesized += total_failures > 0 ? "FAILED\n" : "OK\n"
+    synthesized
+  end
+
+  def run_ruby_unit_tests
+    report "\n"
+    report "--------------------\n"
+    report "RUBY UNIT TEST SUITE\n"
+    report "--------------------\n"
+    total_runs = total_failures = total_errors = total_skips = 0
+    Dir['unit/*_test.rb'].sort.each do |tst|
+      report "\nRunning #{tst.to_s}"
+      output = execute("ruby -I. #{tst}", true, false)
+      output.each_line do |line|
+        if line =~ /(\d+) runs, \d+ assertions, (\d+) failures, (\d+) errors, (\d+) skips/
+          total_runs     += Regexp.last_match(1).to_i
+          total_failures += Regexp.last_match(2).to_i
+          total_errors   += Regexp.last_match(3).to_i
+          total_skips    += Regexp.last_match(4).to_i
+        end
+      end
+    end
+    failures = total_failures + total_errors
+    result  = "#{total_runs} Tests #{failures} Failures #{total_skips} Ignored\n"
+    result += failures > 0 ? "FAILED\n" : "OK\n"
+    save_test_results('ruby_unit_tests', result)
+    raise "Ruby unit tests failed." if failures > 0
+  end
+
   def report_summary
     summary = UnityTestSummary.new
     summary.root = File.expand_path(File.dirname(__FILE__)) + '/'
-    results_glob = "#{$cfg['compiler']['build_path']}*.test*"
+    results_glob = "#{$proj[:project][:build_root]}*.test*"
     results_glob.gsub!(/\\/, '/')
     results = Dir[results_glob]
     summary.targets = results
-    summary.run
+    report summary.run
     fail_out "FAIL: There were failures" if (summary.failures > 0)
   end
 
@@ -201,7 +304,6 @@ module RakefileHelpers
     test_files = FileList.new(SYSTEST_GENERATED_FILES_PATH + 'test*.c')
 
     load_configuration($cfg_file)
-    $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
 
     include_dirs = get_local_include_dirs
 
@@ -215,25 +317,23 @@ module RakefileHelpers
 
       report "Executing system tests in #{File.basename(test)}..."
 
-      # Detect dependencies and build required required modules
+      # Detect dependencies and build required modules
       extract_headers(test).each do |header|
 
         # Generate any needed mocks
-        if header =~ /^mock_(.*)\.h/i
+        if header =~ /^mock_(.*)\.[hH]$/i
           module_name = $1
           cmock = CMock.new(SYSTEST_GENERATED_FILES_PATH + cmock_config)
-          cmock.setup_mocks("#{$cfg['compiler']['source_path']}#{module_name}.h")
+          cmock.setup_mocks("#{$proj[:paths][:source].first}#{module_name}.h")
         end
         # Compile corresponding source file if it exists
         src_file = find_source_file(header, include_dirs)
-        if !src_file.nil?
-          obj_list << compile(src_file)
-        end
+        obj_list << compile(src_file) unless src_file.nil?
       end
 
       # Generate and build the test suite runner
       runner_name = test_base + '_runner.c'
-      runner_path = $cfg['compiler']['source_path'] + runner_name
+      runner_path = $proj[:paths][:source].first + runner_name
       UnityTestRunnerGenerator.new(SYSTEST_GENERATED_FILES_PATH + cmock_config).run(test, runner_path)
       obj_list << compile(runner_path)
 
@@ -244,15 +344,17 @@ module RakefileHelpers
       link_it(test_base, obj_list)
 
       # Execute unit test and generate results file
-      simulator = build_simulator_fields
-      executable = $cfg['linker']['bin_files']['destination'] + test_base + $cfg['linker']['bin_files']['extension']
-      if simulator.nil?
-        cmd_str = executable
-      else
-        cmd_str = "#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}"
-      end
+      simulator  = build_simulator_fields
+      ext        = $unity_cfg[:extension][:executable]
+      build_root = $proj[:project][:build_root]
+      executable = build_root + test_base + ext
+      cmd_str = if simulator.nil?
+                  executable
+                else
+                  "#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}"
+                end
       output = execute(cmd_str, false, false)
-      test_results = $cfg['compiler']['build_path'] + test_base + RESULT_EXTENSION
+      test_results = build_root + test_base + RESULT_EXTENSION
       File.open(test_results, 'w') { |f| f.print output }
     end
 
@@ -267,10 +369,8 @@ module RakefileHelpers
 
       test_file    = 'test_' + File.basename(test_case).ext(C_EXTENSION)
       result_file  = test_file.ext(RESULT_EXTENSION)
-      test_results = File.readlines(SYSTEST_BUILD_FILES_PATH + result_file).reject {|line| line.size < 10 } # we're rejecting lines that are too short to be realistic, which handles line ending problems
+      test_results = File.readlines(SYSTEST_BUILD_FILES_PATH + result_file).reject {|line| line.size < 10 }
       tests.each_with_index do |test, index|
-        # compare test's intended pass/fail state with pass/fail state in actual results;
-        # if they don't match, the system test has failed
         this_failed = case(test[:pass])
           when :ignore
             (test_results[index] =~ /:IGNORE/).nil?
@@ -284,7 +384,6 @@ module RakefileHelpers
           test_results[index] =~ /test#{index+1}:(.+)/
           failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:#{$1}"
         end
-        # some tests have additional requirements to check for (checking the actual output message)
         if (test[:verify_error]) and not (test_results[index] =~ /test#{index+1}:.*#{test[:verify_error]}/)
           total_failures += 1
           failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:should have output matching '#{test[:verify_error]}' but was '#{test_results[index]}'"
@@ -301,13 +400,15 @@ module RakefileHelpers
 
     if (failure_messages.size > 0)
       report 'System test failures:'
-      failure_messages.each do |failure|
-        report failure
-      end
+      failure_messages.each { |failure| report failure }
     end
 
     report ''
-
+    result  = failure_messages.join("\n")
+    result += "\n" unless failure_messages.empty?
+    result += "#{total_tests} Tests #{total_failures} Failures 0 Ignored\n"
+    result += total_failures > 0 ? "FAILED\n" : "OK\n"
+    save_test_results('system_interactions', result)
     return total_failures
   end
 
@@ -332,27 +433,27 @@ module RakefileHelpers
 
   def run_system_test_compilations(mockables)
     load '../lib/cmock.rb'
-
     load_configuration($cfg_file)
-    $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
 
     report "\n"
     report "------------------------------------\n"
     report "SYSTEM TEST MOCK COMPILATION SUMMARY\n"
     report "------------------------------------\n"
+    pass_count = 0
     mockables.each do |header|
       mock_filename = 'mock_' + File.basename(header).ext('.c')
       CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml').setup_mocks(header)
       report "Compiling #{mock_filename}..."
       compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
+      pass_count += 1
     end
+    report "#{pass_count} Tests 0 Failures 0 Ignored\nOK\n"
+    save_test_results('system_compilations', "#{pass_count} Tests 0 Failures 0 Ignored\nOK\n")
   end
 
   def run_system_test_profiles(mockables)
     load '../lib/cmock.rb'
-
     load_configuration($cfg_file)
-    $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
 
     report "\n"
     report "--------------------------\n"
@@ -375,25 +476,24 @@ module RakefileHelpers
     report "----------------\n"
     report "UNIT TEST C CODE\n"
     report "----------------\n"
-    errors = false
+    ext        = $unity_cfg[:extension][:executable]
+    build_root = $proj[:project][:build_root]
+    combined_output = ''
     FileList.new("c/*.yml").each do |yaml_file|
       test = load_yaml(yaml_file)
       report "\nTesting #{yaml_file.sub('.yml','')}"
       report "(#{test[:options].join(', ')})"
       test[:files].each { |f| compile(f, test[:options]) }
-      obj_files = test[:files].map { |f| f.gsub!(/.*\//,'').gsub!(C_EXTENSION, $cfg['compiler']['object_files']['extension']) }
+      obj_files = test[:files].map { |f| f.gsub!(/.*\//,'').gsub!(C_EXTENSION, $unity_cfg[:extension][:object]) }
       link_it('TestCMockC', obj_files)
-      if $cfg['simulator'].nil?
-        execute($cfg['linker']['bin_files']['destination'] + 'TestCMockC' + $cfg['linker']['bin_files']['extension'])
-      else
-        execute(tackit($cfg['simulator']['path'].join) + ' ' +
-            $cfg['simulator']['pre_support'].map{|o| tackit(o)}.join(' ') + ' ' +
-            $cfg['linker']['bin_files']['destination'] +
-            'TestCMockC' +
-            $cfg['linker']['bin_files']['extension'] + ' ' +
-            $cfg['simulator']['post_support'].map{|o| tackit(o)}.join(' ') )
-      end
+      simulator = build_simulator_fields
+      executable = build_root + 'TestCMockC' + ext
+      cmd = simulator.nil? ? executable : "#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}"
+      combined_output += execute(cmd, true, false) + "\n"
     end
+    result = collect_test_output(combined_output)
+    save_test_results('c_unit_tests', result)
+    raise "C unit tests failed." if result =~ /FAILED/
   end
 
   def run_examples(verbose=false, raise_on_failure=true)
@@ -401,12 +501,25 @@ module RakefileHelpers
     report "-----------------\n"
     report "VALIDATE EXAMPLES\n"
     report "-----------------\n"
-    [ "cd #{File.join("..","examples","make_example")} && make clean && make setup && make test",
-      "cd #{File.join("..","examples","temp_sensor")} && rake ci"
+    total_tests    = 0
+    total_failures = 0
+    total_ignored  = 0
+    [ "cd #{File.join("..", "examples", "make_example")} && make clean && make setup && make test",
+      "cd #{File.join("..", "examples", "temp_sensor")} && rake ci"
     ].each do |cmd|
       report "Testing '#{cmd}'"
-      execute(cmd, verbose, raise_on_failure)
+      execute(cmd, verbose, false).each_line do |line|
+        if line =~ /(\d+) TOTAL TESTS (\d+) TOTAL FAILURES (\d+) IGNORED/
+          total_tests    += Regexp.last_match(1).to_i
+          total_failures += Regexp.last_match(2).to_i
+          total_ignored  += Regexp.last_match(3).to_i
+        end
+      end
     end
+    result  = "#{total_tests} Tests #{total_failures} Failures #{total_ignored} Ignored\n"
+    result += total_failures > 0 ? "FAILED\n" : "OK\n"
+    save_test_results('examples', result)
+    raise "Examples failed." if total_failures > 0 && raise_on_failure
   end
 
   def fail_out(msg)
@@ -414,4 +527,3 @@ module RakefileHelpers
     exit(-1)
   end
 end
-

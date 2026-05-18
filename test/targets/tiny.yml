@@ -1,0 +1,37 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:defines:
+  :test:
+  - CMOCK_MEM_STATIC
+  - CMOCK_MEM_SIZE=1024
+:unsupported:
+  - all_plugins_but_other_limits
+  - all_plugins_coexist
+  - array_and_pointer_handling
+  - const_primitives_handling
+  - enforce_strict_ordering
+  - expect_and_return_custom_types
+  - expect_and_return_treat_as
+  - expect_and_throw
+  - expect_any_args
+  - fancy_pointer_handling
+  - function_pointer_handling
+  - newer_standards_stuff1
+  - nonstandard_pased_stuff_1
+  - nonstandard_pased_stuff_2
+  - parsing_challenges
+  - return_thru_ptr_and_expect_any_args
+  - return_thru_ptr_ignore_arg
+  - struct_union_enum_expect_and_return
+  - struct_union_enum_expect_and_return_with_plugins
+  - stubs_with_callbacks
+  - unity_64bit_support
+  - unity_ignores
+  - callingconv
+  - C

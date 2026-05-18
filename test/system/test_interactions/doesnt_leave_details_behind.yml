@@ -75,7 +75,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after an expect and return'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -89,7 +89,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after an expect'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -103,7 +103,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after throw expectation'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -119,7 +119,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after a mock call'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -134,7 +134,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after throw'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -151,7 +151,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after ignore'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -166,7 +166,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after ignored mock'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -181,7 +181,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after callback setup'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -198,7 +198,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after mock with callback'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -214,7 +214,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after expect any args'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -231,7 +231,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after mock which expected any args'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -247,7 +247,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after ignored arg'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -265,7 +265,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after mock which ignored an arg'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -282,7 +282,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after mock which threw a CException'
-      :verify_error: 'FAIL: Expected 1 Was 2. CustomFail'
+      :verify_error: 'FAIL: Expected 1 Was 2:CustomFail'
       :code: |
         test()
         {
@@ -299,7 +299,7 @@
 
     - :pass: FALSE
       :should: 'not contain mock details in failed assertion after mock which used a return thru ptr'
-      :verify_error: 'FAIL: Expected 3 Was 7. CustomFail'
+      :verify_error: 'FAIL: Expected 3 Was 7:CustomFail'
       :code: |
         test()
         {

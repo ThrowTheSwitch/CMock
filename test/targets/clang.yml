@@ -5,7 +5,7 @@
 #   SPDX-License-Identifier: MIT
 # =========================================================================
 
-# CMock overlay for vendor/unity/test/targets/gcc_64.yml
+# CMock overlay for vendor/unity/test/targets/clang_strict.yml
 # Only contains additions not present in the Unity base target.
 :unsupported:
   - out_of_memory

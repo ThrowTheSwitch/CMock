@@ -22,32 +22,67 @@ module RakefileHelpers
     YAML.load(yaml_string)
   end
 
-  def load_configuration(config_file)
+  def find_cmock_target(targets_dir, config_file)
+    return config_file if File.exist?("#{targets_dir}/#{config_file}")
+
+    basename = File.basename(config_file, '.yml')
+    while basename.include?('_')
+      basename = basename.rpartition('_').first
+      candidate = "#{basename}.yml"
+      return candidate if File.exist?("#{targets_dir}/#{candidate}")
+    end
+
+    nil
+  end
+
+  def load_configuration(config_file, cmock_overlay = nil)
     $cfg_file = config_file
-    $cfg = load_yaml(File.read("./targets/#{$cfg_file}"))
-    $colour_output = false unless $cfg['colour']
+    $proj = load_yaml(File.read('./project.yml'))
+
+    unity_target      = "../../vendor/unity/test/targets/#{$cfg_file}"
+    cmock_targets_dir = '../../test/targets'
+
+    if File.exist?(unity_target)
+      puts "Loading Unity target:  #{unity_target}"
+      $unity_cfg = load_yaml(File.read(unity_target))
+
+      cmock_file = cmock_overlay || find_cmock_target(cmock_targets_dir, $cfg_file)
+      if cmock_file
+        puts "Loading CMock overlay: #{cmock_targets_dir}/#{cmock_file}"
+        $cmock_cfg = load_yaml(File.read("#{cmock_targets_dir}/#{cmock_file}"))
+      else
+        puts "No CMock overlay found for #{$cfg_file}"
+        $cmock_cfg = {}
+      end
+    else
+      puts "Loading CMock-only target: #{cmock_targets_dir}/#{$cfg_file}"
+      $unity_cfg = load_yaml(File.read("#{cmock_targets_dir}/#{$cfg_file}"))
+      $cmock_cfg = {}
+    end
+
+    $colour_output = $proj[:project][:colour]
   end
 
   def configure_clean
-    CLEAN.include("#{$cfg['compiler']['build_path']}*.*") unless $cfg['compiler']['build_path'].nil?
+    CLEAN.include("#{$proj[:project][:build_root]}*.*")
   end
 
-  def configure_toolchain(config_file = DEFAULT_CONFIG_FILE)
-    config_file += '.yml' unless config_file =~ /\.yml$/
-    load_configuration(config_file)
+  def configure_toolchain(config_file = DEFAULT_CONFIG_FILE, cmock_overlay = nil)
+    config_file ||= DEFAULT_CONFIG_FILE
+    config_file += '.yml' unless config_file =~ /\.yml$/i
+    cmock_overlay += '.yml' if cmock_overlay && cmock_overlay !~ /\.yml$/i
+    load_configuration(config_file, cmock_overlay)
     configure_clean
   end
 
   def unit_test_files
-    path = $cfg['compiler']['unit_tests_path'] + "Test*#{C_EXTENSION}"
+    path = $proj[:paths][:test] + "Test*#{C_EXTENSION}"
     path.tr!('\\', '/')
     FileList.new(path)
   end
 
   def local_include_dirs
-    include_dirs = $cfg['compiler']['includes']['items'].dup
-    include_dirs.delete_if { |dir| dir.is_a?(Array) }
-    include_dirs
+    $proj[:paths][:include].reject { |dir| dir.is_a?(Array) }
   end
 
   def extract_headers(filename)
@@ -55,9 +90,7 @@ module RakefileHelpers
     lines = File.readlines(filename)
     lines.each do |line|
       m = line.match(/^\s*#include\s+"\s*(.+\.[hH])\s*"/)
-      unless m.nil?
-        includes << m[1]
-      end
+      includes << m[1] unless m.nil?
     end
     includes
   end
@@ -65,9 +98,7 @@ module RakefileHelpers
   def find_source_file(header, paths)
     paths.each do |dir|
       src_file = dir + header.ext(C_EXTENSION)
-      if File.exist?(src_file)
-        return src_file
-      end
+      return src_file if File.exist?(src_file)
     end
     nil
   end
@@ -85,79 +116,85 @@ module RakefileHelpers
     end
   end
 
-  def squash(prefix, items)
-    result = ''
-    items.each { |item| result += " #{prefix}#{tackit(item)}" }
-    result
+  # All defines: project common + Unity target + CMock overlay + any extras
+  def all_defines(extra = [])
+    (($proj[:defines][:common] || []) +
+     ($unity_cfg[:defines][:test] || []) +
+     (($cmock_cfg[:defines] || {})[:test] || []) +
+     extra).uniq
   end
 
-  def build_compiler_fields
-    command = tackit($cfg['compiler']['path'])
-    defines = if $cfg['compiler']['defines']['items'].nil?
-                ''
-              else
-                squash($cfg['compiler']['defines']['prefix'], $cfg['compiler']['defines']['items'])
-              end
-    options = squash('', $cfg['compiler']['options'])
-    includes = squash($cfg['compiler']['includes']['prefix'], $cfg['compiler']['includes']['items'])
-    includes = includes.gsub(/\\ /, ' ').gsub(/\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
-    { :command => command, :defines => defines, :options => options, :includes => includes }
+  # Toolchain-specific include paths: Array items in Unity's :paths: :test:
+  def toolchain_include_paths
+    if $unity_cfg[:paths] && $unity_cfg[:paths][:test]
+      $unity_cfg[:paths][:test]
+    else
+      []
+    end
   end
 
-  def compile(file, _defines = [])
-    compiler = build_compiler_fields
-    cmd_str  = "#{compiler[:command]}#{compiler[:defines]}#{compiler[:options]}#{compiler[:includes]} #{file} " \
-               "#{$cfg['compiler']['object_files']['prefix']}#{$cfg['compiler']['object_files']['destination']}"
-    obj_file = "#{File.basename(file, C_EXTENSION)}#{$cfg['compiler']['object_files']['extension']}"
-    execute(cmd_str + obj_file)
-    obj_file
+  # Resolve Unity's argument template tokens into a flat argument string.
+  def build_argument_list(raw_args, toolchain_paths, project_paths, defines, input, output)
+    result = []
+    raw_args.each do |arg|
+      if arg.is_a?(Array)
+        result << arg.join
+      elsif arg.include?('COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE')
+        toolchain_paths.each { |p| result << "-I\"#{p.is_a?(Array) ? p.join : p}\"" }
+      elsif arg.include?('COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR')
+        project_paths.each { |p| result << "-I\"#{p}\"" }
+      elsif arg.include?('COLLECTION_DEFINES_TEST_AND_VENDOR')
+        defines.each { |d| result << "-D#{d}" }
+      else
+        result << arg.gsub('${1}', input.to_s).gsub('${2}', output.to_s)
+      end
+    end
+    result.join(' ')
   end
 
-  def build_linker_fields
-    command = tackit($cfg['linker']['path'])
-    options = if $cfg['linker']['options'].nil?
-                ''
-              else
-                squash('', $cfg['linker']['options'])
-              end
-    includes = if $cfg['linker']['includes'].nil? || $cfg['linker']['includes']['items'].nil?
-                 ''
-               else
-                 squash($cfg['linker']['includes']['prefix'], $cfg['linker']['includes']['items'])
-               end
-    includes = includes.gsub(/\\ /, ' ').gsub(/\\"/, '"').gsub(/\\$/, '') # Remove trailing slashes (for IAR)
-    { :command => command, :options => options, :includes => includes }
+  def compile(file, extra_defines = [])
+    tool       = $unity_cfg[:tools][:test_compiler]
+    ext        = $unity_cfg[:extension][:object]
+    build_root = $proj[:project][:build_root]
+    obj_file   = build_root + File.basename(file, C_EXTENSION) + ext
+
+    cmd_str = "#{tackit(tool[:executable])} #{
+              build_argument_list(tool[:arguments],
+                                  toolchain_include_paths,
+                                  $proj[:paths][:include],
+                                  all_defines(extra_defines),
+                                  file, obj_file)}"
+    execute(cmd_str)
+    File.basename(obj_file)
   end
 
   def link_it(exe_name, obj_list)
-    linker = build_linker_fields
-    cmd_str = "#{linker[:command]}#{linker[:includes]} " \
-              "#{(obj_list.map { |obj| "#{$cfg['linker']['object_files']['path']}#{obj} " }).join}" \
-              "#{$cfg['linker']['bin_files']['prefix']} " \
-              "#{$cfg['linker']['bin_files']['destination']}" \
-              "#{exe_name}#{$cfg['linker']['bin_files']['extension']} #{linker[:options]}"
+    tool       = $unity_cfg[:tools][:test_linker]
+    ext        = $unity_cfg[:extension][:executable]
+    build_root = $proj[:project][:build_root]
+
+    input_files = obj_list.uniq.map { |obj| build_root + obj }.join(' ')
+    output_file = build_root + exe_name + ext
+
+    cmd_str = "#{tackit(tool[:executable])} #{build_argument_list(tool[:arguments], [], [], [], input_files, output_file)}"
     execute(cmd_str)
   end
 
   def build_simulator_fields
-    return nil if $cfg['simulator'].nil?
+    return nil unless $unity_cfg[:tools][:test_fixture]
 
-    command = if $cfg['simulator']['path'].nil?
-                ''
-              else
-                "#{tackit($cfg['simulator']['path'])} "
-              end
-    pre_support = if $cfg['simulator']['pre_support'].nil?
-                    ''
-                  else
-                    squash('', $cfg['simulator']['pre_support'])
-                  end
-    post_support = if $cfg['simulator']['post_support'].nil?
-                     ''
-                   else
-                     squash('', $cfg['simulator']['post_support'])
-                   end
-    { :command => command, :pre_support => pre_support, :post_support => post_support }
+    tool       = $unity_cfg[:tools][:test_fixture]
+    executable = tackit(tool[:executable])
+    raw_args   = tool[:arguments] || []
+    idx        = raw_args.index('${1}')
+    if idx
+      pre  = raw_args[0...idx].map { |a| a.is_a?(Array) ? a.join : a }.join(' ')
+      post = raw_args[(idx + 1)..].map { |a| a.is_a?(Array) ? a.join : a }.join(' ')
+    else
+      pre  = ''
+      post = raw_args.map { |a| a.is_a?(Array) ? a.join : a }.join(' ')
+    end
+    { command: "#{executable} ", pre_support: pre, post_support: post }
   end
 
   def execute(command_string, verbose = true, ok_to_fail = false)
@@ -174,7 +211,7 @@ module RakefileHelpers
   def report_summary
     summary = UnityTestSummary.new
     summary.root = HERE
-    results_glob = "#{$cfg['compiler']['build_path']}*.test*"
+    results_glob = "#{$proj[:project][:build_root]}*.test*"
     results_glob.tr!('\\', '/')
     results = Dir[results_glob]
     summary.targets = results
@@ -185,71 +222,56 @@ module RakefileHelpers
   def run_tests(test_files)
     report 'Running system tests...'
 
-    # Tack on TEST define for compiling unit tests
     load_configuration($cfg_file)
-    test_defines = ['TEST']
-    $cfg['compiler']['defines']['items'] = [] if $cfg['compiler']['defines']['items'].nil?
-    $cfg['compiler']['defines']['items'] << 'TEST'
 
     include_dirs = local_include_dirs
 
     # Build and execute each unit test
     test_files.each do |test|
-      # Detect dependencies and build required required modules
-      header_list = (extract_headers(test) + ['cmock.h'] + [$cfg[:cmock][:unity_helper_path]]).compact.uniq
+      # Detect dependencies and build required modules
+      header_list = (extract_headers(test) + ['cmock.h'] + [($proj[:cmock] || {})[:unity_helper_path]]).compact.uniq
       header_list.each do |header|
         # create mocks if needed
         next unless header =~ /Mock/
 
         require '../../lib/cmock'
-        @cmock ||= CMock.new(".//targets//#{$cfg_file}")
-        @cmock.setup_mocks([$cfg['compiler']['source_path'] + header.gsub('Mock', '')])
+        @cmock ||= CMock.new($proj[:cmock])
+        @cmock.setup_mocks([$proj[:paths][:source].first + header.gsub('Mock', '')])
       end
 
-      # compile all mocks
+      # compile all mocks and dependencies
       obj_list = []
       header_list.each do |header|
-        # compile source file header if it exists
         src_file = find_source_file(header, include_dirs)
-        unless src_file.nil?
-          obj_list << compile(src_file, test_defines)
-        end
+        obj_list << compile(src_file, ['TEST']) unless src_file.nil?
       end
 
-      # Build the test runner (generate if configured to do so)
-      test_base = File.basename(test, C_EXTENSION)
+      # Build the test runner
+      test_base   = File.basename(test, C_EXTENSION)
       runner_name = "#{test_base}_Runner.c"
-      if $cfg['compiler']['runner_path'].nil?
-        runner_path = "#{$cfg['compiler']['build_path']}#{runner_name}"
-        test_gen = UnityTestRunnerGenerator.new(".//targets//#{$cfg_file}")
-        test_gen.run(test, runner_path)
-      else
-        runner_path = $cfg['compiler']['runner_path'] + runner_name
-      end
+      runner_path = "#{$proj[:project][:build_root]}#{runner_name}"
+      UnityTestRunnerGenerator.new({}).run(test, runner_path)
 
-      obj_list << compile(runner_path, test_defines)
+      obj_list << compile(runner_path, ['TEST'])
 
       # Build the test module
-      obj_list << compile(test, test_defines)
+      obj_list << compile(test, ['TEST'])
 
       # Link the test executable
       link_it(test_base, obj_list)
 
       # Execute unit test and generate results file
-      simulator = build_simulator_fields
-      executable = $cfg['linker']['bin_files']['destination'] + test_base + $cfg['linker']['bin_files']['extension']
+      simulator  = build_simulator_fields
+      build_root = $proj[:project][:build_root]
+      executable = build_root + test_base + $unity_cfg[:extension][:executable]
       cmd_str = if simulator.nil?
                   executable
                 else
                   "#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}"
                 end
       output = execute(cmd_str, true)
-      test_results = $cfg['compiler']['build_path'] + test_base
-      test_results += if output.match(/OK$/m).nil?
-                        '.testfail'
-                      else
-                        '.testpass'
-                      end
+      test_results = build_root + test_base
+      test_results += output.match(/OK$/m).nil? ? '.testfail' : '.testpass'
       File.open(test_results, 'w') { |f| f.print output }
     end
   end
@@ -258,23 +280,20 @@ module RakefileHelpers
     report 'Building application...'
 
     obj_list = []
-    load_configuration(".//targets//#{$cfg_file}")
-    main_path = $cfg['compiler']['source_path'] + main + C_EXTENSION
+    load_configuration($cfg_file)
+    main_path = $proj[:paths][:source].first + main + C_EXTENSION
 
-    # Detect dependencies and build required required modules
+    # Detect dependencies and build required modules
     include_dirs = local_include_dirs
     extract_headers(main_path).each do |header|
       src_file = find_source_file(header, include_dirs)
-      unless src_file.nil?
-        obj_list << compile(src_file)
-      end
+      obj_list << compile(src_file) unless src_file.nil?
     end
 
     # Build the main source file
-    main_base = File.basename(main_path, C_EXTENSION)
     obj_list << compile(main_path)
 
     # Create the executable
-    link_it(main_base, obj_list)
+    link_it(File.basename(main_path, C_EXTENSION), obj_list)
   end
 end
