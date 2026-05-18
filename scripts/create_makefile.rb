@@ -28,6 +28,8 @@ MOCK_PREFIX = ENV.fetch('TEST_MOCK_PREFIX', 'mock_')
 MOCK_SUFFIX = ENV.fetch('TEST_MOCK_SUFFIX', '')
 TEST_MAKEFILE = ENV.fetch('TEST_MAKEFILE', File.join(TEST_BUILD_DIR, 'MakefileTestSupport'))
 MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-.]+#{MOCK_SUFFIX}/
+OPTION_FILE = ENV.fetch('TEST_OPTION_YML_FILE', '')
+OPTION_FILE_FLAG = OPTION_FILE.empty? ? '' : "-o#{OPTION_FILE}"
 
 [TEST_BUILD_DIR, OBJ_DIR, RUNNERS_DIR, MOCKS_DIR, TEST_BIN_DIR].each do |dir|
   FileUtils.mkdir_p dir
@@ -126,7 +128,7 @@ File.open(TEST_MAKEFILE, 'w') do |mkfile|
 
     # Create runners
     mkfile.puts "#{runner_source}: #{test}"
-    mkfile.puts "\t@UNITY_DIR=${UNITY_DIR} ruby ${CMOCK_DIR}/scripts/create_runner.rb #{test} #{runner_source}"
+    mkfile.puts "\truby #{UNITY_DIR}/auto/generate_test_runner.rb #{OPTION_FILE} #{test} #{runner_source}"
     mkfile.puts ''
 
     # Build runner
@@ -189,7 +191,7 @@ File.open(TEST_MAKEFILE, 'w') do |mkfile|
     mock_obj = File.join(MOCKS_DIR, "#{mock_name}.o")
 
     mkfile.puts "#{mock_src}: #{hdr}"
-    mkfile.puts "\t@CMOCK_DIR=${CMOCK_DIR} ruby ${CMOCK_DIR}/scripts/create_mock.rb #{hdr}"
+    mkfile.puts "\truby #{CMOCK_DIR}/lib/cmock.rb #{hdr} --mock_path=#{MOCKS_DIR} #{OPTION_FILE_FLAG}"
     mkfile.puts ''
 
     mkfile.puts "#{mock_obj}: #{mock_src} #{mock_header}"
@@ -199,7 +201,7 @@ File.open(TEST_MAKEFILE, 'w') do |mkfile|
 
   # Create test summary task
   mkfile.puts 'test_summary:'
-  mkfile.puts "\t@UNITY_DIR=${UNITY_DIR} ruby ${CMOCK_DIR}/scripts/test_summary.rb #{suppress_error ? '--silent' : ''}"
+  mkfile.puts "\truby #{UNITY_DIR}/auto/unity_test_summary.rb #{suppress_error ? '--silent' : ''} #{TEST_BUILD_DIR}"
   mkfile.puts ''
   mkfile.puts '.PHONY: test_summary'
   mkfile.puts ''
