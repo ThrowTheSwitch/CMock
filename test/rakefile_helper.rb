@@ -230,6 +230,62 @@ module RakefileHelpers
     report "Styling C:PASS"
   end
 
+  def save_test_results(test_base, output)
+    build_root = $proj[:project][:build_root]
+    test_results = build_root + test_base
+    test_results += output.match(/OK\s*$/m) ? '.testpass' : '.testfail'
+    File.open(test_results, 'w') { |f| f.print output }
+  end
+
+  def collect_test_output(output)
+    total_tests    = 0
+    total_failures = 0
+    total_ignored  = 0
+    detail_lines   = []
+
+    output.each_line do |line|
+      stripped = line.chomp
+      if stripped =~ /(\d+) Tests (\d+) Failures (\d+) Ignored/
+        total_tests    += Regexp.last_match(1).to_i
+        total_failures += Regexp.last_match(2).to_i
+        total_ignored  += Regexp.last_match(3).to_i
+      elsif stripped =~ /^[^:]+:[^:]+:\w+(?:\([^)]*\))?:(?:PASS|FAIL|IGNORE)/
+        detail_lines << stripped
+      end
+    end
+
+    synthesized  = detail_lines.join("\n")
+    synthesized += "\n" unless detail_lines.empty?
+    synthesized += "#{total_tests} Tests #{total_failures} Failures #{total_ignored} Ignored\n"
+    synthesized += total_failures > 0 ? "FAILED\n" : "OK\n"
+    synthesized
+  end
+
+  def run_ruby_unit_tests
+    report "\n"
+    report "--------------------\n"
+    report "RUBY UNIT TEST SUITE\n"
+    report "--------------------\n"
+    total_runs = total_failures = total_errors = total_skips = 0
+    Dir['unit/*_test.rb'].sort.each do |tst|
+      report "\nRunning #{tst.to_s}"
+      output = execute("ruby -I. #{tst}", true, false)
+      output.each_line do |line|
+        if line =~ /(\d+) runs, \d+ assertions, (\d+) failures, (\d+) errors, (\d+) skips/
+          total_runs     += Regexp.last_match(1).to_i
+          total_failures += Regexp.last_match(2).to_i
+          total_errors   += Regexp.last_match(3).to_i
+          total_skips    += Regexp.last_match(4).to_i
+        end
+      end
+    end
+    failures = total_failures + total_errors
+    result  = "#{total_runs} Tests #{failures} Failures #{total_skips} Ignored\n"
+    result += failures > 0 ? "FAILED\n" : "OK\n"
+    save_test_results('ruby_unit_tests', result)
+    raise "Ruby unit tests failed." if failures > 0
+  end
+
   def report_summary
     summary = UnityTestSummary.new
     summary.root = File.expand_path(File.dirname(__FILE__)) + '/'
@@ -237,7 +293,7 @@ module RakefileHelpers
     results_glob.gsub!(/\\/, '/')
     results = Dir[results_glob]
     summary.targets = results
-    summary.run
+    report summary.run
     fail_out "FAIL: There were failures" if (summary.failures > 0)
   end
 
@@ -348,6 +404,11 @@ module RakefileHelpers
     end
 
     report ''
+    result  = failure_messages.join("\n")
+    result += "\n" unless failure_messages.empty?
+    result += "#{total_tests} Tests #{total_failures} Failures 0 Ignored\n"
+    result += total_failures > 0 ? "FAILED\n" : "OK\n"
+    save_test_results('system_interactions', result)
     return total_failures
   end
 
@@ -378,12 +439,16 @@ module RakefileHelpers
     report "------------------------------------\n"
     report "SYSTEM TEST MOCK COMPILATION SUMMARY\n"
     report "------------------------------------\n"
+    pass_count = 0
     mockables.each do |header|
       mock_filename = 'mock_' + File.basename(header).ext('.c')
       CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml').setup_mocks(header)
       report "Compiling #{mock_filename}..."
       compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
+      pass_count += 1
     end
+    report "#{pass_count} Tests 0 Failures 0 Ignored\nOK\n"
+    save_test_results('system_compilations', "#{pass_count} Tests 0 Failures 0 Ignored\nOK\n")
   end
 
   def run_system_test_profiles(mockables)
@@ -413,6 +478,7 @@ module RakefileHelpers
     report "----------------\n"
     ext        = $unity_cfg[:extension][:executable]
     build_root = $proj[:project][:build_root]
+    combined_output = ''
     FileList.new("c/*.yml").each do |yaml_file|
       test = load_yaml(yaml_file)
       report "\nTesting #{yaml_file.sub('.yml','')}"
@@ -422,12 +488,12 @@ module RakefileHelpers
       link_it('TestCMockC', obj_files)
       simulator = build_simulator_fields
       executable = build_root + 'TestCMockC' + ext
-      if simulator.nil?
-        execute(executable)
-      else
-        execute("#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}")
-      end
+      cmd = simulator.nil? ? executable : "#{simulator[:command]} #{simulator[:pre_support]} #{executable} #{simulator[:post_support]}"
+      combined_output += execute(cmd, true, false) + "\n"
     end
+    result = collect_test_output(combined_output)
+    save_test_results('c_unit_tests', result)
+    raise "C unit tests failed." if result =~ /FAILED/
   end
 
   def run_examples(verbose=false, raise_on_failure=true)
@@ -435,12 +501,25 @@ module RakefileHelpers
     report "-----------------\n"
     report "VALIDATE EXAMPLES\n"
     report "-----------------\n"
+    total_tests    = 0
+    total_failures = 0
+    total_ignored  = 0
     [ "cd #{File.join("..", "examples", "make_example")} && make clean && make setup && make test",
       "cd #{File.join("..", "examples", "temp_sensor")} && rake ci"
     ].each do |cmd|
       report "Testing '#{cmd}'"
-      execute(cmd, verbose, raise_on_failure)
+      execute(cmd, verbose, false).each_line do |line|
+        if line =~ /(\d+) TOTAL TESTS (\d+) TOTAL FAILURES (\d+) IGNORED/
+          total_tests    += Regexp.last_match(1).to_i
+          total_failures += Regexp.last_match(2).to_i
+          total_ignored  += Regexp.last_match(3).to_i
+        end
+      end
     end
+    result  = "#{total_tests} Tests #{total_failures} Failures #{total_ignored} Ignored\n"
+    result += total_failures > 0 ? "FAILED\n" : "OK\n"
+    save_test_results('examples', result)
+    raise "Examples failed." if total_failures > 0 && raise_on_failure
   end
 
   def fail_out(msg)
