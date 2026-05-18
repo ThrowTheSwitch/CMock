@@ -7,6 +7,7 @@
 
 typedef unsigned short U16;
 typedef signed int int32_t;
+typedef unsigned int uint32_t;
 
 /* CMock should handle UTF-8 characters in comments. The world is an awesomely diverse place! */
 /* my µC Rocks! Open Source, not ©! My language has no Ümlauts! ǺƜǝƧǾɱɛ! */ /**! Illegal: åäö */
