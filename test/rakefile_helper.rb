@@ -363,6 +363,7 @@ module RakefileHelpers
     total_failures = 0
     failure_messages = []
 
+    report "\n\nSystem Testing Results: "
     test_case_files.each do |test_case|
       tests = (load_yaml(test_case))[:systest][:tests][:units]
       total_tests += tests.size
@@ -382,11 +383,16 @@ module RakefileHelpers
         if (this_failed)
           total_failures += 1
           test_results[index] =~ /test#{index+1}:(.+)/
-          failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:#{$1}"
-        end
-        if (test[:verify_error]) and not (test_results[index] =~ /test#{index+1}:.*#{test[:verify_error]}/)
+          new_msg = "#{test_file}:test#{index+1}:should #{test[:should]}:#{$1}"
+          failure_messages << new_msg
+          report new_msg
+        elsif (test[:verify_error]) and not (test_results[index] =~ /test#{index+1}:.*#{test[:verify_error]}/)
           total_failures += 1
-          failure_messages << "#{test_file}:test#{index+1}:should #{test[:should]}:should have output matching '#{test[:verify_error]}' but was '#{test_results[index]}'"
+          new_msg = "#{test_file}:test#{index+1}:should #{test[:should]}:should have output matching '#{test[:verify_error]}' but was '#{test_results[index]}'"
+          failure_messages << new_msg
+          report new_msg
+        else
+          report "#{test_file}:test#{index+1}:should #{test[:should]}:PASS"
         end
       end
     end
