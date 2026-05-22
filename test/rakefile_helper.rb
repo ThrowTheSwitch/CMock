@@ -269,7 +269,7 @@ module RakefileHelpers
     total_runs = total_failures = total_errors = total_skips = 0
     Dir['unit/*_test.rb'].sort.each do |tst|
       report "\nRunning #{tst.to_s}"
-      output = execute("ruby -I. #{tst}", true, false)
+      output = execute("ruby -I. #{tst} -v", true, false)
       output.each_line do |line|
         if line =~ /(\d+) runs, \d+ assertions, (\d+) failures, (\d+) errors, (\d+) skips/
           total_runs     += Regexp.last_match(1).to_i
