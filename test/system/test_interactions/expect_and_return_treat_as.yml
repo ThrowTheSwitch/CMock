@@ -110,7 +110,7 @@
         }
 
     - :pass: TRUE
-      :should: 'handle floating point numbers with Unity support: pass'
+      :should: 'handle floating point numbers with Unity support to pass'
       :code: |
         test()
         {
@@ -119,7 +119,7 @@
         }
 
     - :pass: FALSE
-      :should: 'handle floating point numbers with Unity support: fail'
+      :should: 'handle floating point numbers with Unity support to fail'
       :code: |
         test()
         {
