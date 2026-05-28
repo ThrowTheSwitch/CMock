@@ -46,27 +46,37 @@ module RakefileHelpers
     $cfg_file = config_file
     $proj = load_yaml('./project.yml')
 
-    unity_target    = "../vendor/unity/test/targets/#{$cfg_file}"
+    unity_targets_dir = '../vendor/unity/test/targets'
     cmock_targets_dir = './targets'
+    config_basename   = File.basename(config_file)
+    path_specified    = File.dirname(config_file) != '.'
 
-    if File.exist?(unity_target)
+    # Resolve the target file location:
+    #   - path specified → use only that location
+    #   - no path → check current directory first, then vendor unity targets
+    config_target = if path_specified 
+      config_file
+    elsif File.exist?("./#{config_file}")
+      "./#{config_file}"
+    else
+      "#{unity_targets_dir}/#{config_file}"
+    end
+
+    if File.exist?(config_target)
       # Load Unity base target, then CMock overlay (unsupported list, extra defines)
-      puts "Loading Unity target:  #{unity_target}"
-      $unity_cfg = load_yaml(unity_target)
+      puts "Loading Toolchain target:  #{config_target}"
+      $unity_cfg = load_yaml(config_target)
 
-      cmock_file = cmock_overlay || find_cmock_target(cmock_targets_dir, $cfg_file)
+      cmock_file = cmock_overlay || find_cmock_target(cmock_targets_dir, config_basename)
       if cmock_file
-        puts "Loading CMock overlay: #{cmock_targets_dir}/#{cmock_file}"
+        puts "Loading Toolchain overlay: #{cmock_targets_dir}/#{cmock_file}"
         $cmock_cfg = load_yaml("#{cmock_targets_dir}/#{cmock_file}")
       else
-        puts "No CMock overlay found for #{$cfg_file}"
+        puts "No Toolchain overlay found for #{config_file}"
         $cmock_cfg = {}
       end
     else
-      # CMock-only target (no Unity equivalent); it uses Unity format directly
-      puts "Loading CMock-only target: #{cmock_targets_dir}/#{$cfg_file}"
-      $unity_cfg = load_yaml("#{cmock_targets_dir}/#{$cfg_file}")
-      $cmock_cfg = {}
+      raise "Cannot find Config File #{config_target}"
     end
 
     $colour_output = $proj[:project][:colour]
@@ -131,7 +141,7 @@ module RakefileHelpers
   # Toolchain-specific include paths: Array items in Unity's :paths: :test:
   # (e.g., IAR compiler include directories encoded as path-concatenation arrays)
   def toolchain_include_paths
-    ($unity_cfg[:paths][:test] || []).select { |p| p.is_a?(Array) }
+    (($unity_cfg[:paths] || {})[:test] || []).select { |p| p.is_a?(Array) }
   end
 
   # Returns the unsupported test list, regardless of whether it came from
@@ -140,17 +150,26 @@ module RakefileHelpers
     $cmock_cfg[:unsupported] || $unity_cfg[:unsupported] || []
   end
 
-  # Resolve Unity's argument template tokens and produce a flat argument string.
-  #   COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE  → -I per toolchain path (Arrays from :paths: :test:)
-  #   COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR → -I per project include path
-  #   COLLECTION_DEFINES_TEST_AND_VENDOR       → -D per define
+  # Resolve argument template tokens and produce a flat argument string.
+  # Supports Ceedling-style positional tokens and legacy Unity COLLECTION_* tokens.
+  #   ${5}  → expands to one arg per include path (toolchain paths + project paths combined)
+  #   ${6}  → expands to one arg per define
   #   ${1}  → input file(s)
   #   ${2}  → output file
+  #   COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE          → (legacy) -I per toolchain path
+  #   COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR → (legacy) -I per project include path
+  #   COLLECTION_DEFINES_TEST_AND_VENDOR               → (legacy) -D per define
   def build_argument_list(raw_args, toolchain_paths, project_paths, defines, input, output)
     result = []
     raw_args.each do |arg|
       if arg.is_a?(Array)
         result << arg.join
+      elsif arg.include?('${5}')
+        (toolchain_paths + project_paths).each do |p|
+          result << arg.gsub('${5}', p.is_a?(Array) ? p.join : p.to_s)
+        end
+      elsif arg.include?('${6}')
+        defines.each { |d| result << arg.gsub('${6}', d) }
       elsif arg.include?('COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE')
         toolchain_paths.each { |p| result << "-I\"#{p.is_a?(Array) ? p.join : p}\"" }
       elsif arg.include?('COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR')
@@ -166,8 +185,8 @@ module RakefileHelpers
 
   def compile(file, extra_defines = [])
     tool       = $unity_cfg[:tools][:test_compiler]
-    ext        = $unity_cfg[:extension][:object]
-    build_root = $proj[:project][:build_root]
+    ext        = $unity_cfg[:extension][:object] || '.o'
+    build_root = $proj[:project][:build_root] || 'build/'
     obj_file   = build_root + File.basename(file, C_EXTENSION) + ext
 
     cmd_str = tackit(tool[:executable]) + ' ' +
@@ -181,8 +200,8 @@ module RakefileHelpers
   end
 
   def link_it(exe_name, obj_list)
-    tool       = $unity_cfg[:tools][:test_linker]
-    ext        = $unity_cfg[:extension][:executable]
+    tool       = $unity_cfg[:tools][:test_linker] 
+    ext        = $unity_cfg[:extension][:executable] || ''
     build_root = $proj[:project][:build_root]
 
     input_files = obj_list.uniq.map { |obj| build_root + obj }.join(' ')
@@ -224,7 +243,7 @@ module RakefileHelpers
               "--style=allman --indent=spaces=4 --indent-switches --indent-preproc-define --indent-preproc-block " \
               "--pad-oper --pad-comma --unpad-paren --pad-header " \
               "--align-pointer=type --align-reference=name " \
-              "--add-brackets --mode=c --suffix=none " \
+              "--mode=c --suffix=none " \
               "#{style_what}"
     execute(command, false)
     report "Styling C:PASS"
@@ -345,7 +364,7 @@ module RakefileHelpers
 
       # Execute unit test and generate results file
       simulator  = build_simulator_fields
-      ext        = $unity_cfg[:extension][:executable]
+      ext        = $unity_cfg[:extension][:executable] || ''
       build_root = $proj[:project][:build_root]
       executable = build_root + test_base + ext
       cmd_str = if simulator.nil?
@@ -482,7 +501,7 @@ module RakefileHelpers
     report "----------------\n"
     report "UNIT TEST C CODE\n"
     report "----------------\n"
-    ext        = $unity_cfg[:extension][:executable]
+    ext        = $unity_cfg[:extension][:executable] || ''
     build_root = $proj[:project][:build_root]
     combined_output = ''
     FileList.new("c/*.yml").each do |yaml_file|
@@ -490,7 +509,7 @@ module RakefileHelpers
       report "\nTesting #{yaml_file.sub('.yml','')}"
       report "(#{test[:options].join(', ')})"
       test[:files].each { |f| compile(f, test[:options]) }
-      obj_files = test[:files].map { |f| f.gsub!(/.*\//,'').gsub!(C_EXTENSION, $unity_cfg[:extension][:object]) }
+      obj_files = test[:files].map { |f| f.gsub!(/.*\//,'').gsub!(C_EXTENSION, $unity_cfg[:extension][:object] || '.o') }
       link_it('TestCMockC', obj_files)
       simulator = build_simulator_fields
       executable = build_root + 'TestCMockC' + ext

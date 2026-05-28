@@ -27,18 +27,22 @@ SYSTEM_TEST_SUPPORT_DIRS.each do |dir|
   CLOBBER.include(dir)
 end
 
+$config_file = DEFAULT_CONFIG_FILE
+$overlay_file = nil
 
 task :prep_system_tests => SYSTEM_TEST_SUPPORT_DIRS
-
-configure_toolchain(DEFAULT_CONFIG_FILE)
-
 task :default => [:test]
 task :ci      => [:no_color, :default, 'test:examples', 'style:check', 'test:summary']
 task :cruise  => :ci
 
 desc "Load configuration"
 task :config, [:config_file, :cmock_overlay] do |t, args|
-  configure_toolchain(args[:config_file], args[:cmock_overlay])
+  $config_file = args[:config_file]
+  $overlay_file = args[:cmock_overlay]
+end
+
+task :config_toolchains do 
+  configure_toolchain($config_file, $overlay_file)
 end
 
 # Still support testing everything with just 'test' but switch default to ceedling-like test:all
@@ -46,30 +50,30 @@ task :test => ['test:all']
 
 namespace :test do
   desc "Run all unit, c, and system tests"
-  task :all => [:clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
+  task :all => [:config_toolchains, :clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
 
   desc "Run Unit Tests"
-  task :units => [:prep_system_tests] do
+  task :units => [:config_toolchains, :prep_system_tests] do
     run_ruby_unit_tests
   end
 
   #individual unit tests
   FileList['unit/*_test.rb'].each do |test|
-    Rake::TestTask.new(File.basename(test,'.*').sub('_test','')) do |t|
+    Rake::TestTask.new(File.basename(test,'.*').sub('_test','') => [:config_toolchains]) do |t|
       t.pattern = test
       t.verbose = true
     end
   end
 
   desc "Run C Unit Tests"
-  task :c => [:prep_system_tests] do
+  task :c => [:config_toolchains, :prep_system_tests] do
     unless (unsupported_tests.include? "C")
       build_and_test_c_files
     end
   end
 
   desc "Run System Tests"
-  task :system => [:clobber, :prep_system_tests] do
+  task :system => [:config_toolchains, :clobber, :prep_system_tests] do
     #get a list of all system tests, removing unsupported tests for this compiler
     sys_unsupported  = unsupported_tests.map {|a| 'system/test_interactions/'+a+'.yml'}
     sys_tests_to_run = FileList['system/test_interactions/*.yml'] - sys_unsupported
@@ -88,7 +92,7 @@ namespace :test do
   end
 
   desc "Test cmock examples"
-  task :examples => [:prep_system_tests] do
+  task :examples => [:config_toolchains, :prep_system_tests] do
     run_examples(true)
   end
 
@@ -96,13 +100,13 @@ namespace :test do
   FileList['system/test_interactions/*.yml'].each do |test|
     basename = File.basename(test,'.*')
     #desc "Run system test #{basename}"
-    task basename do
+    task basename => [:config_toolchains] do
       run_system_test_interactions([test])
     end
   end
 
   desc "Profile Mock Generation"
-  task :profile => [:clobber, :prep_system_tests] do
+  task :profile => [:config_toolchains, :clobber, :prep_system_tests] do
     run_system_test_profiles(FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'])
   end
 
@@ -119,7 +123,7 @@ end
 ################### CODING STYLE VALIDATION
 namespace :style do
   desc "Check style"
-  task :check do
+  task :check => [:config_toolchains] do
     report "\n"
     report "--------------------\n"
     report "VERIFYING RUBY STYLE\n"
@@ -129,25 +133,25 @@ namespace :style do
   end
 
   desc "Fix Style of all C Code"
-  task :c do
-    run_astyle("../src/*.* ../extras/fixture/src/*.*")
+  task :c => [:config_toolchains]do
+    run_astyle("../src/*.*")
   end
 
   desc "Attempt to Autocorrect style"
-  task :auto  => ['style:clean'] do
+  task :auto => [:config_toolchains, 'style:clean'] do
     execute("rubocop ../lib ../examples ../config ../scripts --autocorrect --config ../vendor/unity/test/.rubocop.yml", true)
     report "Autocorrected What We Could."
   end
 
   desc "Update style todo list"
-  task :todo  => ['style:clean'] do
+  task :todo => [:config_toolchains, 'style:clean'] do
     execute("rubocop ../lib ../examples ../config ../scripts --auto-gen-config --config ../vendor/unity/test/.rubocop.yml", true)
     report "Updated Style TODO List."
   end
 
-  task :clean do
+  task :clean => [:config_toolchains] do
     File.delete(".rubocop_todo.yml") if File.exist?(".rubocop_todo.yml")
   end
 end
 
-task :style => ['style:check']
+task :style => [:config_toolchains, 'style:check']

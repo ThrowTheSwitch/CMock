@@ -17,16 +17,16 @@
 
 /* should be big enough to index full range of CMOCK_MEM_MAX */
 #ifndef CMOCK_MEM_INDEX_TYPE
-#include <stddef.h>
-#define CMOCK_MEM_INDEX_TYPE  size_t
+    #include <stddef.h>
+    #define CMOCK_MEM_INDEX_TYPE  size_t
 #endif
 
 #define CMOCK_GUTS_NONE   (0)
 
 #if defined __GNUC__
-#    define CMOCK_FUNCTION_ATTR(a) __attribute__((a))
+    #define CMOCK_FUNCTION_ATTR(a) __attribute__((a))
 #else
-#    define CMOCK_FUNCTION_ATTR(a) /* ignore */
+    #define CMOCK_FUNCTION_ATTR(a) /* ignore */
 #endif
 
 /*-------------------------------------------------------

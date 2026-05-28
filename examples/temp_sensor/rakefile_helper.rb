@@ -39,24 +39,38 @@ module RakefileHelpers
     $cfg_file = config_file
     $proj = load_yaml(File.read('./project.yml'))
 
-    unity_target      = "../../vendor/unity/test/targets/#{$cfg_file}"
+    unity_targets_dir = '../../vendor/unity/test/targets'
     cmock_targets_dir = '../../test/targets'
+    config_basename   = File.basename(config_file)
+    path_specified    = File.dirname(config_file) != '.'
+
+    # Resolve the target file location:
+    #   - path specified → use only that location
+    #   - no path → check current directory first, then vendor unity targets
+    unity_target = if path_specified
+                     config_file
+                   elsif File.exist?("./#{config_file}")
+                     "./#{config_file}"
+                   else
+                     "#{unity_targets_dir}/#{config_file}"
+                   end
 
     if File.exist?(unity_target)
       puts "Loading Unity target:  #{unity_target}"
       $unity_cfg = load_yaml(File.read(unity_target))
 
-      cmock_file = cmock_overlay || find_cmock_target(cmock_targets_dir, $cfg_file)
+      cmock_file = cmock_overlay || find_cmock_target(cmock_targets_dir, config_basename)
       if cmock_file
         puts "Loading CMock overlay: #{cmock_targets_dir}/#{cmock_file}"
         $cmock_cfg = load_yaml(File.read("#{cmock_targets_dir}/#{cmock_file}"))
       else
-        puts "No CMock overlay found for #{$cfg_file}"
+        puts "No CMock overlay found for #{config_file}"
         $cmock_cfg = {}
       end
     else
-      puts "Loading CMock-only target: #{cmock_targets_dir}/#{$cfg_file}"
-      $unity_cfg = load_yaml(File.read("#{cmock_targets_dir}/#{$cfg_file}"))
+      # CMock-only target (no Unity equivalent); it uses Unity format directly
+      puts "Loading CMock-only target: #{cmock_targets_dir}/#{config_basename}"
+      $unity_cfg = load_yaml(File.read("#{cmock_targets_dir}/#{config_basename}"))
       $cmock_cfg = {}
     end
 
@@ -133,12 +147,23 @@ module RakefileHelpers
     end
   end
 
-  # Resolve Unity's argument template tokens into a flat argument string.
+  # Resolve argument template tokens into a flat argument string.
+  # Supports Ceedling-style positional tokens and legacy Unity COLLECTION_* tokens.
+  #   ${5}  → expands to one arg per include path (toolchain paths + project paths combined)
+  #   ${6}  → expands to one arg per define
+  #   ${1}  → input file(s)
+  #   ${2}  → output file
   def build_argument_list(raw_args, toolchain_paths, project_paths, defines, input, output)
     result = []
     raw_args.each do |arg|
       if arg.is_a?(Array)
         result << arg.join
+      elsif arg.include?('${5}')
+        (toolchain_paths + project_paths).each do |p|
+          result << arg.gsub('${5}', p.is_a?(Array) ? p.join : p.to_s)
+        end
+      elsif arg.include?('${6}')
+        defines.each { |d| result << arg.gsub('${6}', d) }
       elsif arg.include?('COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE')
         toolchain_paths.each { |p| result << "-I\"#{p.is_a?(Array) ? p.join : p}\"" }
       elsif arg.include?('COLLECTION_PATHS_TEST_SUPPORT_SOURCE_INCLUDE_VENDOR')
