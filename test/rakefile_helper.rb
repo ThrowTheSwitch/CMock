@@ -132,7 +132,7 @@ module RakefileHelpers
 
   # All defines: project common + Unity target + CMock overlay + any extras
   def all_defines(extra = [])
-    (($proj[:defines][:common] || []) +
+    (($proj[:defines][:test] || []) +
      ($unity_cfg[:defines][:test] || []) +
      (($cmock_cfg[:defines] || {})[:test] || []) +
      extra).uniq

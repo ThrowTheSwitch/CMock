@@ -28,7 +28,7 @@
   :executable: '.exe'
 
 :defines:
-  :common:
+  :test:
     - __monitor
     - UNITY_SUPPORT_64
 

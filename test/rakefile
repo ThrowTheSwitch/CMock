@@ -82,7 +82,8 @@ namespace :test do
     }
     criteria.each_pair do |k,v|
       crit_defs = v[:defines] || []
-      conf_defs = $unity_cfg.dig(:defines,:test,'*') || $unity_cfg.dig(:defines,:test) || []
+      test_defs = $unity_cfg.dig(:defines,:test)
+      conf_defs = (test_defs.is_a?(Hash) ? test_defs['*'] : nil) || test_defs || []
       if (crit_defs & conf_defs).empty?
         unsupported |= [k] 
       end

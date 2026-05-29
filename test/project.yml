@@ -28,6 +28,6 @@
   :executable: '.exe'
 
 :defines:
-  :common:
+  :test:
     - CMOCK
 
