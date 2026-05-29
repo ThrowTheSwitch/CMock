@@ -27,8 +27,8 @@ SYSTEM_TEST_SUPPORT_DIRS.each do |dir|
   CLOBBER.include(dir)
 end
 
-$config_file = DEFAULT_CONFIG_FILE
-$overlay_file = nil
+$cmock_test_config_file = DEFAULT_CONFIG_FILE
+$cmock_test_overlay_file = nil
 
 task :prep_system_tests => SYSTEM_TEST_SUPPORT_DIRS
 task :default => [:test]
@@ -37,12 +37,12 @@ task :cruise  => :ci
 
 desc "Load configuration"
 task :config, [:config_file, :cmock_overlay] do |t, args|
-  $config_file = args[:config_file]
-  $overlay_file = args[:cmock_overlay]
+  $cmock_test_config_file = args[:config_file]
+  $cmock_test_overlay_file = args[:cmock_overlay]
 end
 
 task :config_toolchains do 
-  configure_toolchain($config_file, $overlay_file)
+  configure_toolchain($cmock_test_config_file, $cmock_test_overlay_file)
 end
 
 # Still support testing everything with just 'test' but switch default to ceedling-like test:all
@@ -74,10 +74,24 @@ namespace :test do
 
   desc "Run System Tests"
   task :system => [:config_toolchains, :clobber, :prep_system_tests] do
-    #get a list of all system tests, removing unsupported tests for this compiler
-    sys_unsupported  = unsupported_tests.map {|a| 'system/test_interactions/'+a+'.yml'}
+    # Get a list of all system tests, removing unsupported tests for this toolchain
+    # including those explicitly not included, plus those implicitly based on needs
+    unsupported = unsupported_tests()
+    criteria = {
+      'out_of_memory' => { :defines => ['CMOCK_MEM_STATIC', 'CMOCK_MEM_SIZE=1024']}
+    }
+    criteria.each_pair do |k,v|
+      crit_defs = v[:defines] || []
+      conf_defs = $unity_cfg.dig(:defines,:test,'*') || $unity_cfg.dig(:defines,:test) || []
+      if (crit_defs & conf_defs).empty?
+        unsupported |= [k] 
+      end
+    end
+    sys_unsupported = unsupported.map {|a| 'system/test_interactions/'+a+'.yml'}
+
+    # Determine which system tests remain after those are removed
     sys_tests_to_run = FileList['system/test_interactions/*.yml'] - sys_unsupported
-    compile_unsupported  = unsupported_tests.map {|a| SYSTEST_COMPILE_MOCKABLES_PATH+a+'.h'}
+    compile_unsupported  = unsupported.map {|a| SYSTEST_COMPILE_MOCKABLES_PATH+a+'.h'}
     compile_tests_to_run = FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'] - compile_unsupported
     unless (sys_unsupported.empty? and compile_unsupported.empty?)
       report "\nIgnoring these system tests..."
@@ -93,7 +107,7 @@ namespace :test do
 
   desc "Test cmock examples"
   task :examples => [:config_toolchains, :prep_system_tests] do
-    run_examples(true)
+    run_examples()
   end
 
   #individual system tests

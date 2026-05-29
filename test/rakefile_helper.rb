@@ -147,7 +147,7 @@ module RakefileHelpers
   # Returns the unsupported test list, regardless of whether it came from
   # a CMock overlay or a CMock-only target file.
   def unsupported_tests
-    $cmock_cfg[:unsupported] || $unity_cfg[:unsupported] || []
+    ($cmock_cfg[:unsupported] || []) | ($unity_cfg[:unsupported] || [])
   end
 
   # Resolve argument template tokens and produce a flat argument string.
@@ -229,6 +229,7 @@ module RakefileHelpers
   end
 
   def execute(command_string, verbose=true, raise_on_failure=true)
+    report(command_string) if verbose
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
     if ($?.exitstatus != 0) and (raise_on_failure)
@@ -521,7 +522,7 @@ module RakefileHelpers
     raise "C unit tests failed." if result =~ /FAILED/
   end
 
-  def run_examples(verbose=false, raise_on_failure=true)
+  def run_examples()
     report "\n"
     report "-----------------\n"
     report "VALIDATE EXAMPLES\n"
@@ -529,11 +530,20 @@ module RakefileHelpers
     total_tests    = 0
     total_failures = 0
     total_ignored  = 0
-    [ "cd #{File.join("..", "examples", "make_example")} && make clean && make setup && make test",
-      "cd #{File.join("..", "examples", "temp_sensor")} && rake ci"
-    ].each do |cmd|
-      report "Testing '#{cmd}'"
-      execute(cmd, verbose, false).each_line do |line|
+    puts "DEBUG DIS #{$cmock_test_config_file}"
+    cfg_file = "#{($cmock_test_config_file =~ /[\\\/]/) ? '../' : ''}#{$cmock_test_config_file}" 
+
+    # Determine which examples are valid for this platform
+    examples = {
+      :make_example => "cd #{File.join("..", "examples", "make_example")} && make clean && make setup && make test",
+      :rake_example => "cd #{File.join("..", "examples", "temp_sensor")} && rake config[\"#{cfg_file}\"] ci"
+    }
+    examples.delete(:make_example) unless ($cmock_test_config_file =~ /gcc/)
+
+    # Run the examples
+    examples.each_pair do |key, cmd|
+      report "Testing Example: '#{key}'"
+      execute(cmd, true, false).each_line do |line|
         if line =~ /(\d+) TOTAL TESTS (\d+) TOTAL FAILURES (\d+) IGNORED/
           total_tests    += Regexp.last_match(1).to_i
           total_failures += Regexp.last_match(2).to_i
@@ -541,10 +551,12 @@ module RakefileHelpers
         end
       end
     end
+
+    # Report the results from the examples
     result  = "#{total_tests} Tests #{total_failures} Failures #{total_ignored} Ignored\n"
     result += total_failures > 0 ? "FAILED\n" : "OK\n"
     save_test_results('examples', result)
-    raise "Examples failed." if total_failures > 0 && raise_on_failure
+    raise "Examples failed." if total_failures > 0
   end
 
   def fail_out(msg)

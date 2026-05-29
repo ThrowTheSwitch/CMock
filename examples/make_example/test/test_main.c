@@ -6,7 +6,7 @@
 ========================================================================= */
 
 #include "unity.h"
-#include "mock_foo.h"
+#include "Mockfoo.h"
 
 void setUp(void)
 {

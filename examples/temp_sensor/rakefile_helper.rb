@@ -179,8 +179,8 @@ module RakefileHelpers
 
   def compile(file, extra_defines = [])
     tool       = $unity_cfg[:tools][:test_compiler]
-    ext        = $unity_cfg[:extension][:object]
-    build_root = $proj[:project][:build_root]
+    ext        = $unity_cfg[:extension][:object] || '.o'
+    build_root = $proj[:project][:build_root] || 'build/'
     obj_file   = build_root + File.basename(file, C_EXTENSION) + ext
 
     cmd_str = "#{tackit(tool[:executable])} #{
@@ -195,8 +195,8 @@ module RakefileHelpers
 
   def link_it(exe_name, obj_list)
     tool       = $unity_cfg[:tools][:test_linker]
-    ext        = $unity_cfg[:extension][:executable]
-    build_root = $proj[:project][:build_root]
+    ext        = $unity_cfg[:extension][:executable] || ''
+    build_root = $proj[:project][:build_root] || 'build/'
 
     input_files = obj_list.uniq.map { |obj| build_root + obj }.join(' ')
     output_file = build_root + exe_name + ext
@@ -288,7 +288,7 @@ module RakefileHelpers
       # Execute unit test and generate results file
       simulator  = build_simulator_fields
       build_root = $proj[:project][:build_root]
-      executable = build_root + test_base + $unity_cfg[:extension][:executable]
+      executable = build_root + test_base + ($unity_cfg[:extension][:executable] || '')
       cmd_str = if simulator.nil?
                   executable
                 else
