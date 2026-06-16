@@ -86,7 +86,8 @@ class CMockGeneratorUtils
 
   def code_assign_argument_quickly(dest, arg)
     if arg[:ptr?] || @treat_as.include?(arg[:type])
-      "  #{dest} = #{arg[:name]};\n"
+      cast = arg[:array_dims] ? "(#{arg[:type]})" : ''
+      "  #{dest} = #{cast}#{arg[:name]};\n"
     else
       assert_expr = "sizeof(#{arg[:name]}) == sizeof(#{arg[:type]}) ? 1 : -1"
       comment = "/* add #{arg[:type]} to :treat_as_array if this causes an error */"

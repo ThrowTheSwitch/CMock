@@ -561,7 +561,6 @@ module RakefileHelpers
     total_tests    = 0
     total_failures = 0
     total_ignored  = 0
-    puts "DEBUG DIS #{$cmock_test_config_file}"
     cfg_file = "#{($cmock_test_config_file =~ /[\\\/]/) ? '../' : ''}#{$cmock_test_config_file}" 
 
     # Determine which examples are valid for this platform
