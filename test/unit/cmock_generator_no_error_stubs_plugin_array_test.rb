@@ -16,6 +16,9 @@ class UtilsStub
   def arg_type_with_const(arg)
     CMockGeneratorUtils.arg_type_with_const(arg)
   end
+  def arg_declaration(arg)
+    CMockGeneratorUtils.arg_declaration(arg)
+  end
   def code_add_base_expectation(func)
     "mock_retval_0"
   end

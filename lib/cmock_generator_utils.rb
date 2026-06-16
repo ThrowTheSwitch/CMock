@@ -36,6 +36,20 @@ class CMockGeneratorUtils
     self.class.arg_type_with_const(arg)
   end
 
+  def self.arg_declaration(arg)
+    if arg[:array_dims]
+      base_type = arg_type_with_const(arg).sub(/\*$/, '').strip
+      dims_str = arg[:array_dims].map { |d| "[#{d}]" }.join
+      "#{base_type} #{arg[:name]}#{dims_str}"
+    else
+      "#{arg_type_with_const(arg)} #{arg[:name]}"
+    end
+  end
+
+  def arg_declaration(arg)
+    self.class.arg_declaration(arg)
+  end
+
   def code_verify_an_arg_expectation(function, arg)
     if @arrays
       case @ptr_handling
@@ -85,8 +99,7 @@ class CMockGeneratorUtils
     if function[:args_string] != 'void'
       if @arrays
         args_string = function[:args].map do |m|
-          type = arg_type_with_const(m)
-          m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
+          m[:ptr?] ? "#{arg_declaration(m)}, int #{m[:name]}_Depth" : arg_declaration(m)
         end.join(', ')
         "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string});\n" \
           "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" \

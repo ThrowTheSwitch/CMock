@@ -31,8 +31,7 @@ class CMockGeneratorPluginArray
     args_call_i = function[:args].map { |m| m[:ptr?] ? "#{m[:name]}, #{m[:name]}_Depth" : (m[:name]).to_s }.join(', ')
     args_call_o = function[:args].map { |m| m[:ptr?] ? "#{m[:name]}, (#{m[:name]}_Depth)" : (m[:name]).to_s }.join(', ')
     args_string = function[:args].map do |m|
-      type = @utils.arg_type_with_const(m)
-      m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
+      m[:ptr?] ? "#{@utils.arg_declaration(m)}, int #{m[:name]}_Depth" : @utils.arg_declaration(m)
     end.join(', ')
     lines = ''
     if function[:return][:void?]
@@ -53,8 +52,7 @@ class CMockGeneratorPluginArray
     lines = []
     func_name = function[:name]
     args_string = function[:args].map do |m|
-      type = @utils.arg_type_with_const(m)
-      m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
+      m[:ptr?] ? "#{@utils.arg_declaration(m)}, int #{m[:name]}_Depth" : @utils.arg_declaration(m)
     end.join(', ')
     call_string = function[:args].map { |m| m[:ptr?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name] }.join(', ')
     lines << if function[:return][:void?]

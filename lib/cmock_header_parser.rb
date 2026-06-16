@@ -408,7 +408,16 @@ class CMockHeaderParser
     arg_info
   end
 
-  def parse_args(arg_list)
+  def extract_array_dims(arg_list)
+    dims = {}
+    arg_list.scan(/(\w+)\s*((?:\s*\[[^\[\]]*\])+)/) do |name, all_dims|
+      dim_list = all_dims.scan(/\[([^\[\]]*)\]/).map { |d| d[0].strip }
+      dims[name] = dim_list
+    end
+    dims
+  end
+
+  def parse_args(arg_list, array_dims_by_name = {})
     args = []
     arg_list.split(',').each do |arg|
       arg.strip!
@@ -417,6 +426,8 @@ class CMockHeaderParser
       arg_info = parse_type_and_name(arg)
       arg_info.delete(:modifier)             # don't care about this
       arg_info.delete(:c_calling_convention) # don't care about this
+
+      arg_info[:array_dims] = array_dims_by_name[arg_info[:name]] if array_dims_by_name.key?(arg_info[:name])
 
       # in C, array arguments implicitly degrade to pointers
       # make the translation explicit here to simplify later logic
@@ -591,10 +602,26 @@ class CMockHeaderParser
       decl[:var_arg] = nil
     end
 
+    # Extract array dimensions before cleaning converts them to pointer notation
+    array_dims_by_name = extract_array_dims(args)
+
     # parse out and clean up the remainder of the arguments
     args = clean_args(args, parse_project)
-    decl[:args_string] = args
-    decl[:args] = parse_args(args)
+    decl[:args] = parse_args(args, array_dims_by_name)
+    # Rebuild args_string using original array notation where applicable
+    if args == 'void'
+      decl[:args_string] = args
+    else
+      arg_parts = args.split(/,\s*/)
+      decl[:args].each_with_index do |arg, i|
+        next unless arg[:array_dims]
+
+        base_type = arg[:type].sub(/\*$/, '').strip
+        dims_str = arg[:array_dims].map { |d| "[#{d}]" }.join
+        arg_parts[i] = "#{base_type} #{arg[:name]}#{dims_str}"
+      end
+      decl[:args_string] = arg_parts.join(', ')
+    end
     decl[:args_call] = decl[:args].map { |a| a[:name] }.join(', ')
     decl[:contains_ptr?] = decl[:args].inject(false) { |ptr, arg| arg[:ptr?] ? true : ptr }
 
