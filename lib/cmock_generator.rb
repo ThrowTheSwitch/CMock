@@ -296,11 +296,20 @@ class CMockGenerator
     file << "}\n\n"
   end
 
+  def function_return_type(function)
+    # When const_ptr? is true, the "const" in :modifier belongs after the asterisk (e.g. "int* const"),
+    # not as a prefix (which would incorrectly produce "const int*").
+    ret = if function[:return][:const_ptr?]
+            "#{function[:return][:type]} const"
+          else
+            (function[:modifier].empty? ? '' : "#{function[:modifier]} ") + function[:return][:type]
+          end
+    ret + (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
+  end
+
   def create_mock_implementation(file, function)
     # prepare return value and arguments
-    function_mod_and_rettype = (function[:modifier].empty? ? '' : "#{function[:modifier]} ") +
-                               (function[:return][:type]) +
-                               (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
+    function_mod_and_rettype = function_return_type(function)
     args_string = function[:args_string]
     args_string += ", #{function[:var_arg]}" unless function[:var_arg].nil?
 
@@ -359,9 +368,7 @@ class CMockGenerator
 
   def create_function_skeleton(file, function, existing)
     # prepare return value and arguments
-    function_mod_and_rettype = (function[:modifier].empty? ? '' : "#{function[:modifier]} ") +
-                               (function[:return][:type]) +
-                               (function[:c_calling_convention] ? " #{function[:c_calling_convention]}" : '')
+    function_mod_and_rettype = function_return_type(function)
     args_string = function[:args_string]
     args_string += ", #{function[:var_arg]}" unless function[:var_arg].nil?
 

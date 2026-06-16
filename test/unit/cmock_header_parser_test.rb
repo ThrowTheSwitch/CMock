@@ -1038,7 +1038,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               :ptr?   => true,
                               :const? => false,
                               :const_ptr? => true,
-                              :str    => "int* cmock_to_return",
+                              :str    => "int* const cmock_to_return",
                               :void?  => false
                             },
                   :modifier=>"const",

@@ -567,9 +567,10 @@ class CMockHeaderParser
 
     rettype = parsed[:type]
     rettype = 'void' if @local_as_void.include?(rettype.strip)
+    retstr = parsed[:const_ptr?] ? "#{rettype} const" : rettype
     decl[:return] = { :type       => rettype,
                       :name       => 'cmock_to_return',
-                      :str        => "#{rettype} cmock_to_return",
+                      :str        => "#{retstr} cmock_to_return",
                       :void?      => (rettype == 'void'),
                       :ptr?       => parsed[:ptr?]       || false,
                       :const?     => parsed[:const?]     || false,
