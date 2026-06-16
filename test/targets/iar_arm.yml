@@ -9,8 +9,6 @@
 # Only contains additions not present in the Unity base target.
 
 :unsupported:
-  - out_of_memory
   - nonstandard_parsed_stuff_1
   - const
   - callingconv
-  - unity_64bit_support

@@ -50,18 +50,21 @@ task :test => ['test:all']
 
 namespace :test do
   desc "Run all unit, c, and system tests"
-  task :all => [:config_toolchains, :clobber, :prep_system_tests, 'test:units', 'test:c', 'test:system']
+  task :all => [:config_toolchains, :clobber, :prep_system_tests, 'test:unit', 'test:c', 'test:system']
 
   desc "Run Unit Tests"
-  task :units => [:config_toolchains, :prep_system_tests] do
+  task :unit => [:config_toolchains, :prep_system_tests] do
     run_ruby_unit_tests
   end
 
   #individual unit tests
-  FileList['unit/*_test.rb'].each do |test|
-    Rake::TestTask.new(File.basename(test,'.*').sub('_test','') => [:config_toolchains]) do |t|
-      t.pattern = test
-      t.verbose = true
+  namespace :unit do
+    FileList['unit/*_test.rb'].each do |test|
+      desc "Run unit test #{File.basename(test,'.*')}"
+      Rake::TestTask.new(File.basename(test,'.*').sub('_test','') => [:config_toolchains]) do |t|
+        t.pattern = test
+        t.verbose = true
+      end
     end
   end
 
@@ -74,50 +77,34 @@ namespace :test do
 
   desc "Run System Tests"
   task :system => [:config_toolchains, :clobber, :prep_system_tests] do
-    # Get a list of all system tests, removing unsupported tests for this toolchain
-    # including those explicitly not included, plus those implicitly based on needs
-    unsupported = unsupported_tests()
-    criteria = {
-      'out_of_memory' => { :defines => ['CMOCK_MEM_STATIC', 'CMOCK_MEM_SIZE=1024']}
-    }
-    criteria.each_pair do |k,v|
-      crit_defs = v[:defines] || []
-      test_defs = $unity_cfg.dig(:defines,:test)
-      conf_defs = (test_defs.is_a?(Hash) ? test_defs['*'] : nil) || test_defs || []
-      if (crit_defs & conf_defs).empty?
-        unsupported |= [k] 
-      end
-    end
-    sys_unsupported = unsupported.map {|a| 'system/test_interactions/'+a+'.yml'}
-
-    # Determine which system tests remain after those are removed
-    sys_tests_to_run = FileList['system/test_interactions/*.yml'] - sys_unsupported
-    compile_unsupported  = unsupported.map {|a| SYSTEST_COMPILE_MOCKABLES_PATH+a+'.h'}
-    compile_tests_to_run = FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'] - compile_unsupported
-    unless (sys_unsupported.empty? and compile_unsupported.empty?)
-      report "\nIgnoring these system tests..."
-      sys_unsupported.each {|a| report a}
-      compile_unsupported.each {|a| report a}
-    end
     report "\nRunning system tests..."
-    tests_failed = run_system_test_interactions(sys_tests_to_run)
+    tests_failed = run_system_test_interactions(FileList['system/test_interactions/*.yml'])
     raise "System tests failed." if (tests_failed > 0)
 
-    run_system_test_compilations(compile_tests_to_run)
+    run_system_test_compilations(FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'])
+  end
+
+  #individual system tests
+  namespace :system do
+    FileList['system/test_interactions/*.yml'].each do |test|
+      basename = File.basename(test,'.*')
+      desc "Run system test #{basename}"
+      task basename => [:config_toolchains, :prep_system_tests] do
+        run_system_test_interactions([test])
+      end
+    end
+    FileList[SYSTEST_COMPILE_MOCKABLES_PATH + '*.h'].each do |test|
+      basename = File.basename(test,'.*')
+      desc "Run system test #{basename}"
+      task basename => [:config_toolchains, :prep_system_tests] do
+        run_system_test_compilations([test])
+      end
+    end
   end
 
   desc "Test cmock examples"
   task :examples => [:config_toolchains, :prep_system_tests] do
     run_examples()
-  end
-
-  #individual system tests
-  FileList['system/test_interactions/*.yml'].each do |test|
-    basename = File.basename(test,'.*')
-    #desc "Run system test #{basename}"
-    task basename => [:config_toolchains] do
-      run_system_test_interactions([test])
-    end
   end
 
   desc "Profile Mock Generation"

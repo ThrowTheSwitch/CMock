@@ -39,7 +39,7 @@ CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemEndOfChain(CMOCK_MEM_INDEX_TYPE root_index) 
 
 void*                 CMock_Guts_GetAddressFor(CMOCK_MEM_INDEX_TYPE index) CMOCK_FUNCTION_ATTR(pure);
 
-CMOCK_MEM_INDEX_TYPE CMock_Guts_MemBytesCapacity(void) CMOCK_FUNCTION_ATTR(const);
+CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesCapacity(void) CMOCK_FUNCTION_ATTR(const);
 CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesFree(void) CMOCK_FUNCTION_ATTR(pure);
 CMOCK_MEM_INDEX_TYPE  CMock_Guts_MemBytesUsed(void) CMOCK_FUNCTION_ATTR(pure);
 void                  CMock_Guts_MemFreeAll(void);

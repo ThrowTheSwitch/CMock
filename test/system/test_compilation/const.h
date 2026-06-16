@@ -24,15 +24,15 @@ void const_variants2(
 
 const int * const_retval1(void);        /* nicety version for pointer to constant int */
 int const * const_retval2(void);        /* formal version for pointer to constant int */
-//int * const const_retval3(void);        /* formal version for constant pointer to int */
-//int const * const const_retval4(void);  /* formal version for constant pointer to constant int */
+int * const const_retval3(void);        /* formal version for constant pointer to int */
+int const * const const_retval4(void);  /* formal version for constant pointer to constant int */
 
 const int* const_retval5(void);         /* sticky-left nicety version for pointer to constant int */
 int const* const_retval6(void);         /* sticky-left formal version for pointer to constant int */
-//int* const const_retval7(void);         /* sticky-left formal version for constant pointer to int */
-//int const* const const_retval8(void);   /* sticky-left formal version for constant pointer to constant int */
+int* const const_retval7(void);         /* sticky-left formal version for constant pointer to int */
+int const* const const_retval8(void);   /* sticky-left formal version for constant pointer to constant int */
 
 const int *const_retval9(void);         /* sticky-right nicety version for pointer to constant int */
 int const *const_retvalA(void);         /* sticky-right formal version for pointer to constant int */
-//int *const const_retvalB(void);         /* sticky-right formal version for constant pointer to int */
-//int const *const const_retvalC(void);   /* sticky-right formal version for constant pointer to constant int */
+int *const const_retvalB(void);         /* sticky-right formal version for constant pointer to int */
+int const *const const_retvalC(void);   /* sticky-right formal version for constant pointer to constant int */

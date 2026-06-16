@@ -31,7 +31,6 @@
   - struct_union_enum_expect_and_return
   - struct_union_enum_expect_and_return_with_plugins
   - stubs_with_callbacks
-  - unity_64bit_support
   - unity_ignores
   - callingconv
   - C

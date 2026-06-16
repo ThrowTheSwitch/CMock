@@ -144,10 +144,22 @@ module RakefileHelpers
     (($unity_cfg[:paths] || {})[:test] || []).select { |p| p.is_a?(Array) }
   end
 
-  # Returns the unsupported test list, regardless of whether it came from
-  # a CMock overlay or a CMock-only target file.
+  # Returns the full unsupported test list for the current toolchain, combining:
+  #   - explicit :unsupported lists from the CMock overlay and Unity target files
+  #   - implicit criteria (tests that require defines not present in the toolchain)
+  UNSUPPORTED_CRITERIA = {
+    'out_of_memory'       => { :defines => ['CMOCK_MEM_STATIC'] },
+    'unity_64bit_support' => { :defines => ['UNITY_SUPPORT_64'] }
+  }.freeze
+
   def unsupported_tests
-    ($cmock_cfg[:unsupported] || []) | ($unity_cfg[:unsupported] || [])
+    result = ($cmock_cfg[:unsupported] || []) | ($unity_cfg[:unsupported] || [])
+    test_defs = $unity_cfg.dig(:defines, :test)
+    conf_defs = (test_defs.is_a?(Hash) ? test_defs['*'] : nil) || test_defs || []
+    UNSUPPORTED_CRITERIA.each_pair do |name, crit|
+      result |= [name] if (crit[:defines] & conf_defs).empty?
+    end
+    result
   end
 
   # Resolve argument template tokens and produce a flat argument string.
@@ -228,7 +240,7 @@ module RakefileHelpers
     { command: "#{executable} ", pre_support: pre, post_support: post }
   end
 
-  def execute(command_string, verbose=true, raise_on_failure=true)
+  def execute(command_string, verbose=false, raise_on_failure=true)
     report(command_string) if verbose
     output = `#{command_string}`.chomp
     report(output) if (verbose && !output.nil? && (output.length > 0))
@@ -320,20 +332,30 @@ module RakefileHelpers
   def run_system_test_interactions(test_case_files)
     load '../lib/cmock.rb'
 
+    unsupported = unsupported_tests
+    test_case_files = test_case_files.reject do |f|
+      name = File.basename(f, YAML_EXTENSION)
+      if unsupported.include?(name)
+        report "Ignoring system test: #{name}"
+        true
+      end
+    end
+
     SystemTestGenerator.new.generate_files(test_case_files)
-    test_files = FileList.new(SYSTEST_GENERATED_FILES_PATH + 'test*.c')
 
     load_configuration($cfg_file)
 
     include_dirs = get_local_include_dirs
 
     # Build and execute each unit test
-    test_files.each do |test|
+    test_case_files.each do |yaml|
 
       obj_list = []
 
-      test_base    = File.basename(test, C_EXTENSION)
-      cmock_config = test_base.gsub(/test_/, '') + '_cmock.yml'
+      name         = File.basename(yaml, YAML_EXTENSION)
+      test_base    = 'test_' + name
+      test         = SYSTEST_GENERATED_FILES_PATH + test_base + C_EXTENSION
+      cmock_config = name + '_cmock.yml'
 
       report "Executing system tests in #{File.basename(test)}..."
 
@@ -460,6 +482,15 @@ module RakefileHelpers
   def run_system_test_compilations(mockables)
     load '../lib/cmock.rb'
     load_configuration($cfg_file)
+
+    unsupported = unsupported_tests
+    mockables = mockables.reject do |f|
+      name = File.basename(f, '.h')
+      if unsupported.include?(name)
+        report "Ignoring system test compilation: #{name}"
+        true
+      end
+    end
 
     report "\n"
     report "------------------------------------\n"

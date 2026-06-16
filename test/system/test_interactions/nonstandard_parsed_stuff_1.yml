@@ -27,7 +27,7 @@
     const char const * bars(void);
 
   :source: 
-    :header: |   
+    :header: |
       #include "CException.h" 
       void function_a(void);
       void function_b(void);
