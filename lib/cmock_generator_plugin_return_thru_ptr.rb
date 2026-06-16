@@ -56,7 +56,12 @@ class CMockGeneratorPluginReturnThruPtr
                  " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, sizeof(*#{arg[:name]}))\n"
                end
       lines << "#define #{function[:name]}_ReturnArrayThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_len)"
-      lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, (cmock_len * sizeof(*#{arg[:name]})))\n"
+      array_elem_size = if arg[:array_dims] && (arg[:type][-1] == '*') && !void_pointer?(arg[:type][0..-2])
+                          "sizeof(#{arg[:type][0..-2]})"
+                        else
+                          "sizeof(*#{arg[:name]})"
+                        end
+      lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, (cmock_len * #{array_elem_size}))\n"
       lines << "#define #{function[:name]}_ReturnMemThruPtr_#{arg[:name]}(#{arg[:name]}, cmock_size)"
       lines << " #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(__LINE__, #{arg[:name]}, (cmock_size))\n"
       lines << "void #{function[:name]}_CMockReturnMemThruPtr_#{arg[:name]}(UNITY_LINE_TYPE cmock_line, #{ptr_to_const(arg[:type])} #{arg[:name]}, size_t cmock_size);\n"

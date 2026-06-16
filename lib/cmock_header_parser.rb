@@ -417,7 +417,16 @@ class CMockHeaderParser
     dims
   end
 
-  def parse_args(arg_list, array_dims_by_name = {})
+  def extract_ptr_to_array_dims(arg_list)
+    dims = {}
+    arg_list.scan(/\(\s*\*\s*(\w+)\s*\)((?:\s*\[[^\[\]]*\])+)/) do |name, all_dims|
+      dim_list = all_dims.scan(/\[([^\[\]]*)\]/).map { |d| d[0].strip }
+      dims[name] = dim_list
+    end
+    dims
+  end
+
+  def parse_args(arg_list, array_dims_by_name = {}, ptr_to_array_dims_by_name = {})
     args = []
     arg_list.split(',').each do |arg|
       arg.strip!
@@ -428,6 +437,13 @@ class CMockHeaderParser
       arg_info.delete(:c_calling_convention) # don't care about this
 
       arg_info[:array_dims] = array_dims_by_name[arg_info[:name]] if array_dims_by_name.key?(arg_info[:name])
+
+      # Handle pointer-to-array args: (*name)[dims] was rewritten to * name before clean_args
+      if ptr_to_array_dims_by_name.key?(arg_info[:name])
+        arg_info[:array_dims] = ptr_to_array_dims_by_name[arg_info[:name]]
+        arg_info[:ptr_to_array?] = true
+        arg_info[:ptr?] = true # force true even for types like char* that divine_ptr would otherwise treat as strings
+      end
 
       # in C, array arguments implicitly degrade to pointers
       # make the translation explicit here to simplify later logic
@@ -602,12 +618,18 @@ class CMockHeaderParser
       decl[:var_arg] = nil
     end
 
+    # Extract pointer-to-array parameters (e.g., char (*buffer)[10]) and rewrite for normal processing
+    ptr_to_array_dims = extract_ptr_to_array_dims(args)
+    ptr_to_array_dims.each_key do |name|
+      args.gsub!(/\(\s*\*\s*#{Regexp.escape(name)}\s*\)((?:\s*\[[^\[\]]*\])+)/, "* #{name}")
+    end
+
     # Extract array dimensions before cleaning converts them to pointer notation
     array_dims_by_name = extract_array_dims(args)
 
     # parse out and clean up the remainder of the arguments
     args = clean_args(args, parse_project)
-    decl[:args] = parse_args(args, array_dims_by_name)
+    decl[:args] = parse_args(args, array_dims_by_name, ptr_to_array_dims)
     # Rebuild args_string using original array notation where applicable
     if args == 'void'
       decl[:args_string] = args
@@ -618,7 +640,11 @@ class CMockHeaderParser
 
         base_type = arg[:type].sub(/\*$/, '').strip
         dims_str = arg[:array_dims].map { |d| "[#{d}]" }.join
-        arg_parts[i] = "#{base_type} #{arg[:name]}#{dims_str}"
+        arg_parts[i] = if arg[:ptr_to_array?]
+                         "#{base_type} (*#{arg[:name]})#{dims_str}"
+                       else
+                         "#{base_type} #{arg[:name]}#{dims_str}"
+                       end
       end
       decl[:args_string] = arg_parts.join(', ')
     end
