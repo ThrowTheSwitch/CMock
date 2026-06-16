@@ -49,6 +49,7 @@
     void transform_grid(int grid[][4], int rows);
     void write_buffer(char (*dest)[10]);
     void read_buffers(int count, char (*buffers)[8]);
+    void process_handles(void *const handles[], int count);
 
   :source:
     :header: |
@@ -61,6 +62,7 @@
       void function_g(void);
       void function_h(void);
       void function_i(void);
+      void function_j(void);
 
     :code: |
       void function_a(void)
@@ -126,6 +128,12 @@
           for (j = 0; j < 8; j++)
             bufs[i][j] = (char)(i * 8 + j + 1);
         read_buffers((int)3, bufs);
+      }
+
+      void function_j(void)
+      {
+        void *const ptrs[] = {(void*)1, (void*)2, (void*)3};
+        process_handles(ptrs, 3);
       }
 
   :tests:
@@ -596,6 +604,39 @@
           read_buffers_ExpectWithArray(3, expected, 3);
 
           function_i();
+        }
+
+    - :pass: TRUE
+      :should: 'pass when array of const void pointers matches expected'
+      :code: |
+        test()
+        {
+          void *const expected[] = {(void*)1, (void*)2, (void*)3};
+          process_handles_Expect(expected, 3);
+
+          function_j();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in array of const void pointers'
+      :code: |
+        test()
+        {
+          void *const expected[] = {(void*)1, (void*)2, (void*)9};
+          process_handles_Expect(expected, 3);
+
+          function_j();
+        }
+
+    - :pass: TRUE
+      :should: 'pass when comparing subset of const void pointer array via ExpectWithArray'
+      :code: |
+        test()
+        {
+          void *const expected[] = {(void*)1, (void*)2};
+          process_handles_ExpectWithArray(expected, 2, 3);
+
+          function_j();
         }
 
 ...

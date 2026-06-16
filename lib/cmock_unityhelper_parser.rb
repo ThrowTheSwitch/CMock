@@ -16,7 +16,12 @@ class CMockUnityHelperParser
 
   def get_helper(ctype)
     lookup = ctype.gsub(/(?:^|(\S?)(\s*)|(\W))const(?:$|(\s*)(\S)|(\W))/, '\1\3\5\6').strip.gsub(/\s+/, '_')
-    return [@c_types[lookup], ''] if @c_types[lookup]
+    if @c_types[lookup]
+      # _ARRAY_ARRAY variants don't exist in Unity; use memory fallback instead
+      return [@fallback, ''] if @c_types[lookup].end_with?('_ARRAY_ARRAY')
+
+      return [@c_types[lookup], '']
+    end
 
     if lookup =~ /\*$/
       lookup = lookup.gsub(/\*$/, '')
