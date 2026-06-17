@@ -20,6 +20,7 @@ class CMockGeneratorUtils
     @ignore = @config.plugins.include? :ignore
     @ignore_stateless = @config.plugins.include? :ignore_stateless
     @treat_as = @config.treat_as
+    @treat_as_void = (['void'] + (@config.respond_to?(:treat_as_void) ? @config.treat_as_void : [])).uniq
     @helpers = helpers
   end
 
@@ -155,10 +156,21 @@ class CMockGeneratorUtils
 
     unity_func = if (arg[:ptr?]) && ((c_type =~ /\*\*/) || (@ptr_handling == :compare_ptr))
                    ['UNITY_TEST_ASSERT_EQUAL_PTR', '']
+                 elsif arg[:ptr?] && !@arrays && void_pointer_type?(c_type)
+                   # void* cannot be safely dereferenced; without the array plugin there's no way
+                   # to specify depth, so fall back to comparing the pointer value itself
+                   ['UNITY_TEST_ASSERT_EQUAL_PTR', '']
                  else
                    @helpers.nil? || @helpers[:unity_helper].nil? ? ['UNITY_TEST_ASSERT_EQUAL', ''] : @helpers[:unity_helper].get_helper(c_type)
                  end
     [c_type, arg_name, expected, ignore, unity_func[0], unity_func[1]]
+  end
+
+  def void_pointer_type?(c_type)
+    base = c_type.gsub(/\bconst\b/, '').gsub(/\s+/, '')
+    return false unless base.end_with?('*')
+
+    @treat_as_void.include?(base.chomp('*'))
   end
 
   def ptr_to_array_elem_size(arg, c_type)

@@ -401,4 +401,49 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY', '&'], ['MY_TYPE']
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
   end
+
+  # void* tests without array plugin (when_ptr: :compare_data) - these must use pointer
+  # comparison because dereferencing void* is illegal in C
+  it 'handle void pointer comparison without array plugin by using pointer comparison' do
+    config_stub = create_stub({
+      when_ptr: :compare_data,
+      enforce_strict_ordering: false,
+      plugins: [],
+      treat_as: {'void*' => 'HEX8_ARRAY', 'void const*' => 'HEX8_ARRAY', 'const void*' => 'HEX8_ARRAY'},
+      treat_as_void: []
+    })
+    utils = CMockGeneratorUtils.new(config_stub, {:unity_helper => @unity_helper})
+    function = { :name => 'Pear' }
+
+    [
+      {:type => "void*",       :name => 'MyVoidPtr',      :ptr? => true, :const? => false, :const_ptr? => false},
+      {:type => "const void*", :name => 'MyConstVoidPtr', :ptr? => true, :const? => true,  :const_ptr? => false},
+      {:type => "void const*", :name => 'MyVoidConstPtr', :ptr? => true, :const? => false, :const_ptr? => true},
+    ].each do |arg|
+      expected = "  {\n" +
+                 "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_#{arg[:name]});\n" +
+                 "    UNITY_TEST_ASSERT_EQUAL_PTR(cmock_call_instance->Expected_#{arg[:name]}, #{arg[:name]}, cmock_line, CMockStringMismatch);\n" +
+                 "  }\n"
+      assert_equal(expected, utils.code_verify_an_arg_expectation(function, arg))
+    end
+  end
+
+  it 'handle treat_as_void alias pointer comparison without array plugin by using pointer comparison' do
+    config_stub = create_stub({
+      when_ptr: :compare_data,
+      enforce_strict_ordering: false,
+      plugins: [],
+      treat_as: {'MY_VOID*' => 'HEX8_ARRAY'},
+      treat_as_void: ['MY_VOID']
+    })
+    utils = CMockGeneratorUtils.new(config_stub, {:unity_helper => @unity_helper})
+    function = { :name => 'Pear' }
+
+    arg = {:type => "MY_VOID*", :name => 'MyVoidAliasPtr', :ptr? => true, :const? => false, :const_ptr? => false}
+    expected = "  {\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyVoidAliasPtr);\n" +
+               "    UNITY_TEST_ASSERT_EQUAL_PTR(cmock_call_instance->Expected_MyVoidAliasPtr, MyVoidAliasPtr, cmock_line, CMockStringMismatch);\n" +
+               "  }\n"
+    assert_equal(expected, utils.code_verify_an_arg_expectation(function, arg))
+  end
 end
