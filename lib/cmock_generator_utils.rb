@@ -160,6 +160,11 @@ class CMockGeneratorUtils
                    # void* cannot be safely dereferenced; without the array plugin there's no way
                    # to specify depth, so fall back to comparing the pointer value itself
                    ['UNITY_TEST_ASSERT_EQUAL_PTR', '']
+                 elsif arg[:ptr?] && @arrays && void_pointer_type?(c_type)
+                   # With the array plugin, treat_as_void aliases not in treat_as would fall back to
+                   # MEMORY_ARRAY with sizeof(void), which is illegal. Use HEX8_ARRAY (byte comparison)
+                   # to match what literal void* gets from the default treat_as entry.
+                   ['UNITY_TEST_ASSERT_EQUAL_HEX8_ARRAY', '']
                  else
                    @helpers.nil? || @helpers[:unity_helper].nil? ? ['UNITY_TEST_ASSERT_EQUAL', ''] : @helpers[:unity_helper].get_helper(c_type)
                  end

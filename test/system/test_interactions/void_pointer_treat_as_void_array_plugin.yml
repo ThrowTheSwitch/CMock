@@ -1,0 +1,102 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+#The purpose of this test is to verify that pointers to treat_as_void alias types
+#(e.g. MY_VOID*) use HEX8_ARRAY byte comparison when the array plugin is active,
+#rather than falling through to MEMORY_ARRAY which would emit sizeof(void) — illegal C.
+:cmock:
+  :plugins:
+  - :array
+  :when_ptr: :smart
+  :treat_as_void:
+  - MY_VOID
+
+:systest:
+  :types: |
+    typedef void MY_VOID;
+
+  :mockable: |
+    void get_my_void_ptr(MY_VOID* ptr);
+
+  :source:
+    :header: |
+      void function_a(MY_VOID* arg);
+
+    :code: |
+      void function_a(MY_VOID* arg) {
+        get_my_void_ptr(arg);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: 'handle treat_as_void pointer with same pointer using standard expect'
+      :code: |
+        test()
+        {
+          char* a = "Hello";
+          get_my_void_ptr_Expect(a);
+          function_a(a);
+        }
+
+    - :pass: TRUE
+      :should: 'handle treat_as_void pointer with same content using ExpectWithArray'
+      :code: |
+        test()
+        {
+          char* a = "Hello";
+          char* b = "Hello";
+          get_my_void_ptr_ExpectWithArray(a, 5);
+          function_a(b);
+        }
+
+    - :pass: FALSE
+      :should: 'detect treat_as_void pointer content mismatch with ExpectWithArray'
+      :code: |
+        test()
+        {
+          char* a = "Hello";
+          char* b = "Jello";
+          get_my_void_ptr_ExpectWithArray(a, 5);
+          function_a(b);
+        }
+
+    - :pass: TRUE
+      :should: 'handle null treat_as_void pointer comparison'
+      :code: |
+        test()
+        {
+          get_my_void_ptr_Expect(NULL);
+          function_a(NULL);
+        }
+
+    - :pass: TRUE
+      :should: 'handle treat_as_void pointer comparison with depth 0 using smart ptr comparison'
+      :code: |
+        test()
+        {
+          char* a = "Hello";
+          get_my_void_ptr_ExpectWithArray(a, 0);
+          function_a(a);
+        }
+
+    - :pass: FALSE
+      :should: 'detect treat_as_void pointer value mismatch with depth 0 in smart mode'
+      :code: |
+        test()
+        {
+          static char a[] = "Hello";
+          static char b[] = "Hello";
+          get_my_void_ptr_ExpectWithArray(a, 0);
+          function_a(b);
+        }
+...

@@ -446,4 +446,26 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "  }\n"
     assert_equal(expected, utils.code_verify_an_arg_expectation(function, arg))
   end
+
+  it 'handle treat_as_void alias pointer with array plugin using HEX8_ARRAY to avoid sizeof(void)' do
+    config_stub = create_stub({
+      when_ptr: :compare_data,
+      enforce_strict_ordering: false,
+      plugins: [:array],
+      treat_as: {},
+      treat_as_void: ['MY_VOID']
+    })
+    utils = CMockGeneratorUtils.new(config_stub, {:unity_helper => @unity_helper})
+    function = { :name => 'Pear' }
+
+    arg = {:type => "MY_VOID*", :name => 'MyVoidAliasPtr', :ptr? => true, :const? => false, :const_ptr? => false}
+    expected = "  {\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyVoidAliasPtr);\n" +
+               "    if (cmock_call_instance->Expected_MyVoidAliasPtr == NULL)\n" +
+               "      { UNITY_TEST_ASSERT_NULL(MyVoidAliasPtr, cmock_line, CMockStringExpNULL); }\n" +
+               "    else\n" +
+               "      { UNITY_TEST_ASSERT_EQUAL_HEX8_ARRAY(cmock_call_instance->Expected_MyVoidAliasPtr, MyVoidAliasPtr, cmock_call_instance->Expected_MyVoidAliasPtr_Depth, cmock_line, CMockStringMismatch); }\n" +
+               "  }\n"
+    assert_equal(expected, utils.code_verify_an_arg_expectation(function, arg))
+  end
 end
