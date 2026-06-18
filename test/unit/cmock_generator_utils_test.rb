@@ -98,6 +98,46 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     assert_equal(expected, output)
   end
 
+  it "add code for a base expectation with expect_any_args plugin" do
+    config = create_stub(
+      :when_ptr => :smart,
+      :enforce_strict_ordering => false,
+      :plugins => [:expect_any_args],
+      :treat_as => {},
+      :respond_to? => false
+    )
+    utils = CMockGeneratorUtils.new(config, {})
+    expected =
+      "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
+      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
+      "  cmock_call_instance->LineNumber = cmock_line;\n" +
+      "  cmock_call_instance->ExpectAnyArgsBool = (char)0;\n"
+    assert_equal(expected, utils.code_add_base_expectation("Apple"))
+  end
+
+  it "add code for a base expectation with ignore_stateless plugin (without ignore)" do
+    config = create_stub(
+      :when_ptr => :smart,
+      :enforce_strict_ordering => false,
+      :plugins => [:ignore_stateless],
+      :treat_as => {},
+      :respond_to? => false
+    )
+    utils = CMockGeneratorUtils.new(config, {})
+    expected =
+      "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
+      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
+      "  Mock.Apple_IgnoreBool = (char)0;\n" +
+      "  cmock_call_instance->LineNumber = cmock_line;\n"
+    assert_equal(expected, utils.code_add_base_expectation("Apple"))
+  end
+
   it "add argument expectations for values when no array plugin" do
     arg1 = { :name => "Orange", :const? => false, :type => 'int', :ptr? => false }
     expected1 = "  cmock_call_instance->Expected_Orange = Orange;\n"

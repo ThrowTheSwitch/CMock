@@ -44,6 +44,7 @@ module RakefileHelpers
 
   def load_configuration(config_file, cmock_overlay = nil)
     $cfg_file = config_file
+    cmock_overlay += '.yml' if cmock_overlay && cmock_overlay !~ /\.yml$/i
     $proj = load_yaml('./project.yml')
 
     unity_targets_dir = '../vendor/unity/test/targets'
@@ -89,7 +90,6 @@ module RakefileHelpers
   def configure_toolchain(config_file = DEFAULT_CONFIG_FILE, cmock_overlay = nil)
     config_file = config_file || DEFAULT_CONFIG_FILE
     config_file += '.yml' unless config_file =~ /\.yml$/i
-    cmock_overlay += '.yml' if cmock_overlay && cmock_overlay !~ /\.yml$/i
     load_configuration(config_file, cmock_overlay)
     configure_clean
   end
@@ -154,8 +154,7 @@ module RakefileHelpers
 
   def unsupported_tests
     result = ($cmock_cfg[:unsupported] || []) | ($unity_cfg[:unsupported] || [])
-    test_defs = $unity_cfg.dig(:defines, :test)
-    conf_defs = (test_defs.is_a?(Hash) ? test_defs['*'] : nil) || test_defs || []
+    conf_defs = all_defines
     UNSUPPORTED_CRITERIA.each_pair do |name, crit|
       result |= [name] if (crit[:defines] & conf_defs).empty?
     end
@@ -343,7 +342,7 @@ module RakefileHelpers
 
     SystemTestGenerator.new.generate_files(test_case_files)
 
-    load_configuration($cfg_file)
+    load_configuration($cfg_file, $cmock_test_overlay_file)
 
     include_dirs = get_local_include_dirs
 
@@ -481,7 +480,7 @@ module RakefileHelpers
 
   def run_system_test_compilations(mockables)
     load '../lib/cmock.rb'
-    load_configuration($cfg_file)
+    load_configuration($cfg_file, $cmock_test_overlay_file)
 
     unsupported = unsupported_tests
     mockables = mockables.reject do |f|
@@ -510,7 +509,7 @@ module RakefileHelpers
 
   def run_system_test_profiles(mockables)
     load '../lib/cmock.rb'
-    load_configuration($cfg_file)
+    load_configuration($cfg_file, $cmock_test_overlay_file)
 
     report "\n"
     report "--------------------------\n"
