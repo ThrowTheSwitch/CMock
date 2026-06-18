@@ -83,7 +83,7 @@ class CMockGeneratorUtils
 
   def code_add_an_arg_expectation(arg, depth = 1)
     lines =  code_assign_argument_quickly("cmock_call_instance->Expected_#{arg[:name]}", arg)
-    lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{arg[:name]}_Depth;\n" if @arrays && depth.instance_of?(String)
+    lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{depth};\n" if @arrays && depth.instance_of?(String)
     lines << "  cmock_call_instance->IgnoreArg_#{arg[:name]} = 0;\n" if @ignore_arg
     lines << "  cmock_call_instance->ReturnThruPtr_#{arg[:name]}_Used = 0;\n" if @return_thru_ptr && ptr_or_str?(arg[:type]) && !(arg[:const?])
     lines
@@ -105,11 +105,27 @@ class CMockGeneratorUtils
     if function[:args_string] != 'void'
       if @arrays
         args_string = function[:args].map do |m|
-          m[:ptr?] ? "#{arg_declaration(m)}, int #{m[:name]}_Depth" : arg_declaration(m)
+          if m[:ptr?] && m[:array_size_order] == :before
+            arg_declaration(m)
+          elsif m[:ptr?]
+            "#{arg_declaration(m)}, int #{m[:name]}_Depth"
+          else
+            arg_declaration(m)
+          end
         end.join(', ')
+        body = function[:args].inject('') do |all, arg|
+          depth = if arg[:ptr?] && arg[:array_size_order] == :before
+                    arg[:array_size_name]
+                  elsif arg[:ptr?]
+                    "#{arg[:name]}_Depth"
+                  else
+                    1
+                  end
+          all + code_add_an_arg_expectation(arg, depth)
+        end
         "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string});\n" \
           "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" \
-          "#{function[:args].inject('') { |all, arg| all + code_add_an_arg_expectation(arg, (arg[:ptr?] ? "#{arg[:name]}_Depth" : 1)) }}" \
+          "#{body}" \
           "}\n\n"
       else
         "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]});\n" \
@@ -125,10 +141,14 @@ class CMockGeneratorUtils
   def code_call_argument_loader(function)
     if function[:args_string] != 'void'
       args = function[:args].map do |m|
-        if @arrays && m[:ptr?] && !(m[:array_data?])
+        if @arrays && m[:ptr?] && m[:array_size_order] == :after
+          "#{m[:name]}, #{m[:array_size_name]}"
+        elsif @arrays && m[:ptr?] && m[:array_size_order] == :before
+          m[:name]
+        elsif @arrays && m[:ptr?]
           "#{m[:name]}, 1"
         elsif @arrays && m[:array_size?]
-          "#{m[:name]}, #{m[:name]}"
+          m[:name]
         else
           m[:name]
         end

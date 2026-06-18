@@ -2879,5 +2879,128 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
+  it "pairs size arg with adjacent pointer when no name affinity exists" do
+    source = "void process(int *data, int size)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    data_arg = args.find { |a| a[:name] == 'data' }
+    size_arg = args.find { |a| a[:name] == 'size' }
+
+    assert_equal(:after, data_arg[:array_size_order], "data should be paired with size (after)")
+    assert_equal(true,   size_arg[:array_size?],      "size should be marked as array_size?")
+  end
+
+  it "pairs size arg with the pointer whose name it matches, even when a different pointer is adjacent" do
+    # buf_size is adjacent to status, but 'buf' root matches 'buf' exactly
+    source = "void store(int *status, int buf_size, int *buf)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    status_arg  = args.find { |a| a[:name] == 'status' }
+    buf_size_arg = args.find { |a| a[:name] == 'buf_size' }
+    buf_arg     = args.find { |a| a[:name] == 'buf' }
+
+    assert_nil(status_arg[:array_size_order],            "status should NOT be paired")
+    assert_equal(:before, buf_arg[:array_size_order],    "buf should be paired with size (before)")
+    assert_equal(true,    buf_size_arg[:array_size?],    "buf_size should be marked as array_size?")
+  end
+
+  it "pairs size arg with pointer that comes after it when name affinity is stronger than adjacency" do
+    # buff_size is adjacent to bytes_to_read, but 'buff' root is a prefix of 'buffer'
+    source = "void read_interface(size_t *bytes_to_read, size_t buff_size, char **buffer)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    bytes_arg     = args.find { |a| a[:name] == 'bytes_to_read' }
+    buff_size_arg = args.find { |a| a[:name] == 'buff_size' }
+    buffer_arg    = args.find { |a| a[:name] == 'buffer' }
+
+    assert_nil(bytes_arg[:array_size_order],               "bytes_to_read should NOT be paired")
+    assert_equal(:before, buffer_arg[:array_size_order],   "buffer should be paired with size (before)")
+    assert_equal(true,    buff_size_arg[:array_size?],     "buff_size should be marked as array_size?")
+  end
+
+  it "pairs multiple size args each with their best-matched pointer" do
+    source = "void copy(int *dst, int dst_len, int *src, int src_len)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    dst_arg     = args.find { |a| a[:name] == 'dst' }
+    dst_len_arg = args.find { |a| a[:name] == 'dst_len' }
+    src_arg     = args.find { |a| a[:name] == 'src' }
+    src_len_arg = args.find { |a| a[:name] == 'src_len' }
+
+    assert_equal(:after, dst_arg[:array_size_order], "dst should be paired with size (after)")
+    assert_equal(true, dst_len_arg[:array_size?],    "dst_len should be marked as array_size?")
+    assert_equal(:after, src_arg[:array_size_order], "src should be paired with size (after)")
+    assert_equal(true, src_len_arg[:array_size?],    "src_len should be marked as array_size?")
+  end
+
+  it "pairs size arg with adjacent array when no name affinity exists" do
+    source = "void process(int data[], int size)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    data_arg = args.find { |a| a[:name] == 'data' }
+    size_arg = args.find { |a| a[:name] == 'size' }
+
+    assert_equal(:after, data_arg[:array_size_order], "data should be paired with size (after)")
+    assert_equal(true,   size_arg[:array_size?],      "size should be marked as array_size?")
+  end
+
+  it "pairs size arg with the array whose name it matches, even when a different pointer is adjacent" do
+    # buf_size is adjacent to status, but 'buf' root matches 'buf' exactly
+    source = "void store(int status[], int buf_size, int buf[])"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    status_arg  = args.find { |a| a[:name] == 'status' }
+    buf_size_arg = args.find { |a| a[:name] == 'buf_size' }
+    buf_arg     = args.find { |a| a[:name] == 'buf' }
+
+    assert_nil(status_arg[:array_size_order],            "status should NOT be paired")
+    assert_equal(:before, buf_arg[:array_size_order],    "buf should be paired with size (before)")
+    assert_equal(true,    buf_size_arg[:array_size?],    "buf_size should be marked as array_size?")
+  end
+
+  it "pairs size arg with array that comes after it when name affinity is stronger than adjacency" do
+    # buff_size is adjacent to bytes_to_read, but 'buff' root is a prefix of 'buffer'
+    source = "void read_interface(size_t bytes_to_read[], size_t buff_size, char *buffer[])"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    bytes_arg     = args.find { |a| a[:name] == 'bytes_to_read' }
+    buff_size_arg = args.find { |a| a[:name] == 'buff_size' }
+    buffer_arg    = args.find { |a| a[:name] == 'buffer' }
+
+    assert_nil(bytes_arg[:array_size_order],               "bytes_to_read should NOT be paired")
+    assert_equal(:before, buffer_arg[:array_size_order],   "buffer should be paired with size (before)")
+    assert_equal(true, buff_size_arg[:array_size?],        "buff_size should be marked as array_size?")
+  end
+
+  it "pairs multiple size args each with their best-matched array" do
+    source = "void copy(int dst[], int dst_len, int src[], int src_len)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    dst_arg     = args.find { |a| a[:name] == 'dst' }
+    dst_len_arg = args.find { |a| a[:name] == 'dst_len' }
+    src_arg     = args.find { |a| a[:name] == 'src' }
+    src_len_arg = args.find { |a| a[:name] == 'src_len' }
+
+    assert_equal(:after, dst_arg[:array_size_order],  "dst should be paired with size (after)")
+    assert_equal(true, dst_len_arg[:array_size?],     "dst_len should be marked as array_size?")
+    assert_equal(:after, src_arg[:array_size_order],  "src should be paired with size (after)")
+    assert_equal(true, src_len_arg[:array_size?],     "src_len should be marked as array_size?")
+  end
 
 end

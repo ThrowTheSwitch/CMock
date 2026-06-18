@@ -130,7 +130,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
 
     arg3 = { :name => "Kiwi", :const? => false, :type => 'KIWI_T*', :ptr? => true }
     expected3 = "  cmock_call_instance->Expected_Kiwi = Kiwi;\n" +
-                "  cmock_call_instance->Expected_Kiwi_Depth = Kiwi_Depth;\n" +
+                "  cmock_call_instance->Expected_Kiwi_Depth = Mango_Depth;\n" +
                 "  cmock_call_instance->IgnoreArg_Kiwi = 0;\n" +
                 "  cmock_call_instance->ReturnThruPtr_Kiwi_Used = 0;\n"
 
@@ -141,7 +141,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
 
     assert_equal(expected1, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg1))
     assert_equal(expected2, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg2, 'Lemon_Depth'))
-    assert_equal(expected3, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg3, 'Lemon_Depth'))
+    assert_equal(expected3, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg3, 'Mango_Depth'))
     assert_equal(expected4, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg4))
   end
 

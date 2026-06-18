@@ -456,18 +456,59 @@ class CMockHeaderParser
       args << arg_info
     end
 
-    # Try to find array pair in parameters following this pattern : <type> * <name>, <@array_size_type> <@array_size_name>
-    args.each_with_index do |val, index|
-      next_index = index + 1
-      next unless args.length > next_index
+    # Try to find array pairs using name-affinity scoring.
+    # Pairs each size-candidate arg with the best-matching pointer arg.
+    # Score: 10=exact root match, 7=prefix match, 5=substring match, +2 adjacency bonus (ptr immediately precedes size).
+    # Falls back to adjacency alone (score 2) when no name affinity found, preserving original behavior.
+    size_candidate_indices = args.each_index.select do |i|
+      args[i][:name].match(@array_size_name) && @array_size_type.include?(args[i][:type])
+    end
 
-      if (val[:ptr?] == true) && args[next_index][:name].match(@array_size_name) && @array_size_type.include?(args[next_index][:type])
-        val[:array_data?] = true
-        args[next_index][:array_size?] = true
+    size_candidate_indices.each do |size_idx|
+      best_score = 0
+      best_ptr_idx = nil
+
+      args.each_with_index do |ptr_arg, ptr_idx|
+        next unless ptr_arg[:ptr?] && !ptr_arg[:array_data?]
+
+        score = array_size_name_affinity(ptr_arg[:name], args[size_idx][:name])
+        score += 2 if ptr_idx + 1 == size_idx
+
+        if score > best_score
+          best_score = score
+          best_ptr_idx = ptr_idx
+        end
       end
+
+      next unless best_ptr_idx
+
+      args[best_ptr_idx][:array_size_name] = args[size_idx][:name]
+      args[best_ptr_idx][:array_size_order] = size_idx < best_ptr_idx ? :before : :after
+      args[size_idx][:array_size?] = true
     end
 
     args
+  end
+
+  def array_size_name_affinity(ptr_name, size_name)
+    size_words = @array_size_name.to_s.split('|').select { |w| w.match?(/^\w+$/) }
+    p_name = ptr_name.downcase
+    s_name = size_name.downcase
+
+    roots = size_words.flat_map do |word|
+      [
+        s_name.sub(/_#{Regexp.escape(word)}$/, ''),
+        s_name.sub(/^#{Regexp.escape(word)}_/, '')
+      ]
+    end.uniq.reject { |r| r.empty? || r == s_name }
+
+    roots.each do |root|
+      return 10 if root == p_name
+      return 7 if p_name.start_with?(root) || root.start_with?(p_name)
+      return 5 if p_name.include?(root) || root.include?(p_name)
+    end
+
+    0
   end
 
   def divine_ptr(arg)
