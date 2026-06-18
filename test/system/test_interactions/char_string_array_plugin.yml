@@ -1,0 +1,113 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+  :when_ptr: :smart
+  :plugins:
+  - :array
+
+:systest:
+  :types: |
+
+  :mockable: |
+    void send_message(const char* msg);
+    int process_command(const char* cmd, int len);
+
+  :source:
+    :header: |
+      void function_a(void);
+      void function_b(void);
+      void function_c(void);
+      int  function_d(void);
+      int  function_e(void);
+
+    :code: |
+      void function_a(void)
+      {
+        send_message("hello");
+      }
+
+      void function_b(void)
+      {
+        send_message("hello");
+      }
+
+      void function_c(void)
+      {
+        send_message("hello");
+      }
+
+      int function_d(void)
+      {
+        return process_command("hello", 5);
+      }
+
+      int function_e(void)
+      {
+        return process_command("hello", 5);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: 'compare char* args as strings using Expect (strcmp) when array plugin active'
+      :code: |
+        test()
+        {
+          send_message_Expect("hello");
+          function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'compare char* args as byte array using ExpectWithArray and pass when bytes match'
+      :code: |
+        test()
+        {
+          send_message_ExpectWithArray("hello", 5);
+          function_b();
+        }
+
+    - :pass: TRUE
+      :should: 'compare char* args as byte array using ExpectWithArray and pass when brief bytes match'
+      :code: |
+        test()
+        {
+          send_message_ExpectWithArray("heXXX", 2);
+          function_b();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in char* via ExpectWithArray byte comparison'
+      :code: |
+        test()
+        {
+          send_message_ExpectWithArray("hXllo", 5);
+          function_c();
+        }
+
+    - :pass: TRUE
+      :should: 'compare char* with ExpectWithArrayAndReturn and pass when bytes match'
+      :code: |
+        test()
+        {
+          process_command_ExpectWithArrayAndReturn("hello", 5, 5, 42);
+          TEST_ASSERT_EQUAL(42, function_d());
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in char* via ExpectWithArrayAndReturn byte comparison'
+      :code: |
+        test()
+        {
+          process_command_ExpectWithArrayAndReturn("world", 5, 5, 42);
+          TEST_ASSERT_EQUAL(42, function_e());
+        }

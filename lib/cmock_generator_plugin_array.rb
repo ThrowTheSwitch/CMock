@@ -21,7 +21,7 @@ class CMockGeneratorPluginArray
 
   def instance_typedefs(function)
     function[:args].inject('') do |all, arg|
-      arg[:ptr?] ? all + "  int Expected_#{arg[:name]}_Depth;\n" : all
+      arg[:ptr?] || arg[:string?] ? all + "  int Expected_#{arg[:name]}_Depth;\n" : all
     end
   end
 
@@ -30,35 +30,36 @@ class CMockGeneratorPluginArray
 
     func_name = function[:name]
 
-    # C function signature: always explicit depth for every pointer arg
+    # C function signature: always explicit depth for every pointer/string arg
     args_string = function[:args].map do |m|
-      m[:ptr?] ? "#{@utils.arg_declaration(m)}, int #{m[:name]}_Depth" : @utils.arg_declaration(m)
+      m[:ptr?] || m[:string?] ? "#{@utils.arg_declaration(m)}, int #{m[:name]}_Depth" : @utils.arg_declaration(m)
     end.join(', ')
 
     # Short macro params: paired ptrs (before OR after) omit _Depth (auto-filled from paired size arg)
+    # string? args always need an explicit _Depth
     args_call_i = function[:args].map do |m|
-      m[:ptr?] && !m[:array_size_name] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name].to_s
+      (m[:ptr?] && !m[:array_size_name]) || m[:string?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name].to_s
     end.join(', ')
 
     # Short macro call: paired ptrs pass paired size name as depth automatically
     args_call_o = function[:args].map do |m|
       if m[:ptr?] && m[:array_size_name]
         "#{m[:name]}, (#{m[:array_size_name]})"
-      elsif m[:ptr?]
+      elsif m[:ptr?] || m[:string?]
         "#{m[:name]}, (#{m[:name]}_Depth)"
       else
         m[:name].to_s
       end
     end.join(', ')
 
-    # Extended macro params: every ptr gets an explicit _Depth
+    # Extended macro params: every ptr/string gets an explicit _Depth
     args_call_ext_i = function[:args].map do |m|
-      m[:ptr?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name].to_s
+      m[:ptr?] || m[:string?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name].to_s
     end.join(', ')
 
-    # Extended macro call: every ptr passes (name_Depth)
+    # Extended macro call: every ptr/string passes (name_Depth)
     args_call_ext_o = function[:args].map do |m|
-      m[:ptr?] ? "#{m[:name]}, (#{m[:name]}_Depth)" : m[:name].to_s
+      m[:ptr?] || m[:string?] ? "#{m[:name]}, (#{m[:name]}_Depth)" : m[:name].to_s
     end.join(', ')
 
     has_paired = function[:args].any? { |m| m[:array_size_name] }
@@ -90,14 +91,15 @@ class CMockGeneratorPluginArray
     lines = []
     func_name = function[:name]
 
-    # C function: always explicit depth for every pointer arg
+    # C function: always explicit depth for every pointer/string arg
     args_string = function[:args].map do |m|
-      m[:ptr?] ? "#{@utils.arg_declaration(m)}, int #{m[:name]}_Depth" : @utils.arg_declaration(m)
+      m[:ptr?] || m[:string?] ? "#{@utils.arg_declaration(m)}, int #{m[:name]}_Depth" : @utils.arg_declaration(m)
     end.join(', ')
 
     # Call to CMockExpectParameters_: :before-paired ptrs pass only ptr name (their depth is set from paired size arg)
+    # string? args always pass their depth explicitly
     call_string = function[:args].map do |m|
-      m[:ptr?] && m[:array_size_order] != :before ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name]
+      (m[:ptr?] && m[:array_size_order] != :before) || m[:string?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name]
     end.join(', ')
 
     lines << if function[:return][:void?]

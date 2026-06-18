@@ -107,7 +107,7 @@ class CMockGeneratorUtils
         args_string = function[:args].map do |m|
           if m[:ptr?] && m[:array_size_order] == :before
             arg_declaration(m)
-          elsif m[:ptr?]
+          elsif m[:ptr?] || m[:string?]
             "#{arg_declaration(m)}, int #{m[:name]}_Depth"
           else
             arg_declaration(m)
@@ -116,7 +116,7 @@ class CMockGeneratorUtils
         body = function[:args].inject('') do |all, arg|
           depth = if arg[:ptr?] && arg[:array_size_order] == :before
                     arg[:array_size_name]
-                  elsif arg[:ptr?]
+                  elsif arg[:ptr?] || arg[:string?]
                     "#{arg[:name]}_Depth"
                   else
                     1
@@ -147,6 +147,8 @@ class CMockGeneratorUtils
           m[:name]
         elsif @arrays && m[:ptr?]
           "#{m[:name]}, 1"
+        elsif @arrays && m[:string?]
+          "#{m[:name]}, 0"
         elsif @arrays && m[:array_size?]
           m[:name]
         else
@@ -246,7 +248,7 @@ class CMockGeneratorUtils
 
   def code_verify_an_arg_expectation_with_normal_arrays(function, arg)
     c_type, arg_name, expected, ignore, unity_func, pre = lookup_expect_type(function, arg)
-    depth_name = arg[:ptr?] ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
+    depth_name = arg[:ptr?] || arg[:string?] ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
     elem_size = ptr_to_array_elem_size(arg, c_type)
     lines = ''
     lines << "  if (!#{ignore})\n" if @ignore_arg
@@ -275,7 +277,14 @@ class CMockGeneratorUtils
         lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, CMockStringMismatch); }\n"
       end
     else
-      lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
+      if arg[:string?]
+        lines << "    if (#{depth_name} == 0)\n"
+        lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch); }\n"
+        lines << "    else\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY((const void*)(#{pre}#{expected}), (const void*)(#{pre}#{arg_name}), (UNITY_UINT32)(#{depth_name}), cmock_line, CMockStringMismatch); }\n"
+      else
+        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
+      end
     end
     lines << "  }\n"
     lines
@@ -283,7 +292,7 @@ class CMockGeneratorUtils
 
   def code_verify_an_arg_expectation_with_smart_arrays(function, arg)
     c_type, arg_name, expected, ignore, unity_func, pre = lookup_expect_type(function, arg)
-    depth_name = arg[:ptr?] ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
+    depth_name = arg[:ptr?] || arg[:string?] ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
     elem_size = ptr_to_array_elem_size(arg, c_type)
     lines = ''
     lines << "  if (!#{ignore})\n" if @ignore_arg
@@ -314,7 +323,14 @@ class CMockGeneratorUtils
         lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, CMockStringMismatch); }\n"
       end
     else
-      lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
+      if arg[:string?]
+        lines << "    if (#{depth_name} == 0)\n"
+        lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch); }\n"
+        lines << "    else\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY((const void*)(#{pre}#{expected}), (const void*)(#{pre}#{arg_name}), (UNITY_UINT32)(#{depth_name}), cmock_line, CMockStringMismatch); }\n"
+      else
+        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
+      end
     end
     lines << "  }\n"
     lines

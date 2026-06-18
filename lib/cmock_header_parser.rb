@@ -533,6 +533,7 @@ class CMockHeaderParser
     divination = {}
 
     divination[:ptr?] = divine_ptr(arg)
+    divination[:string?] = !divination[:ptr?] && (/(^|\s)(const\s+)?char(\s+const)?\s*\*(?!.*\*)/ =~ arg ? true : false)
     divination[:const?] = divine_const(arg)
 
     # an arg containing "const" after the last * is a constant pointer
@@ -690,7 +691,7 @@ class CMockHeaderParser
       decl[:args_string] = arg_parts.join(', ')
     end
     decl[:args_call] = decl[:args].map { |a| a[:name] }.join(', ')
-    decl[:contains_ptr?] = decl[:args].inject(false) { |ptr, arg| arg[:ptr?] ? true : ptr }
+    decl[:contains_ptr?] = decl[:args].inject(false) { |ptr, arg| arg[:ptr?] || arg[:string?] ? true : ptr }
 
     if decl[:return][:type].nil? || decl[:name].nil? || decl[:args].nil? ||
        decl[:return][:type].empty? || decl[:name].empty?
