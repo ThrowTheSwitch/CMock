@@ -38,12 +38,12 @@ class CMockGeneratorPluginArray
     # Short macro params: paired ptrs (before OR after) omit _Depth (auto-filled from paired size arg)
     # string? args always need an explicit _Depth
     args_call_i = function[:args].map do |m|
-      (m[:ptr?] && !m[:array_size_name]) || m[:string?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name].to_s
+      (m[:ptr?] || m[:string?]) && !m[:array_size_name] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name].to_s
     end.join(', ')
 
     # Short macro call: paired ptrs pass paired size name as depth automatically
     args_call_o = function[:args].map do |m|
-      if m[:ptr?] && m[:array_size_name]
+      if (m[:ptr?] || m[:string?]) && m[:array_size_name]
         "#{m[:name]}, (#{m[:array_size_name]})"
       elsif m[:ptr?] || m[:string?]
         "#{m[:name]}, (#{m[:name]}_Depth)"
@@ -99,7 +99,7 @@ class CMockGeneratorPluginArray
     # Call to CMockExpectParameters_: :before-paired ptrs pass only ptr name (their depth is set from paired size arg)
     # string? args always pass their depth explicitly
     call_string = function[:args].map do |m|
-      (m[:ptr?] && m[:array_size_order] != :before) || m[:string?] ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name]
+      (m[:ptr?] || m[:string?]) && m[:array_size_order] != :before ? "#{m[:name]}, #{m[:name]}_Depth" : m[:name]
     end.join(', ')
 
     lines << if function[:return][:void?]
@@ -113,7 +113,7 @@ class CMockGeneratorPluginArray
     # Override depths for :before-paired pointers. CMockExpectParameters_ sets these from the paired
     # size arg; the explicit _Depth param here allows _ExpectWithArrayExtended to override that value.
     function[:args].each do |arg|
-      lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{arg[:name]}_Depth;\n" if arg[:ptr?] && arg[:array_size_order] == :before
+      lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{arg[:name]}_Depth;\n" if (arg[:ptr?] || arg[:string?]) && arg[:array_size_order] == :before
     end
     lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n" unless function[:return][:void?]
     lines << "}\n\n"

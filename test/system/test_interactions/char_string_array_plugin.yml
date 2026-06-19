@@ -99,7 +99,7 @@
       :code: |
         test()
         {
-          process_command_ExpectWithArrayAndReturn("hello", 5, 5, 42);
+          process_command_ExpectWithArrayAndReturn("hello", 5, 42);
           TEST_ASSERT_EQUAL(42, function_d());
         }
 
@@ -108,6 +108,6 @@
       :code: |
         test()
         {
-          process_command_ExpectWithArrayAndReturn("world", 5, 5, 42);
+          process_command_ExpectWithArrayAndReturn("world", 5, 42);
           TEST_ASSERT_EQUAL(42, function_e());
         }

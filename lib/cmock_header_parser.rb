@@ -469,7 +469,7 @@ class CMockHeaderParser
       best_ptr_idx = nil
 
       args.each_with_index do |ptr_arg, ptr_idx|
-        next unless ptr_arg[:ptr?] && !ptr_arg[:array_data?]
+        next unless (ptr_arg[:ptr?] || ptr_arg[:string?]) && !ptr_arg[:array_data?]
 
         score = array_size_name_affinity(ptr_arg[:name], args[size_idx][:name])
         score += 2 if ptr_idx + 1 == size_idx

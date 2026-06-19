@@ -105,7 +105,7 @@ class CMockGeneratorUtils
     if function[:args_string] != 'void'
       if @arrays
         args_string = function[:args].map do |m|
-          if m[:ptr?] && m[:array_size_order] == :before
+          if (m[:ptr?] || m[:string?]) && m[:array_size_order] == :before
             arg_declaration(m)
           elsif m[:ptr?] || m[:string?]
             "#{arg_declaration(m)}, int #{m[:name]}_Depth"
@@ -114,7 +114,7 @@ class CMockGeneratorUtils
           end
         end.join(', ')
         body = function[:args].inject('') do |all, arg|
-          depth = if arg[:ptr?] && arg[:array_size_order] == :before
+          depth = if (arg[:ptr?] || arg[:string?]) && arg[:array_size_order] == :before
                     arg[:array_size_name]
                   elsif arg[:ptr?] || arg[:string?]
                     "#{arg[:name]}_Depth"
@@ -141,9 +141,9 @@ class CMockGeneratorUtils
   def code_call_argument_loader(function)
     if function[:args_string] != 'void'
       args = function[:args].map do |m|
-        if @arrays && m[:ptr?] && m[:array_size_order] == :after
+        if @arrays && (m[:ptr?] || m[:string?]) && m[:array_size_order] == :after
           "#{m[:name]}, #{m[:array_size_name]}"
-        elsif @arrays && m[:ptr?] && m[:array_size_order] == :before
+        elsif @arrays && (m[:ptr?] || m[:string?]) && m[:array_size_order] == :before
           m[:name]
         elsif @arrays && m[:ptr?]
           "#{m[:name]}, 1"
