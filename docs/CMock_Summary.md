@@ -378,6 +378,23 @@ generate a skeleton instead:
 ruby cmock.rb --skeleton ../create/c/for/this.h
 ```
 
+Using CMock Without Ceedling
+----------------------------
+
+CMock depends on the Unity test framework, but it does not *require* Ceedling. You can use the 
+generated mocks directly with the Unity test framework in whatever build system you prefer. One 
+important thing to remember when doing this is that you will need to call the `_Init` function 
+for each of your mocks BEFORE the tests and the `_Verify` function for each mock AFTER each test.
+This allows CMock to perform all of its internal accounting. If you're running into problems where
+some errors aren't getting caught, this is likely what you are missing.
+
+There are many ways to accomplish this. Any is valid:
+
+  - These actions can be performed as part of `setUp` and `tearDown` in each test file
+  - You can hand-write your own RUN_TEST macro. If so, protect `_Verify` calls in `TEST_PROTECT`
+  - You can use Unity's test runner generator and it will automatically take care of this for you.
+  - You can use Ceedling and it will automatically take care of this for you.
+
 Config Options:
 ---------------
 
