@@ -1,0 +1,758 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+  :when_ptr: :smart
+  :array_size_name: 'size|len|count'
+  :plugins:
+  - :array
+
+:systest:
+  :types: |
+    typedef struct {
+      int x;
+      int y;
+    } POINT_T;
+
+    typedef struct {
+      int id;
+      int value;
+    } SENSOR_T;
+
+    typedef enum {
+      STATUS_OK = 0,
+      STATUS_ERROR = 1,
+      STATUS_PENDING = 2
+    } STATUS_E;
+
+    typedef union {
+      int raw;
+      unsigned char bytes[4];
+    } SAMPLE_U;
+
+    #define ARRAY_A_SIZE (5)
+
+  :mockable: |
+    POINT_T* bar(void);
+    void fooa(POINT_T a[ARRAY_A_SIZE]);
+    void no_pointers(int a, const char* b);
+    int mixed(int a, int* b, int c);
+    void process_sensors(SENSOR_T sensors[], int count);
+    void process_statuses(STATUS_E statuses[], int count);
+    void process_samples(SAMPLE_U samples[], int count);
+    void fill_matrix(int matrix[13][4]);
+    void transform_grid(int grid[][4], int rows);
+    void write_buffer(char (*dest)[10]);
+    void read_buffers(int count, char (*buffers)[8]);
+    void process_handles(void *const handles[], int count);
+    void store_data(int *written_count, int buf_size, int *buf);
+
+  :source:
+    :header: |
+      void function_a(void);
+      int  function_b(void);
+      void function_c(void);
+      void function_d(void);
+      void function_e(void);
+      void function_f(void);
+      void function_g(void);
+      void function_h(void);
+      void function_i(void);
+      void function_j(void);
+      void function_k(void);
+
+    :code: |
+      void function_a(void)
+      {
+        fooa(bar());
+      }
+
+      int function_b(void)
+      {
+        int test_list[] = {1, 2, 3, 4, 5};
+        no_pointers(1, "silly");
+        return mixed(6, test_list, 7);
+      }
+
+      void function_c(void)
+      {
+        SENSOR_T sensors[] = {{1, 100}, {2, 200}, {3, 300}};
+        process_sensors(sensors, 3);
+      }
+
+      void function_d(void)
+      {
+        STATUS_E statuses[] = {STATUS_OK, STATUS_ERROR, STATUS_PENDING};
+        process_statuses(statuses, 3);
+      }
+
+      void function_e(void)
+      {
+        SAMPLE_U samples[3];
+        samples[0].raw = 111;
+        samples[1].raw = 222;
+        samples[2].raw = 333;
+        process_samples(samples, 3);
+      }
+
+      void function_f(void)
+      {
+        int matrix[13][4];
+        int i, j;
+        for (i = 0; i < 13; i++)
+          for (j = 0; j < 4; j++)
+            matrix[i][j] = i * 4 + j;
+        fill_matrix(matrix);
+      }
+
+      void function_g(void)
+      {
+        int grid[3][4] = {{1,2,3,4},{5,6,7,8},{9,10,11,12}};
+        transform_grid(grid, 3);
+      }
+
+      void function_h(void)
+      {
+        char buf[10] = {1,2,3,4,5,6,7,8,9,10};
+        write_buffer(&buf);
+      }
+
+      void function_i(void)
+      {
+        char bufs[3][8];
+        int i, j;
+        for (i = 0; i < 3; i++)
+          for (j = 0; j < 8; j++)
+            bufs[i][j] = (char)(i * 8 + j + 1);
+        read_buffers((int)3, bufs);
+      }
+
+      void function_j(void)
+      {
+        void *const ptrs[] = {(void*)1, (void*)2, (void*)3};
+        process_handles(ptrs, 3);
+      }
+
+      void function_k(void)
+      {
+        int count = 0;
+        int data[] = {10, 20, 30};
+        store_data(&count, 3, data);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: 'handle passing null to an array parameter'
+      :code: |
+        test()
+        {
+          bar_ExpectAndReturn(NULL);
+          fooa_Expect(NULL);
+
+          function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'compare a single struct array element and pass'
+      :code: |
+        test()
+        {
+          POINT_T pt = {4, 8};
+          POINT_T ex = {4, 8};
+          bar_ExpectAndReturn(&pt);
+          fooa_Expect(&ex);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in single struct array element'
+      :code: |
+        test()
+        {
+          POINT_T pt = {4, 8};
+          POINT_T ex = {4, 9};
+          bar_ExpectAndReturn(&pt);
+          fooa_Expect(&ex);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect when null array is passed but non-null was expected'
+      :code: |
+        test()
+        {
+          POINT_T pt = {4, 8};
+          bar_ExpectAndReturn(&pt);
+          fooa_Expect(NULL);
+
+          function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'compare multiple struct array elements via ExpectWithArray and pass'
+      :code: |
+        test()
+        {
+          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
+          POINT_T ex[] = {{1, 2}, {3, 4}, {5, 6}};
+          bar_ExpectAndReturn(pt);
+          fooa_ExpectWithArray(ex, 3);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in first struct array element via ExpectWithArray'
+      :code: |
+        test()
+        {
+          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
+          POINT_T ex[] = {{9, 2}, {3, 4}, {5, 6}};
+          bar_ExpectAndReturn(pt);
+          fooa_ExpectWithArray(ex, 3);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in middle struct array element via ExpectWithArray'
+      :code: |
+        test()
+        {
+          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
+          POINT_T ex[] = {{1, 2}, {3, 9}, {5, 6}};
+          bar_ExpectAndReturn(pt);
+          fooa_ExpectWithArray(ex, 3);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in last struct array element via ExpectWithArray'
+      :code: |
+        test()
+        {
+          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
+          POINT_T ex[] = {{1, 2}, {3, 4}, {5, 9}};
+          bar_ExpectAndReturn(pt);
+          fooa_ExpectWithArray(ex, 3);
+
+          function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'handle creating int array expects for mixed-argument function and pass'
+      :code: |
+        test()
+        {
+          int expect_list[] = {1, 9};
+          no_pointers_Expect(1, "silly");
+          mixed_ExpectAndReturn(6, expect_list, 7, 13);
+
+          TEST_ASSERT_EQUAL(13, function_b());
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in int array for mixed-argument function'
+      :code: |
+        test()
+        {
+          int expect_list[] = {9, 1};
+          no_pointers_Expect(1, "silly");
+          mixed_ExpectAndReturn(6, expect_list, 7, 13);
+
+          TEST_ASSERT_EQUAL(13, function_b());
+        }
+
+    - :pass: TRUE
+      :should: 'compare multiple int array elements for mixed-argument function and pass'
+      :code: |
+        test()
+        {
+          int expect_list[] = {1, 2, 3, 4, 6};
+          no_pointers_Expect(1, "silly");
+          mixed_ExpectWithArrayAndReturn(6, expect_list, 4, 7, 13);
+
+          TEST_ASSERT_EQUAL(13, function_b());
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch when checking too many int array elements'
+      :code: |
+        test()
+        {
+          int expect_list[] = {1, 2, 3, 4, 6};
+          no_pointers_Expect(1, "silly");
+          mixed_ExpectWithArrayAndReturn(6, expect_list, 5, 7, 13);
+
+          TEST_ASSERT_EQUAL(13, function_b());
+        }
+
+    - :pass: TRUE
+      :should: 'compare an array of sensors (struct) and pass'
+      :code: |
+        test()
+        {
+          SENSOR_T expected[] = {{1, 100}, {2, 200}, {3, 300}};
+          process_sensors_Expect(expected, 3);
+
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in sensor id field'
+      :code: |
+        test()
+        {
+          SENSOR_T expected[] = {{9, 100}, {2, 200}, {3, 300}};
+          process_sensors_Expect(expected, 3);
+
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in sensor value field'
+      :code: |
+        test()
+        {
+          SENSOR_T expected[] = {{1, 100}, {2, 999}, {3, 300}};
+          process_sensors_Expect(expected, 3);
+
+          function_c();
+        }
+
+    - :pass: TRUE
+      :should: 'compare all sensor elements via collapsed ExpectWithArray and pass'
+      :code: |
+        test()
+        {
+          SENSOR_T expected[] = {{1, 100}, {2, 200}, {3, 300}};
+          process_sensors_ExpectWithArray(expected, 3);
+
+          function_c();
+        }
+
+    - :pass: TRUE
+      :should: 'compare a subset of sensor elements via ExpectWithArrayExtended and pass'
+      :code: |
+        test()
+        {
+          SENSOR_T expected[] = {{1, 100}, {2, 200}};
+          process_sensors_ExpectWithArrayExtended(expected, 2, 3);
+
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch when comparing sensor subset via ExpectWithArrayExtended'
+      :code: |
+        test()
+        {
+          SENSOR_T expected[] = {{1, 100}, {2, 999}};
+          process_sensors_ExpectWithArrayExtended(expected, 2, 3);
+
+          function_c();
+        }
+
+    - :pass: TRUE
+      :should: 'compare an array of statuses (enum) and pass'
+      :code: |
+        test()
+        {
+          STATUS_E expected[] = {STATUS_OK, STATUS_ERROR, STATUS_PENDING};
+          process_statuses_Expect(expected, 3);
+
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in first status enum element'
+      :code: |
+        test()
+        {
+          STATUS_E expected[] = {STATUS_ERROR, STATUS_ERROR, STATUS_PENDING};
+          process_statuses_Expect(expected, 3);
+
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in last status enum element'
+      :code: |
+        test()
+        {
+          STATUS_E expected[] = {STATUS_OK, STATUS_ERROR, STATUS_OK};
+          process_statuses_Expect(expected, 3);
+
+          function_d();
+        }
+
+    - :pass: TRUE
+      :should: 'compare a subset of status elements via ExpectWithArrayExtended and pass'
+      :code: |
+        test()
+        {
+          STATUS_E expected[] = {STATUS_OK, STATUS_ERROR};
+          process_statuses_ExpectWithArrayExtended(expected, 2, 3);
+
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in status subset via ExpectWithArrayExtended'
+      :code: |
+        test()
+        {
+          STATUS_E expected[] = {STATUS_OK, STATUS_PENDING};
+          process_statuses_ExpectWithArrayExtended(expected, 2, 3);
+
+          function_d();
+        }
+
+    - :pass: TRUE
+      :should: 'compare an array of samples (union) and pass'
+      :code: |
+        test()
+        {
+          SAMPLE_U expected[3];
+          expected[0].raw = 111;
+          expected[1].raw = 222;
+          expected[2].raw = 333;
+          process_samples_Expect(expected, 3);
+
+          function_e();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in first sample union element'
+      :code: |
+        test()
+        {
+          SAMPLE_U expected[3];
+          expected[0].raw = 999;
+          expected[1].raw = 222;
+          expected[2].raw = 333;
+          process_samples_Expect(expected, 3);
+
+          function_e();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in last sample union element'
+      :code: |
+        test()
+        {
+          SAMPLE_U expected[3];
+          expected[0].raw = 111;
+          expected[1].raw = 222;
+          expected[2].raw = 999;
+          process_samples_Expect(expected, 3);
+
+          function_e();
+        }
+
+    - :pass: TRUE
+      :should: 'compare a subset of sample elements via ExpectWithArrayExtended and pass'
+      :code: |
+        test()
+        {
+          SAMPLE_U expected[3];
+          expected[0].raw = 111;
+          expected[1].raw = 222;
+          process_samples_ExpectWithArrayExtended(expected, 2, 3);
+
+          function_e();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in sample subset via ExpectWithArrayExtended'
+      :code: |
+        test()
+        {
+          SAMPLE_U expected[3];
+          expected[0].raw = 111;
+          expected[1].raw = 999;
+          process_samples_ExpectWithArrayExtended(expected, 2, 3);
+
+          function_e();
+        }
+
+    - :pass: TRUE
+      :should: 'compare a fully-specified 2D matrix [13][4] and pass'
+      :code: |
+        test()
+        {
+          int expected[13][4];
+          int i, j;
+          for (i = 0; i < 13; i++)
+            for (j = 0; j < 4; j++)
+              expected[i][j] = i * 4 + j;
+          fill_matrix_ExpectWithArray(expected, 13*4);
+
+          function_f();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in a fully-specified 2D matrix [13][4]'
+      :code: |
+        test()
+        {
+          int expected[13][4];
+          int i, j;
+          for (i = 0; i < 13; i++)
+            for (j = 0; j < 4; j++)
+              expected[i][j] = i * 4 + j;
+          expected[6][2] = 999;
+          fill_matrix_ExpectWithArray(expected, 13*4);
+
+          function_f();
+        }
+
+    - :pass: TRUE
+      :should: 'compare only the first row of a fully-specified 2D matrix [13][4]'
+      :code: |
+        test()
+        {
+          int expected[13][4] = {{0,1,2,3}};
+          fill_matrix_ExpectWithArray(expected, 4);
+
+          function_f();
+        }
+
+    - :pass: TRUE
+      :should: 'compare a partially-specified 2D grid [][4] and pass'
+      :code: |
+        test()
+        {
+          int expected[3][4] = {{1,2,3,4},{5,6,7,8},{9,10,11,12}};
+          transform_grid_ExpectWithArray(expected, 3*4, 3);
+
+          function_g();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in a partially-specified 2D grid [][4]'
+      :code: |
+        test()
+        {
+          int expected[3][4] = {{1,2,3,4},{5,6,7,99},{9,10,11,12}};
+          transform_grid_ExpectWithArray(expected, 3*4, 3);
+
+          function_g();
+        }
+
+    - :pass: TRUE
+      :should: 'compare only the first two rows of a partially-specified 2D grid [][4]'
+      :code: |
+        test()
+        {
+          int expected[3][4] = {{1,2,3,4},{5,6,7,8}};
+          transform_grid_ExpectWithArray(expected, 2*4, 3);
+
+          function_g();
+        }
+
+    - :pass: TRUE
+      :should: 'pass when pointer-to-array argument contents match'
+      :code: |
+        test()
+        {
+          char expected[10] = {1,2,3,4,5,6,7,8,9,10};
+          write_buffer_Expect(&expected);
+
+          function_h();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in pointer-to-array argument contents'
+      :code: |
+        test()
+        {
+          char expected[10] = {1,2,3,4,5,6,7,8,9,99};
+          write_buffer_Expect(&expected);
+
+          function_h();
+        }
+
+    - :pass: TRUE
+      :should: 'pass when passing null to pointer-to-array parameter'
+      :code: |
+        test()
+        {
+          write_buffer_Expect(NULL);
+          write_buffer(NULL);
+        }
+
+    - :pass: TRUE
+      :should: 'compare multiple pointer-to-array elements via ExpectWithArray and pass'
+      :code: |
+        test()
+        {
+          char expected[3][8];
+          int i, j;
+          for (i = 0; i < 3; i++)
+            for (j = 0; j < 8; j++)
+              expected[i][j] = (char)(i * 8 + j + 1);
+          read_buffers_ExpectWithArray(3, expected, 3);
+
+          function_i();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch when comparing multiple pointer-to-array elements'
+      :code: |
+        test()
+        {
+          char expected[3][8];
+          int i, j;
+          for (i = 0; i < 3; i++)
+            for (j = 0; j < 8; j++)
+              expected[i][j] = (char)(i * 8 + j + 1);
+          expected[1][3] = 99;
+          read_buffers_ExpectWithArray(3, expected, 3);
+
+          function_i();
+        }
+
+    - :pass: TRUE
+      :should: 'pass when array of const void pointers matches expected'
+      :code: |
+        test()
+        {
+          void *const expected[] = {(void*)1, (void*)2, (void*)3};
+          process_handles_Expect(expected, 3);
+
+          function_j();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in array of const void pointers'
+      :code: |
+        test()
+        {
+          void *const expected[] = {(void*)1, (void*)2, (void*)9};
+          process_handles_Expect(expected, 3);
+
+          function_j();
+        }
+
+    - :pass: TRUE
+      :should: 'pass when comparing subset of const void pointer array via ExpectWithArrayExtended'
+      :code: |
+        test()
+        {
+          void *const expected[] = {(void*)1, (void*)2};
+          process_handles_ExpectWithArrayExtended(expected, 2, 3);
+
+          function_j();
+        }
+
+    - :pass: TRUE
+      :should: 'pair buf_size with buf not written_count, and pass'
+      :code: |
+        test()
+        {
+          int exp_count = 0;
+          int exp_data[] = {10, 20, 30};
+          store_data_Expect(&exp_count, 3, exp_data);
+
+          function_k();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in buf array when buf_size is correctly paired with buf'
+      :code: |
+        test()
+        {
+          int exp_count = 0;
+          int exp_data[] = {10, 20, 99};
+          store_data_Expect(&exp_count, 3, exp_data);
+
+          function_k();
+        }
+
+    - :pass: TRUE
+      :should: 'use ExpectWithArray with length before pointer order'
+      :code: |
+        test()
+        {
+          int exp_count = 0;
+          int exp_data[] = {10, 20, 30};
+          store_data_ExpectWithArray(&exp_count, 1, 3, exp_data);
+
+          function_k();
+        }
+
+    - :pass: FALSE
+      :should: 'detect content mismatch in buf via ExpectWithArray'
+      :code: |
+        test()
+        {
+          int exp_count = 0;
+          int exp_data[] = {10, 99, 30};
+          store_data_ExpectWithArray(&exp_count, 1, 3, exp_data);
+
+          function_k();
+        }
+
+    - :pass: TRUE
+      :should: 'pass using ExpectWithArrayExtended with explicit depth matching buf_size'
+      :code: |
+        test()
+        {
+          int exp_count = 0;
+          int exp_data[] = {10, 20, 30};
+          store_data_ExpectWithArrayExtended(&exp_count, 1, 3, exp_data, 3);
+
+          function_k();
+        }
+
+    - :pass: FALSE
+      :should: 'detect content mismatch in buf via ExpectWithArrayExtended'
+      :code: |
+        test()
+        {
+          int exp_count = 0;
+          int exp_data[] = {10, 99, 30};
+          store_data_ExpectWithArrayExtended(&exp_count, 1, 3, exp_data, 3);
+
+          function_k();
+        }
+
+    - :pass: TRUE
+      :should: 'pass using ExpectWithArrayExtended with depth override that skips mismatched last element'
+      :code: |
+        test()
+        {
+          int exp_count = 0;
+          int exp_data[] = {10, 20, 99};
+          store_data_ExpectWithArrayExtended(&exp_count, 1, 3, exp_data, 2);
+
+          function_k();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch within overridden depth via ExpectWithArrayExtended'
+      :code: |
+        test()
+        {
+          int exp_count = 0;
+          int exp_data[] = {10, 99, 30};
+          store_data_ExpectWithArrayExtended(&exp_count, 1, 3, exp_data, 2);
+
+          function_k();
+        }
+
+...

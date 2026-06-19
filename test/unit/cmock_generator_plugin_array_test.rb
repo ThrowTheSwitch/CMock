@@ -16,6 +16,9 @@ class UtilsStub
   def arg_type_with_const(arg)
     CMockGeneratorUtils.arg_type_with_const(arg)
   end
+  def arg_declaration(arg)
+    CMockGeneratorUtils.arg_declaration(arg)
+  end
   def code_add_base_expectation(func)
     "mock_retval_0"
   end
@@ -115,6 +118,42 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
     assert_equal(expected, returned)
   end
 
+  it "add mock function declarations for functions with size arg after pointer, short macro auto-fills depth" do
+    function = {:name => "Birch",
+                :args => [
+                  { :type => "int*", :name => "sensors", :ptr? => true, :array_size_order => :after, :array_size_name => "count" },
+                  { :type => "int",  :name => "count",   :ptr? => false, :array_size? => true }
+                ],
+                :return => test_return[:void],
+                :contains_ptr? => true }
+
+    expected = "#define Birch_ExpectWithArrayAndReturn(sensors, count, cmock_retval) TEST_FAIL_MESSAGE(\"Birch requires _ExpectWithArray (not AndReturn)\");\n" +
+               "#define Birch_ExpectWithArrayExtendedAndReturn(sensors, sensors_Depth, count, cmock_retval) TEST_FAIL_MESSAGE(\"Birch requires _ExpectWithArrayExtended (not AndReturn)\");\n" +
+               "#define Birch_ExpectWithArray(sensors, count) Birch_CMockExpectWithArray(__LINE__, sensors, (count), count)\n" +
+               "#define Birch_ExpectWithArrayExtended(sensors, sensors_Depth, count) Birch_CMockExpectWithArray(__LINE__, sensors, (sensors_Depth), count)\n" +
+               "void Birch_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, int* sensors, int sensors_Depth, int count);\n"
+    returned = @cmock_generator_plugin_array.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+
+  it "add mock function declarations for functions with size arg before pointer, short macro auto-fills depth" do
+    function = {:name => "Willow",
+                :args => [
+                  { :type => "int", :name => "buf_size", :ptr? => false, :array_size? => true },
+                  { :type => "int*", :name => "buf", :ptr? => true, :array_size_order => :before, :array_size_name => "buf_size" }
+                ],
+                :return => test_return[:void],
+                :contains_ptr? => true }
+
+    expected = "#define Willow_ExpectWithArrayAndReturn(buf_size, buf, cmock_retval) TEST_FAIL_MESSAGE(\"Willow requires _ExpectWithArray (not AndReturn)\");\n" +
+               "#define Willow_ExpectWithArrayExtendedAndReturn(buf_size, buf, buf_Depth, cmock_retval) TEST_FAIL_MESSAGE(\"Willow requires _ExpectWithArrayExtended (not AndReturn)\");\n" +
+               "#define Willow_ExpectWithArray(buf_size, buf) Willow_CMockExpectWithArray(__LINE__, buf_size, buf, (buf_size))\n" +
+               "#define Willow_ExpectWithArrayExtended(buf_size, buf, buf_Depth) Willow_CMockExpectWithArray(__LINE__, buf_size, buf, (buf_Depth))\n" +
+               "void Willow_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, int buf_size, int* buf, int buf_Depth);\n"
+    returned = @cmock_generator_plugin_array.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+
   it "not have a mock function implementation" do
     assert(!@cmock_generator_plugin_array.respond_to?(:mock_implementation))
   end
@@ -137,6 +176,27 @@ describe CMockGeneratorPluginArray, "Verify CMockPGeneratorluginArray Module" do
                 "mock_retval_0",
                 "  CMockExpectParameters_Lemon(cmock_call_instance, pescado, pescado_Depth, pes);\n",
                 "  cmock_call_instance->ReturnVal = cmock_to_return;\n",
+                "}\n\n"
+               ].join
+    returned = @cmock_generator_plugin_array.mock_interfaces(function).join
+    assert_equal(expected, returned)
+  end
+
+  it "add mock interfaces with depth override line for :before-paired pointer" do
+    function = {:name => "Willow",
+                :args => [
+                  { :type => "int", :name => "buf_size", :ptr? => false, :array_size? => true },
+                  { :type => "int*", :name => "buf", :ptr? => true, :array_size_order => :before, :array_size_name => "buf_size" }
+                ],
+                :args_string => "int buf_size, int* buf",
+                :return => test_return[:void],
+                :contains_ptr? => true }
+
+    expected = ["void Willow_CMockExpectWithArray(UNITY_LINE_TYPE cmock_line, int buf_size, int* buf, int buf_Depth)\n",
+                "{\n",
+                "mock_retval_0",
+                "  CMockExpectParameters_Willow(cmock_call_instance, buf_size, buf);\n",
+                "  cmock_call_instance->Expected_buf_Depth = buf_Depth;\n",
                 "}\n\n"
                ].join
     returned = @cmock_generator_plugin_array.mock_interfaces(function).join

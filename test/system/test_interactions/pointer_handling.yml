@@ -1,0 +1,465 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+  :when_ptr: :smart
+  :plugins:
+  - :array
+
+:systest:
+  :types: |
+    typedef struct {
+      int x;
+      int y;
+    } POINT_T;
+
+    typedef enum {
+      RED = 0,
+      GREEN = 1,
+      BLUE = 2
+    } COLOR_E;
+
+    typedef union {
+      int as_int;
+      unsigned short as_shorts[2];
+    } RESULT_U;
+
+  :mockable: |
+    void foo(POINT_T* a);
+    POINT_T* bar(void);
+    void foos(const char* a);
+    const char* bars(void);
+    void poke_color(COLOR_E* c);
+    COLOR_E* peek_color(void);
+    void poke_result(RESULT_U* r);
+    RESULT_U* peek_result(void);
+    void potential_packing_problem(short* a);
+    void voidpointerfunc(void* a);
+
+  :source:
+    :header: |
+      void function_a(void);
+      void function_b(void);
+      void function_c(void);
+      void function_d(void);
+      void function_e(void);
+      void function_f(void);
+
+    :code: |
+      void function_a(void)
+      {
+        foo(bar());
+      }
+
+      void function_b(void)
+      {
+        foos(bars());
+      }
+
+      void function_c(void)
+      {
+        poke_color(peek_color());
+      }
+
+      void function_d(void)
+      {
+        poke_result(peek_result());
+      }
+
+      void function_e(void)
+      {
+        short test_list[] = {-1, -2, -3, -4};
+        potential_packing_problem(&test_list[1]);
+      }
+
+      void function_f(void)
+      {
+        char arg[6] = "hello";
+        voidpointerfunc(arg);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: 'handle null struct pointers in both directions'
+      :code: |
+        test()
+        {
+          bar_ExpectAndReturn(NULL);
+          foo_Expect(NULL);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch when expecting null struct pointer but receiving non-null'
+      :code: |
+        test()
+        {
+          POINT_T pt = {1, 2};
+          bar_ExpectAndReturn(&pt);
+          foo_Expect(NULL);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch when expecting non-null struct pointer but receiving null'
+      :code: |
+        test()
+        {
+          POINT_T ex = {1, 2};
+          bar_ExpectAndReturn(NULL);
+          foo_Expect(&ex);
+
+          function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'compare struct pointer contents and pass when contents match'
+      :code: |
+        test()
+        {
+          POINT_T pt = {3, 7};
+          POINT_T ex = {3, 7};
+          bar_ExpectAndReturn(&pt);
+          foo_Expect(&ex);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'compare struct pointer contents and fail when contents differ'
+      :code: |
+        test()
+        {
+          POINT_T pt = {3, 7};
+          POINT_T ex = {3, 9};
+          bar_ExpectAndReturn(&pt);
+          foo_Expect(&ex);
+
+          function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'fall back to pointer comparison when depth is zero and pointers match'
+      :code: |
+        test()
+        {
+          POINT_T ex = {1, 2};
+          bar_ExpectAndReturn(&ex);
+          foo_ExpectWithArray(&ex, 0);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'fail pointer comparison when depth is zero and pointers differ'
+      :code: |
+        test()
+        {
+          POINT_T ex = {1, 2};
+          POINT_T pt = {1, 2};
+          bar_ExpectAndReturn(&pt);
+          foo_ExpectWithArray(&ex, 0);
+
+          function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'compare multiple struct elements via ExpectWithArray and pass'
+      :code: |
+        test()
+        {
+          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
+          POINT_T ex[] = {{1, 2}, {3, 4}, {5, 6}};
+          bar_ExpectAndReturn(pt);
+          foo_ExpectWithArray(ex, 3);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in first element of struct array comparison'
+      :code: |
+        test()
+        {
+          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
+          POINT_T ex[] = {{9, 2}, {3, 4}, {5, 6}};
+          bar_ExpectAndReturn(pt);
+          foo_ExpectWithArray(ex, 3);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in middle element of struct array comparison'
+      :code: |
+        test()
+        {
+          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
+          POINT_T ex[] = {{1, 2}, {3, 9}, {5, 6}};
+          bar_ExpectAndReturn(pt);
+          foo_ExpectWithArray(ex, 3);
+
+          function_a();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in last element of struct array comparison'
+      :code: |
+        test()
+        {
+          POINT_T pt[] = {{1, 2}, {3, 4}, {5, 6}};
+          POINT_T ex[] = {{1, 2}, {3, 4}, {5, 9}};
+          bar_ExpectAndReturn(pt);
+          foo_ExpectWithArray(ex, 3);
+
+          function_a();
+        }
+
+    - :pass: TRUE
+      :should: 'handle string pointer matching on null-terminated content'
+      :code: |
+        test()
+        {
+          const char* retval = "This is a\0 silly string";
+          bars_ExpectAndReturn((char*)retval);
+          foos_Expect("This is a\0 wacky string");
+
+          function_b();
+        }
+
+    - :pass: FALSE
+      :should: 'detect string pointer mismatch on content'
+      :code: |
+        test()
+        {
+          const char* retval = "This is a silly string";
+          bars_ExpectAndReturn((char*)retval);
+          foos_Expect("This is a wacky string");
+
+          function_b();
+        }
+
+    - :pass: TRUE
+      :should: 'handle null enum pointers in both directions'
+      :code: |
+        test()
+        {
+          peek_color_ExpectAndReturn(NULL);
+          poke_color_Expect(NULL);
+
+          function_c();
+        }
+
+    - :pass: TRUE
+      :should: 'compare enum pointer contents and pass when contents match'
+      :code: |
+        test()
+        {
+          COLOR_E actual = GREEN;
+          COLOR_E expected = GREEN;
+          peek_color_ExpectAndReturn(&actual);
+          poke_color_Expect(&expected);
+
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in enum pointer contents'
+      :code: |
+        test()
+        {
+          COLOR_E actual = GREEN;
+          COLOR_E expected = BLUE;
+          peek_color_ExpectAndReturn(&actual);
+          poke_color_Expect(&expected);
+
+          function_c();
+        }
+
+    - :pass: TRUE
+      :should: 'compare multiple enum elements via ExpectWithArray and pass'
+      :code: |
+        test()
+        {
+          COLOR_E actual[] = {RED, GREEN, BLUE};
+          COLOR_E expected[] = {RED, GREEN, BLUE};
+          peek_color_ExpectAndReturn(actual);
+          poke_color_ExpectWithArray(expected, 3);
+
+          function_c();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch when comparing multiple enum elements'
+      :code: |
+        test()
+        {
+          COLOR_E actual[] = {RED, GREEN, BLUE};
+          COLOR_E expected[] = {RED, BLUE, BLUE};
+          peek_color_ExpectAndReturn(actual);
+          poke_color_ExpectWithArray(expected, 3);
+
+          function_c();
+        }
+
+    - :pass: TRUE
+      :should: 'handle null union pointers in both directions'
+      :code: |
+        test()
+        {
+          peek_result_ExpectAndReturn(NULL);
+          poke_result_Expect(NULL);
+
+          function_d();
+        }
+
+    - :pass: TRUE
+      :should: 'compare union pointer contents and pass when contents match'
+      :code: |
+        test()
+        {
+          RESULT_U actual;
+          RESULT_U expected;
+          actual.as_int = 42;
+          expected.as_int = 42;
+          peek_result_ExpectAndReturn(&actual);
+          poke_result_Expect(&expected);
+
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch in union pointer contents'
+      :code: |
+        test()
+        {
+          RESULT_U actual;
+          RESULT_U expected;
+          actual.as_int = 42;
+          expected.as_int = 99;
+          peek_result_ExpectAndReturn(&actual);
+          poke_result_Expect(&expected);
+
+          function_d();
+        }
+
+    - :pass: TRUE
+      :should: 'compare multiple union elements via ExpectWithArray and pass'
+      :code: |
+        test()
+        {
+          RESULT_U actual[3];
+          RESULT_U expected[3];
+          actual[0].as_int = 1; actual[1].as_int = 2; actual[2].as_int = 3;
+          expected[0].as_int = 1; expected[1].as_int = 2; expected[2].as_int = 3;
+          peek_result_ExpectAndReturn(actual);
+          poke_result_ExpectWithArray(expected, 3);
+
+          function_d();
+        }
+
+    - :pass: FALSE
+      :should: 'detect mismatch when comparing multiple union elements'
+      :code: |
+        test()
+        {
+          RESULT_U actual[3];
+          RESULT_U expected[3];
+          actual[0].as_int = 1; actual[1].as_int = 2; actual[2].as_int = 3;
+          expected[0].as_int = 1; expected[1].as_int = 9; expected[2].as_int = 3;
+          peek_result_ExpectAndReturn(actual);
+          poke_result_ExpectWithArray(expected, 3);
+
+          function_d();
+        }
+
+    - :pass: TRUE
+      :should: 'handle a passing packing problem comparison'
+      :code: |
+        test()
+        {
+          short expect_list[] = {-2, -3, -4};
+          potential_packing_problem_ExpectWithArray(expect_list, 3);
+
+          function_e();
+        }
+
+    - :pass: FALSE
+      :should: 'detect a failing packing problem comparison'
+      :code: |
+        test()
+        {
+          short expect_list[] = {-2, -3, 4};
+          potential_packing_problem_ExpectWithArray(expect_list, 3);
+
+          function_e();
+        }
+
+    - :pass: TRUE
+      :should: 'handle void pointer with array comparison passing'
+      :code: |
+        test()
+        {
+          char expect_list[6] = "hello";
+          voidpointerfunc_ExpectWithArray(expect_list, 5);
+
+          function_f();
+        }
+
+    - :pass: TRUE
+      :should: 'handle void pointer with partial array comparison passing'
+      :code: |
+        test()
+        {
+          char expect_list[6] = "help!";
+          voidpointerfunc_ExpectWithArray(expect_list, 3);
+
+          function_f();
+        }
+
+    - :pass: FALSE
+      :should: 'detect void pointer content mismatch with array comparison'
+      :code: |
+        test()
+        {
+          char expect_list[6] = "help!";
+          voidpointerfunc_ExpectWithArray(expect_list, 4);
+
+          function_f();
+        }
+
+    - :pass: TRUE
+      :should: 'handle void pointer with standard expect passing'
+      :code: |
+        test()
+        {
+          char expect_list[2] = "h";
+          voidpointerfunc_Expect(expect_list);
+
+          function_f();
+        }
+
+    - :pass: FALSE
+      :should: 'detect void pointer mismatch with standard expect'
+      :code: |
+        test()
+        {
+          char expect_list[2] = "g";
+          voidpointerfunc_Expect(expect_list);
+
+          function_f();
+        }
+
+...

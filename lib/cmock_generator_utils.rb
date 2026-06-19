@@ -20,6 +20,7 @@ class CMockGeneratorUtils
     @ignore = @config.plugins.include? :ignore
     @ignore_stateless = @config.plugins.include? :ignore_stateless
     @treat_as = @config.treat_as
+    @treat_as_void = (['void'] + (@config.respond_to?(:treat_as_void) ? @config.treat_as_void : [])).uniq
     @helpers = helpers
   end
 
@@ -34,6 +35,24 @@ class CMockGeneratorUtils
 
   def arg_type_with_const(arg)
     self.class.arg_type_with_const(arg)
+  end
+
+  def self.arg_declaration(arg)
+    if arg[:ptr_to_array?] && arg[:array_dims]
+      base_type = arg_type_with_const(arg).sub(/\*$/, '').strip
+      dims_str = arg[:array_dims].map { |d| "[#{d}]" }.join
+      "#{base_type} (*#{arg[:name]})#{dims_str}"
+    elsif arg[:array_dims]
+      base_type = arg_type_with_const(arg).sub(/\*$/, '').strip
+      dims_str = arg[:array_dims].map { |d| "[#{d}]" }.join
+      "#{base_type} #{arg[:name]}#{dims_str}"
+    else
+      "#{arg_type_with_const(arg)} #{arg[:name]}"
+    end
+  end
+
+  def arg_declaration(arg)
+    self.class.arg_declaration(arg)
   end
 
   def code_verify_an_arg_expectation(function, arg)
@@ -64,7 +83,7 @@ class CMockGeneratorUtils
 
   def code_add_an_arg_expectation(arg, depth = 1)
     lines =  code_assign_argument_quickly("cmock_call_instance->Expected_#{arg[:name]}", arg)
-    lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{arg[:name]}_Depth;\n" if @arrays && depth.instance_of?(String)
+    lines << "  cmock_call_instance->Expected_#{arg[:name]}_Depth = #{depth};\n" if @arrays && depth.instance_of?(String)
     lines << "  cmock_call_instance->IgnoreArg_#{arg[:name]} = 0;\n" if @ignore_arg
     lines << "  cmock_call_instance->ReturnThruPtr_#{arg[:name]}_Used = 0;\n" if @return_thru_ptr && ptr_or_str?(arg[:type]) && !(arg[:const?])
     lines
@@ -72,7 +91,8 @@ class CMockGeneratorUtils
 
   def code_assign_argument_quickly(dest, arg)
     if arg[:ptr?] || @treat_as.include?(arg[:type])
-      "  #{dest} = #{arg[:name]};\n"
+      cast = arg[:array_dims] ? "(#{arg[:type]})" : ''
+      "  #{dest} = #{cast}#{arg[:name]};\n"
     else
       assert_expr = "sizeof(#{arg[:name]}) == sizeof(#{arg[:type]}) ? 1 : -1"
       comment = "/* add #{arg[:type]} to :treat_as_array if this causes an error */"
@@ -85,12 +105,27 @@ class CMockGeneratorUtils
     if function[:args_string] != 'void'
       if @arrays
         args_string = function[:args].map do |m|
-          type = arg_type_with_const(m)
-          m[:ptr?] ? "#{type} #{m[:name]}, int #{m[:name]}_Depth" : "#{type} #{m[:name]}"
+          if (m[:ptr?] || m[:string?]) && m[:array_size_order] == :before
+            arg_declaration(m)
+          elsif m[:ptr?] || m[:string?]
+            "#{arg_declaration(m)}, int #{m[:name]}_Depth"
+          else
+            arg_declaration(m)
+          end
         end.join(', ')
+        body = function[:args].inject('') do |all, arg|
+          depth = if (arg[:ptr?] || arg[:string?]) && arg[:array_size_order] == :before
+                    arg[:array_size_name]
+                  elsif arg[:ptr?] || arg[:string?]
+                    "#{arg[:name]}_Depth"
+                  else
+                    1
+                  end
+          all + code_add_an_arg_expectation(arg, depth)
+        end
         "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string});\n" \
           "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{args_string})\n{\n" \
-          "#{function[:args].inject('') { |all, arg| all + code_add_an_arg_expectation(arg, (arg[:ptr?] ? "#{arg[:name]}_Depth" : 1)) }}" \
+          "#{body}" \
           "}\n\n"
       else
         "void CMockExpectParameters_#{function[:name]}(CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance, #{function[:args_string]});\n" \
@@ -106,10 +141,16 @@ class CMockGeneratorUtils
   def code_call_argument_loader(function)
     if function[:args_string] != 'void'
       args = function[:args].map do |m|
-        if @arrays && m[:ptr?] && !(m[:array_data?])
+        if @arrays && (m[:ptr?] || m[:string?]) && m[:array_size_order] == :after
+          "#{m[:name]}, #{m[:array_size_name]}"
+        elsif @arrays && (m[:ptr?] || m[:string?]) && m[:array_size_order] == :before
+          m[:name]
+        elsif @arrays && m[:ptr?]
           "#{m[:name]}, 1"
+        elsif @arrays && m[:string?]
+          "#{m[:name]}, 0"
         elsif @arrays && m[:array_size?]
-          "#{m[:name]}, #{m[:name]}"
+          m[:name]
         else
           m[:name]
         end
@@ -132,16 +173,46 @@ class CMockGeneratorUtils
     arg_name   = arg[:name]
     expected   = "cmock_call_instance->Expected_#{arg_name}"
     ignore     = "cmock_call_instance->IgnoreArg_#{arg_name}"
+    # Pointer-to-array args (e.g., char (*buf)[N]) always compare by memory contents
+    return [c_type, arg_name, expected, ignore, 'UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY', ''] if arg[:ptr_to_array?]
+
     unity_func = if (arg[:ptr?]) && ((c_type =~ /\*\*/) || (@ptr_handling == :compare_ptr))
                    ['UNITY_TEST_ASSERT_EQUAL_PTR', '']
+                 elsif arg[:ptr?] && !@arrays && void_pointer_type?(c_type)
+                   # void* cannot be safely dereferenced; without the array plugin there's no way
+                   # to specify depth, so fall back to comparing the pointer value itself
+                   ['UNITY_TEST_ASSERT_EQUAL_PTR', '']
+                 elsif arg[:ptr?] && @arrays && void_pointer_type?(c_type)
+                   # With the array plugin, treat_as_void aliases not in treat_as would fall back to
+                   # MEMORY_ARRAY with sizeof(void), which is illegal. Use HEX8_ARRAY (byte comparison)
+                   # to match what literal void* gets from the default treat_as entry.
+                   ['UNITY_TEST_ASSERT_EQUAL_HEX8_ARRAY', '']
                  else
                    @helpers.nil? || @helpers[:unity_helper].nil? ? ['UNITY_TEST_ASSERT_EQUAL', ''] : @helpers[:unity_helper].get_helper(c_type)
                  end
     [c_type, arg_name, expected, ignore, unity_func[0], unity_func[1]]
   end
 
+  def void_pointer_type?(c_type)
+    base = c_type.gsub(/\bconst\b/, '').gsub(/\s+/, '')
+    return false unless base.end_with?('*')
+
+    @treat_as_void.include?(base.chomp('*'))
+  end
+
+  def ptr_to_array_elem_size(arg, c_type)
+    # For pointer-to-array args (e.g., char (*buf)[10]), the element size is sizeof(base_type[dims])
+    if arg[:ptr_to_array?] && arg[:array_dims]
+      base_type = c_type.gsub(/\*+$/, '').strip
+      "sizeof(#{base_type}#{arg[:array_dims].map { |d| "[#{d}]" }.join})"
+    else
+      "sizeof(#{c_type.sub('*', '')})"
+    end
+  end
+
   def code_verify_an_arg_expectation_with_no_arrays(function, arg)
     c_type, arg_name, expected, ignore, unity_func, pre = lookup_expect_type(function, arg)
+    elem_size = ptr_to_array_elem_size(arg, c_type)
     lines = ''
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
@@ -152,12 +223,12 @@ class CMockGeneratorUtils
       lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY'
       if pre == '&'
-        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch);\n"
+        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, #{elem_size}, cmock_line, CMockStringMismatch);\n"
       else
         lines << "    if (#{pre}#{expected} == NULL)\n"
         lines << "      { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, CMockStringExpNULL); }\n"
         lines << "    else\n"
-        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch); }\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, #{elem_size}, cmock_line, CMockStringMismatch); }\n"
       end
     when /_ARRAY/
       if pre == '&'
@@ -177,7 +248,8 @@ class CMockGeneratorUtils
 
   def code_verify_an_arg_expectation_with_normal_arrays(function, arg)
     c_type, arg_name, expected, ignore, unity_func, pre = lookup_expect_type(function, arg)
-    depth_name = arg[:ptr?] ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
+    depth_name = arg[:ptr?] || arg[:string?] ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
+    elem_size = ptr_to_array_elem_size(arg, c_type)
     lines = ''
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
@@ -188,12 +260,12 @@ class CMockGeneratorUtils
       lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY'
       if pre == '&'
-        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), cmock_line, CMockStringMismatch);\n"
+        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, #{elem_size}, cmock_line, CMockStringMismatch);\n"
       else
         lines << "    if (#{pre}#{expected} == NULL)\n"
         lines << "      { UNITY_TEST_ASSERT_NULL(#{pre}#{arg_name}, cmock_line, CMockStringExpNULL); }\n"
         lines << "    else\n"
-        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch); }\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, #{elem_size}, #{depth_name}, cmock_line, CMockStringMismatch); }\n"
       end
     when /_ARRAY/
       if pre == '&'
@@ -205,7 +277,14 @@ class CMockGeneratorUtils
         lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, CMockStringMismatch); }\n"
       end
     else
-      lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
+      if arg[:string?]
+        lines << "    if (#{depth_name} == 0)\n"
+        lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch); }\n"
+        lines << "    else\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY((const void*)(#{pre}#{expected}), (const void*)(#{pre}#{arg_name}), (UNITY_UINT32)(#{depth_name}), cmock_line, CMockStringMismatch); }\n"
+      else
+        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
+      end
     end
     lines << "  }\n"
     lines
@@ -213,7 +292,8 @@ class CMockGeneratorUtils
 
   def code_verify_an_arg_expectation_with_smart_arrays(function, arg)
     c_type, arg_name, expected, ignore, unity_func, pre = lookup_expect_type(function, arg)
-    depth_name = arg[:ptr?] ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
+    depth_name = arg[:ptr?] || arg[:string?] ? "cmock_call_instance->Expected_#{arg_name}_Depth" : 1
+    elem_size = ptr_to_array_elem_size(arg, c_type)
     lines = ''
     lines << "  if (!#{ignore})\n" if @ignore_arg
     lines << "  {\n"
@@ -224,13 +304,13 @@ class CMockGeneratorUtils
       lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type_local}), cmock_line, CMockStringMismatch);\n"
     when 'UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY'
       if pre == '&'
-        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch);\n"
+        lines << "    UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, #{elem_size}, #{depth_name}, cmock_line, CMockStringMismatch);\n"
       else
         lines << "    if (#{pre}#{expected} == NULL)\n"
         lines << "      { UNITY_TEST_ASSERT_NULL(#{arg_name}, cmock_line, CMockStringExpNULL); }\n"
         lines << (depth_name != 1 ? "    else if (#{depth_name} == 0)\n      { UNITY_TEST_ASSERT_EQUAL_PTR(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch); }\n" : '')
         lines << "    else\n"
-        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, sizeof(#{c_type.sub('*', '')}), #{depth_name}, cmock_line, CMockStringMismatch); }\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY_ARRAY(#{pre}#{expected}, #{pre}#{arg_name}, #{elem_size}, #{depth_name}, cmock_line, CMockStringMismatch); }\n"
       end
     when /_ARRAY/
       if pre == '&'
@@ -243,7 +323,14 @@ class CMockGeneratorUtils
         lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, #{depth_name}, cmock_line, CMockStringMismatch); }\n"
       end
     else
-      lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
+      if arg[:string?]
+        lines << "    if (#{depth_name} == 0)\n"
+        lines << "      { #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch); }\n"
+        lines << "    else\n"
+        lines << "      { UNITY_TEST_ASSERT_EQUAL_MEMORY((const void*)(#{pre}#{expected}), (const void*)(#{pre}#{arg_name}), (UNITY_UINT32)(#{depth_name}), cmock_line, CMockStringMismatch); }\n"
+      else
+        lines << "    #{unity_func}(#{pre}#{expected}, #{pre}#{arg_name}, cmock_line, CMockStringMismatch);\n"
+      end
     end
     lines << "  }\n"
     lines

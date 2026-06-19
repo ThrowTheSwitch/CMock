@@ -1,0 +1,133 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+#The purpose of this test is to verify that void* arguments use pointer
+#comparison (not byte dereferencing) when the array plugin is not active.
+#Dereferencing void* is illegal in C, so the mock must fall back to
+#comparing pointer values via UNITY_TEST_ASSERT_EQUAL_PTR.
+:cmock:
+  :plugins: []
+  :treat_as_void:
+  - MY_VOID
+
+:systest:
+  :types: |
+    typedef void MY_VOID;
+
+  :mockable: |
+    void get_v_ptr(void* ptr);
+    void get_const_v_ptr(const void* ptr);
+    void get_my_void_ptr(MY_VOID* ptr);
+
+  :source:
+    :header: |
+      void function_a(void* arg);
+      void function_b(const void* arg);
+      void function_c(MY_VOID* arg);
+
+    :code: |
+      void function_a(void* arg) {
+        get_v_ptr(arg);
+      }
+
+      void function_b(const void* arg) {
+        get_const_v_ptr(arg);
+      }
+
+      void function_c(MY_VOID* arg) {
+        get_my_void_ptr(arg);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: 'handle void pointer expect passing when same pointer used'
+      :code: |
+        test()
+        {
+          char* a = "Hello";
+          get_v_ptr_Expect(a);
+          function_a(a);
+        }
+
+    - :pass: FALSE
+      :should: 'detect void pointer mismatch when different pointers used even with same content'
+      :code: |
+        test()
+        {
+          static char a[] = "Hello";
+          static char b[] = "Hello";
+          get_v_ptr_Expect(a);
+          function_a(b);
+        }
+
+    - :pass: TRUE
+      :should: 'handle null void pointer expect passing'
+      :code: |
+        test()
+        {
+          get_v_ptr_Expect(NULL);
+          function_a(NULL);
+        }
+
+    - :pass: FALSE
+      :should: 'detect null vs non-null void pointer mismatch'
+      :code: |
+        test()
+        {
+          char* a = "Hello";
+          get_v_ptr_Expect(NULL);
+          function_a(a);
+        }
+
+    - :pass: TRUE
+      :should: 'handle const void pointer expect passing when same pointer used'
+      :code: |
+        test()
+        {
+          char* a = "Hello";
+          get_const_v_ptr_Expect(a);
+          function_b(a);
+        }
+
+    - :pass: FALSE
+      :should: 'detect const void pointer mismatch when different pointers used'
+      :code: |
+        test()
+        {
+          static char a[] = "Hello";
+          static char b[] = "Hello";
+          get_const_v_ptr_Expect(a);
+          function_b(b);
+        }
+
+    - :pass: TRUE
+      :should: 'handle treat_as_void alias pointer expect passing when same pointer used'
+      :code: |
+        test()
+        {
+          char* a = "Hello";
+          get_my_void_ptr_Expect(a);
+          function_c(a);
+        }
+
+    - :pass: FALSE
+      :should: 'detect treat_as_void alias pointer mismatch when different pointers used'
+      :code: |
+        test()
+        {
+          static char a[] = "Hello";
+          static char b[] = "Hello";
+          get_my_void_ptr_Expect(a);
+          function_c(b);
+        }
+...

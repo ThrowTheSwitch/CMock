@@ -15,7 +15,7 @@
     :when_ptr: :smart
     :plugins:
         - :array
-        - :ignore_arg
+        - :expect_any_args
         - :return_thru_ptr
 
 :systest:
@@ -106,11 +106,10 @@
       :code: |
         test()
         {
-          int r = 1, s = 2;
+          int s = 2;
           int res = 4;
 
-          ptr_ret_int_Expect(&r);
-          ptr_ret_int_IgnoreArg_r();
+          ptr_ret_int_ExpectAnyArgs();
           ptr_ret_int_ReturnThruPtr_r(&res);
           ptr_ret_int(&s);
           TEST_ASSERT_EQUAL(4, s);
@@ -124,8 +123,7 @@
           int r = 1;
           int res = 4;
 
-          ptr_ret_int_Expect(NULL);
-          ptr_ret_int_IgnoreArg_r();
+          ptr_ret_int_ExpectAnyArgs();
           ptr_ret_int_ReturnThruPtr_r(&res);
           ptr_ret_int(&r);
           TEST_ASSERT_EQUAL(4, r);
@@ -230,13 +228,11 @@
         }
 
     - :pass: TRUE
-      :should: "generate IgnoreArg definitions"
+      :should: "generate ExpectAnyArgs definitions"
       :code: |
         test()
         {
-        #if !defined(ptr_ret_array_IgnoreArg_r)         \
-            || !defined(ptr_ret_array_IgnoreArg_len)    \
-            || !defined(ptr_ret_const_int_IgnoreArg_s)
-            TEST_FAIL_MESSAGE("IgnoreArg not defined for an argument.");
+        #if !defined(ptr_ret_array_ExpectAnyArgs)
+            TEST_FAIL_MESSAGE("ExpectAnyArgs not defined for an argument.");
         #endif
         }

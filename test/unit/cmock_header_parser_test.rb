@@ -597,7 +597,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                           },
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[{:type=>"int", :name=>"a", :ptr? => false, :const? => false, :const_ptr? => false}],
+                 :args=>[{:type=>"int", :name=>"a", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}],
                  :args_string=>"int a",
                  :args_call=>"a"}
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
@@ -643,7 +643,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                           },
                  :modifier=>"",
                  :contains_ptr? => true,
-                 :args=>[{:type=>"MY_FUNKY_VOID*", :name=>"bluh", :ptr? => true, :const? => false, :const_ptr? => false}],
+                 :args=>[{:type=>"MY_FUNKY_VOID*", :name=>"bluh", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false}],
                  :args_string=>"MY_FUNKY_VOID* bluh",
                  :args_call=>"bluh" }
     assert_equal(expected, @parser.parse_declaration(@test_project, source))
@@ -745,8 +745,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                           },
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned int", :name=>"b", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"unsigned int", :name=>"b", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"int a, unsigned int b",
                  :args_call=>"a, b" }
@@ -771,9 +771,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"uint", :name=>"la", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"int",  :name=>"de", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"bool", :name=>"da", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"uint", :name=>"la", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"int",  :name=>"de", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"bool", :name=>"da", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"uint la, int     de, bool da",
                  :args_call=>"la, de, da" }
@@ -822,8 +822,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"const",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true, :string? => false,  :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"int Trinity, unsigned int* Neo",
                  :args_call=>"Trinity, Neo" }
@@ -849,8 +849,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :modifier=>"const",
                  :c_calling_convention=>"__stdcall",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true, :string? => false,  :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"int Trinity, unsigned int* Neo",
                  :args_call=>"Trinity, Neo" }
@@ -874,8 +874,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                           },
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned int", :name=>"b", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"int", :name=>"a", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"unsigned int", :name=>"b", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"int a, unsigned int b",
                  :args_call=>"a, b" }
@@ -902,8 +902,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"const",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true,  :const? => false, :const_ptr? => false}
+                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                           {:type=>"unsigned int*", :name=>"Neo",     :ptr? => true, :string? => false,  :const? => false, :const_ptr? => false}
                          ],
                   :args_string=>"int Trinity, unsigned int* Neo",
                  :args_call=>"Trinity, Neo" },
@@ -922,8 +922,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"unsigned int*", :name=>"cmock_arg2", :ptr? => true,  :const? => false, :const_ptr? => false}
+                  :args=>[ {:type=>"int",           :name=>"cmock_arg1", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                           {:type=>"unsigned int*", :name=>"cmock_arg2", :ptr? => true, :string? => false,  :const? => false, :const_ptr? => false}
                          ],
                   :args_string=>"int cmock_arg1, unsigned int* cmock_arg2",
                  :args_call=>"cmock_arg1, cmock_arg2"
@@ -951,8 +951,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                             },
                   :modifier=>"const",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"unsigned int*", :name=>"Neo", :ptr? => true,      :const? => false, :const_ptr? => false}
+                  :args=>[ {:type=>"int",           :name=>"Trinity", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                           {:type=>"unsigned int*", :name=>"Neo", :ptr? => true, :string? => false,      :const? => false, :const_ptr? => false}
                          ],
                   :args_string=>"int Trinity, unsigned int* Neo",
                   :args_call=>"Trinity, Neo"
@@ -1070,14 +1070,14 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :var_arg => nil,
                   :args_string => "int const* cmock_arg1, int* const cmock_arg2, const int* cmock_arg3, const int* const cmock_arg4, " +
                                   "int const* const cmock_arg5, int* cmock_arg6, int cmock_arg7, const int cmock_arg8",
-                  :args => [{ :type=>"int const*", :name => "cmock_arg1", :ptr? => true,  :const? => true,  :const_ptr? => false },
-                            { :type=>"int*",       :name => "cmock_arg2", :ptr? => true,  :const? => false, :const_ptr? => true  },
-                            { :type=>"const int*", :name => "cmock_arg3", :ptr? => true,  :const? => true,  :const_ptr? => false },
-                            { :type=>"const int*", :name => "cmock_arg4", :ptr? => true,  :const? => true,  :const_ptr? => true  },
-                            { :type=>"int const*", :name => "cmock_arg5", :ptr? => true,  :const? => true,  :const_ptr? => true  },
-                            { :type=>"int*",       :name => "cmock_arg6", :ptr? => true,  :const? => false, :const_ptr? => false },
-                            { :type=>"int",        :name => "cmock_arg7", :ptr? => false, :const? => false, :const_ptr? => false },
-                            { :type=>"int",        :name => "cmock_arg8", :ptr? => false, :const? => true,  :const_ptr? => false }],
+                  :args => [{ :type=>"int const*", :name => "cmock_arg1", :ptr? => true, :string? => false,  :const? => true,  :const_ptr? => false },
+                            { :type=>"int*",       :name => "cmock_arg2", :ptr? => true, :string? => false,  :const? => false, :const_ptr? => true  },
+                            { :type=>"const int*", :name => "cmock_arg3", :ptr? => true, :string? => false,  :const? => true,  :const_ptr? => false },
+                            { :type=>"const int*", :name => "cmock_arg4", :ptr? => true, :string? => false,  :const? => true,  :const_ptr? => true  },
+                            { :type=>"int const*", :name => "cmock_arg5", :ptr? => true, :string? => false,  :const? => true,  :const_ptr? => true  },
+                            { :type=>"int*",       :name => "cmock_arg6", :ptr? => true, :string? => false,  :const? => false, :const_ptr? => false },
+                            { :type=>"int",        :name => "cmock_arg7", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false },
+                            { :type=>"int",        :name => "cmock_arg8", :ptr? => false, :string? => false, :const? => true,  :const_ptr? => false }],
                   :args_call => "cmock_arg1, cmock_arg2, cmock_arg3, cmock_arg4, cmock_arg5, cmock_arg6, cmock_arg7, cmock_arg8",
                   :contains_ptr? => true
                 }]
@@ -1105,14 +1105,14 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :var_arg => nil,
                   :args_string => "int const* param1, int* const param2, const int* param3, const int* const param4, " +
                                   "int const* const param5, int* param6, int param7, const int param8",
-                  :args => [{ :type=>"int const*", :name => "param1", :ptr? => true,  :const? => true,  :const_ptr? => false },
-                            { :type=>"int*",       :name => "param2", :ptr? => true,  :const? => false, :const_ptr? => true  },
-                            { :type=>"const int*", :name => "param3", :ptr? => true,  :const? => true,  :const_ptr? => false },
-                            { :type=>"const int*", :name => "param4", :ptr? => true,  :const? => true,  :const_ptr? => true  },
-                            { :type=>"int const*", :name => "param5", :ptr? => true,  :const? => true,  :const_ptr? => true  },
-                            { :type=>"int*",       :name => "param6", :ptr? => true,  :const? => false, :const_ptr? => false },
-                            { :type=>"int",        :name => "param7", :ptr? => false, :const? => false, :const_ptr? => false },
-                            { :type=>"int",        :name => "param8", :ptr? => false, :const? => true,  :const_ptr? => false }],
+                  :args => [{ :type=>"int const*", :name => "param1", :ptr? => true, :string? => false,  :const? => true,  :const_ptr? => false },
+                            { :type=>"int*",       :name => "param2", :ptr? => true, :string? => false,  :const? => false, :const_ptr? => true  },
+                            { :type=>"const int*", :name => "param3", :ptr? => true, :string? => false,  :const? => true,  :const_ptr? => false },
+                            { :type=>"const int*", :name => "param4", :ptr? => true, :string? => false,  :const? => true,  :const_ptr? => true  },
+                            { :type=>"int const*", :name => "param5", :ptr? => true, :string? => false,  :const? => true,  :const_ptr? => true  },
+                            { :type=>"int*",       :name => "param6", :ptr? => true, :string? => false,  :const? => false, :const_ptr? => false },
+                            { :type=>"int",        :name => "param7", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false },
+                            { :type=>"int",        :name => "param8", :ptr? => false, :string? => false, :const? => true,  :const_ptr? => false }],
                   :args_call => "param1, param2, param3, param4, param5, param6, param7, param8",
                   :contains_ptr? => true
                 }].freeze
@@ -1137,8 +1137,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                                 :const_ptr? => false
                               },
                   :var_arg => nil,
-                  :args => [{ :type => "Page*",      :name => "book",   :ptr? => true, :const? => false, :const_ptr? => false },
-                            { :type => "const int*", :name => "values", :ptr? => true, :const? => true,  :const_ptr? => false }],
+                  :args => [{ :type => "Page*",      :name => "book",   :ptr? => true, :string? => false, :const? => false, :const_ptr? => false },
+                            { :type => "const int*", :name => "values", :ptr? => true, :string? => false, :const? => true,  :const_ptr? => false }],
                   :args_string => "Book book, const IntArray values",
                   :args_call => "book, values",
                   :contains_ptr? => true
@@ -1170,7 +1170,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                               },
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"SingAlong", :ptr? => false, :const? => false, :const_ptr? => false} ],
+                  :args=>[ {:type=>"int", :name=>"SingAlong", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false} ],
                   :args_string=>"int SingAlong",
                   :args_call=>"SingAlong"
                 },
@@ -1217,7 +1217,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"struct SingAlong", :name=>"Blog", :ptr? => false, :const? => false, :const_ptr? => false} ],
+                  :args=>[ {:type=>"struct SingAlong", :name=>"Blog", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false} ],
                   :args_string=>"struct SingAlong Blog",
                   :args_call=>"Blog"
                 },
@@ -1236,7 +1236,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"struct const _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :const? => true, :const_ptr? => true} ],
+                  :args=>[ {:type=>"struct const _KeepYourHeadUp_*", :name=>"BillyBuddy", :ptr? => true, :string? => false, :const? => true, :const_ptr? => true} ],
                   :args_string=>"struct const _KeepYourHeadUp_* const BillyBuddy",
                   :args_call=>"BillyBuddy"
                 },
@@ -1279,8 +1279,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"union STARS_AND_STRIPES*", :name=>"a", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"union AFL_CIO", :name=>"b", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"union STARS_AND_STRIPES*", :name=>"a", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"union AFL_CIO", :name=>"b", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"union STARS_AND_STRIPES* a, union AFL_CIO b",
                  :args_call=>"a, b" }]
@@ -1305,11 +1305,11 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
-                 :args=>[ {:type=> "unsigned int", :name=>"const_param", :ptr? => false, :const? => true, :const_ptr? => false},
-                          {:type=>"int", :name=>"int_param", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"int", :name=>"integer", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"char", :name=>"character", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"int*", :name=>"constant", :ptr? => true, :const? => false, :const_ptr? => true}
+                 :args=>[ {:type=> "unsigned int", :name=>"const_param", :ptr? => false, :string? => false, :const? => true, :const_ptr? => false},
+                          {:type=>"int", :name=>"int_param", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"int", :name=>"integer", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"char", :name=>"character", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"int*", :name=>"constant", :ptr? => true, :string? => false, :const? => false, :const_ptr? => true}
                         ],
                  :args_string=>"const unsigned int const_param, int int_param, int integer, char character, int* const constant",
                  :args_call=>"const_param, int_param, integer, character, constant" }]
@@ -1334,11 +1334,11 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"integer", :name=>"param", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"character", :name=>"thing", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"longint*", :name=>"junk", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"constant", :name=>"value", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"int32_t", :name=>"number", :ptr? => false, :const? => true, :const_ptr? => false}
+                 :args=>[ {:type=>"integer", :name=>"param", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"character", :name=>"thing", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"longint*", :name=>"junk", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"constant", :name=>"value", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"int32_t", :name=>"number", :ptr? => false, :string? => false, :const? => true, :const_ptr? => false}
                         ],
                  :args_string=>"integer param, character thing, longint* junk, constant value, int32_t const number",
                  :args_call=>"param, thing, junk, value, number" }]
@@ -1363,10 +1363,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"signed char", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned long int", :name=>"xyz_123", :ptr? => false, :const? => true, :const_ptr? => false},
-                          {:type=>"unsigned int", :name=>"abc_123", :ptr? => false, :const? => true, :const_ptr? => false},
-                          {:type=>"long long", :name=>"arm_of_the_law", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"signed char", :name=>"abc", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"unsigned long int", :name=>"xyz_123", :ptr? => false, :string? => false, :const? => true, :const_ptr? => false},
+                          {:type=>"unsigned int", :name=>"abc_123", :ptr? => false, :string? => false, :const? => true, :const_ptr? => false},
+                          {:type=>"long long", :name=>"arm_of_the_law", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"signed char abc, const unsigned long int xyz_123, unsigned int const abc_123, long long arm_of_the_law",
                  :args_call=>"abc, xyz_123, abc_123, arm_of_the_law" }]
@@ -1391,10 +1391,10 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"CUSTOM_TYPE", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"CUSTOM_TYPE*", :name=>"xyz_123", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"CUSTOM_TYPE", :name=>"abcxyz", :ptr? => false, :const? => true, :const_ptr? => false},
-                          {:type=>"struct CUSTOM_TYPE const*", :name=>"abc123", :ptr? => true, :const? => true, :const_ptr? => true}
+                 :args=>[ {:type=>"CUSTOM_TYPE", :name=>"abc", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"CUSTOM_TYPE*", :name=>"xyz_123", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"CUSTOM_TYPE", :name=>"abcxyz", :ptr? => false, :string? => false, :const? => true, :const_ptr? => false},
+                          {:type=>"struct CUSTOM_TYPE const*", :name=>"abc123", :ptr? => true, :string? => false, :const? => true, :const_ptr? => true}
                         ],
                  :args_string=>"CUSTOM_TYPE abc, CUSTOM_TYPE* xyz_123, CUSTOM_TYPE const abcxyz, struct CUSTOM_TYPE const* const abc123",
                  :args_call=>"abc, xyz_123, abcxyz, abc123" }]
@@ -1406,13 +1406,11 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     source = 'void KeyOperated(CUSTOM_TYPE thing1[], int thing2 [ ], ' \
              'char thing3 [][2 ][ 3], int* thing4[4], u8 thing5[((u8)((5 + 5*2)/3))])'
     expected_args = [
-      { type: 'CUSTOM_TYPE*', name: 'thing1', ptr?: true,  const?: false, const_ptr?: false },
-      { type: 'int*',         name: 'thing2', ptr?: true,  const?: false, const_ptr?: false },
-      # this one will likely change in the future when we improve multidimensional array support
-      { type: 'char*',        name: 'thing3', ptr?: false, const?: false, const_ptr?: false },
-      # this one will likely change in the future when we improve multidimensional array support
-      { type: 'int**',        name: 'thing4', ptr?: true,  const?: false, const_ptr?: false },
-      { type: 'u8*',          name: 'thing5', ptr?: true,  const?: false, const_ptr?: false }
+      { type: 'CUSTOM_TYPE*', name: 'thing1', ptr?: true, string?: false,  const?: false, const_ptr?: false, array_dims: [''] },
+      { type: 'int*',         name: 'thing2', ptr?: true, string?: false,  const?: false, const_ptr?: false, array_dims: [''] },
+      { type: 'char*',        name: 'thing3', ptr?: false, string?: true, const?: false, const_ptr?: false, array_dims: ['', '2', '3'] },
+      { type: 'int**',        name: 'thing4', ptr?: true, string?: false,  const?: false, const_ptr?: false, array_dims: ['4'] },
+      { type: 'u8*',          name: 'thing5', ptr?: true, string?: false,  const?: false, const_ptr?: false, array_dims: ['((u8)((5 + 5*2)/3))'] }
     ]
     expected = [{:var_arg=>nil,
                  :return=>{ :type   => "void",
@@ -1430,8 +1428,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :modifier=>"",
                  :contains_ptr? => true,
                  :args => expected_args,
-                 :args_string => 'CUSTOM_TYPE* thing1, int* thing2, ' \
-                                 'char* thing3, int** thing4, u8* thing5',
+                 :args_string => 'CUSTOM_TYPE thing1[], int thing2[], char thing3[][2][3], int* thing4[4], u8 thing5[((u8)((5 + 5*2)/3))]',
                  :args_call => 'thing1, thing2, thing3, thing4, thing5' }]
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
@@ -1454,9 +1451,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"unsigned CUSTOM_TYPE", :name=>"abc", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"unsigned", :name=>"xyz", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"CUSTOM_TYPE1 CUSTOM_TYPE2", :name=>"pdq", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"unsigned CUSTOM_TYPE", :name=>"abc", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"unsigned", :name=>"xyz", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"CUSTOM_TYPE1 CUSTOM_TYPE2", :name=>"pdq", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"unsigned CUSTOM_TYPE abc, unsigned xyz, CUSTOM_TYPE1 CUSTOM_TYPE2 pdq",
                  :args_call=>"abc, xyz, pdq" }]
@@ -1481,7 +1478,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"cmock_module_func_ptr1 func_ptr",
                  :args_call=>"func_ptr" }]
@@ -1508,7 +1505,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"cmock_module_func_ptr1 func_ptr",
                  :args_call=>"func_ptr" }]
@@ -1535,7 +1532,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"cmock_module_func_ptr1 func_ptr",
                  :args_call=>"func_ptr" }]
@@ -1562,7 +1559,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"cmock_module_func_ptr1 func_ptr",
                  :args_call=>"func_ptr" }]
@@ -1589,7 +1586,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => true, :const_ptr? => false}
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :string? => false, :const? => true, :const_ptr? => false}
                         ],
                  :args_string=>"cmock_module_func_ptr1 const func_ptr",
                  :args_call=>"func_ptr" }]
@@ -1604,7 +1601,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     # expected = [{ :var_arg=>nil,
                  # :return=>{ :type   => "void",
                             # :name   => 'cmock_to_return',
-                            # :ptr?   => false,
+                            # :ptr?   => false, :string? => false,
                             # :const? => false,
                             # :const_ptr? => false,
                             # :str    => "void cmock_to_return",
@@ -1616,7 +1613,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  # :class=>nil,
                  # :modifier=>"",
                  # :contains_ptr? => false,
-                 # :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :const? => false, :const_ptr? => false}
+                 # :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         # ],
                  # :args_string=>"cmock_module_func_ptr1 func_ptr",
                  # :args_call=>"func_ptr" }]
@@ -1643,8 +1640,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"cmock_module_func_ptr2", :name=>"func_ptr2", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"cmock_module_func_ptr2", :name=>"func_ptr2", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"cmock_module_func_ptr1 func_ptr1, cmock_module_func_ptr2 func_ptr2",
                  :args_call=>"func_ptr1, func_ptr2" }]
@@ -1671,9 +1668,9 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"uint16_t", :name=>"num1", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"uint16_t", :name=>"num2", :ptr? => false, :const? => false, :const_ptr? => false},
-                          {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"uint16_t", :name=>"num1", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"uint16_t", :name=>"num2", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"cmock_module_func_ptr1", :name=>"func_ptr1", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"uint16_t num1, uint16_t num2, cmock_module_func_ptr1 func_ptr1",
                  :args_call=>"num1, num2, func_ptr1" }]
@@ -1700,7 +1697,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => true, :const_ptr? => false}
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :string? => false, :const? => true, :const_ptr? => false}
                         ],
                  :args_string=>"cmock_module_func_ptr1 const cmock_arg1",
                  :args_call=>"cmock_arg1" }]
@@ -1727,7 +1724,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => false,
-                 :args=>[ {:type=>"char", :name=>"op_code", :ptr? => false, :const? => true, :const_ptr? => false}
+                 :args=>[ {:type=>"char", :name=>"op_code", :ptr? => false, :string? => false, :const? => true, :const_ptr? => false}
                         ],
                  :args_string=>"const char op_code",
                  :args_call=>"op_code" }]
@@ -1806,8 +1803,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                  :class=>nil,
                  :modifier=>"",
                  :contains_ptr? => true,
-                 :args=>[ {:type=>"double*", :name=>"foo", :ptr? => true, :const? => false, :const_ptr? => false},
-                          {:type=>"THING*", :name=>"bar", :ptr? => true, :const? => false, :const_ptr? => false}
+                 :args=>[ {:type=>"double*", :name=>"foo", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false},
+                          {:type=>"THING*", :name=>"bar", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false}
                         ],
                  :args_string=>"double* foo, THING* bar",
                  :args_call=>"foo, bar" }]
@@ -1834,11 +1831,11 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                    :class=>nil,
                    :modifier=>"SQLITE_API",
                    :contains_ptr? => true,
-                   :args=>[ {:type=>"sqlite3_stmt*", :name=>"cmock_arg2", :ptr? => true, :const? => false, :const_ptr? => false},
-                            {:type=>"int", :name=>"cmock_arg3", :ptr? => false, :const? => false, :const_ptr? => false},
-                            {:type=>"const char*", :name=>"cmock_arg4", :ptr? => false, :const? => true, :const_ptr? => false},
-                            {:type=>"int", :name=>"n", :ptr? => false, :const? => false, :const_ptr? => false},
-                            {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :const? => false, :const_ptr? => false}
+                   :args=>[ {:type=>"sqlite3_stmt*", :name=>"cmock_arg2", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false},
+                            {:type=>"int", :name=>"cmock_arg3", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                            {:type=>"const char*", :name=>"cmock_arg4", :ptr? => false, :string? => true, :const? => true, :const_ptr? => false},
+                            {:type=>"int", :name=>"n", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                            {:type=>"cmock_module_func_ptr1", :name=>"cmock_arg1", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                           ],
                    :args_string=>"sqlite3_stmt* cmock_arg2, int cmock_arg3, const char* cmock_arg4, int n, cmock_module_func_ptr1 cmock_arg1",
                    :args_call=>"cmock_arg2, cmock_arg3, cmock_arg4, n, cmock_arg1" }]
@@ -1865,8 +1862,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"int", :name=>"Mulder", :ptr? => false, :const? => false, :const_ptr? => false}
+                  :args=>[ {:type=>"int", :name=>"Scully", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                           {:type=>"int", :name=>"Mulder", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                          ],
                   :args_string=>"int Scully, int Mulder",
                   :args_call=>"Scully, Mulder"
@@ -1891,7 +1888,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => true,
-                  :args=>[ {:type=>"void*", :name=>"stuff", :ptr? => true, :const? => false, :const_ptr? => false}
+                  :args=>[ {:type=>"void*", :name=>"stuff", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false}
                          ],
                   :args_string=>"void* stuff",
                   :args_call=>"stuff"
@@ -1916,8 +1913,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"int", :name=>"Squiggy", :ptr? => false, :const? => false, :const_ptr? => false}
+                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                           {:type=>"int", :name=>"Squiggy", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                          ],
                   :args_string=>"int Lenny, int Squiggy",
                   :args_call=>"Lenny, Squiggy"
@@ -1942,8 +1939,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Cliff", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"int", :name=>"Claire", :ptr? => false, :const? => false, :const_ptr? => false}
+                  :args=>[ {:type=>"int", :name=>"Cliff", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                           {:type=>"int", :name=>"Claire", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                          ],
                   :args_string=>"int Cliff, int Claire",
                   :args_call=>"Cliff, Claire"
@@ -1981,7 +1978,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       assert_equal(@parser.divine_ptr(entry[0]), entry[1])
       assert_equal(@parser.divine_const(entry[0]), entry[2])
       assert_equal(@parser.divine_ptr_and_const(entry[0]),
-        { ptr?: entry[1], const?: entry[2], const_ptr?: entry[3] })
+        { ptr?: entry[1], string?: false, const?: entry[2], const_ptr?: entry[3] })
     end
   end
 
@@ -2348,8 +2345,8 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
                   :class=>nil,
                   :modifier=>"",
                   :contains_ptr? => false,
-                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :const? => false, :const_ptr? => false},
-                           {:type=>"int", :name=>"Squiggy", :ptr? => false, :const? => false, :const_ptr? => false}
+                  :args=>[ {:type=>"int", :name=>"Lenny", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false},
+                           {:type=>"int", :name=>"Squiggy", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
                          ],
                   :args_string=>"int Lenny, int Squiggy",
                   :args_call=>"Lenny, Squiggy"
@@ -2592,7 +2589,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
         :var_arg => nil,
         :args_string => "int a",
         :args => [
-          { :ptr? => false,
+          { :ptr? => false, :string? => false,
             :const? => false,
             :const_ptr? => false,
             :name => "a",
@@ -2615,7 +2612,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
         :var_arg => nil,
         :args_string => "int* a",
         :args => [
-          { :ptr? => true,
+          { :ptr? => true, :string? => false,
             :const? => false,
             :const_ptr? => false,
             :name => "a",
@@ -2664,7 +2661,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
         :var_arg => nil,
         :args_string => "int a",
         :args => [
-          { :ptr? => false,
+          { :ptr? => false, :string? => false,
             :const? => false,
             :const_ptr? => false,
             :name => "a",
@@ -2687,7 +2684,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
         :var_arg => nil,
         :args_string => "int* a",
         :args => [
-          { :ptr? => true,
+          { :ptr? => true, :string? => false,
             :const? => false,
             :const_ptr? => false,
             :name => "a",
@@ -2882,5 +2879,128 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.transform_inline_functions(source))
   end
 
+  it "pairs size arg with adjacent pointer when no name affinity exists" do
+    source = "void process(int *data, int size)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    data_arg = args.find { |a| a[:name] == 'data' }
+    size_arg = args.find { |a| a[:name] == 'size' }
+
+    assert_equal(:after, data_arg[:array_size_order], "data should be paired with size (after)")
+    assert_equal(true,   size_arg[:array_size?],      "size should be marked as array_size?")
+  end
+
+  it "pairs size arg with the pointer whose name it matches, even when a different pointer is adjacent" do
+    # buf_size is adjacent to status, but 'buf' root matches 'buf' exactly
+    source = "void store(int *status, int buf_size, int *buf)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    status_arg  = args.find { |a| a[:name] == 'status' }
+    buf_size_arg = args.find { |a| a[:name] == 'buf_size' }
+    buf_arg     = args.find { |a| a[:name] == 'buf' }
+
+    assert_nil(status_arg[:array_size_order],            "status should NOT be paired")
+    assert_equal(:before, buf_arg[:array_size_order],    "buf should be paired with size (before)")
+    assert_equal(true,    buf_size_arg[:array_size?],    "buf_size should be marked as array_size?")
+  end
+
+  it "pairs size arg with pointer that comes after it when name affinity is stronger than adjacency" do
+    # buff_size is adjacent to bytes_to_read, but 'buff' root is a prefix of 'buffer'
+    source = "void read_interface(size_t *bytes_to_read, size_t buff_size, char **buffer)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    bytes_arg     = args.find { |a| a[:name] == 'bytes_to_read' }
+    buff_size_arg = args.find { |a| a[:name] == 'buff_size' }
+    buffer_arg    = args.find { |a| a[:name] == 'buffer' }
+
+    assert_nil(bytes_arg[:array_size_order],               "bytes_to_read should NOT be paired")
+    assert_equal(:before, buffer_arg[:array_size_order],   "buffer should be paired with size (before)")
+    assert_equal(true,    buff_size_arg[:array_size?],     "buff_size should be marked as array_size?")
+  end
+
+  it "pairs multiple size args each with their best-matched pointer" do
+    source = "void copy(int *dst, int dst_len, int *src, int src_len)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    dst_arg     = args.find { |a| a[:name] == 'dst' }
+    dst_len_arg = args.find { |a| a[:name] == 'dst_len' }
+    src_arg     = args.find { |a| a[:name] == 'src' }
+    src_len_arg = args.find { |a| a[:name] == 'src_len' }
+
+    assert_equal(:after, dst_arg[:array_size_order], "dst should be paired with size (after)")
+    assert_equal(true, dst_len_arg[:array_size?],    "dst_len should be marked as array_size?")
+    assert_equal(:after, src_arg[:array_size_order], "src should be paired with size (after)")
+    assert_equal(true, src_len_arg[:array_size?],    "src_len should be marked as array_size?")
+  end
+
+  it "pairs size arg with adjacent array when no name affinity exists" do
+    source = "void process(int data[], int size)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    data_arg = args.find { |a| a[:name] == 'data' }
+    size_arg = args.find { |a| a[:name] == 'size' }
+
+    assert_equal(:after, data_arg[:array_size_order], "data should be paired with size (after)")
+    assert_equal(true,   size_arg[:array_size?],      "size should be marked as array_size?")
+  end
+
+  it "pairs size arg with the array whose name it matches, even when a different pointer is adjacent" do
+    # buf_size is adjacent to status, but 'buf' root matches 'buf' exactly
+    source = "void store(int status[], int buf_size, int buf[])"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    status_arg  = args.find { |a| a[:name] == 'status' }
+    buf_size_arg = args.find { |a| a[:name] == 'buf_size' }
+    buf_arg     = args.find { |a| a[:name] == 'buf' }
+
+    assert_nil(status_arg[:array_size_order],            "status should NOT be paired")
+    assert_equal(:before, buf_arg[:array_size_order],    "buf should be paired with size (before)")
+    assert_equal(true,    buf_size_arg[:array_size?],    "buf_size should be marked as array_size?")
+  end
+
+  it "pairs size arg with array that comes after it when name affinity is stronger than adjacency" do
+    # buff_size is adjacent to bytes_to_read, but 'buff' root is a prefix of 'buffer'
+    source = "void read_interface(size_t bytes_to_read[], size_t buff_size, char *buffer[])"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    bytes_arg     = args.find { |a| a[:name] == 'bytes_to_read' }
+    buff_size_arg = args.find { |a| a[:name] == 'buff_size' }
+    buffer_arg    = args.find { |a| a[:name] == 'buffer' }
+
+    assert_nil(bytes_arg[:array_size_order],               "bytes_to_read should NOT be paired")
+    assert_equal(:before, buffer_arg[:array_size_order],   "buffer should be paired with size (before)")
+    assert_equal(true, buff_size_arg[:array_size?],        "buff_size should be marked as array_size?")
+  end
+
+  it "pairs multiple size args each with their best-matched array" do
+    source = "void copy(int dst[], int dst_len, int src[], int src_len)"
+
+    result = @parser.parse("module", source)
+    args = result[:functions].first[:args]
+
+    dst_arg     = args.find { |a| a[:name] == 'dst' }
+    dst_len_arg = args.find { |a| a[:name] == 'dst_len' }
+    src_arg     = args.find { |a| a[:name] == 'src' }
+    src_len_arg = args.find { |a| a[:name] == 'src_len' }
+
+    assert_equal(:after, dst_arg[:array_size_order],  "dst should be paired with size (after)")
+    assert_equal(true, dst_len_arg[:array_size?],     "dst_len should be marked as array_size?")
+    assert_equal(:after, src_arg[:array_size_order],  "src should be paired with size (after)")
+    assert_equal(true, src_len_arg[:array_size?],     "src_len should be marked as array_size?")
+  end
 
 end

@@ -98,6 +98,46 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     assert_equal(expected, output)
   end
 
+  it "add code for a base expectation with expect_any_args plugin" do
+    config = create_stub(
+      :when_ptr => :smart,
+      :enforce_strict_ordering => false,
+      :plugins => [:expect_any_args],
+      :treat_as => {},
+      :respond_to? => false
+    )
+    utils = CMockGeneratorUtils.new(config, {})
+    expected =
+      "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
+      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
+      "  cmock_call_instance->LineNumber = cmock_line;\n" +
+      "  cmock_call_instance->ExpectAnyArgsBool = (char)0;\n"
+    assert_equal(expected, utils.code_add_base_expectation("Apple"))
+  end
+
+  it "add code for a base expectation with ignore_stateless plugin (without ignore)" do
+    config = create_stub(
+      :when_ptr => :smart,
+      :enforce_strict_ordering => false,
+      :plugins => [:ignore_stateless],
+      :treat_as => {},
+      :respond_to? => false
+    )
+    utils = CMockGeneratorUtils.new(config, {})
+    expected =
+      "  CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_Apple_CALL_INSTANCE));\n" +
+      "  CMOCK_Apple_CALL_INSTANCE* cmock_call_instance = (CMOCK_Apple_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n" +
+      "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringOutOfMemory);\n" +
+      "  memset(cmock_call_instance, 0, sizeof(*cmock_call_instance));\n" +
+      "  Mock.Apple_CallInstance = CMock_Guts_MemChain(Mock.Apple_CallInstance, cmock_guts_index);\n" +
+      "  Mock.Apple_IgnoreBool = (char)0;\n" +
+      "  cmock_call_instance->LineNumber = cmock_line;\n"
+    assert_equal(expected, utils.code_add_base_expectation("Apple"))
+  end
+
   it "add argument expectations for values when no array plugin" do
     arg1 = { :name => "Orange", :const? => false, :type => 'int', :ptr? => false }
     expected1 = "  cmock_call_instance->Expected_Orange = Orange;\n"
@@ -130,7 +170,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
 
     arg3 = { :name => "Kiwi", :const? => false, :type => 'KIWI_T*', :ptr? => true }
     expected3 = "  cmock_call_instance->Expected_Kiwi = Kiwi;\n" +
-                "  cmock_call_instance->Expected_Kiwi_Depth = Kiwi_Depth;\n" +
+                "  cmock_call_instance->Expected_Kiwi_Depth = Mango_Depth;\n" +
                 "  cmock_call_instance->IgnoreArg_Kiwi = 0;\n" +
                 "  cmock_call_instance->ReturnThruPtr_Kiwi_Used = 0;\n"
 
@@ -141,7 +181,7 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
 
     assert_equal(expected1, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg1))
     assert_equal(expected2, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg2, 'Lemon_Depth'))
-    assert_equal(expected3, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg3, 'Lemon_Depth'))
+    assert_equal(expected3, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg3, 'Mango_Depth'))
     assert_equal(expected4, @cmock_generator_utils_complex.code_add_an_arg_expectation(arg4))
   end
 
@@ -400,5 +440,72 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
     @unity_helper.expect :nil?, false
     @unity_helper.expect :get_helper, ['UNITY_TEST_ASSERT_EQUAL_MY_TYPE_ARRAY', '&'], ['MY_TYPE']
     assert_equal(expected, @cmock_generator_utils_complex.code_verify_an_arg_expectation(function, arg))
+  end
+
+  # void* tests without array plugin (when_ptr: :compare_data) - these must use pointer
+  # comparison because dereferencing void* is illegal in C
+  it 'handle void pointer comparison without array plugin by using pointer comparison' do
+    config_stub = create_stub({
+      when_ptr: :compare_data,
+      enforce_strict_ordering: false,
+      plugins: [],
+      treat_as: {'void*' => 'HEX8_ARRAY', 'void const*' => 'HEX8_ARRAY', 'const void*' => 'HEX8_ARRAY'},
+      treat_as_void: []
+    })
+    utils = CMockGeneratorUtils.new(config_stub, {:unity_helper => @unity_helper})
+    function = { :name => 'Pear' }
+
+    [
+      {:type => "void*",       :name => 'MyVoidPtr',      :ptr? => true, :const? => false, :const_ptr? => false},
+      {:type => "const void*", :name => 'MyConstVoidPtr', :ptr? => true, :const? => true,  :const_ptr? => false},
+      {:type => "void const*", :name => 'MyVoidConstPtr', :ptr? => true, :const? => false, :const_ptr? => true},
+    ].each do |arg|
+      expected = "  {\n" +
+                 "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_#{arg[:name]});\n" +
+                 "    UNITY_TEST_ASSERT_EQUAL_PTR(cmock_call_instance->Expected_#{arg[:name]}, #{arg[:name]}, cmock_line, CMockStringMismatch);\n" +
+                 "  }\n"
+      assert_equal(expected, utils.code_verify_an_arg_expectation(function, arg))
+    end
+  end
+
+  it 'handle treat_as_void alias pointer comparison without array plugin by using pointer comparison' do
+    config_stub = create_stub({
+      when_ptr: :compare_data,
+      enforce_strict_ordering: false,
+      plugins: [],
+      treat_as: {'MY_VOID*' => 'HEX8_ARRAY'},
+      treat_as_void: ['MY_VOID']
+    })
+    utils = CMockGeneratorUtils.new(config_stub, {:unity_helper => @unity_helper})
+    function = { :name => 'Pear' }
+
+    arg = {:type => "MY_VOID*", :name => 'MyVoidAliasPtr', :ptr? => true, :const? => false, :const_ptr? => false}
+    expected = "  {\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyVoidAliasPtr);\n" +
+               "    UNITY_TEST_ASSERT_EQUAL_PTR(cmock_call_instance->Expected_MyVoidAliasPtr, MyVoidAliasPtr, cmock_line, CMockStringMismatch);\n" +
+               "  }\n"
+    assert_equal(expected, utils.code_verify_an_arg_expectation(function, arg))
+  end
+
+  it 'handle treat_as_void alias pointer with array plugin using HEX8_ARRAY to avoid sizeof(void)' do
+    config_stub = create_stub({
+      when_ptr: :compare_data,
+      enforce_strict_ordering: false,
+      plugins: [:array],
+      treat_as: {},
+      treat_as_void: ['MY_VOID']
+    })
+    utils = CMockGeneratorUtils.new(config_stub, {:unity_helper => @unity_helper})
+    function = { :name => 'Pear' }
+
+    arg = {:type => "MY_VOID*", :name => 'MyVoidAliasPtr', :ptr? => true, :const? => false, :const_ptr? => false}
+    expected = "  {\n" +
+               "    UNITY_SET_DETAILS(CMockString_Pear,CMockString_MyVoidAliasPtr);\n" +
+               "    if (cmock_call_instance->Expected_MyVoidAliasPtr == NULL)\n" +
+               "      { UNITY_TEST_ASSERT_NULL(MyVoidAliasPtr, cmock_line, CMockStringExpNULL); }\n" +
+               "    else\n" +
+               "      { UNITY_TEST_ASSERT_EQUAL_HEX8_ARRAY(cmock_call_instance->Expected_MyVoidAliasPtr, MyVoidAliasPtr, cmock_call_instance->Expected_MyVoidAliasPtr_Depth, cmock_line, CMockStringMismatch); }\n" +
+               "  }\n"
+    assert_equal(expected, utils.code_verify_an_arg_expectation(function, arg))
   end
 end

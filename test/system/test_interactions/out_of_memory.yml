@@ -7,7 +7,7 @@
 
 ---
 :cmock:
-  :plugins: []
+  :plugins: [ignore, expect_any_args, array]
   :treat_as:
     custom_type: INT
 
@@ -21,6 +21,8 @@
 
   :mockable: |
     void foo(BIG_FAT_STRUCT_T a);
+    int get_result(void);
+    void process_data(int* data, int count);
 
   :source:
     :header: |
@@ -68,6 +70,7 @@
 
     - :pass: FALSE
       :should: 'should error out because we do not have eough memory to handle two of these structures'
+      :verify_error: 'CMock has run out of memory. Please allocate more.'
       :code: |
         test()
         {
@@ -83,6 +86,43 @@
           // It should not actually get here
           for (i=0; i < (CMOCK_MEM_SIZE/BIG_FAT_STRUCT_SIZE - 1); i++) {
             function_b();
+          }
+        }
+
+    - :pass: FALSE
+      :should: 'should error out on ExpectAnyArgs when memory is exhausted'
+      :verify_error: 'CMock has run out of memory. Please allocate more.'
+      :code: |
+        test()
+        {
+          // Fill all available memory with ExpectAnyArgs call instances
+          while (CMock_Guts_MemBytesFree() > 0) {
+            foo_ExpectAnyArgs();
+          }
+        }
+
+    - :pass: FALSE
+      :should: 'should error out on IgnoreAndReturn when memory is exhausted'
+      :verify_error: 'CMock has run out of memory. Please allocate more.'
+      :code: |
+        test()
+        {
+          // Fill all available memory with IgnoreAndReturn call instances
+          while (CMock_Guts_MemBytesFree() > 0) {
+            get_result_IgnoreAndReturn(42);
+          }
+        }
+
+    - :pass: FALSE
+      :should: 'should error out on ExpectWithArray when memory is exhausted'
+      :verify_error: 'CMock has run out of memory. Please allocate more.'
+      :code: |
+        test()
+        {
+          int data = 0;
+          // Fill all available memory with ExpectWithArray call instances
+          while (CMock_Guts_MemBytesFree() > 0) {
+            process_data_ExpectWithArray(&data, 1, 1);
           }
         }
 

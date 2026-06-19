@@ -408,7 +408,25 @@ class CMockHeaderParser
     arg_info
   end
 
-  def parse_args(arg_list)
+  def extract_array_dims(arg_list)
+    dims = {}
+    arg_list.scan(/(\w+)\s*((?:\s*\[[^\[\]]*\])+)/) do |name, all_dims|
+      dim_list = all_dims.scan(/\[([^\[\]]*)\]/).map { |d| d[0].strip }
+      dims[name] = dim_list
+    end
+    dims
+  end
+
+  def extract_ptr_to_array_dims(arg_list)
+    dims = {}
+    arg_list.scan(/\(\s*\*\s*(\w+)\s*\)((?:\s*\[[^\[\]]*\])+)/) do |name, all_dims|
+      dim_list = all_dims.scan(/\[([^\[\]]*)\]/).map { |d| d[0].strip }
+      dims[name] = dim_list
+    end
+    dims
+  end
+
+  def parse_args(arg_list, array_dims_by_name = {}, ptr_to_array_dims_by_name = {})
     args = []
     arg_list.split(',').each do |arg|
       arg.strip!
@@ -417,6 +435,15 @@ class CMockHeaderParser
       arg_info = parse_type_and_name(arg)
       arg_info.delete(:modifier)             # don't care about this
       arg_info.delete(:c_calling_convention) # don't care about this
+
+      arg_info[:array_dims] = array_dims_by_name[arg_info[:name]] if array_dims_by_name.key?(arg_info[:name])
+
+      # Handle pointer-to-array args: (*name)[dims] was rewritten to * name before clean_args
+      if ptr_to_array_dims_by_name.key?(arg_info[:name])
+        arg_info[:array_dims] = ptr_to_array_dims_by_name[arg_info[:name]]
+        arg_info[:ptr_to_array?] = true
+        arg_info[:ptr?] = true # force true even for types like char* that divine_ptr would otherwise treat as strings
+      end
 
       # in C, array arguments implicitly degrade to pointers
       # make the translation explicit here to simplify later logic
@@ -429,18 +456,59 @@ class CMockHeaderParser
       args << arg_info
     end
 
-    # Try to find array pair in parameters following this pattern : <type> * <name>, <@array_size_type> <@array_size_name>
-    args.each_with_index do |val, index|
-      next_index = index + 1
-      next unless args.length > next_index
+    # Try to find array pairs using name-affinity scoring.
+    # Pairs each size-candidate arg with the best-matching pointer arg.
+    # Score: 10=exact root match, 7=prefix match, 5=substring match, +2 adjacency bonus (ptr immediately precedes size).
+    # Falls back to adjacency alone (score 2) when no name affinity found, preserving original behavior.
+    size_candidate_indices = args.each_index.select do |i|
+      args[i][:name].match(@array_size_name) && @array_size_type.include?(args[i][:type])
+    end
 
-      if (val[:ptr?] == true) && args[next_index][:name].match(@array_size_name) && @array_size_type.include?(args[next_index][:type])
-        val[:array_data?] = true
-        args[next_index][:array_size?] = true
+    size_candidate_indices.each do |size_idx|
+      best_score = 0
+      best_ptr_idx = nil
+
+      args.each_with_index do |ptr_arg, ptr_idx|
+        next unless (ptr_arg[:ptr?] || ptr_arg[:string?]) && !ptr_arg[:array_data?]
+
+        score = array_size_name_affinity(ptr_arg[:name], args[size_idx][:name])
+        score += 2 if ptr_idx + 1 == size_idx
+
+        if score > best_score
+          best_score = score
+          best_ptr_idx = ptr_idx
+        end
       end
+
+      next unless best_ptr_idx
+
+      args[best_ptr_idx][:array_size_name] = args[size_idx][:name]
+      args[best_ptr_idx][:array_size_order] = size_idx < best_ptr_idx ? :before : :after
+      args[size_idx][:array_size?] = true
     end
 
     args
+  end
+
+  def array_size_name_affinity(ptr_name, size_name)
+    size_words = @array_size_name.to_s.split('|').select { |w| w.match?(/^\w+$/) }
+    p_name = ptr_name.downcase
+    s_name = size_name.downcase
+
+    roots = size_words.flat_map do |word|
+      [
+        s_name.sub(/_#{Regexp.escape(word)}$/, ''),
+        s_name.sub(/^#{Regexp.escape(word)}_/, '')
+      ]
+    end.uniq.reject { |r| r.empty? || r == s_name }
+
+    roots.each do |root|
+      return 10 if root == p_name
+      return 7 if p_name.start_with?(root) || root.start_with?(p_name)
+      return 5 if p_name.include?(root) || root.include?(p_name)
+    end
+
+    0
   end
 
   def divine_ptr(arg)
@@ -465,6 +533,7 @@ class CMockHeaderParser
     divination = {}
 
     divination[:ptr?] = divine_ptr(arg)
+    divination[:string?] = !divination[:ptr?] && (/(^|\s)(const\s+)?char(\s+const)?\s*\*(?!.*\*)/ =~ arg ? true : false)
     divination[:const?] = divine_const(arg)
 
     # an arg containing "const" after the last * is a constant pointer
@@ -591,12 +660,38 @@ class CMockHeaderParser
       decl[:var_arg] = nil
     end
 
+    # Extract pointer-to-array parameters (e.g., char (*buffer)[10]) and rewrite for normal processing
+    ptr_to_array_dims = extract_ptr_to_array_dims(args)
+    ptr_to_array_dims.each_key do |name|
+      args.gsub!(/\(\s*\*\s*#{Regexp.escape(name)}\s*\)((?:\s*\[[^\[\]]*\])+)/, "* #{name}")
+    end
+
+    # Extract array dimensions before cleaning converts them to pointer notation
+    array_dims_by_name = extract_array_dims(args)
+
     # parse out and clean up the remainder of the arguments
     args = clean_args(args, parse_project)
-    decl[:args_string] = args
-    decl[:args] = parse_args(args)
+    decl[:args] = parse_args(args, array_dims_by_name, ptr_to_array_dims)
+    # Rebuild args_string using original array notation where applicable
+    if args == 'void'
+      decl[:args_string] = args
+    else
+      arg_parts = args.split(/,\s*/)
+      decl[:args].each_with_index do |arg, i|
+        next unless arg[:array_dims]
+
+        base_type = arg[:type].sub(/\*$/, '').strip
+        dims_str = arg[:array_dims].map { |d| "[#{d}]" }.join
+        arg_parts[i] = if arg[:ptr_to_array?]
+                         "#{base_type} (*#{arg[:name]})#{dims_str}"
+                       else
+                         "#{base_type} #{arg[:name]}#{dims_str}"
+                       end
+      end
+      decl[:args_string] = arg_parts.join(', ')
+    end
     decl[:args_call] = decl[:args].map { |a| a[:name] }.join(', ')
-    decl[:contains_ptr?] = decl[:args].inject(false) { |ptr, arg| arg[:ptr?] ? true : ptr }
+    decl[:contains_ptr?] = decl[:args].inject(false) { |ptr, arg| arg[:ptr?] || arg[:string?] ? true : ptr }
 
     if decl[:return][:type].nil? || decl[:name].nil? || decl[:args].nil? ||
        decl[:return][:type].empty? || decl[:name].empty?

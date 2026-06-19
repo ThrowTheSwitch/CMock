@@ -147,6 +147,27 @@ that they are pointing to the same memory address.
 * `retval func(void)` => (nothing. In fact, an additional function is only generated if the params list contains pointers)
 * `retval func(other, ptr* param)` => `void func_ExpectWithArrayAndReturn(other, ptr* param, int param_depth, retval_to_return)`
 
+When the `:array_size_name` and `:array_size_type` options are configured, CMock
+can recognize that a scalar parameter is the size of an adjacent pointer parameter
+and pair them together. When a size parameter is paired with a pointer, the `_Expect`
+call automatically uses it as the array depth, and `_ExpectWithArray` preserves
+the original argument order without adding a separate depth argument.
+
+When performing this type of automatic identification of arguments, CMock will also
+generate an additional `_ExpectWithArrayExtended`, which accepts an explicit
+depth for every pointer — allowing you to override the inferred depth when the
+pairing heuristic guesses wrong:
+
+* `void func(int size, ptr* buf)` =>
+  * `void func_ExpectWithArray(int size, ptr* buf)` _(depth inferred from `size`)_
+  * `void func_ExpectWithArrayExtended(int size, ptr* buf, int buf_Depth)` _(explicit override)_
+
+`_ExpectWithArrayExtended` is only generated for functions where at least one
+size parameter has been automatically identified. For all other functions the short
+`_ExpectWithArray` already gives full depth control. This function can be used to correct
+poor assumptions that CMock has made. It can also be used to separately verify a passed
+length, but compare the actual contents for a DIFFERENT number of elements.
+
 
 Ignore:
 -------
@@ -722,11 +743,7 @@ from the defaults. We've tried to specify what the defaults are below.
 
   * `void GoBananas(Banana * bananas, int num_bananas)`
   * `int write_data(int fd, const uint8_t * data, uint32_t size)`
-
-  To recognize functions like these, CMock looks for a parameter list
-  containing a pointer (which could be an array) followed by something that
-  could be an array size.  "Something", by default, means an `int` or `size_t`
-  parameter with a name containing "size" or "len".
+  * `void store_data(int buf_size, uint8_t * buf)`
 
   `:array_size_type` is a list of additional types (besides `int` and `size_t`)
   that could be used for an array size parameter.  For example, to get CMock to
@@ -741,8 +758,30 @@ from the defaults. We've tried to specify what the defaults are below.
 
         cfg[:array_size_name] = 'size|len|num_'
 
-  Parameters must match *both* `:array_size_type` and `:array_size_name` (and
-  must come right after a pointer parameter) to be treated as an array size.
+  A parameter must match *both* `:array_size_type` and `:array_size_name` to be
+  treated as an array size.
+
+  **Pairing heuristic:** CMock scores each candidate size parameter against each
+  pointer parameter using name similarity. It strips size-words (e.g. "size",
+  "len") from the size parameter's name to derive a root, then checks whether
+  that root matches the pointer's name exactly (score 10), as a prefix or suffix
+  (score 7), or as a substring (score 5). Adjacency in the argument list adds a
+  small bonus (score +2). The highest-scoring pairing wins. This means CMock
+  correctly pairs `buff_size` with `buffer` even when another pointer appears
+  adjacent to `buff_size`.
+
+  Size parameters may appear either **before or after** the pointer they describe.
+  CMock recognizes both orderings:
+
+  * Size after pointer: `void func(uint8_t* buf, int buf_size)` — the `_Expect`
+    call uses `buf_size` as the depth automatically. `_ExpectWithArray` adds an
+    explicit `buf_Depth` argument after `buf` for manual override.
+
+  * Size before pointer: `void func(int buf_size, uint8_t* buf)` — the `_Expect`
+    call again uses `buf_size` as the depth automatically, and `_ExpectWithArray`
+    keeps arguments in their original order with no extra depth argument added.
+    An additional `_ExpectWithArrayExtended` variant is generated that does accept
+    an explicit depth, allowing you to override the inferred value when needed.
 
   Once you've told it how to recognize your arrays, CMock will give you `_Expect`
   calls that work more like `_ExpectWithArray`, and compare an array of objects
