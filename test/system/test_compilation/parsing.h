@@ -111,3 +111,8 @@ inline int stuff(int num)
     }
     return reg;
 }
+
+/* it seems like CMock didn't love a func-looking struct before a func */
+#define FOO_TYPE(a) foo_##a
+struct FOO_TYPE(bar) { int baz; };
+char b(void);

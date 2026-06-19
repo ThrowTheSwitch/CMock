@@ -253,7 +253,7 @@ class CMockHeaderParser
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
     source.gsub!(/^[\w\s]*struct[^;{}()]+;/m, '') # remove forward declared structs
-    source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s]*\{[^}]+\}[\w\s*,]*;/m, '') # remove struct, union, and enum definitions and typedefs with braces
+    source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s()]*\{[^}]+\}[\w\s*,]*;/m, '') # remove struct, union, and enum definitions and typedefs with braces
     # remove problem keywords
     source.gsub!(/(\W)(?:register|auto|restrict)(\W)/, '\1\2')
     source.gsub!(/(\W)(?:static)(\W)/, '\1\2') unless cpp
