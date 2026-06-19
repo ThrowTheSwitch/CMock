@@ -259,6 +259,17 @@ class CMockHeaderParser
     source.gsub!(/(\W)(?:static)(\W)/, '\1\2') unless cpp
 
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_.]+\s*/, '') # remove default value statements from argument lists
+
+    # strip macro decorator patterns that cannot be C function prototypes.
+    # must run after default-value removal so "= \"str\"" doesn't trigger string detection.
+    # neutralize string literals (never valid in C prototype args), eliminating any parentheses
+    # inside string content (e.g. "msg()") that would fool subsequent brace-matching.
+    source.gsub!(/"[^"]*"/, '""')
+    # strip WORD("") -- any call with a string literal arg cannot be a C function prototype
+    source.gsub!(/\b\w+\s*\([^)]*""[^)]*\)/, '')
+    # strip WORD(N...) -- any call whose first arg starts with a digit cannot be a C prototype
+    source.gsub!(/\b\w+\s*\(\s*\d[^)]*\)/, '')
+
     source.gsub!(/^(?:[\w\s]*\W)?typedef\W[^;]*/m, '')                                     # remove typedef statements
     source.gsub!(/\)(\w)/, ') \1')                                                         # add space between parenthese and alphanumeric
     source.gsub!(/(^|\W+)(?:#{@c_strippables.join('|')})(?=$|\W+)/, '\1') unless @c_strippables.empty? # remove known attributes slated to be stripped
@@ -636,6 +647,7 @@ class CMockHeaderParser
 
     rettype = parsed[:type]
     rettype = 'void' if @local_as_void.include?(rettype.strip)
+    rettype = 'void' if rettype.empty? && !(@standards + @local_as_void).include?(parsed[:name]) # all return-type tokens were stripped (e.g. bare decorator macros)
     retstr = parsed[:const_ptr?] ? "#{rettype} const" : rettype
     decl[:return] = { :type       => rettype,
                       :name       => 'cmock_to_return',

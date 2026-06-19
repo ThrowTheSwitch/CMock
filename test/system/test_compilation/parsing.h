@@ -116,3 +116,14 @@ inline int stuff(int num)
 #define FOO_TYPE(a) foo_##a
 struct FOO_TYPE(bar) { int baz; };
 char b(void);
+
+/* Here are more macros that sorta look like functions. Only sample_func is real */
+#define SAMPLE_EXTERN
+#define SAMPLE_MODE
+#define SAMPLE_DEPRECATED(a,b)
+struct struct_a;
+struct struct_b;
+SAMPLE_EXTERN SAMPLE_MODE SAMPLE_DEPRECATED(1.1.2, "It was bad. real bad()")
+void sample_func(struct struct_a **a,
+            struct struct_b **b,
+            ...);

@@ -15,3 +15,6 @@
   :treat_as_void:
   - OSEK_TASK
   - VOID_TYPE_CRAZINESS
+  :strippables:
+  - SAMPLE_EXTERN
+  - SAMPLE_MODE
