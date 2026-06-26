@@ -223,6 +223,26 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module W
     assert_equal(expected, returned)
   end
 
+  it "preserve const on non-pointer custom type in mock function declaration but drop it from struct field" do
+    function = {
+      :name        => "myFunc",
+      :args        => [{ :name => "t_MyType", :type => "MyType_t", :ptr? => false, :const? => true, :const_ptr? => false }],
+      :args_string => "const MyType_t t_MyType",
+      :args_call   => "t_MyType",
+      :return      => test_return[:int]
+    }
+    # struct field uses arg[:type] directly — no const, so the field stays writable
+    expected_typedef = "  int ReturnVal;\n" \
+                       "  MyType_t Expected_t_MyType;\n"
+    assert_equal(expected_typedef, @cmock_generator_plugin_expect.instance_typedefs(function))
+
+    # function declaration uses args_string — const MyType_t must appear in the C signature
+    expected_decl = "#define myFunc_Expect(t_MyType) TEST_FAIL_MESSAGE(\"myFunc requires _ExpectAndReturn\");\n" \
+                    "#define myFunc_ExpectAndReturn(t_MyType, cmock_retval) myFunc_CMockExpectAndReturn(__LINE__, t_MyType, cmock_retval)\n" \
+                    "void myFunc_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, const MyType_t t_MyType, int cmock_to_return);\n"
+    assert_equal(expected_decl, @cmock_generator_plugin_expect.mock_function_declarations(function))
+  end
+
   it "store const-pointer return value without trailing const in typedef struct field (for writability)" do
     int_ptr_const_return = { :type => "int*", :name => "cmock_to_return", :ptr? => true,
                              :const? => false, :const_ptr? => true, :void? => false,

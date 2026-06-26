@@ -1,0 +1,68 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+  :plugins:
+  - # none
+
+:systest:
+  :types: |
+    typedef enum {
+        MyTypeA,
+        MyTypeB,
+        MyTypeC,
+    } MyType_t;
+
+  :mockable: |
+    int myFunc(const MyType_t t_MyType);
+
+  :source:
+    :header: |
+      int exercise(const MyType_t t_MyType);
+
+    :code: |
+      int exercise(const MyType_t t_MyType)
+      {
+        return myFunc(t_MyType);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: 'compile and pass when the correct enum value is passed and return value matches'
+      :code: |
+        test()
+        {
+          myFunc_ExpectAndReturn(MyTypeB, 42);
+          TEST_ASSERT_EQUAL(42, exercise(MyTypeB));
+        }
+
+    - :pass: FALSE
+      :should: 'fail when the wrong enum value is passed'
+      :code: |
+        test()
+        {
+          myFunc_ExpectAndReturn(MyTypeB, 42);
+          exercise(MyTypeC);
+        }
+
+    - :pass: TRUE
+      :should: 'pass when called with a const MyType_t variable'
+      :code: |
+        test()
+        {
+          const MyType_t val = MyTypeA;
+          myFunc_ExpectAndReturn(MyTypeA, 0);
+          TEST_ASSERT_EQUAL(0, exercise(val));
+        }
+
+...

@@ -3139,4 +3139,33 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "preserve const on non-pointer custom type arguments (e.g. const MyType_t)" do
+    source = "int myFunc(const MyType_t t_MyType);\n"
+
+    expected = [{ :var_arg => nil,
+                  :name    => "myFunc",
+                  :unscoped_name => "myFunc",
+                  :namespace => [],
+                  :class => nil,
+                  :return  => { :type       => "int",
+                                :name       => 'cmock_to_return',
+                                :ptr?       => false,
+                                :const?     => false,
+                                :const_ptr? => false,
+                                :str        => "int cmock_to_return",
+                                :void?      => false
+                              },
+                  :modifier      => "",
+                  :contains_ptr? => false,
+                  :args => [
+                    { :type => "MyType_t", :name => "t_MyType", :ptr? => false, :string? => false,
+                      :const? => true, :const_ptr? => false }
+                  ],
+                  :args_string => "const MyType_t t_MyType",
+                  :args_call   => "t_MyType"
+                }]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
 end
