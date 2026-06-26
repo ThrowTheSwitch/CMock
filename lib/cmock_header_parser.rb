@@ -251,6 +251,8 @@ class CMockHeaderParser
     source.gsub!(/^\s*#.*/, '')
 
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
+    # pre-collapse nested brace pairs so that structs containing nested structs/unions are removed as a unit below
+    source = remove_nested_pairs_of_braces(source) unless cpp
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
     source.gsub!(/^[\w\s]*struct[^;{}()]+;/m, '') # remove forward declared structs
     source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s()]*\{[^}]+\}[\w\s*,]*;/m, '') # remove struct, union, and enum definitions and typedefs with braces
