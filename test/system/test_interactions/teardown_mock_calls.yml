@@ -1,0 +1,57 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+# Test for issue #67: mock segfault on incorrect expectations in tearDown.
+# Verifies that calling a mock function in tearDown without a matching
+# expectation produces a clean failure message rather than a crash.
+
+---
+:cmock:
+  :plugins:
+  - # none
+
+:systest:
+  :types: |
+
+  :mockable: |
+    void init(void);
+    void deinit(void);
+
+  :source:
+    :header: |
+      /* no source functions needed for this test */
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void)
+      {
+        /* Simulate issue #67: accidentally call a mock with no expectation.
+           This should produce "Called more times than expected", not a crash. */
+        deinit();
+      }
+
+    :units:
+    - :pass: FALSE
+      :should: 'fail gracefully (not segfault) when a mock is called in tearDown without any expectation'
+      :code: |
+        test()
+        {
+          /* Empty test body; tearDown calls deinit() with no expectation */
+        }
+
+    - :pass: FALSE
+      :should: 'fail gracefully when mock is called in tearDown even when test body passed'
+      :code: |
+        test()
+        {
+          /* Test body passes fine; the tearDown call is what causes failure */
+          init_Expect();
+          init();
+        }
+
+...

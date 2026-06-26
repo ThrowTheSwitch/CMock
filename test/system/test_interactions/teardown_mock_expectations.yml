@@ -1,0 +1,59 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+# Test for issue #67: mock segfault on incorrect expectations in tearDown.
+# Verifies that setting mock expectations in tearDown for functions that are
+# never called produces a clean failure message rather than a crash.
+
+---
+:cmock:
+  :plugins:
+  - # none
+
+:systest:
+  :types: |
+
+  :mockable: |
+    void init(void);
+    void deinit(void);
+
+  :source:
+    :header: |
+      /* no source functions needed for this test */
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void)
+      {
+        /* Simulate issue #67: user meant to call deinit_Expect() but accidentally
+           called init_Expect() instead. The init function is never actually called,
+           so CMock should report "Called too few times", not segfault. */
+        init_Expect();
+      }
+
+    :units:
+    - :pass: FALSE
+      :should: 'fail gracefully (not segfault) when wrong expectations are set in tearDown'
+      :code: |
+        test()
+        {
+          /* Empty test body. tearDown sets up init_Expect() but init is never
+             called, so CMock_Verify should report an unmet expectation. */
+        }
+
+    - :pass: FALSE
+      :should: 'fail gracefully when wrong expectations are set in tearDown even if test body passed'
+      :code: |
+        test()
+        {
+          /* Test body is correct; tearDown's wrong expectation causes the failure */
+          deinit_Expect();
+          deinit();
+        }
+
+...
