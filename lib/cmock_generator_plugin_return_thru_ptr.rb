@@ -13,6 +13,8 @@ class CMockGeneratorPluginReturnThruPtr
     @utils        = utils
     @priority     = 9
     @config       = config
+    plugins       = @config.plugins
+    @ignore_used  = plugins.include?(:ignore) || plugins.include?(:ignore_stateless)
   end
 
   def ptr_to_const(arg_type)
@@ -69,6 +71,25 @@ class CMockGeneratorPluginReturnThruPtr
     lines
   end
 
+  def mock_precheck_return_thru_ptr(function)
+    return '' unless @ignore_used
+
+    lines = []
+    function[:args].each do |arg|
+      arg_name = arg[:name]
+      next unless @utils.ptr_or_str?(arg[:type]) && !(arg[:const?])
+
+      lines << "  if (Mock.#{function[:name]}_IgnoreBool && cmock_call_instance != NULL &&\n"
+      lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Used)\n"
+      lines << "  {\n"
+      lines << "    UNITY_TEST_ASSERT_NOT_NULL(#{arg_name}, cmock_line, CMockStringPtrIsNULL);\n"
+      lines << "    memcpy((void*)#{arg_name}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
+      lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Size);\n"
+      lines << "  }\n"
+    end
+    lines
+  end
+
   def mock_interfaces(function)
     lines = []
     func_name = function[:name]
@@ -80,6 +101,23 @@ class CMockGeneratorPluginReturnThruPtr
       lines << "{\n"
       lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " \
                "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
+      if @ignore_used
+        lines << "  if (Mock.#{func_name}_IgnoreBool &&\n"
+        lines << "      (cmock_call_instance == NULL || cmock_call_instance->ReturnThruPtr_#{arg_name}_Used))\n"
+        lines << "  {\n"
+        lines << "    CMOCK_MEM_INDEX_TYPE cmock_guts_index = CMock_Guts_MemNew(sizeof(CMOCK_#{func_name}_CALL_INSTANCE));\n"
+        lines << "    CMOCK_#{func_name}_CALL_INSTANCE* new_instance = (CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(cmock_guts_index);\n"
+        lines << "    UNITY_TEST_ASSERT_NOT_NULL(new_instance, cmock_line, CMockStringOutOfMemory);\n"
+        lines << "    memset(new_instance, 0, sizeof(*new_instance));\n"
+        lines << "    new_instance->LineNumber = cmock_line;\n"
+        unless function[:return][:void?]
+          lines << "    if (cmock_call_instance != NULL)\n"
+          lines << "      new_instance->ReturnVal = cmock_call_instance->ReturnVal;\n"
+        end
+        lines << "    Mock.#{func_name}_CallInstance = CMock_Guts_MemChain(Mock.#{func_name}_CallInstance, cmock_guts_index);\n"
+        lines << "    cmock_call_instance = new_instance;\n"
+        lines << "  }\n"
+      end
       lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringPtrPreExp);\n"
       lines << "  cmock_call_instance->ReturnThruPtr_#{arg_name}_Used = 1;\n"
       lines << "  cmock_call_instance->ReturnThruPtr_#{arg_name}_Val = #{arg_name};\n"

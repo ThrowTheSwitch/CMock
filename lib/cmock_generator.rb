@@ -346,6 +346,7 @@ class CMockGenerator
     file << "  UNITY_SET_DETAIL(CMockString_#{function[:name]});\n"
     file << "  cmock_call_instance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:name]}_CallInstance);\n"
     file << "  Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
+    file << @plugins.run(:mock_precheck_return_thru_ptr, function)
     file << @plugins.run(:mock_implementation_precheck, function)
     file << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringCalledMore);\n"
     file << "  cmock_line = cmock_call_instance->LineNumber;\n"

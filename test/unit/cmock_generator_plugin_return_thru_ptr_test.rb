@@ -57,6 +57,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
                       :contains_ptr? => true }
 
     #no strict ordering
+    @config.expect :plugins, []
     @cmock_generator_plugin_return_thru_ptr = CMockGeneratorPluginReturnThruPtr.new(@config, @utils)
   end
 

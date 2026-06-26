@@ -1,0 +1,142 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+    :mock_path: test/mocks
+    :mock_prefix: mock_
+    :when_ptr: :smart
+    :plugins:
+        - :ignore
+        - :return_thru_ptr
+
+:systest:
+  :types: ""
+  :mockable: |
+      void ptr_ret_int(int *r);
+      int ptr_ret_int_rtn(int *r);
+
+  :source:
+    :header: |
+      #include <string.h>
+      #define lengthof(x) (sizeof(x)/sizeof((x)[0]))
+
+    :code: |
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: "handle a single int* argument"
+      :code: |
+        test()
+        {
+          int r = 1;
+          int res = 4;
+
+          ptr_ret_int_Expect(&r);
+          ptr_ret_int_ReturnThruPtr_r(&res);
+
+          ptr_ret_int(&r);
+          TEST_ASSERT_EQUAL(4, r);
+        }
+
+    - :pass: TRUE
+      :should: "ignore a call but still return arguments"
+      :code: |
+        test()
+        {
+          int r = 1;
+          int res = 4;
+
+          ptr_ret_int_Ignore();
+          ptr_ret_int_ReturnThruPtr_r(&res);
+
+          ptr_ret_int(&r);
+          TEST_ASSERT_EQUAL(4, r);
+        }
+
+    - :pass: TRUE
+      :should: "queue multiple return values in ignored calls"
+      :code: |
+        test()
+        {
+          int r = 1;
+          int res1 = 4;
+          int res2 = 8;
+          int res3 = 16;
+
+          ptr_ret_int_Ignore();
+          ptr_ret_int_ReturnThruPtr_r(&res1);
+          ptr_ret_int_ReturnThruPtr_r(&res2);
+          ptr_ret_int_ReturnThruPtr_r(&res3);
+
+          ptr_ret_int(&r);
+          TEST_ASSERT_EQUAL(4, r);
+          ptr_ret_int(&r);
+          TEST_ASSERT_EQUAL(8, r);
+          ptr_ret_int(&r);
+          TEST_ASSERT_EQUAL(16, r);
+
+        }
+
+    - :pass: TRUE
+      :should: "return func and handle a single int* argument"
+      :code: |
+        test()
+        {
+          int r = 1;
+          int res = 4;
+
+          ptr_ret_int_rtn_ExpectAndReturn(&r,1);
+          ptr_ret_int_rtn_ReturnThruPtr_r(&res);
+
+          TEST_ASSERT_EQUAL_INT(1,ptr_ret_int_rtn(&r));
+          TEST_ASSERT_EQUAL(4, r);
+        }
+
+    - :pass: TRUE
+      :should: "ignore and return a call but still return arguments"
+      :code: |
+        test()
+        {
+          int r = 1;
+          int res = 4;
+
+          ptr_ret_int_rtn_IgnoreAndReturn(1);
+          ptr_ret_int_rtn_ReturnThruPtr_r(&res);
+
+          TEST_ASSERT_EQUAL_INT(1,ptr_ret_int_rtn(&r));
+          TEST_ASSERT_EQUAL(4, r);
+        }
+
+    - :pass: TRUE
+      :should: "queue multiple return values in ignore and return calls"
+      :code: |
+        test()
+        {
+          int r = 1;
+          int res1 = 4;
+          int res2 = 8;
+          int res3 = 16;
+
+          ptr_ret_int_rtn_IgnoreAndReturn(1);
+          ptr_ret_int_rtn_ReturnThruPtr_r(&res1);
+          ptr_ret_int_rtn_ReturnThruPtr_r(&res2);
+          ptr_ret_int_rtn_ReturnThruPtr_r(&res3);
+
+          TEST_ASSERT_EQUAL_INT(1,ptr_ret_int_rtn(&r));
+          TEST_ASSERT_EQUAL(4, r);
+          TEST_ASSERT_EQUAL_INT(1,ptr_ret_int_rtn(&r));
+          TEST_ASSERT_EQUAL(8, r);
+          TEST_ASSERT_EQUAL_INT(1,ptr_ret_int_rtn(&r));
+          TEST_ASSERT_EQUAL(16, r);
+
+        }
