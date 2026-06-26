@@ -45,6 +45,19 @@
     };
 
     int32_t saladBowlInit(SaladBowl *bowl, uint16_t sizeInBytes, uint16_t headerSizeInBytes);
+    void saladBowlBase(void);
+    void saladBowlTop(void);
+
+    /* inlines containing function calls look like function prototypes too */
+    inline void inlineSaladKit(void)
+    {
+      {
+        saladBowlBase();
+      }
+      {
+        saladBowlTop();
+      }
+    }
 
   :source:
     :header: |
