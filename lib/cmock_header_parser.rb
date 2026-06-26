@@ -565,6 +565,10 @@ class CMockHeaderParser
       # pull asterisks away from arg to place asterisks with type (where they belong)
       arg_list.gsub!(/\*(\w)/, '* \1')
 
+      # normalize parenthesized pointer arguments like int (* numb) -> int * numb
+      # negative lookahead prevents matching function pointers (*name)(args) and pointer-to-arrays (*name)[dims]
+      arg_list.gsub!(/\(\s*\*\s*((?:const\s+)?\w+)\s*\)(?!\s*[(\[])/, '* \1')
+
       # scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s*]+)\(+([\w\s]*)\*[*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s*]*,?)*)\s*\)*/) do |_m|
         functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"

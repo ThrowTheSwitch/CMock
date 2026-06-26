@@ -1845,6 +1845,59 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(typedefs, result[:typedefs])
   end
 
+  it "extract functions containing a parenthesized pointer argument" do
+    source = "void func(char *str, int (* numb))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
+                            :ptr?   => false,
+                            :const? => false,
+                            :const_ptr? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"func",
+                 :unscoped_name=>"func",
+                 :namespace=>[],
+                 :class=>nil,
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"char*", :name=>"str", :ptr? => false, :string? => true, :const? => false, :const_ptr? => false},
+                          {:type=>"int*",  :name=>"numb", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false}
+                        ],
+                 :args_string=>"char* str, int* numb",
+                 :args_call=>"str, numb" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal([], result[:typedefs])
+  end
+
+  it "extract functions containing a parenthesized const pointer argument" do
+    source = "void func(int (* const numb))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
+                            :ptr?   => false,
+                            :const? => false,
+                            :const_ptr? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"func",
+                 :unscoped_name=>"func",
+                 :namespace=>[],
+                 :class=>nil,
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"int*", :name=>"numb", :ptr? => true, :string? => false, :const? => false, :const_ptr? => true}
+                        ],
+                 :args_string=>"int* const numb",
+                 :args_call=>"numb" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal([], result[:typedefs])
+  end
+
   it "extract functions with varargs" do
     source = "int XFiles(int Scully, int Mulder, ...);\n"
     expected = [{ :var_arg=>"...",
