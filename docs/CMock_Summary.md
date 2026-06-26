@@ -881,6 +881,29 @@ based on other settings, particularly Unity's settings.
   This needs to be something big enough to point anywhere in Cmock's
   memory space... usually it's a size_t.
 
+* `CMOCK_MEMCPY`
+  The memory-copy function used by CMock's internals and the generated mocks. 
+  It defaults to `memcpy` from `<string.h>`. Override alongside `CMOCK_MEMSET` 
+  to supply a custom implementation on targets where the standard library is 
+  unavailable or undesirable:
+
+  ```c
+  #define CMOCK_MEMCPY(dst, src, size) my_memcpy(dst, src, size)
+  ```
+
+* `CMOCK_MEMSET`
+  The memory-set function used by CMock's internals to zero-initialize
+  allocated blocks. It defaults to `memset` from `<string.h>`. Override
+  alongside `CMOCK_MEMCPY` to keep CMock fully independent of the standard
+  library:
+
+  ```c
+  #define CMOCK_MEMSET(dst, val, size) my_memset(dst, val, size)
+  ```
+
+  If both `CMOCK_MEMCPY` and `CMOCK_MEMSET` are defined before including
+  `cmock.h`, CMock will not pull in `<string.h>` at all.
+
 Other Tips
 ==========
 

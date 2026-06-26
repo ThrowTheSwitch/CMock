@@ -193,13 +193,13 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "  if (cmock_call_instance->ReturnThruPtr_tofu_Used)\n" +
       "  {\n" +
       "    UNITY_TEST_ASSERT_NOT_NULL(tofu, cmock_line, CMockStringPtrIsNULL);\n" +
-      "    memcpy((void*)tofu, (const void*)cmock_call_instance->ReturnThruPtr_tofu_Val,\n" +
+      "    CMOCK_MEMCPY((void*)tofu, (const void*)cmock_call_instance->ReturnThruPtr_tofu_Val,\n" +
       "      cmock_call_instance->ReturnThruPtr_tofu_Size);\n" +
       "  }\n" +
       "  if (cmock_call_instance->ReturnThruPtr_bean_buffer_Used)\n" +
       "  {\n" +
       "    UNITY_TEST_ASSERT_NOT_NULL(bean_buffer, cmock_line, CMockStringPtrIsNULL);\n" +
-      "    memcpy((void*)bean_buffer, (const void*)cmock_call_instance->ReturnThruPtr_bean_buffer_Val,\n" +
+      "    CMOCK_MEMCPY((void*)bean_buffer, (const void*)cmock_call_instance->ReturnThruPtr_bean_buffer_Val,\n" +
       "      cmock_call_instance->ReturnThruPtr_bean_buffer_Size);\n" +
       "  }\n"
 

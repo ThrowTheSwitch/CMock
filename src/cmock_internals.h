@@ -83,6 +83,18 @@ extern const char* CMockStringMismatch;
     #define CMOCK_MEM_SIZE (32768)
 #endif
 
+/* memory copy/set functions used by CMock internals and generated mocks.
+ * Override to use custom implementations on targets without standard libc. */
+#if !defined(CMOCK_MEMCPY) || !defined(CMOCK_MEMSET)
+    #include <string.h>
+    #ifndef CMOCK_MEMCPY
+        #define CMOCK_MEMCPY(a, b, c) memcpy(a, b, c)
+    #endif
+    #ifndef CMOCK_MEMSET
+        #define CMOCK_MEMSET(a, b, c) memset(a, b, c)
+    #endif
+#endif
+
 /* automatically calculated defs for easier reading */
 #define CMOCK_MEM_ALIGN_SIZE  (CMOCK_MEM_INDEX_TYPE)(1u << CMOCK_MEM_ALIGN)
 #define CMOCK_MEM_ALIGN_MASK  (CMOCK_MEM_INDEX_TYPE)(CMOCK_MEM_ALIGN_SIZE - 1)
