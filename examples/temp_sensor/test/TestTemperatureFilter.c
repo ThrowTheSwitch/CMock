@@ -19,7 +19,7 @@ void tearDown(void)
 {
 }
 
-void testShouldInitializeTemeratureToInvalidValue(void)
+void testShouldInitializeTemperatureToInvalidValue(void)
 {
   TemperatureFilter_Init();
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, -INFINITY, TemperatureFilter_GetTemperatureInCelcius());
