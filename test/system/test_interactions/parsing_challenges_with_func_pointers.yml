@@ -1,0 +1,88 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+#The purpose of this test is to verify that structs containing function pointer
+#members are not mistakenly mocked by CMock. Only actual function prototypes
+#at file scope should be mocked. This is especially tricky when the struct
+#contains nested anonymous structs or unions, because the struct removal regex
+#can be confused by the inner closing brace and leave function pointer members
+#in the source for the parser to encounter.
+:cmock:
+  :plugins:
+  - # none
+  :includes:
+    - "<stdint.h>"
+
+:systest:
+  :types: |
+    #include <stdint.h>
+
+    /* Forward-declare the type so the source header can use SaladBowl* before
+       the full definition (which lives in the mockable header) is visible. */
+    typedef struct SaladBowlStruct SaladBowl;
+
+  :mockable: |
+    #include <stdint.h>
+
+    /* Full struct definition with a nested anonymous struct and function pointer
+       members. CMock must ignore all of these and only mock saladBowlInit. */
+    struct SaladBowlStruct {
+        struct {
+            uint16_t remainingCapacity;
+            uint16_t ingredientCount;
+        } stats;
+
+        void* (*toss)(struct SaladBowlStruct *self, uint16_t itemSize);
+        int32_t (*empty)(struct SaladBowlStruct *self);
+        void* (*grab)(struct SaladBowlStruct *self, uint16_t itemIndex);
+        void* (*add)(struct SaladBowlStruct *self, uint16_t itemIndex, uint16_t itemSize);
+        int32_t (*pluck)(struct SaladBowlStruct *self, uint16_t itemIndex);
+    };
+
+    int32_t saladBowlInit(SaladBowl *bowl, uint16_t sizeInBytes, uint16_t headerSizeInBytes);
+    void saladBowlBase(void);
+    void saladBowlTop(void);
+
+    /* inlines containing function calls look like function prototypes too */
+    inline void inlineSaladKit(void)
+    {
+      {
+        saladBowlBase();
+      }
+      {
+        saladBowlTop();
+      }
+    }
+
+  :source:
+    :header: |
+      #include <stdint.h>
+      void exercise_salad_bowl(SaladBowl *bowl);
+
+    :code: |
+      void exercise_salad_bowl(SaladBowl *bowl)
+      {
+        saladBowlInit(bowl, 256, 16);
+      }
+
+  :tests:
+    :common: |
+      SaladBowl g_bowl;
+      void setUp(void) {}
+      void tearDown(void) {}
+    :units:
+    - :pass: TRUE
+      :should: 'mock only saladBowlInit and ignore function pointer members of the struct'
+      :code: |
+        test()
+        {
+          saladBowlInit_ExpectAndReturn(&g_bowl, 256, 16, 0);
+          exercise_salad_bowl(&g_bowl);
+        }
+
+...

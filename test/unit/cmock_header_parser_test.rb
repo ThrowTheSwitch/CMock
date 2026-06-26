@@ -1515,6 +1515,33 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(typedefs, result[:typedefs])
   end
 
+  it "extract functions using a function pointer with shorthand notation and a calling convention" do
+    source = "void FunkyTurkey(void __stdcall * func_ptr(int arg0))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
+                            :ptr?   => false,
+                            :const? => false,
+                            :const_ptr? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"FunkyTurkey",
+                 :unscoped_name=>"FunkyTurkey",
+                 :namespace=>[],
+                 :class=>nil,
+                 :modifier=>"",
+                 :contains_ptr? => false,
+                 :args=>[ {:type=>"cmock_module_func_ptr1", :name=>"func_ptr", :ptr? => false, :string? => false, :const? => false, :const_ptr? => false}
+                        ],
+                 :args_string=>"cmock_module_func_ptr1 func_ptr",
+                 :args_call=>"func_ptr" }]
+    typedefs = ["typedef void *(__stdcall *cmock_module_func_ptr1)(int arg0);"]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal(typedefs, result[:typedefs])
+  end
+
   it "extract functions containing a function pointer with a void" do
     source = "void FunkyTurkey(void (*func_ptr)(void))"
     expected = [{ :var_arg=>nil,
@@ -1843,6 +1870,59 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     result = @parser.parse("module", source)
     assert_equal(expected, result[:functions])
     assert_equal(typedefs, result[:typedefs])
+  end
+
+  it "extract functions containing a parenthesized pointer argument" do
+    source = "void func(char *str, int (* numb))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
+                            :ptr?   => false,
+                            :const? => false,
+                            :const_ptr? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"func",
+                 :unscoped_name=>"func",
+                 :namespace=>[],
+                 :class=>nil,
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"char*", :name=>"str", :ptr? => false, :string? => true, :const? => false, :const_ptr? => false},
+                          {:type=>"int*",  :name=>"numb", :ptr? => true, :string? => false, :const? => false, :const_ptr? => false}
+                        ],
+                 :args_string=>"char* str, int* numb",
+                 :args_call=>"str, numb" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal([], result[:typedefs])
+  end
+
+  it "extract functions containing a parenthesized const pointer argument" do
+    source = "void func(int (* const numb))"
+    expected = [{ :var_arg=>nil,
+                 :return=>{ :type   => "void",
+                            :name   => 'cmock_to_return',
+                            :ptr?   => false,
+                            :const? => false,
+                            :const_ptr? => false,
+                            :str    => "void cmock_to_return",
+                            :void?  => true
+                          },
+                 :name=>"func",
+                 :unscoped_name=>"func",
+                 :namespace=>[],
+                 :class=>nil,
+                 :modifier=>"",
+                 :contains_ptr? => true,
+                 :args=>[ {:type=>"int*", :name=>"numb", :ptr? => true, :string? => false, :const? => false, :const_ptr? => true}
+                        ],
+                 :args_string=>"int* const numb",
+                 :args_call=>"numb" }]
+    result = @parser.parse("module", source)
+    assert_equal(expected, result[:functions])
+    assert_equal([], result[:typedefs])
   end
 
   it "extract functions with varargs" do
@@ -3001,6 +3081,171 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(true, dst_len_arg[:array_size?],     "dst_len should be marked as array_size?")
     assert_equal(:after, src_arg[:array_size_order],  "src should be paired with size (after)")
     assert_equal(true, src_len_arg[:array_size?],     "src_len should be marked as array_size?")
+  end
+
+  it "correctly parse const int* const return type (both const qualifiers)" do
+    sources = [
+      "const int* const DoubleConst(void);\n",
+      "const int *const DoubleConst(void);\n",
+    ]
+
+    # The trailing 'const' (const_ptr?) also lands in :modifier, matching the existing
+    # behavior seen for 'int* const' return types (see the test above for PorkRoast).
+    # The generated mock correctly uses return[:str] and function_return_type() which
+    # reconstruct the full "const int* const" from :type + const_ptr? without needing :modifier.
+    expected = [{ :var_arg => nil,
+                  :name    => "DoubleConst",
+                  :unscoped_name => "DoubleConst",
+                  :namespace => [],
+                  :class => nil,
+                  :return  => { :type       => "const int*",
+                                :name       => 'cmock_to_return',
+                                :ptr?       => true,
+                                :const?     => true,
+                                :const_ptr? => true,
+                                :str        => "const int* const cmock_to_return",
+                                :void?      => false
+                              },
+                  :modifier      => "const",
+                  :contains_ptr? => false,
+                  :args          => [],
+                  :args_string   => "void",
+                  :args_call     => ""
+                }]
+
+    sources.each do |source|
+      assert_equal(expected, @parser.parse("module", source)[:functions])
+    end
+  end
+
+  it "correctly parse int const* const return type (trailing-const form, both qualifiers)" do
+    sources = [
+      "int const* const DoubleConst(void);\n",
+      "int const *const DoubleConst(void);\n",
+    ]
+
+    expected = [{ :var_arg => nil,
+                  :name    => "DoubleConst",
+                  :unscoped_name => "DoubleConst",
+                  :namespace => [],
+                  :class => nil,
+                  :return  => { :type       => "int const*",
+                                :name       => 'cmock_to_return',
+                                :ptr?       => true,
+                                :const?     => true,
+                                :const_ptr? => true,
+                                :str        => "int const* const cmock_to_return",
+                                :void?      => false
+                              },
+                  :modifier      => "const",
+                  :contains_ptr? => false,
+                  :args          => [],
+                  :args_string   => "void",
+                  :args_call     => ""
+                }]
+
+    sources.each do |source|
+      assert_equal(expected, @parser.parse("module", source)[:functions])
+    end
+  end
+
+  it "correctly parse double-pointer argument types preserving const and pointer ordering" do
+    # Tests the full parse pipeline for double-pointer args (not just divine_ptr_and_const).
+    # const int** p  → const? false (const is not before the final *), type preserves "const int**"
+    # int** const q  → const_ptr? true, type is "int**"
+    # int* const* p  → const? true (const* before the last *), type is "int* const*"
+    source = "void TriplePlay(const int** a, int** const b, int* const* c);\n"
+
+    expected = [{ :var_arg => nil,
+                  :name    => "TriplePlay",
+                  :unscoped_name => "TriplePlay",
+                  :namespace => [],
+                  :class => nil,
+                  :return  => { :type       => "void",
+                                :name       => 'cmock_to_return',
+                                :ptr?       => false,
+                                :const?     => false,
+                                :const_ptr? => false,
+                                :str        => "void cmock_to_return",
+                                :void?      => true
+                              },
+                  :modifier      => "",
+                  :contains_ptr? => true,
+                  :args => [
+                    { :type => "const int**", :name => "a", :ptr? => true, :string? => false,
+                      :const? => false, :const_ptr? => false },
+                    { :type => "int**",       :name => "b", :ptr? => true, :string? => false,
+                      :const? => false, :const_ptr? => true  },
+                    { :type => "int* const*", :name => "c", :ptr? => true, :string? => false,
+                      :const? => true,  :const_ptr? => false },
+                  ],
+                  :args_string => "const int** a, int** const b, int* const* c",
+                  :args_call   => "a, b, c"
+                }]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "correctly parse double-pointer argument types with all consts" do
+    # const int** const p  → both const forms: type "const int**", const?=false, const_ptr?=true
+    # int* const* const q  → both const forms: type "int* const*", const?=true, const_ptr?=true
+    source = "void AllConst(const int** const a, int* const* const b);\n"
+
+    expected = [{ :var_arg => nil,
+                  :name    => "AllConst",
+                  :unscoped_name => "AllConst",
+                  :namespace => [],
+                  :class => nil,
+                  :return  => { :type       => "void",
+                                :name       => 'cmock_to_return',
+                                :ptr?       => false,
+                                :const?     => false,
+                                :const_ptr? => false,
+                                :str        => "void cmock_to_return",
+                                :void?      => true
+                              },
+                  :modifier      => "",
+                  :contains_ptr? => true,
+                  :args => [
+                    { :type => "const int**", :name => "a", :ptr? => true, :string? => false,
+                      :const? => false, :const_ptr? => true  },
+                    { :type => "int* const*", :name => "b", :ptr? => true, :string? => false,
+                      :const? => true,  :const_ptr? => true  },
+                  ],
+                  :args_string => "const int** const a, int* const* const b",
+                  :args_call   => "a, b"
+                }]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "preserve const on non-pointer custom type arguments (e.g. const MyType_t)" do
+    source = "int myFunc(const MyType_t t_MyType);\n"
+
+    expected = [{ :var_arg => nil,
+                  :name    => "myFunc",
+                  :unscoped_name => "myFunc",
+                  :namespace => [],
+                  :class => nil,
+                  :return  => { :type       => "int",
+                                :name       => 'cmock_to_return',
+                                :ptr?       => false,
+                                :const?     => false,
+                                :const_ptr? => false,
+                                :str        => "int cmock_to_return",
+                                :void?      => false
+                              },
+                  :modifier      => "",
+                  :contains_ptr? => false,
+                  :args => [
+                    { :type => "MyType_t", :name => "t_MyType", :ptr? => false, :string? => false,
+                      :const? => true, :const_ptr? => false }
+                  ],
+                  :args_string => "const MyType_t t_MyType",
+                  :args_call   => "t_MyType"
+                }]
+
+    assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
 end

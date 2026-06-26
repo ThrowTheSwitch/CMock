@@ -1,0 +1,80 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+  :plugins:
+  - # none
+
+:systest:
+  :types: |
+
+  :mockable: |
+    int *const foo(float const *const self);
+
+  :source:
+    :header: |
+      int *const exercise(float const *const self);
+
+    :code: |
+      int *const exercise(float const *const self)
+      {
+        return foo(self);
+      }
+
+  :tests:
+    :common: |
+      static float f1 = 1.0f;
+      static float f2 = 2.0f;
+      static int i1 = 10;
+      static int i2 = 20;
+      static float const *const self_a = &f1;
+      static float const *const self_b = &f2;
+      static int *const ret_a = &i1;
+      static int *const ret_b = &i2;
+
+      void setUp(void) {}
+      void tearDown(void) {}
+
+    :units:
+    - :pass: TRUE
+      :should: 'compile and pass when the correct argument is passed and return value matches'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn(self_a, ret_a);
+          TEST_ASSERT_EQUAL_PTR(ret_a, exercise(self_a));
+        }
+
+    - :pass: FALSE
+      :should: 'fail when the wrong argument pointer is passed'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn(self_a, ret_a);
+          exercise(self_b);
+        }
+
+    - :pass: TRUE
+      :should: 'return the exact pointer provided to ExpectAndReturn'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn(self_a, ret_b);
+          TEST_ASSERT_EQUAL_PTR(ret_b, exercise(self_a));
+        }
+
+    - :pass: FALSE
+      :should: 'fail when the returned pointer does not match what the test expects'
+      :code: |
+        test()
+        {
+          foo_ExpectAndReturn(self_a, ret_b);
+          TEST_ASSERT_EQUAL_PTR(ret_a, exercise(self_a));
+        }
+
+...

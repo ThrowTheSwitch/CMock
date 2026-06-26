@@ -187,4 +187,118 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module W
     returned = @cmock_generator_plugin_expect.mock_verify(function)
     assert_equal(expected, returned)
   end
+
+  it "preserve const-pointer ordering in typedef struct fields for arguments" do
+    function = {
+      :name => "Willow",
+      :args => [
+        { :name => "ptr_to_const", :type => "const int*", :ptr? => true, :const? => true,  :const_ptr? => false },
+        { :name => "const_ptr",    :type => "int*",        :ptr? => true, :const? => false, :const_ptr? => true  },
+        { :name => "both_const",   :type => "const int*",  :ptr? => true, :const? => true,  :const_ptr? => true  },
+        { :name => "plain_ptr",    :type => "int*",        :ptr? => true, :const? => false, :const_ptr? => false },
+      ],
+      :return => test_return[:void]
+    }
+    # Struct fields use arg[:type] directly (no reconstruction via arg_type_with_const):
+    # - "const int*" preserved as "const int*" (pointer to const data)
+    # - "int*" (from int* const) stored as "int*" — the const_ptr? is intentionally omitted
+    #   because a const struct field can never be written to, making the mock unworkable
+    # - "const int*" (from const int* const) similarly stored without the trailing const
+    expected = "  const int* Expected_ptr_to_const;\n" +
+               "  int* Expected_const_ptr;\n" +
+               "  const int* Expected_both_const;\n" +
+               "  int* Expected_plain_ptr;\n"
+    returned = @cmock_generator_plugin_expect.instance_typedefs(function)
+    assert_equal(expected, returned)
+  end
+
+  it "preserve const-before-pointer in return typedef struct field" do
+    const_int_ptr_return = { :type => "const int*", :name => "cmock_to_return", :ptr? => true,
+                             :const? => true, :const_ptr? => false, :void? => false,
+                             :str => "const int* cmock_to_return" }
+    function = { :name => "Elm", :args => [], :return => const_int_ptr_return }
+    # ReturnVal uses return[:type] = "const int*"
+    expected = "  const int* ReturnVal;\n"
+    returned = @cmock_generator_plugin_expect.instance_typedefs(function)
+    assert_equal(expected, returned)
+  end
+
+  it "preserve const on non-pointer custom type in mock function declaration but drop it from struct field" do
+    function = {
+      :name        => "myFunc",
+      :args        => [{ :name => "t_MyType", :type => "MyType_t", :ptr? => false, :const? => true, :const_ptr? => false }],
+      :args_string => "const MyType_t t_MyType",
+      :args_call   => "t_MyType",
+      :return      => test_return[:int]
+    }
+    # struct field uses arg[:type] directly — no const, so the field stays writable
+    expected_typedef = "  int ReturnVal;\n" \
+                       "  MyType_t Expected_t_MyType;\n"
+    assert_equal(expected_typedef, @cmock_generator_plugin_expect.instance_typedefs(function))
+
+    # function declaration uses args_string — const MyType_t must appear in the C signature
+    expected_decl = "#define myFunc_Expect(t_MyType) TEST_FAIL_MESSAGE(\"myFunc requires _ExpectAndReturn\");\n" \
+                    "#define myFunc_ExpectAndReturn(t_MyType, cmock_retval) myFunc_CMockExpectAndReturn(__LINE__, t_MyType, cmock_retval)\n" \
+                    "void myFunc_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, const MyType_t t_MyType, int cmock_to_return);\n"
+    assert_equal(expected_decl, @cmock_generator_plugin_expect.mock_function_declarations(function))
+  end
+
+  it "store const-pointer return value without trailing const in typedef struct field (for writability)" do
+    int_ptr_const_return = { :type => "int*", :name => "cmock_to_return", :ptr? => true,
+                             :const? => false, :const_ptr? => true, :void? => false,
+                             :str => "int* const cmock_to_return" }
+    function = { :name => "Elm", :args => [], :return => int_ptr_const_return }
+    # ReturnVal uses return[:type] = "int*"; the trailing const is intentionally dropped
+    # so that the struct field remains assignable
+    expected = "  int* ReturnVal;\n"
+    returned = @cmock_generator_plugin_expect.instance_typedefs(function)
+    assert_equal(expected, returned)
+  end
+
+  it "preserve const and pointer order in mock function declaration" do
+    int_ptr_const_return = { :type => "int*", :name => "cmock_to_return", :ptr? => true,
+                             :const? => false, :const_ptr? => true, :void? => false,
+                             :str => "int* const cmock_to_return" }
+    function = {
+      :name        => "Cedar",
+      :args        => [
+        { :name => "p", :type => "const int*", :ptr? => true, :const? => true,  :const_ptr? => false },
+        { :name => "q", :type => "int*",        :ptr? => true, :const? => false, :const_ptr? => true  }
+      ],
+      :args_string => "const int* p, int* const q",
+      :args_call   => "p, q",
+      :return      => int_ptr_const_return
+    }
+    expected = "#define Cedar_Expect(p, q) TEST_FAIL_MESSAGE(\"Cedar requires _ExpectAndReturn\");\n" +
+               "#define Cedar_ExpectAndReturn(p, q, cmock_retval) Cedar_CMockExpectAndReturn(__LINE__, p, q, cmock_retval)\n" +
+               "void Cedar_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, const int* p, int* const q, int* const cmock_to_return);\n"
+    returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+
+  it "preserve const-before-pointer return type in mock function declaration for void-arg functions" do
+    const_int_ptr_return = { :type => "const int*", :name => "cmock_to_return", :ptr? => true,
+                             :const? => true, :const_ptr? => false, :void? => false,
+                             :str => "const int* cmock_to_return" }
+    function = { :name => "Oak", :args => [], :args_string => "void", :args_call => "",
+                 :return => const_int_ptr_return }
+    expected = "#define Oak_Expect() TEST_FAIL_MESSAGE(\"Oak requires _ExpectAndReturn\");\n" +
+               "#define Oak_ExpectAndReturn(cmock_retval) Oak_CMockExpectAndReturn(__LINE__, cmock_retval)\n" +
+               "void Oak_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, const int* cmock_to_return);\n"
+    returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
+
+  it "preserve const-after-pointer return type in mock function declaration for void-arg functions" do
+    int_ptr_const_return = { :type => "int*", :name => "cmock_to_return", :ptr? => true,
+                             :const? => false, :const_ptr? => true, :void? => false,
+                             :str => "int* const cmock_to_return" }
+    function = { :name => "Oak", :args => [], :args_string => "void", :args_call => "",
+                 :return => int_ptr_const_return }
+    expected = "#define Oak_Expect() TEST_FAIL_MESSAGE(\"Oak requires _ExpectAndReturn\");\n" +
+               "#define Oak_ExpectAndReturn(cmock_retval) Oak_CMockExpectAndReturn(__LINE__, cmock_retval)\n" +
+               "void Oak_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, int* const cmock_to_return);\n"
+    returned = @cmock_generator_plugin_expect.mock_function_declarations(function)
+    assert_equal(expected, returned)
+  end
 end

@@ -251,6 +251,8 @@ class CMockHeaderParser
     source.gsub!(/^\s*#.*/, '')
 
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them
+    # pre-collapse nested brace pairs so that structs containing nested structs/unions are removed as a unit below
+    source = remove_nested_pairs_of_braces(source) unless cpp
     # forward declared structs are removed before struct definitions so they don't mess up real thing later. we leave structs keywords in function prototypes
     source.gsub!(/^[\w\s]*struct[^;{}()]+;/m, '') # remove forward declared structs
     source.gsub!(/^[\w\s]*(enum|union|struct|typedef)[\w\s()]*\{[^}]+\}[\w\s*,]*;/m, '') # remove struct, union, and enum definitions and typedefs with braces
@@ -565,6 +567,10 @@ class CMockHeaderParser
       # pull asterisks away from arg to place asterisks with type (where they belong)
       arg_list.gsub!(/\*(\w)/, '* \1')
 
+      # normalize parenthesized pointer arguments like int (* numb) -> int * numb
+      # negative lookahead prevents matching function pointers (*name)(args) and pointer-to-arrays (*name)[dims]
+      arg_list.gsub!(/\(\s*\*\s*((?:const\s+)?\w+)\s*\)(?!\s*[(\[])/, '* \1')
+
       # scan argument list for function pointers and replace them with custom types
       arg_list.gsub!(/([\w\s*]+)\(+([\w\s]*)\*[*\s]*([\w\s]*)\s*\)+\s*\(((?:[\w\s*]*,?)*)\s*\)*/) do |_m|
         functype = "cmock_#{parse_project[:module_name]}_func_ptr#{parse_project[:typedefs].size + 1}"
@@ -592,11 +598,24 @@ class CMockHeaderParser
         funcname = Regexp.last_match(2).strip
         funcargs = Regexp.last_match(3).strip
         funconst = ''
+        funcdecl = ''
         if funcname.include? 'const'
           funcname.gsub!('const', '').strip!
           funconst = 'const '
         end
-        parse_project[:typedefs] << "typedef #{funcret}(*#{functype})(#{funcargs});"
+        # Extract any calling convention from the return type (it belongs in the function pointer declaration)
+        @c_calling_conventions.each do |cc|
+          next unless funcret.include?(cc)
+
+          funcret = funcret.gsub(cc, '').strip
+          funcdecl = cc
+          break
+        end
+        parse_project[:typedefs] << if funcdecl.empty?
+                                      "typedef #{funcret}(*#{functype})(#{funcargs});"
+                                    else
+                                      "typedef #{funcret}(#{funcdecl} *#{functype})(#{funcargs});"
+                                    end
         funcname = "cmock_arg#{c += 1}" if funcname.empty?
         "#{functype} #{funconst}#{funcname}"
       end
