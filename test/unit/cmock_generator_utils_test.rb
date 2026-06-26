@@ -508,4 +508,65 @@ describe CMockGeneratorUtils, "Verify CMockGeneratorUtils Module" do
                "  }\n"
     assert_equal(expected, utils.code_verify_an_arg_expectation(function, arg))
   end
+
+  it 'correctly reconstruct type strings preserving const and pointer order' do
+    # non-pointer: no const
+    assert_equal("int",       CMockGeneratorUtils.arg_type_with_const({:type => "int",   :ptr? => false, :const? => false, :const_ptr? => false}))
+    # non-pointer: const (prepended)
+    assert_equal("const int", CMockGeneratorUtils.arg_type_with_const({:type => "int",   :ptr? => false, :const? => true,  :const_ptr? => false}))
+
+    # pointer to mutable: no const
+    assert_equal("int*",      CMockGeneratorUtils.arg_type_with_const({:type => "int*",  :ptr? => true,  :const? => false, :const_ptr? => false}))
+
+    # pointer to const (const int*): const already in :type, no trailing const
+    assert_equal("const int*",      CMockGeneratorUtils.arg_type_with_const({:type => "const int*",  :ptr? => true, :const? => true, :const_ptr? => false}))
+
+    # const pointer (int* const): :type has no const, const_ptr? appends " const"
+    assert_equal("int* const",      CMockGeneratorUtils.arg_type_with_const({:type => "int*",        :ptr? => true, :const? => false, :const_ptr? => true}))
+
+    # const pointer to const (const int* const)
+    assert_equal("const int* const", CMockGeneratorUtils.arg_type_with_const({:type => "const int*", :ptr? => true, :const? => true, :const_ptr? => true}))
+
+    # trailing-const form: int const* (same semantics as const int* but different spelling)
+    assert_equal("int const*",       CMockGeneratorUtils.arg_type_with_const({:type => "int const*", :ptr? => true, :const? => true, :const_ptr? => false}))
+
+    # trailing-const pointer to const: int const* const
+    assert_equal("int const* const", CMockGeneratorUtils.arg_type_with_const({:type => "int const*", :ptr? => true, :const? => true, :const_ptr? => true}))
+
+    # custom type pointer
+    assert_equal("MY_TYPE*",      CMockGeneratorUtils.arg_type_with_const({:type => "MY_TYPE*", :ptr? => true,  :const? => false, :const_ptr? => false}))
+    assert_equal("const MY_TYPE", CMockGeneratorUtils.arg_type_with_const({:type => "MY_TYPE",  :ptr? => false, :const? => true,  :const_ptr? => false}))
+
+    # double pointer: no const_ptr, so :type used as-is
+    assert_equal("int**",        CMockGeneratorUtils.arg_type_with_const({:type => "int**",       :ptr? => true, :const? => false, :const_ptr? => false}))
+    assert_equal("const int**",  CMockGeneratorUtils.arg_type_with_const({:type => "const int**", :ptr? => true, :const? => true,  :const_ptr? => false}))
+    # double pointer with const_ptr: appends " const" after last *
+    assert_equal("int** const",  CMockGeneratorUtils.arg_type_with_const({:type => "int**",       :ptr? => true, :const? => false, :const_ptr? => true}))
+  end
+
+  it 'produce correct C declarations preserving const and pointer order' do
+    # const pointer to mutable int: int* const p
+    arg = {:type => "int*",        :name => "p", :ptr? => true, :const? => false, :const_ptr? => true}
+    assert_equal("int* const p", CMockGeneratorUtils.arg_declaration(arg))
+
+    # pointer to const int: const int* p
+    arg = {:type => "const int*",  :name => "p", :ptr? => true, :const? => true,  :const_ptr? => false}
+    assert_equal("const int* p", CMockGeneratorUtils.arg_declaration(arg))
+
+    # const pointer to const int: const int* const p
+    arg = {:type => "const int*",  :name => "p", :ptr? => true, :const? => true,  :const_ptr? => true}
+    assert_equal("const int* const p", CMockGeneratorUtils.arg_declaration(arg))
+
+    # trailing-const form: int const* const p
+    arg = {:type => "int const*",  :name => "p", :ptr? => true, :const? => true,  :const_ptr? => true}
+    assert_equal("int const* const p", CMockGeneratorUtils.arg_declaration(arg))
+
+    # plain pointer: int* p
+    arg = {:type => "int*",        :name => "p", :ptr? => true, :const? => false, :const_ptr? => false}
+    assert_equal("int* p", CMockGeneratorUtils.arg_declaration(arg))
+
+    # non-pointer const: const MY_TYPE v
+    arg = {:type => "MY_TYPE",     :name => "v", :ptr? => false, :const? => true,  :const_ptr? => false}
+    assert_equal("const MY_TYPE v", CMockGeneratorUtils.arg_declaration(arg))
+  end
 end

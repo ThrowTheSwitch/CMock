@@ -207,4 +207,74 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     assert_equal(expected, returned)
   end
 
+  it "converts single pointer type to pointer-to-const via ptr_to_const" do
+    plugin = @cmock_generator_plugin_return_thru_ptr
+    assert_equal("int const*",     plugin.ptr_to_const("int*"))
+    assert_equal("char const*",    plugin.ptr_to_const("char*"))
+    assert_equal("uint8_t const*", plugin.ptr_to_const("uint8_t*"))
+    assert_equal("void const*",    plugin.ptr_to_const("void*"))
+    assert_equal("MY_TYPE const*", plugin.ptr_to_const("MY_TYPE*"))
+  end
+
+  it "converts double pointer type by making inner pointer const via ptr_to_const" do
+    plugin = @cmock_generator_plugin_return_thru_ptr
+    assert_equal("char* const*",   plugin.ptr_to_const("char**"))
+    assert_equal("int* const*",    plugin.ptr_to_const("int**"))
+  end
+
+  it "includes int* const args (const pointer, mutable data) in typedef but excludes const int* args" do
+    # int* const: const_ptr?=true, const?=false → data is mutable, pointer is const
+    # The condition `!(arg[:const?])` checks whether the POINTED-TO data is const.
+    # const? is about the data, not the pointer itself, so int* const IS included.
+    const_ptr_func = {
+      :name => "Birch",
+      :args => [
+        { :type => "int*",       :name => "mutable_ptr",  :ptr? => true, :const? => false, :const_ptr? => false },
+        { :type => "int*",       :name => "const_ptr",    :ptr? => true, :const? => false, :const_ptr? => true  },
+        { :type => "const int*", :name => "ptr_to_const", :ptr? => true, :const? => true,  :const_ptr? => false },
+      ],
+      :return => test_return[:void]
+    }
+
+    @utils.expect :ptr_or_str?, true, ["int*"]
+    @utils.expect :ptr_or_str?, true, ["int*"]
+    @utils.expect :ptr_or_str?, true, ["const int*"]
+
+    # mutable_ptr and const_ptr are included; ptr_to_const is excluded (const?=true)
+    expected = "  char ReturnThruPtr_mutable_ptr_Used;\n" +
+               "  int const* ReturnThruPtr_mutable_ptr_Val;\n" +
+               "  size_t ReturnThruPtr_mutable_ptr_Size;\n" +
+               "  char ReturnThruPtr_const_ptr_Used;\n" +
+               "  int const* ReturnThruPtr_const_ptr_Val;\n" +
+               "  size_t ReturnThruPtr_const_ptr_Size;\n"
+
+    returned = @cmock_generator_plugin_return_thru_ptr.instance_typedefs(const_ptr_func)
+    assert_equal(expected, returned)
+  end
+
+  it "generates correct function signature for int* const args in mock interface" do
+    const_ptr_func = {
+      :name => "Birch",
+      :args => [
+        { :type => "int*", :name => "const_ptr", :ptr? => true, :const? => false, :const_ptr? => true },
+      ],
+      :return => test_return[:void]
+    }
+
+    @utils.expect :ptr_or_str?, true, ["int*"]
+
+    # ptr_to_const("int*") = "int const*", so the helper function takes int const* const_ptr
+    expected =
+      "#define Birch_ReturnThruPtr_const_ptr(const_ptr)" +
+      " Birch_CMockReturnMemThruPtr_const_ptr(__LINE__, const_ptr, sizeof(int))\n" +
+      "#define Birch_ReturnArrayThruPtr_const_ptr(const_ptr, cmock_len)" +
+      " Birch_CMockReturnMemThruPtr_const_ptr(__LINE__, const_ptr, (cmock_len * sizeof(*const_ptr)))\n" +
+      "#define Birch_ReturnMemThruPtr_const_ptr(const_ptr, cmock_size)" +
+      " Birch_CMockReturnMemThruPtr_const_ptr(__LINE__, const_ptr, (cmock_size))\n" +
+      "void Birch_CMockReturnMemThruPtr_const_ptr(UNITY_LINE_TYPE cmock_line, int const* const_ptr, size_t cmock_size);\n"
+
+    returned = @cmock_generator_plugin_return_thru_ptr.mock_function_declarations(const_ptr_func)
+    assert_equal(expected, returned)
+  end
+
 end
