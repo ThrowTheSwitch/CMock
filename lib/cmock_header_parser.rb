@@ -598,11 +598,24 @@ class CMockHeaderParser
         funcname = Regexp.last_match(2).strip
         funcargs = Regexp.last_match(3).strip
         funconst = ''
+        funcdecl = ''
         if funcname.include? 'const'
           funcname.gsub!('const', '').strip!
           funconst = 'const '
         end
-        parse_project[:typedefs] << "typedef #{funcret}(*#{functype})(#{funcargs});"
+        # Extract any calling convention from the return type (it belongs in the function pointer declaration)
+        @c_calling_conventions.each do |cc|
+          next unless funcret.include?(cc)
+
+          funcret = funcret.gsub(cc, '').strip
+          funcdecl = cc
+          break
+        end
+        parse_project[:typedefs] << if funcdecl.empty?
+                                      "typedef #{funcret}(*#{functype})(#{funcargs});"
+                                    else
+                                      "typedef #{funcret}(#{funcdecl} *#{functype})(#{funcargs});"
+                                    end
         funcname = "cmock_arg#{c += 1}" if funcname.empty?
         "#{functype} #{funconst}#{funcname}"
       end
