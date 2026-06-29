@@ -252,14 +252,14 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     assert_equal(expected, returned)
   end
 
-  it "uses (void*)(uintptr_t) cast in mock_implementation for volatile pointer arg" do
+  it "uses (void*)(CMOCK_MEM_PTR_AS_INT) cast in mock_implementation for volatile pointer arg" do
     volatile_ptr_func_expect()
 
     expected =
       "  if (cmock_call_instance->ReturnThruPtr_foo_handle_Used)\n" +
       "  {\n" +
       "    UNITY_TEST_ASSERT_NOT_NULL(foo_handle, cmock_line, CMockStringPtrIsNULL);\n" +
-      "    CMOCK_MEMCPY((void*)(uintptr_t)foo_handle, (const void*)cmock_call_instance->ReturnThruPtr_foo_handle_Val,\n" +
+      "    CMOCK_MEMCPY((void*)(CMOCK_MEM_PTR_AS_INT)foo_handle, (const void*)cmock_call_instance->ReturnThruPtr_foo_handle_Val,\n" +
       "      cmock_call_instance->ReturnThruPtr_foo_handle_Size);\n" +
       "  }\n"
 
