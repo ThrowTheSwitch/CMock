@@ -1,15 +1,31 @@
 CMock: Argument Validation
 ==========================
 
-Much of the power of CMock comes from its ability to automatically 
-validate that the arguments passed to mocked functions are the 
+Much of the power of CMock comes from its ability to automatically
+validate that the arguments passed to mocked functions are the
 values that were expected to be passed. CMock puts a lot of effort
-into guessing how the user would most like to see those values 
+into guessing how the user would most like to see those values
 compared, and then represented when failures are encountered.
 
 Like Unity, CMock follows a philosophy of making its best guesses,
-and then allowing the user to explicity specify any features that 
+and then allowing the user to explicitly specify any features that
 they would like to change or customize.
+
+Quick Reference: Which Option Should I Use?
+-------------------------------------------
+
+| Situation | Recommended Option |
+|-----------|-------------------|
+| Built-in C types (`int`, `uint8_t`, `float`, …) | Nothing — Option 1 handles these automatically |
+| Simple typedef or `#define` alias of a known type | Option 2: add a `:treat_as` entry |
+| Small `enum` type | Option 2: map to `INT8`, `INT16`, or `INT` |
+| Opaque handle / function pointer where only identity matters | Option 2: map to `PTR` |
+| `typedef`'d fixed-size array | Option 2: `:treat_as_array` |
+| Legacy `typedef void MY_VOID` | Option 2: `:treat_as_void` |
+| `struct` or `union` needing field-level comparison | Option 3: custom assertion + `:unity_helper_path` |
+| Pointer to a `struct` with a custom assertion | Option 2 + 3: custom assertion, then `:treat_as` the pointer |
+| Type that changes meaning per test, or one-off complex logic | Option 4: Callback |
+| Last resort — type is unknown and rough equality is enough | Option 1b: memcmp fallback (automatic) |
 
 Option 1: Common Types
 ----------------------
@@ -72,21 +88,128 @@ a custom type?
 Option 2: Treat-As
 ------------------
 
-CMock maintains a list of non-standard types which are basically 
-aliases of standard types. For example, a common shorthand for 
-a single-byte unsigned integer might be `u8` or `U8` or `UNIT8`.
-Any of these can simply be mapped to the standard 
+CMock maintains a list of non-standard types which are basically
+aliases of standard types. For example, a common shorthand for
+a single-byte unsigned integer might be `u8` or `U8` or `UINT8`.
+Any of these can simply be mapped to the standard
 `TEST_ASSERT_EQUAL_HEX8`.
 
-While CMock has its own list of `:treat_as` mappings, you can 
+### Default Handlers
+
+CMock ships with a built-in `:treat_as` list that already covers the
+most common type aliases found in embedded C codebases. You get all
+of these for free without any configuration:
+
+| C Type              | Unity Assertion Used      |
+|---------------------|---------------------------|
+| `int`               | `INT`                     |
+| `char`              | `INT8`                    |
+| `short`             | `INT16`                   |
+| `long`              | `INT`                     |
+| `unsigned int`      | `HEX32`                   |
+| `unsigned long`     | `HEX32`                   |
+| `unsigned short`    | `HEX16`                   |
+| `unsigned char`     | `HEX8`                    |
+| `int8_t` / `INT8_T` / `int8` | `INT8`         |
+| `int16_t` / `INT16_T` / `int16` | `INT16`     |
+| `int32_t` / `INT32_T` / `int32` | `INT`       |
+| `uint8_t` / `UINT8_T` / `uint8` / `UINT8` | `HEX8` |
+| `uint16_t` / `UINT16_T` / `uint16` / `UINT16` | `HEX16` |
+| `uint32_t` / `UINT32_T` / `uint32` / `UINT32` | `HEX32` |
+| `bool` / `bool_t` / `BOOL` / `BOOL_T` | `INT`  |
+| `char*`             | `STRING`                  |
+| `pCHAR` / `cstring` / `CSTRING` | `STRING`   |
+| `void*`             | `HEX8_ARRAY`              |
+| `float` / `double`  | `FLOAT`                   |
+
+The right-hand side of each mapping is the suffix of the Unity assertion
+that will be used. `HEX8` means CMock will call `TEST_ASSERT_EQUAL_HEX8`,
+for instance. Pointer variants (ending in `*`) map to the corresponding
+array assertion (e.g. `HEX8*` → `TEST_ASSERT_EQUAL_HEX8_ARRAY`).
+
+### Adding Your Own Mappings
+
+While CMock has its own list of `:treat_as` mappings, you can
 add your own pairings to this list. This works especially well for
 the following types:
 
   - aliases of standard types using `#define` or `typedef`
   - `enum` types (works well as `INT8` or whatever size your enums are)
   - function pointers often work well as `PTR` comparisons
-  - `union` types sometimes make sense to treat as the largest type... 
+  - `union` types sometimes make sense to treat as the largest type...
     but this is a judgement call
+
+Your entries **merge** with the defaults — you are only adding or
+overriding specific types, not replacing the entire list. To remove
+a default mapping, set its value to `nil`.
+
+Here is a YAML configuration example:
+
+```yaml
+:cmock:
+  :treat_as:
+    MY_BOOL:    INT           # typedef bool MY_BOOL → compare as int
+    MY_U8:      HEX8          # typedef uint8_t MY_U8 → compare as hex byte
+    MY_U16:     HEX16
+    MY_U32:     HEX32
+    STATUS_T:   INT8          # small enum → compare as signed byte
+    HANDLE_T:   PTR           # opaque pointer → compare pointer addresses
+    float:      nil           # remove the default float mapping (unusual)
+```
+
+Or from Ruby:
+
+```ruby
+CMock.new(
+  treat_as: {
+    'MY_BOOL'  => 'INT',
+    'STATUS_T' => 'INT8',
+    'HANDLE_T' => 'PTR',
+  }
+).setup_mocks('my_module.h')
+```
+
+### Pointer Types in :treat_as
+
+You can map pointer-to-custom-type the same way. Use a `*` suffix on
+the right-hand side to indicate the comparison should use the array
+variant of the assertion:
+
+```yaml
+:treat_as:
+  MY_DATA_PTR: HEX8*    # compares the bytes pointed to, not the address
+```
+
+### Related Options: :treat_as_array and :treat_as_void
+
+Two narrower variants of `:treat_as` handle specific edge cases:
+
+**`:treat_as_array`** — for types that are themselves `typedef`'d arrays,
+such as `typedef int TenIntegers[10];`. This is a hash of typedef name
+to element type:
+
+```yaml
+:cmock:
+  :treat_as_array:
+    TenIntegers: int
+    MyBuffer:    uint8_t
+```
+
+This lets CMock treat parameters of these types the same way it would
+treat a pointer-plus-count, enabling features like `ExpectWithArray`
+and `ReturnArrayThruPtr`.
+
+**`:treat_as_void`** — for legacy codebases that typedef `void` to a
+custom name (e.g. `typedef void MY_VOID;`). Add such names here so
+CMock knows functions returning or accepting that type are effectively
+`void`:
+
+```yaml
+:cmock:
+  :treat_as_void:
+    - MY_VOID
+    - NORETURN_T
+```
 
 Option 3: Custom Assertions for Custom Types
 --------------------------------------------
@@ -206,31 +329,63 @@ void AssertEqualMyType(const MyType expected, const MyType actual, UNITY_LINE_TY
 
 ### Wrapping our Assertion in Macros
 
-Once you have a function which does the main work, we *need* to create
-one macro, and there are a number of other macros which are useful to
-create, in order to treat our assertion just like any other Unity 
-assertion.
+Once you have a function which does the main work, we need to create
+macros around it so that the assertion can be used conveniently both
+by CMock and directly in test code.
 
-`#define UNITY_TEST_ASSERT_EQUAL_MyType(e,a,l,m) AssertEqualMyType(e,a,l,m)`
+The macro that CMock **requires** is the `UNITY_TEST_ASSERT_EQUAL_` form.
+It starts with exactly that prefix, followed by the type name exactly as
+declared, and takes four arguments:
 
-The macro above is the one that CMock is looking for. Notice that it 
-starts with `UNITY_TEST_ASSERT_EQUAL_` followed by the name of our type, 
-*exactly* the way our type is named. The arguments are, in order:
+```c
+#define UNITY_TEST_ASSERT_EQUAL_MyType(e,a,l,m)  AssertEqualMyType(e,a,l,m)
+```
 
   - `e` - expected value
   - `a` - actual value
-  - `l` - line number to report
+  - `l` - line number to report (filled in automatically by CMock)
   - `m` - message to append at the end
 
-If CMock finds a macro that matches this argument list and naming convention,
-then it can automatically use this assertion where needed... all we need to
-do now is tell CMock where to find our custom assertion.
+CMock scans the helper header for macros matching this pattern and
+automatically uses them when it encounters the corresponding type.
+
+It is also useful (though optional) to add the simpler `TEST_ASSERT_EQUAL_`
+form so the assertion is easy to call directly inside your own test
+functions:
+
+```c
+#define TEST_ASSERT_EQUAL_MyType(e,a) \
+    UNITY_TEST_ASSERT_EQUAL_MyType(e,a,__LINE__,NULL)
+
+#define TEST_ASSERT_EQUAL_MyType_MESSAGE(e,a,m) \
+    UNITY_TEST_ASSERT_EQUAL_MyType(e,a,__LINE__,m)
+```
+
+With these in place, you can write `TEST_ASSERT_EQUAL_MyType(expected, actual)`
+in your tests just like any built-in Unity assertion.
 
 ### Informing CMock about our Assertion
 
-In the CMock configuration file, in the `:cmock` or `:unity` sections, 
-there can be an option for `unity_helper_path`. Add the location of your
-new Unity helper file (file with this assertion) to this list.
+CMock needs to know which header file(s) contain your custom assertions.
+Set the `:unity_helper_path` option in your CMock configuration to point
+at the helper header:
+
+```yaml
+:cmock:
+  :unity_helper_path:
+    - test/support/my_types_helper.h
+```
+
+Or from Ruby:
+
+```ruby
+CMock.new(unity_helper_path: ['test/support/my_types_helper.h'])
+      .setup_mocks('my_module.h')
+```
+
+CMock parses each listed file, finds every `UNITY_TEST_ASSERT_EQUAL_*`
+macro definition, and uses those macros automatically when it generates
+mocks for parameters or return values of the matching types.
 
 Done!
 
