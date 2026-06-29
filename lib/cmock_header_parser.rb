@@ -64,6 +64,48 @@ class CMockHeaderParser
 
   private if $ThisIsOnlyATest.nil? ################
 
+  # Remove code disabled by basic preprocesser tags like #if 0, #if 1, etc.
+  def remove_disabled_code_from_source(source)
+    result = []
+    emit = true
+    # Stack entries: [restore_emit, else_emit, seen_else]
+    #   restore_emit: value to restore `emit` to after matching #endif
+    #   else_emit:    value to set `emit` to after #else
+    #   seen_else:    whether #else at this level has already been seen
+    stack = []
+
+    source.each_line do |line|
+      stripped = line.strip
+      if stripped =~ /^#\s*if\s+0\s*$/
+        stack.push([emit, emit, false])
+        emit = false
+      elsif stripped =~ /^#\s*if\s+1\s*$/
+        stack.push([emit, false, false])
+        # emit unchanged: keep the if-branch
+      elsif stripped =~ /^#\s*if/
+        stack.push([emit, emit, false])
+        # emit unchanged: unknown condition, keep both branches
+      elsif stripped =~ /^#\s*else\b/
+        unless stack.empty?
+          entry = stack.last
+          unless entry[2]
+            stack[-1] = [entry[0], entry[1], true]
+            emit = entry[1]
+          end
+        end
+      elsif stripped =~ /^#\s*endif\b/
+        unless stack.empty?
+          entry = stack.pop
+          emit = entry[0]
+        end
+      elsif emit
+        result << line
+      end
+    end
+
+    result.join
+  end
+
   # Remove C/C++ comments from a string
   # +source+:: String which will have the comments removed
   def remove_comments_from_source(source)
@@ -248,6 +290,10 @@ class CMockHeaderParser
 
     # remove preprocessor statements and extern "C"
     source.gsub!(/extern\s+"C"\s*\{/, '')
+
+    # handle basic literal preprocessor conditionals before stripping all directives
+    source = remove_disabled_code_from_source(source)
+
     source.gsub!(/^\s*#.*/, '')
 
     # enums, unions, structs, and typedefs can all contain things (e.g. function pointers) that parse like function prototypes, so yank them

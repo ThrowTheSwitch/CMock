@@ -146,6 +146,118 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.import_source(source, @test_project))
   end
 
+  it "remove code inside #if 0 blocks" do
+    source =
+      "void before(void);\n" +
+      "#if 0\n" +
+      "void hidden(void);\n" +
+      "#endif\n" +
+      "void after(void);\n"
+
+    expected = ["void before(void)", "void after(void)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
+  end
+
+  it "keep code inside #if 1 blocks" do
+    source =
+      "void before(void);\n" +
+      "#if 1\n" +
+      "void visible(void);\n" +
+      "#endif\n" +
+      "void after(void);\n"
+
+    expected = ["void before(void)", "void visible(void)", "void after(void)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
+  end
+
+  it "keep else branch of #if 0 blocks" do
+    source =
+      "void before(void);\n" +
+      "#if 0\n" +
+      "void hidden(void);\n" +
+      "#else\n" +
+      "void visible(void);\n" +
+      "#endif\n" +
+      "void after(void);\n"
+
+    expected = ["void before(void)", "void visible(void)", "void after(void)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
+  end
+
+  it "remove else branch of #if 1 blocks" do
+    source =
+      "void before(void);\n" +
+      "#if 1\n" +
+      "void visible(void);\n" +
+      "#else\n" +
+      "void hidden(void);\n" +
+      "#endif\n" +
+      "void after(void);\n"
+
+    expected = ["void before(void)", "void visible(void)", "void after(void)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
+  end
+
+  it "handle nested #if 1 blocks inside #if 0" do
+    source =
+      "void before(void);\n" +
+      "#if 0\n" +
+      "void hidden1(void);\n" +
+      "#if 1\n" +
+      "void hidden2(void);\n" +
+      "#endif\n" +
+      "void hidden3(void);\n" +
+      "#endif\n" +
+      "void after(void);\n"
+
+    expected = ["void before(void)", "void after(void)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
+  end
+
+  it "handle nested #if 0 blocks inside #if 1" do
+    source =
+      "void before(void);\n" +
+      "#if 1\n" +
+      "void visible1(void);\n" +
+      "#if 0\n" +
+      "void hidden1(void);\n" +
+      "#endif\n" +
+      "void visible2(void);\n" +
+      "#endif\n" +
+      "void after(void);\n"
+
+    expected = ["void before(void)", "void visible1(void)", "void visible2(void)", "void after(void)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
+  end
+
+  it "handle back to back #if 1 blocks and #if 0 blocks" do
+    source =
+      "void before(void);\n" +
+      "#if 0\n" +
+      "void hidden1(void);\n" +
+      "#endif\n" +
+      "#if 1\n" +
+      "void visible1(void);\n" +
+      "#endif\n" +
+      "#if 0\n" +
+      "void hidden2(void);\n" +
+      "#endif\n" +
+      "#if 1\n" +
+      "void visible2(void);\n" +
+      "#endif\n" +
+      "void after(void);\n"
+
+    expected = ["void before(void)", "void visible1(void)", "void visible2(void)", "void after(void)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
+  end
+
 
   it "remove assembler pragma sections" do
     source =
