@@ -30,7 +30,7 @@ class CMockGeneratorPluginExpect
     lines << "  #{function[:return][:type]} ReturnVal;\n"  unless function[:return][:void?]
     lines << "  int CallOrder;\n"                          if @ordered
     function[:args].each do |arg|
-      lines << "  #{arg[:type]} Expected_#{arg[:name]};\n"
+      lines << "  #{arg[:volatile?] ? "volatile #{arg[:type]}" : arg[:type]} Expected_#{arg[:name]};\n"
     end
     lines
   end

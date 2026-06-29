@@ -1119,6 +1119,98 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     assert_equal(expected, @parser.parse("module", source)[:functions])
   end
 
+  it "properly parses volatile pointer argument types" do
+
+    source = "int16_t foo(volatile struct foo_obj *foo_handle, int plain, volatile int not_a_ptr);\n"
+
+    expected = [{ :name => "foo",
+                  :unscoped_name => "foo",
+                  :namespace=>[],
+                  :class=>nil,
+                  :modifier => "",
+                  :return => { :type       => "int16_t",
+                               :name       => "cmock_to_return",
+                               :str        => "int16_t cmock_to_return",
+                               :void?      => false,
+                               :ptr?       => false,
+                               :const?     => false,
+                               :const_ptr? => false
+                             },
+                  :var_arg => nil,
+                  :args_string => "volatile struct foo_obj* foo_handle, int plain, volatile int not_a_ptr",
+                  :args => [{ :type => "struct foo_obj*", :name => "foo_handle",
+                              :ptr? => true, :string? => false, :const? => false, :const_ptr? => false, :volatile? => true },
+                            { :type => "int",  :name => "plain",
+                              :ptr? => false, :string? => false, :const? => false, :const_ptr? => false },
+                            { :type => "volatile int", :name => "not_a_ptr",
+                              :ptr? => false, :string? => false, :const? => false, :const_ptr? => false }],
+                  :args_call => "foo_handle, plain, not_a_ptr",
+                  :contains_ptr? => true
+                }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "properly parses T volatile* style volatile pointer argument types" do
+    # volatile can appear before OR after the base type; both mean "pointer to volatile T"
+    # e.g. "int volatile*" is identical to "volatile int*" in C
+
+    source = "void bar(int volatile* a, struct foo_obj volatile* b);\n"
+
+    expected = [{ :name => "bar",
+                  :unscoped_name => "bar",
+                  :namespace=>[],
+                  :class=>nil,
+                  :modifier => "",
+                  :return => { :type       => "void",
+                               :name       => "cmock_to_return",
+                               :str        => "void cmock_to_return",
+                               :void?      => true,
+                               :ptr?       => false,
+                               :const?     => false,
+                               :const_ptr? => false
+                             },
+                  :var_arg => nil,
+                  :args_string => "int volatile* a, struct foo_obj volatile* b",
+                  :args => [{ :type => "int*", :name => "a",
+                              :ptr? => true, :string? => false, :const? => false, :const_ptr? => false, :volatile? => true },
+                            { :type => "struct foo_obj*", :name => "b",
+                              :ptr? => true, :string? => false, :const? => false, :const_ptr? => false, :volatile? => true }],
+                  :args_call => "a, b",
+                  :contains_ptr? => true
+                }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
+  it "treats int*volatile (volatile pointer to non-volatile type) as a plain pointer without volatile? flag" do
+    # "int * volatile p" = volatile pointer to int (the pointer itself is volatile, not the pointed-to value)
+    # This is distinct from "volatile int *p" (pointer to volatile int).
+    # CMock must NOT set volatile? here: the pointed-to type is not volatile, so no cast-qual issue.
+
+    source = "void baz(int * volatile p);\n"
+
+    expected = [{ :name => "baz",
+                  :unscoped_name => "baz",
+                  :namespace=>[],
+                  :class=>nil,
+                  :modifier => "",
+                  :return => { :type       => "void",
+                               :name       => "cmock_to_return",
+                               :str        => "void cmock_to_return",
+                               :void?      => true,
+                               :ptr?       => false,
+                               :const?     => false,
+                               :const_ptr? => false
+                             },
+                  :var_arg => nil,
+                  :args_string => "int* volatile p",
+                  :args => [{ :type => "int* volatile", :name => "p",
+                              :ptr? => true, :string? => false, :const? => false, :const_ptr? => false }],
+                  :args_call => "p",
+                  :contains_ptr? => true
+                }]
+    assert_equal(expected, @parser.parse("module", source)[:functions])
+  end
+
   it "converts typedef'd array arguments to pointers" do
 
     source = "Book AddToBook(Book book, const IntArray values);\n"

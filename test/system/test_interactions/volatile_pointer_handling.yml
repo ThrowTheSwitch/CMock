@@ -1,0 +1,291 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+    :mock_path: test/mocks
+    :mock_prefix: mock_
+    :plugins:
+        - :array
+        - :cexception
+        - :ignore
+        - :callback
+        - :return_thru_ptr
+        - :ignore_arg
+        - :expect_any_args
+    :callback_after_arg_check: true
+    :callback_include_count: false
+
+:systest:
+  :types: |
+    typedef struct {
+        int x;
+        int y;
+    } point_t;
+
+  :mockable: |
+      #include "CException.h"
+      void update_point(volatile point_t *p);
+      void update_points(volatile point_t *p, int n);
+      void update_int(volatile int *v);
+      int get_value(volatile point_t *p);
+      void mixed_volatile(int a, volatile int *v);
+
+  :source:
+    :header: |
+      #include "CException.h"
+
+    :code: |
+
+  :tests:
+    :common: |
+      #include "CException.h"
+      void setUp(void) {}
+      void tearDown(void) {}
+      void my_update_point_callback(volatile point_t *p) { p->x += 1; }
+      void my_update_int_callback(volatile int *v) { *v = 99; }
+      void my_update_points_callback(volatile point_t *p, int n)
+      {
+        int i;
+        for (i = 0; i < n; i++) { p[i].x = 100 + i; }
+      }
+
+    :units:
+
+    # --- expect plugin (base) ---
+
+    - :pass: TRUE
+      :should: "Expect passes when volatile struct pointer arg matches"
+      :code: |
+        test()
+        {
+          volatile point_t p = { 1, 2 };
+          update_point_Expect(&p);
+          update_point(&p);
+        }
+
+    - :pass: FALSE
+      :should: "Expect fails when volatile struct pointer arg does not match"
+      :code: |
+        test()
+        {
+          volatile point_t p     = { 1, 2 };
+          volatile point_t wrong = { 9, 9 };
+          update_point_Expect(&wrong);
+          update_point(&p);
+        }
+
+    - :pass: TRUE
+      :should: "ExpectAndReturn works with a volatile struct pointer arg"
+      :code: |
+        test()
+        {
+          volatile point_t p = { 5, 7 };
+          get_value_ExpectAndReturn(&p, 42);
+          TEST_ASSERT_EQUAL(42, get_value(&p));
+        }
+
+    # --- return_thru_ptr plugin ---
+
+    - :pass: TRUE
+      :should: "ReturnThruPtr writes through a volatile struct pointer arg"
+      :code: |
+        test()
+        {
+          volatile point_t p  = { 0, 0 };
+          point_t result      = { 10, 20 };
+          update_point_Expect(&p);
+          update_point_ReturnThruPtr_p(&result);
+          update_point(&p);
+          TEST_ASSERT_EQUAL(10, p.x);
+          TEST_ASSERT_EQUAL(20, p.y);
+        }
+
+    - :pass: TRUE
+      :should: "ReturnThruPtr writes through a volatile int pointer arg"
+      :code: |
+        test()
+        {
+          volatile int v = 0;
+          int result = 42;
+          update_int_Expect(&v);
+          update_int_ReturnThruPtr_v(&result);
+          update_int(&v);
+          TEST_ASSERT_EQUAL(42, v);
+        }
+
+    - :pass: TRUE
+      :should: "ReturnThruPtr macros are defined for volatile pointer args"
+      :code: |
+        test()
+        {
+        #if !defined(update_point_ReturnThruPtr_p)
+            TEST_FAIL_MESSAGE("ReturnThruPtr not defined for volatile struct pointer arg.");
+        #endif
+        #if !defined(update_int_ReturnThruPtr_v)
+            TEST_FAIL_MESSAGE("ReturnThruPtr not defined for volatile int pointer arg.");
+        #endif
+        }
+
+    # --- array plugin ---
+
+    - :pass: TRUE
+      :should: "ExpectWithArray passes when all elements of a volatile array match"
+      :code: |
+        test()
+        {
+          volatile point_t p[3]  = { {1,2}, {3,4}, {5,6} };
+          point_t expected[3]    = { {1,2}, {3,4}, {5,6} };
+          update_points_ExpectWithArray(expected, 3, 3);
+          update_points(p, 3);
+        }
+
+    - :pass: FALSE
+      :should: "ExpectWithArray fails when one element of a volatile array does not match"
+      :code: |
+        test()
+        {
+          volatile point_t p[3]  = { {1,2}, {3,4}, {5,6} };
+          point_t expected[3]    = { {1,2}, {3,4}, {5,9} };
+          update_points_ExpectWithArray(expected, 3, 3);
+          update_points(p, 3);
+        }
+
+    # --- ignore plugin ---
+
+    - :pass: TRUE
+      :should: "Ignore suppresses calls to a volatile-arg function"
+      :code: |
+        test()
+        {
+          volatile point_t p = { 1, 2 };
+          update_point_Ignore();
+          update_point(&p);
+          update_point(&p);
+        }
+
+    - :pass: TRUE
+      :should: "IgnoreAndReturn suppresses calls and returns value for volatile-arg function"
+      :code: |
+        test()
+        {
+          volatile point_t p = { 1, 2 };
+          get_value_IgnoreAndReturn(77);
+          TEST_ASSERT_EQUAL(77, get_value(&p));
+          TEST_ASSERT_EQUAL(77, get_value(&p));
+        }
+
+    # --- ignore_arg plugin ---
+
+    - :pass: TRUE
+      :should: "IgnoreArg allows any value for the volatile pointer arg"
+      :code: |
+        test()
+        {
+          volatile int v1 = 10;
+          volatile int v2 = 20;
+          mixed_volatile_Expect(5, &v1);
+          mixed_volatile_IgnoreArg_v();
+          mixed_volatile(5, &v2);
+        }
+
+    - :pass: FALSE
+      :should: "IgnoreArg ignores volatile arg but still checks other args"
+      :code: |
+        test()
+        {
+          volatile int v = 10;
+          mixed_volatile_Expect(5, &v);
+          mixed_volatile_IgnoreArg_v();
+          mixed_volatile(99, &v);
+        }
+
+    # --- expect_any_args plugin ---
+
+    - :pass: TRUE
+      :should: "ExpectAnyArgs accepts any volatile array regardless of contents"
+      :code: |
+        test()
+        {
+          volatile point_t p1[2] = { {1,2}, {3,4} };
+          volatile point_t p2[2] = { {9,9}, {8,8} };
+          update_points_ExpectAnyArgs();
+          update_points_ExpectAnyArgs();
+          update_points(p1, 2);
+          update_points(p2, 2);
+        }
+
+    - :pass: TRUE
+      :should: "ExpectAnyArgsAndReturn works with a volatile array arg"
+      :code: |
+        test()
+        {
+          volatile point_t p[2] = { {1,2}, {3,4} };
+          get_value_ExpectAnyArgsAndReturn(55);
+          TEST_ASSERT_EQUAL(55, get_value(p));
+        }
+
+    - :pass: TRUE
+      :should: "ExpectAnyArgs and ReturnThruPtr can be combined on a volatile pointer arg"
+      :code: |
+        test()
+        {
+          volatile point_t p      = { 0, 0 };
+          point_t          result = { 7, 8 };
+          update_point_ExpectAnyArgs();
+          update_point_ReturnThruPtr_p(&result);
+          update_point(&p);
+          TEST_ASSERT_EQUAL(7, p.x);
+          TEST_ASSERT_EQUAL(8, p.y);
+        }
+
+    # --- callback plugin ---
+
+    - :pass: TRUE
+      :should: "StubWithCallback can read and write all elements of a volatile array"
+      :code: |
+        test()
+        {
+          volatile point_t p[3]  = { {0,0}, {0,0}, {0,0} };
+          point_t expected[3]    = { {0,0}, {0,0}, {0,0} };
+          update_points_Expect(expected, 3);
+          update_points_StubWithCallback(my_update_points_callback);
+          update_points(p, 3);
+          TEST_ASSERT_EQUAL(100, p[0].x);
+          TEST_ASSERT_EQUAL(101, p[1].x);
+          TEST_ASSERT_EQUAL(102, p[2].x);
+        }
+
+    - :pass: TRUE
+      :should: "StubWithCallback receives a volatile int pointer and can modify it"
+      :code: |
+        test()
+        {
+          volatile int v = 0;
+          update_int_Expect(&v);
+          update_int_StubWithCallback(my_update_int_callback);
+          update_int(&v);
+          TEST_ASSERT_EQUAL(99, v);
+        }
+
+    # --- cexception plugin ---
+
+    - :pass: TRUE
+      :should: "ExpectAndThrow throws when a volatile-arg function is called"
+      :code: |
+        test()
+        {
+          CEXCEPTION_T e = 0;
+          volatile point_t p = { 1, 2 };
+          update_point_ExpectAndThrow(&p, 42);
+          Try {
+            update_point(&p);
+            TEST_FAIL_MESSAGE("Expected exception was not thrown.");
+          } Catch(e) {
+            TEST_ASSERT_EQUAL(42, e);
+          }
+        }

@@ -56,6 +56,17 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
                       :return => test_return[:void],
                       :contains_ptr? => true }
 
+    # void Cedar(volatile struct foo_obj *foo_handle)
+    # arg[:type] has volatile stripped at parse time; volatile? flag carries the information
+    @volatile_ptr_func = {:name => "Cedar",
+                          :args => [{ :type      => "struct foo_obj*",
+                                      :name      => "foo_handle",
+                                      :ptr?      => true,
+                                      :volatile? => true,
+                                    }],
+                          :return => test_return[:void],
+                          :contains_ptr? => true }
+
     #no strict ordering
     @config.expect :plugins, []
     @cmock_generator_plugin_return_thru_ptr = CMockGeneratorPluginReturnThruPtr.new(@config, @utils)
@@ -80,6 +91,10 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
     @utils.expect :ptr_or_str?, true, ['MY_FANCY_VOID*']
 
     @config.expect :treat_as_void, ['MY_FANCY_VOID']
+  end
+
+  def volatile_ptr_func_expect
+    @utils.expect :ptr_or_str?, true, ['struct foo_obj*']
   end
 
   it "have set up internal priority correctly on init" do
@@ -204,6 +219,51 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "  }\n"
 
     returned = @cmock_generator_plugin_return_thru_ptr.mock_implementation(@complex_func).join("")
+    assert_equal(expected, returned)
+  end
+
+  it "has no volatile in the Val typedef member for a volatile pointer arg (type is pre-stripped)" do
+    volatile_ptr_func_expect()
+
+    # arg[:type] = "struct foo_obj*" (volatile stripped at parse time)
+    # ptr_to_const("struct foo_obj*") => "struct foo_obj const*"
+    expected = "  char ReturnThruPtr_foo_handle_Used;\n" +
+               "  struct foo_obj const* ReturnThruPtr_foo_handle_Val;\n" +
+               "  size_t ReturnThruPtr_foo_handle_Size;\n"
+
+    returned = @cmock_generator_plugin_return_thru_ptr.instance_typedefs(@volatile_ptr_func)
+    assert_equal(expected, returned)
+  end
+
+  it "has no volatile in the _CMockReturnMemThruPtr_ declaration for a volatile pointer arg" do
+    volatile_ptr_func_expect()
+
+    # arg[:type] = "struct foo_obj*" (volatile stripped), so sizeof and param type are clean.
+    expected =
+      "#define Cedar_ReturnThruPtr_foo_handle(foo_handle)" +
+      " Cedar_CMockReturnMemThruPtr_foo_handle(__LINE__, foo_handle, sizeof(struct foo_obj))\n" +
+      "#define Cedar_ReturnArrayThruPtr_foo_handle(foo_handle, cmock_len)" +
+      " Cedar_CMockReturnMemThruPtr_foo_handle(__LINE__, foo_handle, (cmock_len * sizeof(*foo_handle)))\n" +
+      "#define Cedar_ReturnMemThruPtr_foo_handle(foo_handle, cmock_size)" +
+      " Cedar_CMockReturnMemThruPtr_foo_handle(__LINE__, foo_handle, (cmock_size))\n" +
+      "void Cedar_CMockReturnMemThruPtr_foo_handle(UNITY_LINE_TYPE cmock_line, struct foo_obj const* foo_handle, size_t cmock_size);\n"
+
+    returned = @cmock_generator_plugin_return_thru_ptr.mock_function_declarations(@volatile_ptr_func)
+    assert_equal(expected, returned)
+  end
+
+  it "uses (void*)(uintptr_t) cast in mock_implementation for volatile pointer arg" do
+    volatile_ptr_func_expect()
+
+    expected =
+      "  if (cmock_call_instance->ReturnThruPtr_foo_handle_Used)\n" +
+      "  {\n" +
+      "    UNITY_TEST_ASSERT_NOT_NULL(foo_handle, cmock_line, CMockStringPtrIsNULL);\n" +
+      "    CMOCK_MEMCPY((void*)(uintptr_t)foo_handle, (const void*)cmock_call_instance->ReturnThruPtr_foo_handle_Val,\n" +
+      "      cmock_call_instance->ReturnThruPtr_foo_handle_Size);\n" +
+      "  }\n"
+
+    returned = @cmock_generator_plugin_return_thru_ptr.mock_implementation(@volatile_ptr_func).join("")
     assert_equal(expected, returned)
   end
 

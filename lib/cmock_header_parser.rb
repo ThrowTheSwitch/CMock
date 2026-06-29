@@ -449,6 +449,11 @@ class CMockHeaderParser
       arg_info.delete(:modifier)             # don't care about this
       arg_info.delete(:c_calling_convention) # don't care about this
 
+      # Strip volatile from pointer-to-volatile arg types so internal storage and
+      # comparisons use the clean type; volatile? flag lets generators reconstruct
+      # it where needed (e.g. function signatures via arg_type_with_const).
+      arg_info[:type] = arg_info[:type].gsub(/\bvolatile\s*/, '').gsub(/\s+\*/, '*').strip if arg_info[:volatile?]
+
       arg_info[:array_dims] = array_dims_by_name[arg_info[:name]] if array_dims_by_name.key?(arg_info[:name])
 
       # Handle pointer-to-array args: (*name)[dims] was rewritten to * name before clean_args
@@ -542,12 +547,18 @@ class CMockHeaderParser
     end
   end
 
+  def divine_volatile(arg)
+    # only flag pointer types where volatile applies to the pointed-to type (before the last *)
+    arg.include?('*') && (/(^|\s|\*)volatile(\s(\w|\s)*)?\*(?!.*\*)/ =~ arg ? true : false)
+  end
+
   def divine_ptr_and_const(arg)
     divination = {}
 
     divination[:ptr?] = divine_ptr(arg)
     divination[:string?] = !divination[:ptr?] && (/(^|\s)(const\s+)?char(\s+const)?\s*\*(?!.*\*)/ =~ arg ? true : false)
     divination[:const?] = divine_const(arg)
+    divination[:volatile?] = true if divine_volatile(arg)
 
     # an arg containing "const" after the last * is a constant pointer
     divination[:const_ptr?] = /\*(?!.*\*)\s*const(\s|$)/ =~ arg ? true : false

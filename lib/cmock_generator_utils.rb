@@ -25,12 +25,13 @@ class CMockGeneratorUtils
   end
 
   def self.arg_type_with_const(arg)
-    # Restore any "const" that was removed in header parsing
-    if arg[:type].include?('*')
-      arg[:const_ptr?] ? "#{arg[:type]} const" : arg[:type]
-    else
-      arg[:const?] ? "const #{arg[:type]}" : arg[:type]
-    end
+    # Restore any "const" or "volatile" that was removed in header parsing
+    type = if arg[:type].include?('*')
+             arg[:const_ptr?] ? "#{arg[:type]} const" : arg[:type]
+           else
+             arg[:const?] ? "const #{arg[:type]}" : arg[:type]
+           end
+    arg[:volatile?] ? "volatile #{type}" : type
   end
 
   def arg_type_with_const(arg)
