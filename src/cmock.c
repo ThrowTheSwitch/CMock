@@ -26,7 +26,11 @@ const char* CMockStringMismatch    = "Function called with unexpected argument v
     static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_ALIGN_SIZE;
     static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
 #else
+#if !defined(UNITY_EXCLUDE_STDDEF_H) && defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+    static _Alignas(max_align_t) long long CMock_Guts_Space[(CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE + sizeof(long long) - 1) / sizeof(long long)];
+#else
     static long long              CMock_Guts_Space[(CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE + sizeof(long long) - 1) / sizeof(long long)];
+#endif
     static unsigned char*         CMock_Guts_Buffer = (unsigned char*)CMock_Guts_Space;
     static CMOCK_MEM_INDEX_TYPE   CMock_Guts_BufferSize = CMOCK_MEM_SIZE + CMOCK_MEM_ALIGN_SIZE;//sizeof(CMock_Guts_Space);
     static CMOCK_MEM_INDEX_TYPE   CMock_Guts_FreePtr = CMOCK_MEM_ALIGN_SIZE;
