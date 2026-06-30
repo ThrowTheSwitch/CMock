@@ -14,37 +14,52 @@ jobs:
   # Job: Unit test suite
   unit-tests:
     name: "Unit Tests"
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         ruby: ['3.0', '3.1', '3.2', '3.3']
+        exclude:
+          # create sparse matrix to avoid pointless duplication
+          - os: macos-latest
+            ruby: '3.1'
+          - os: macos-latest
+            ruby: '3.2'
+          - os: windows-latest
+            ruby: '3.1'
+          - os: windows-latest
+            ruby: '3.2'
     steps:
-      # Install Multilib
+      # Install Multilib (Linux only)
       - name: Install Multilib
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update -qq
           sudo apt-get install --assume-yes --quiet gcc-multilib
 
+      # Add MinGW GCC to PATH (Windows only — MSYS2 is pre-installed on the runner)
+      - name: Add GCC to PATH
+        if: matrix.os == 'windows-latest'
+        run: echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       # Checks out repository under $GITHUB_WORKSPACE
       - name: Checkout Latest Repo
-        uses: actions/checkout@v2
-        with: 
+        uses: actions/checkout@v4
+        with:
           submodules: recursive
 
-      # Setup Ruby Testing Tools to do tests on multiple ruby version
-      - name: Setup Ruby Testing Tools
+      # Setup Ruby
+      - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
 
-      # Install Ruby Testing Tools
-      - name: Setup Ruby Testing Tools
+      # Install Ruby dependencies
+      - name: Install Ruby Dependencies
         run: |
-          sudo gem install rspec
-          sudo gem install rubocop -v 1.57.2
-          sudo gem install bundler
-          bundle update
-          bundle install 
+          gem install bundler
+          bundle install
 
       # Run Tests
       - name: Run All Unit Tests
