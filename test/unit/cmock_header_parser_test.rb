@@ -27,6 +27,7 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
     @config.expect :inline_function_patterns, ['(static\s+inline|inline\s+static)\s*', '(\bstatic\b|\binline\b)\s*']
     @config.expect :array_size_type, ['int', 'size_t']
     @config.expect :array_size_name, 'size|len'
+    @config.expect :ct_assert_patterns, ['ct_assert', '_?[Ss]tatic_[Aa]ssert', '_Static_assert', 'STATIC_ASSERT', 'BUILD_ASSERT', 'CTASSERT']
 
     @parser = CMockHeaderParser.new(@config)
 
@@ -368,6 +369,21 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
       "me too!!\n"
 
     assert_equal(["I want to live!! me too!!"], @parser.import_source(source, @test_project).map!{|s|s.strip})
+  end
+
+
+  it "ignore compile-time assertions and not treat them as function prototypes" do
+    source =
+      "static_assert(BLAH_BOOLEAN_TRAIT);\n" +
+      "void real_func(int a);\n" +
+      "ct_assert(COMMIT_ID_H, ID_SIZE == (sizeof(ID)) - 1);\n" +
+      "CTASSERT(OTHER_HEADER_H, BUF_SIZE != 0);\n" +
+      "BUILD_ASSERT(MAX_LEN <= 256);\n" +
+      "STATIC_ASSERT(sizeof(MyStruct) >= 4);\n"
+
+    expected = ["void real_func(int a)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
   end
 
 

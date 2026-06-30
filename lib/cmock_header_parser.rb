@@ -26,6 +26,7 @@ class CMockHeaderParser
     @treat_externs = cfg.treat_externs
     @treat_inlines = cfg.treat_inlines
     @inline_function_patterns = cfg.inline_function_patterns
+    @ct_assert_patterns = cfg.ct_assert_patterns
     @c_strippables += ['extern'] if @treat_externs == :include # we'll need to remove the attribute if we're allowing externs
     @c_strippables += ['inline'] if @treat_inlines == :include # we'll need to remove the attribute if we're allowing inlines
   end
@@ -305,6 +306,12 @@ class CMockHeaderParser
     # remove problem keywords
     source.gsub!(/(\W)(?:register|auto|restrict)(\W)/, '\1\2')
     source.gsub!(/(\W)(?:static)(\W)/, '\1\2') unless cpp
+
+    # strip calls to known compile-time assertion macros by name -- never function prototypes regardless of argument form
+    source.gsub!(/\b(?:#{@ct_assert_patterns.join('|')})\s*\([^;]*\)/, '') unless @ct_assert_patterns.empty?
+    # strip any remaining WORD(...==...) etc. -- calls containing comparison operators cannot be C function prototypes
+    # must run before default-value removal, which would corrupt "!= 0" into "!" by removing "= 0"
+    source.gsub!(/\b\w+\s*\((?:[^()!=<>]*(?:\([^()]*\))*)*(?:==|!=|<=|>=)[^;]*\)/, '')
 
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_.]+\s*/, '') # remove default value statements from argument lists
 
