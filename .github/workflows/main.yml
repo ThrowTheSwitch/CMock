@@ -67,3 +67,51 @@ jobs:
           NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
         run: |
           cd test && rake ci
+
+  # Job: Valgrind memory-leak check (Linux/gcc_64 only, latest Ruby)
+  valgrind:
+    name: "Valgrind Memory Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --assume-yes --quiet gcc-multilib valgrind
+
+      - name: Checkout Latest Repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Install Ruby Dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      # Build and run C unit tests, then re-run the executable under valgrind.
+      # test:system clobbers the build directory, so check TestCMockC before that happens.
+      - name: Build and Run C Unit Tests
+        run: cd test && rake config[gcc_64_valgrind] test:c
+
+      - name: Valgrind Check - C Unit Tests
+        run: |
+          valgrind --leak-check=full --track-origins=yes --error-exitcode=1 \
+            test/system/build/TestCMockC.exe
+
+      # Build and run system tests, then re-run each executable under valgrind.
+      - name: Build and Run System Tests
+        run: cd test && rake config[gcc_64_valgrind] test:system
+
+      - name: Valgrind Check - System Tests
+        run: |
+          failed=0
+          for exe in test/system/build/test_*.exe; do
+            echo "Checking: $exe"
+            valgrind --leak-check=full --track-origins=yes --error-exitcode=1 "$exe" || failed=1
+          done
+          exit $failed
