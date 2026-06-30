@@ -63,5 +63,7 @@ jobs:
 
       # Run Tests
       - name: Run All Unit Tests
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
         run: |
           cd test && rake ci

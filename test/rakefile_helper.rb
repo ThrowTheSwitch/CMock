@@ -80,7 +80,7 @@ module RakefileHelpers
       raise "Cannot find Config File #{config_target}"
     end
 
-    $colour_output = $proj[:project][:colour]
+    $colour_output = $proj[:project][:colour] && !ENV['NO_COLOR']
   end
 
   def configure_clean
