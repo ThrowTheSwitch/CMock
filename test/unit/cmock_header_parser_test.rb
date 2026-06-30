@@ -387,6 +387,17 @@ describe CMockHeaderParser, "Verify CMockHeaderParser Module" do
   end
 
 
+  it "ignore function pointer variables with pointer return types and not treat them as function prototypes" do
+    source =
+      "struct_t * (*func)(some_argument);\n" +
+      "void real_func(int a);\n"
+
+    expected = ["void real_func(int a)"]
+
+    assert_equal(expected, @parser.import_source(source, @test_project).map! { |s| s.strip })
+  end
+
+
   it "remove struct statements" do
     source =
       "struct _NamedStruct1 {\n" +
