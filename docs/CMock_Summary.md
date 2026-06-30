@@ -728,6 +728,20 @@ from the defaults. We've tried to specify what the defaults are below.
   * 2 for normal (default)
   * 3 for verbose
 
+* `:debug_output`:
+  When enabled, the generated mock will emit a `TEST_MESSAGE` for each
+  mock setup call (e.g. `_Expect`, `_Ignore`, `_AddCallback`) and each
+  actual mock invocation. This can help diagnose the order in which mock
+  calls are being set up and executed during a test.
+
+  For example, with `:debug_output: true` and a mocked function `int foo(int a)`,
+  the generated mock will print messages such as:
+
+      CMock: foo_ExpectAndReturn called
+      CMock: mock foo called
+
+  * default: false
+
 * `:weak`:
   When set this to some value, the generated mocks are defined as weak
   symbols using the configured format. This allows them to be overridden
