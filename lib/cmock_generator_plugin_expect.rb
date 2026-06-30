@@ -17,6 +17,7 @@ class CMockGeneratorPluginExpect
     @utils        = utils
     @unity_helper = @utils.helpers[:unity_helper]
     @priority     = 5
+    @debug_output = @config.debug_output
 
     if @config.plugins.include? :expect_any_args
       alias :mock_implementation :mock_implementation_might_check_args
@@ -92,6 +93,7 @@ class CMockGeneratorPluginExpect
              else
                "void #{func_name}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]})\n{\n"
              end
+    lines << "  TEST_MESSAGE(\"CMock: #{func_name}_#{function[:return][:void?] ? 'Expect' : 'ExpectAndReturn'} called\");\n" if @debug_output
     lines << @utils.code_add_base_expectation(func_name)
     lines << @utils.code_call_argument_loader(function)
     lines << @utils.code_assign_argument_quickly('cmock_call_instance->ReturnVal', function[:return]) unless function[:return][:void?]

@@ -13,6 +13,7 @@ class CMockGeneratorPluginIgnore
     @error_stubs = @config.create_error_stubs
     @utils = utils
     @priority = 2
+    @debug_output = @config.debug_output
   end
 
   def instance_structure(function)
@@ -62,6 +63,7 @@ class CMockGeneratorPluginIgnore
              else
                "void #{function[:name]}_CMockIgnoreAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
              end
+    lines << "  TEST_MESSAGE(\"CMock: #{function[:name]}_#{function[:return][:void?] ? 'Ignore' : 'IgnoreAndReturn'} called\");\n" if @debug_output
     unless function[:return][:void?]
       lines << @utils.code_add_base_expectation(function[:name], false)
     end
@@ -73,6 +75,7 @@ class CMockGeneratorPluginIgnore
 
     # Add stop ignore function. it does not matter if there are any args
     lines << "void #{function[:name]}_CMockStopIgnore(void)\n{\n"
+    lines << "  TEST_MESSAGE(\"CMock: #{function[:name]}_StopIgnore called\");\n" if @debug_output
     unless function[:return][:void?]
       lines << "  if(Mock.#{function[:name]}_IgnoreBool)\n"
       lines << "    Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"

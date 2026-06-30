@@ -13,6 +13,7 @@ class CMockGeneratorPluginReturnThruPtr
     @utils        = utils
     @priority     = 9
     @config       = config
+    @debug_output = @config.debug_output
     plugins       = @config.plugins
     @ignore_used  = plugins.include?(:ignore) || plugins.include?(:ignore_stateless)
   end
@@ -100,6 +101,7 @@ class CMockGeneratorPluginReturnThruPtr
 
       lines << "void #{func_name}_CMockReturnMemThruPtr_#{arg_name}(UNITY_LINE_TYPE cmock_line, #{ptr_to_const(arg[:type])} #{arg_name}, size_t cmock_size)\n"
       lines << "{\n"
+      lines << "  TEST_MESSAGE(\"CMock: #{func_name}_ReturnThruPtr_#{arg_name} called\");\n" if @debug_output
       lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " \
                "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
       if @ignore_used

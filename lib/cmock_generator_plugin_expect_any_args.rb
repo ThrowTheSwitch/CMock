@@ -13,6 +13,7 @@ class CMockGeneratorPluginExpectAnyArgs
     @error_stubs = @config.create_error_stubs
     @utils = utils
     @priority = 3
+    @debug_output = @config.debug_output
   end
 
   def instance_typedefs(_function)
@@ -43,6 +44,7 @@ class CMockGeneratorPluginExpectAnyArgs
                else
                  "void #{function[:name]}_CMockExpectAnyArgsAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
                end
+      lines << "  TEST_MESSAGE(\"CMock: #{function[:name]}_#{function[:return][:void?] ? 'ExpectAnyArgs' : 'ExpectAnyArgsAndReturn'} called\");\n" if @debug_output
       lines << @utils.code_add_base_expectation(function[:name], true)
       unless function[:return][:void?]
         lines << "  cmock_call_instance->ReturnVal = cmock_to_return;\n"

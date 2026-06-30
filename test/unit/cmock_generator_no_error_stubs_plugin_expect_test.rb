@@ -18,7 +18,8 @@ describe CMockGeneratorPluginExpect, "Verify Generation Of Mock Function Declara
       :enforce_strict_ordering => false,
       :respond_to? => true,
       :create_error_stubs => false,
-      :plugins => [ :expect ] )
+      :plugins => [ :expect ],
+      :debug_output => false )
 
     @utils.expect :helpers, {}
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)

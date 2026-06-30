@@ -21,7 +21,8 @@ describe CMockPluginManager, "Verify CMockPluginManager Module" do
       :enforce_strict_ordering => false,
       :ignore => :args_and_calls,
       :exclude_setjmp_h => false,
-      :create_error_stubs => true
+      :create_error_stubs => true,
+      :debug_output => false
     )
 
     def @config.plugins

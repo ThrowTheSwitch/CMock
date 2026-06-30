@@ -35,6 +35,7 @@ describe CMockGeneratorPluginIgnoreArg, "Verify CMockGeneratorPluginIgnoreArg Mo
                      :contains_ptr? => true }
 
     #no strict ordering
+    @config.expect :debug_output, false
     @cmock_generator_plugin_ignore_arg = CMockGeneratorPluginIgnoreArg.new(@config, @utils)
   end
 

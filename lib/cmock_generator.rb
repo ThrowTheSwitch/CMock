@@ -22,6 +22,7 @@ class CMockGenerator
     @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
     @exclude_setjmp_h = @config.exclude_setjmp_h
     @subdir = @config.subdir
+    @debug_output = @config.debug_output
 
     @includes_h_pre_orig_header  = ((@config.includes || []) + (@config.includes_h_pre_orig_header || [])).uniq.map { |h| h =~ /</ ? h : "\"#{h}\"" }
     @includes_h_post_orig_header = (@config.includes_h_post_orig_header || []).map { |h| h =~ /</ ? h : "\"#{h}\"" }
@@ -344,6 +345,7 @@ class CMockGenerator
     file << "  UNITY_LINE_TYPE cmock_line = TEST_LINE_NUM;\n"
     file << "  CMOCK_#{function[:name]}_CALL_INSTANCE* cmock_call_instance;\n"
     file << "  UNITY_SET_DETAIL(CMockString_#{function[:name]});\n"
+    file << "  TEST_MESSAGE(\"CMock: mock #{function[:name]} called\");\n" if @debug_output
     file << "  cmock_call_instance = (CMOCK_#{function[:name]}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(Mock.#{function[:name]}_CallInstance);\n"
     file << "  Mock.#{function[:name]}_CallInstance = CMock_Guts_MemNext(Mock.#{function[:name]}_CallInstance);\n"
     file << @plugins.run(:mock_precheck_return_thru_ptr, function)

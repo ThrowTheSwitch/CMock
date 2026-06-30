@@ -18,7 +18,8 @@ describe CMockGeneratorPluginExpect, "Verify CMockGeneratorPluginExpect Module w
       :enforce_strict_ordering => true,
       :respond_to? => true,
       :create_error_stubs => true,
-      :plugins => [ :expect, :expect_any_args ] )
+      :plugins => [ :expect, :expect_any_args ],
+      :debug_output => false )
 
     @utils.expect :helpers, {}
     @cmock_generator_plugin_expect = CMockGeneratorPluginExpect.new(@config, @utils)

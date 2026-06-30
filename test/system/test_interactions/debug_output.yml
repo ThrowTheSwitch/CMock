@@ -1,0 +1,235 @@
+# =========================================================================
+#   CMock - Automatic Mock Generation for C
+#   ThrowTheSwitch.org
+#   Copyright (c) 2007-26 Mike Karlesky, Mark VanderVoord, & Greg Williams
+#   SPDX-License-Identifier: MIT
+# =========================================================================
+
+---
+:cmock:
+  :debug_output: true
+  :plugins:
+  - :ignore
+  - :callback
+  - :expect_any_args
+  - :return_thru_ptr
+  - :ignore_arg
+
+:systest:
+  :types: |
+
+  :mockable: |
+    void foo(int a);
+    int bar(void);
+    int qux(int a);
+    void baz(int* p);
+
+  :source:
+    :header: |
+      void function(int a);
+    :code: |
+      void function(int a)
+      {
+        int temp = 0;
+        foo(a);
+        foo(bar());
+        qux(a);
+        baz(&temp);
+      }
+
+  :tests:
+    :common: |
+      void setUp(void) {}
+      void tearDown(void) {}
+      void my_foo_callback(int a, int cmock_num_calls) { (void)a; (void)cmock_num_calls; }
+
+    :units:
+    - :pass: TRUE
+      :should: 'output a debug message when foo_Expect is called'
+      :verify_message: 'CMock: foo_Expect called'
+      :code: |
+        test()
+        {
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when mock foo is called'
+      :verify_message: 'CMock: mock foo called'
+      :code: |
+        test()
+        {
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when bar_ExpectAndReturn is called'
+      :verify_message: 'CMock: bar_ExpectAndReturn called'
+      :code: |
+        test()
+        {
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when mock bar is called'
+      :verify_message: 'CMock: mock bar called'
+      :code: |
+        test()
+        {
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when foo_Ignore is called'
+      :verify_message: 'CMock: foo_Ignore called'
+      :code: |
+        test()
+        {
+          foo_Ignore();
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(99);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when bar_IgnoreAndReturn is called'
+      :verify_message: 'CMock: bar_IgnoreAndReturn called'
+      :code: |
+        test()
+        {
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_IgnoreAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when foo_StopIgnore is called'
+      :verify_message: 'CMock: foo_StopIgnore called'
+      :code: |
+        test()
+        {
+          foo_Ignore();
+          foo_StopIgnore();
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when foo_ExpectAnyArgs is called'
+      :verify_message: 'CMock: foo_ExpectAnyArgs called'
+      :code: |
+        test()
+        {
+          foo_ExpectAnyArgs();
+          foo_ExpectAnyArgs();
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when qux_ExpectAnyArgsAndReturn is called'
+      :verify_message: 'CMock: qux_ExpectAnyArgsAndReturn called'
+      :code: |
+        test()
+        {
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_ExpectAndReturn(42);
+          qux_ExpectAnyArgsAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when foo_AddCallback is called'
+      :verify_message: 'CMock: foo_AddCallback called'
+      :code: |
+        test()
+        {
+          foo_AddCallback(my_foo_callback);
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when foo_Stub is called'
+      :verify_message: 'CMock: foo_Stub called'
+      :code: |
+        test()
+        {
+          foo_Stub(my_foo_callback);
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when baz_ReturnThruPtr_p is called'
+      :verify_message: 'CMock: baz_ReturnThruPtr_p called'
+      :code: |
+        test()
+        {
+          int val = 99;
+          foo_Expect(1);
+          foo_Expect(42);
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Expect(NULL);
+          baz_IgnoreArg_p();
+          baz_ReturnThruPtr_p(&val);
+          function(1);
+        }
+
+    - :pass: TRUE
+      :should: 'output a debug message when foo_IgnoreArg_a is called'
+      :verify_message: 'CMock: foo_IgnoreArg_a called'
+      :code: |
+        test()
+        {
+          foo_Expect(999);
+          foo_IgnoreArg_a();
+          foo_Expect(999);
+          foo_IgnoreArg_a();
+          bar_ExpectAndReturn(42);
+          qux_IgnoreAndReturn(0);
+          baz_Ignore();
+          function(1);
+        }
+
+...

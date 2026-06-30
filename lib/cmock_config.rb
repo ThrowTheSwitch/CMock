@@ -56,7 +56,8 @@ class CMockConfig
 
       # Compile-time assertion macro names to strip entirely to avoid being confused with function prototypes
       # Common C11, BSD, and embedded RTOS variants are included by default. Add custom names as needed.
-      :ct_assert_patterns          => ['ct_assert', '_?[Ss]tatic_[Aa]ssert', 'STATIC_ASSERT', 'BUILD_ASSERT', 'CTASSERT']
+      :ct_assert_patterns          => ['ct_assert', '_?[Ss]tatic_[Aa]ssert', 'STATIC_ASSERT', 'BUILD_ASSERT', 'CTASSERT'],
+      :debug_output                => false
     }.freeze
 
   def initialize(options = nil)

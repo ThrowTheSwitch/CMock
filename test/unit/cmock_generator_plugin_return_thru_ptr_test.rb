@@ -69,6 +69,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
 
     #no strict ordering
     @config.expect :plugins, []
+    @config.expect :debug_output, false
     @cmock_generator_plugin_return_thru_ptr = CMockGeneratorPluginReturnThruPtr.new(@config, @utils)
   end
 

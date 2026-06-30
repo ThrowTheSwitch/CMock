@@ -12,7 +12,7 @@ describe CMockGeneratorPluginIgnoreStateless, "Verify Generation Of Mock Functio
 
   before do
     create_mocks :config, :utils
-    @config = create_stub(:respond_to? => true, :create_error_stubs => false)
+    @config = create_stub(:respond_to? => true, :create_error_stubs => false, :debug_output => false)
     @cmock_generator_plugin_ignore_stateless = CMockGeneratorPluginIgnoreStateless.new(@config, @utils)
   end
 

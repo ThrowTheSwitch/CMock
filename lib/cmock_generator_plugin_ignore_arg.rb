@@ -9,9 +9,10 @@ class CMockGeneratorPluginIgnoreArg
   attr_reader :priority
   attr_accessor :utils
 
-  def initialize(_config, utils)
+  def initialize(config, utils)
     @utils        = utils
     @priority     = 10
+    @debug_output = config.debug_output
   end
 
   def instance_typedefs(function)
@@ -38,6 +39,7 @@ class CMockGeneratorPluginIgnoreArg
     function[:args].each do |arg|
       lines << "void #{func_name}_CMockIgnoreArg_#{arg[:name]}(UNITY_LINE_TYPE cmock_line)\n"
       lines << "{\n"
+      lines << "  TEST_MESSAGE(\"CMock: #{func_name}_IgnoreArg_#{arg[:name]} called\");\n" if @debug_output
       lines << "  CMOCK_#{func_name}_CALL_INSTANCE* cmock_call_instance = " \
                "(CMOCK_#{func_name}_CALL_INSTANCE*)CMock_Guts_GetAddressFor(CMock_Guts_MemEndOfChain(Mock.#{func_name}_CallInstance));\n"
       lines << "  UNITY_TEST_ASSERT_NOT_NULL(cmock_call_instance, cmock_line, CMockStringIgnPreExp);\n"

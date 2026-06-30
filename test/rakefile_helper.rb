@@ -411,7 +411,9 @@ module RakefileHelpers
 
       test_file    = 'test_' + File.basename(test_case).ext(C_EXTENSION)
       result_file  = test_file.ext(RESULT_EXTENSION)
-      test_results = File.readlines(SYSTEST_BUILD_FILES_PATH + result_file).reject {|line| line.size < 10 }
+      all_results  = File.readlines(SYSTEST_BUILD_FILES_PATH + result_file).reject {|line| line.size < 10 }
+      info_results = all_results.select {|line| line =~ /:INFO:/}
+      test_results = all_results.reject {|line| line =~ /:INFO:/}
       tests.each_with_index do |test, index|
         this_failed = case(test[:pass])
           when :ignore
@@ -430,6 +432,11 @@ module RakefileHelpers
         elsif (test[:verify_error]) and not (test_results[index] =~ /test#{index+1}:.*#{test[:verify_error]}/)
           total_failures += 1
           new_msg = "#{test_file}:test#{index+1}:should #{test[:should]}:should have output matching '#{test[:verify_error]}' but was '#{test_results[index]}'"
+          failure_messages << new_msg
+          report new_msg
+        elsif (test[:verify_message]) and not info_results.any? {|line| line =~ /test#{index+1}:INFO:.*#{test[:verify_message]}/}
+          total_failures += 1
+          new_msg = "#{test_file}:test#{index+1}:should #{test[:should]}:should have message matching '#{test[:verify_message]}' but none found in: #{info_results.select{|l| l =~ /test#{index+1}:/}.inspect}"
           failure_messages << new_msg
           report new_msg
         else

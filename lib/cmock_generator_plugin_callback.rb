@@ -15,6 +15,7 @@ class CMockGeneratorPluginCallback
     @priority = 6
 
     @include_count = @config.callback_include_count
+    @debug_output = @config.debug_output
   end
 
   def instance_structure(function)
@@ -72,13 +73,16 @@ class CMockGeneratorPluginCallback
     has_ignore = @config.plugins.include? :ignore
     lines = ''
     lines << "void #{func_name}_AddCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
+    lines << "  TEST_MESSAGE(\"CMock: #{func_name}_AddCallback called\");\n" if @debug_output
     lines << "  Mock.#{func_name}_IgnoreBool = (char)0;\n" if has_ignore
     lines << "  Mock.#{func_name}_CallbackBool = (char)1;\n"
     lines << "  Mock.#{func_name}_CallbackCalls = 0;\n"
     lines << "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
     lines << "int #{func_name}_CallCount(void)\n{\n"
+    lines << "  TEST_MESSAGE(\"CMock: #{func_name}_CallCount called\");\n" if @debug_output
     lines << "  return Mock.#{func_name}_CallbackCalls;\n}\n\n"
     lines << "void #{func_name}_Stub(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
+    lines << "  TEST_MESSAGE(\"CMock: #{func_name}_Stub called\");\n" if @debug_output
     lines << "  Mock.#{func_name}_IgnoreBool = (char)0;\n" if has_ignore
     lines << "  Mock.#{func_name}_CallbackBool = (char)0;\n"
     lines << "  Mock.#{func_name}_CallbackCalls = 0;\n"

@@ -12,7 +12,7 @@ describe CMockGeneratorPluginIgnoreStateless, "Verify CMockGeneratorPluginIgnore
 
   before do
     create_mocks :config, :utils
-    @config = create_stub(:respond_to? => true, :create_error_stubs => true)
+    @config = create_stub(:respond_to? => true, :create_error_stubs => true, :debug_output => false)
     @cmock_generator_plugin_ignore_stateless = CMockGeneratorPluginIgnoreStateless.new(@config, @utils)
   end
 
