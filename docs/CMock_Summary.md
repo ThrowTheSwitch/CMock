@@ -294,6 +294,14 @@ order (based on any Expects you've set up) before calling the callback.
 to the callback instead. In this case, you are replacing the normal mock calls
 with your own custom stub function.
 
+Calling either `func_AddCallback` or `func_Stub` resets the call count for
+that function to zero, so `NumCalls` always reflects calls made since the
+current stub or callback was installed.
+
+You can read the current call count at any time using `func_CallCount()`.
+This is useful when you need to verify how many times a stub was invoked
+without setting up formal Expects.
+
 There is also an older name, `func_StubWithCallback`, which is just an alias
 for either `func_AddCallback` or `func_Stub` depending on setting of the
 `:callback_after_arg_check` toggle. This is deprecated and we recommend using

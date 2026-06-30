@@ -45,7 +45,8 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = [ "typedef void (* CMOCK_Maple_CALLBACK)(int cmock_num_calls);\n",
                  "void Maple_AddCallback(CMOCK_Maple_CALLBACK Callback);\n",
                  "void Maple_Stub(CMOCK_Maple_CALLBACK Callback);\n",
-                 "#define Maple_StubWithCallback Maple_Stub\n" ].join
+                 "#define Maple_StubWithCallback Maple_Stub\n",
+                 "int Maple_CallCount(void);\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -55,7 +56,8 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = [ "typedef void (* CMOCK_Maple_CALLBACK)(void);\n",
                  "void Maple_AddCallback(CMOCK_Maple_CALLBACK Callback);\n",
                  "void Maple_Stub(CMOCK_Maple_CALLBACK Callback);\n",
-                 "#define Maple_StubWithCallback Maple_Stub\n" ].join
+                 "#define Maple_StubWithCallback Maple_Stub\n",
+                 "int Maple_CallCount(void);\n" ].join
     @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
@@ -66,7 +68,8 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = [ "typedef void (* CMOCK_Maple_CALLBACK)(int* tofu, int cmock_num_calls);\n",
                  "void Maple_AddCallback(CMOCK_Maple_CALLBACK Callback);\n",
                  "void Maple_Stub(CMOCK_Maple_CALLBACK Callback);\n",
-                 "#define Maple_StubWithCallback Maple_Stub\n" ].join
+                 "#define Maple_StubWithCallback Maple_Stub\n",
+                 "int Maple_CallCount(void);\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -76,7 +79,8 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = [ "typedef const char* (* CMOCK_Maple_CALLBACK)(int* tofu, int cmock_num_calls);\n",
                  "void Maple_AddCallback(CMOCK_Maple_CALLBACK Callback);\n",
                  "void Maple_Stub(CMOCK_Maple_CALLBACK Callback);\n",
-                 "#define Maple_StubWithCallback Maple_Stub\n" ].join
+                 "#define Maple_StubWithCallback Maple_Stub\n",
+                 "int Maple_CallCount(void);\n" ].join
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
   end
@@ -86,7 +90,8 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
     expected = [ "typedef const char* (* CMOCK_Maple_CALLBACK)(int* tofu);\n",
                  "void Maple_AddCallback(CMOCK_Maple_CALLBACK Callback);\n",
                  "void Maple_Stub(CMOCK_Maple_CALLBACK Callback);\n",
-                 "#define Maple_StubWithCallback Maple_Stub\n" ].join
+                 "#define Maple_StubWithCallback Maple_Stub\n",
+                 "int Maple_CallCount(void);\n" ].join
     @cmock_generator_plugin_callback.include_count = false
     returned = @cmock_generator_plugin_callback.mock_function_declarations(function)
     assert_equal(expected, returned)
@@ -273,12 +278,18 @@ describe CMockGeneratorPluginCallback, "Verify CMockGeneratorPluginCallback Modu
                 "{\n",
                 "  Mock.Lemon_IgnoreBool = (char)0;\n",
                 "  Mock.Lemon_CallbackBool = (char)1;\n",
+                "  Mock.Lemon_CallbackCalls = 0;\n",
                 "  Mock.Lemon_CallbackFunctionPointer = Callback;\n",
+                "}\n\n",
+                "int Lemon_CallCount(void)\n",
+                "{\n",
+                "  return Mock.Lemon_CallbackCalls;\n",
                 "}\n\n",
                 "void Lemon_Stub(CMOCK_Lemon_CALLBACK Callback)\n",
                 "{\n",
                 "  Mock.Lemon_IgnoreBool = (char)0;\n",
                 "  Mock.Lemon_CallbackBool = (char)0;\n",
+                "  Mock.Lemon_CallbackCalls = 0;\n",
                 "  Mock.Lemon_CallbackFunctionPointer = Callback;\n",
                 "}\n\n"
                ].join

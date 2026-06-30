@@ -33,7 +33,8 @@ class CMockGeneratorPluginCallback
     "typedef #{return_type} (* CMOCK_#{func_name}_CALLBACK)(#{styles[style]});\n" \
     "void #{func_name}_AddCallback(CMOCK_#{func_name}_CALLBACK Callback);\n" \
     "void #{func_name}_Stub(CMOCK_#{func_name}_CALLBACK Callback);\n" \
-    "#define #{func_name}_StubWithCallback #{func_name}_#{action}\n"
+    "#define #{func_name}_StubWithCallback #{func_name}_#{action}\n" \
+    "int #{func_name}_CallCount(void);\n"
   end
 
   def generate_call(function)
@@ -73,10 +74,14 @@ class CMockGeneratorPluginCallback
     lines << "void #{func_name}_AddCallback(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
     lines << "  Mock.#{func_name}_IgnoreBool = (char)0;\n" if has_ignore
     lines << "  Mock.#{func_name}_CallbackBool = (char)1;\n"
+    lines << "  Mock.#{func_name}_CallbackCalls = 0;\n"
     lines << "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
+    lines << "int #{func_name}_CallCount(void)\n{\n"
+    lines << "  return Mock.#{func_name}_CallbackCalls;\n}\n\n"
     lines << "void #{func_name}_Stub(CMOCK_#{func_name}_CALLBACK Callback)\n{\n"
     lines << "  Mock.#{func_name}_IgnoreBool = (char)0;\n" if has_ignore
     lines << "  Mock.#{func_name}_CallbackBool = (char)0;\n"
+    lines << "  Mock.#{func_name}_CallbackCalls = 0;\n"
     lines << "  Mock.#{func_name}_CallbackFunctionPointer = Callback;\n}\n\n"
   end
 
