@@ -118,11 +118,13 @@ class CMockHeaderParser
 
   def remove_nested_pairs_of_braces(source)
     # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
-    # Use iterative approach for all Ruby versions: the recursive regex \{([^\{\}]*|\g<0>)*\}
-    # is exponential on unbalanced brace inputs (catastrophic backtracking on Ruby < 3.2).
-    while source.gsub!(/\{[^{}]*\{[^{}]*\}[^{}]*\}/m, '{ }')
-      # Keep doing it!
+    # Collapse innermost brace pairs first using a brace-free sentinel (\x00), working
+    # outward until no balanced pairs remain. This avoids the catastrophic backtracking
+    # of the recursive regex \{([^\{\}]*|\g<0>)*\} on Ruby < 3.2 while preserving
+    # identical semantics: every balanced brace structure is collapsed to '{ }'.
+    while source.gsub!(/\{[^{}]*\}/m, "\x00")
     end
+    source.gsub!("\x00", '{ }')
     source
   end
 
