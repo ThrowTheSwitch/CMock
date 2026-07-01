@@ -112,6 +112,11 @@ jobs:
           failed=0
           for exe in test/system/build/test_*.exe; do
             echo "Checking: $exe"
-            valgrind --leak-check=full --track-origins=yes --error-exitcode=1 "$exe" || failed=1
+            # Use exit code 42 to distinguish valgrind errors from Unity test failures.
+            # Some executables intentionally contain tests expected to fail (testing CMock's
+            # error-handling), so Unity exits non-zero. --error-exitcode=42 only fires when
+            # valgrind itself detects errors, letting Unity's exit code pass through otherwise.
+            valgrind --leak-check=full --track-origins=yes --error-exitcode=42 "$exe"
+            [ $? -eq 42 ] && failed=1
           done
           exit $failed
