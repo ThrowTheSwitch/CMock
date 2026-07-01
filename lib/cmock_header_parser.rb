@@ -309,7 +309,7 @@ class CMockHeaderParser
     source.gsub!(/\b(?:#{@ct_assert_patterns.join('|')})\s*\([^;]*\)/, '') unless @ct_assert_patterns.empty?
     # strip any remaining WORD(...==...) etc. -- calls containing comparison operators cannot be C function prototypes
     # must run before default-value removal, which would corrupt "!= 0" into "!" by removing "= 0"
-    source.gsub!(/\b\w+\s*\((?:[^()!=<>]*(?:\([^()]*\))*)*(?:==|!=|<=|>=)[^;]*\)/, '')
+    source.gsub!(/\b\w+\s*\((?:[^()!=<>]|\([^()]*\))*(?:==|!=|<=|>=)[^;]*\)/, '')
 
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_.]+\s*/, '') # remove default value statements from argument lists
 
