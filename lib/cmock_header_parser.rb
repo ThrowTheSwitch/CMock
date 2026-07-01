@@ -15,7 +15,7 @@ class CMockHeaderParser
     @c_calling_conventions = cfg.c_calling_conventions.uniq
     @treat_as_array = cfg.treat_as_array
     @treat_as_void = (['void'] + cfg.treat_as_void).uniq
-    @function_declaration_parse_base_match = '([\w\s\*\(\),\[\]]*?\w[\w\s\*\(\),\[\]]*?)\(([\w\s\*\(\),\.\[\]+\-\/]*)\)'
+    @function_declaration_parse_base_match = '([^(]*\w)\s*\(([\w\s\*\(\),\.\[\]+\-\/]*)\)'
     @declaration_parse_matcher = /#{@function_declaration_parse_base_match}$/m
     @standards = (%w[int short char long unsigned signed] + cfg.treat_as.keys).uniq
     @array_size_name = cfg.array_size_name
@@ -118,15 +118,13 @@ class CMockHeaderParser
 
   def remove_nested_pairs_of_braces(source)
     # remove nested pairs of braces because no function declarations will be inside of them (leave outer pair for function definition detection)
-    if RUBY_VERSION.split('.')[0].to_i > 1
-      # we assign a string first because (no joke) if Ruby 1.9.3 sees this line as a regex, it will crash.
-      r = '\\{([^\\{\\}]*|\\g<0>)*\\}'
-      source.gsub!(/#{r}/m, '{ }')
-    else
-      while source.gsub!(/\{[^{}]*\{[^{}]*\}[^{}]*\}/m, '{ }')
-      end
+    # Collapse innermost brace pairs first using a brace-free sentinel (\x00), working
+    # outward until no balanced pairs remain. This avoids the catastrophic backtracking
+    # of the recursive regex \{([^\{\}]*|\g<0>)*\} on Ruby < 3.2 while preserving
+    # identical semantics: every balanced brace structure is collapsed to '{ }'.
+    while source.gsub!(/\{[^{}]*\}/m, "\x00")
     end
-
+    source.gsub!("\x00", '{ }')
     source
   end
 
@@ -311,7 +309,7 @@ class CMockHeaderParser
     source.gsub!(/\b(?:#{@ct_assert_patterns.join('|')})\s*\([^;]*\)/, '') unless @ct_assert_patterns.empty?
     # strip any remaining WORD(...==...) etc. -- calls containing comparison operators cannot be C function prototypes
     # must run before default-value removal, which would corrupt "!= 0" into "!" by removing "= 0"
-    source.gsub!(/\b\w+\s*\((?:[^()!=<>]*(?:\([^()]*\))*)*(?:==|!=|<=|>=)[^;]*\)/, '')
+    source.gsub!(/\b\w+\s*\((?:[^()!=<>]|\([^()]*\))*(?:==|!=|<=|>=)[^;]*\)/, '')
 
     source.gsub!(/\s*=\s*['"a-zA-Z0-9_.]+\s*/, '') # remove default value statements from argument lists
 

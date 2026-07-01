@@ -189,7 +189,7 @@ care how many times it was called, right?
 StopIgnore:
 -------
 
-Maybe you want to ignore a particular function for part of a test but dont want to
+Maybe you want to ignore a particular function for part of a test but don't want to
 ignore it later on. In that case, you want to use StopIgnore which will cancel the
 previously called Ignore or IgnoreAndReturn requiring you to Expect or otherwise
 handle the call to a function.
@@ -198,6 +198,25 @@ handle the call to a function.
 * `void func(params)` => `void func_StopIgnore(void)`
 * `retval func(void)` => `void func_StopIgnore(void)`
 * `retval func(params)` => `void func_StopIgnore(void)`
+
+It's important to note that the effect of this function is immediate and applies to
+this function's stack of expectations. So the following will work as intended:
+
+```
+Blah_Ignore();
+funcThatMightCallBlahButWeDoNotCare();
+Blah_StopIgnore();
+funcThatWeWantToMakeSureDoesNotCallBlah();
+```
+
+But this is NOT going to work, because StopIgnore immediately cancels ignore:
+
+```
+Blah_Ignore();
+Blah_StopIgnore();
+funcThatMightCallBlahButWeDoNotCare();
+funcThatWeWantToMakeSureDoesNotCallBlah();
+```
 
 IgnoreStateless:
 ----------------
@@ -951,8 +970,9 @@ that exposes them as virtual methods and modify your code to inject mocks at
 run-time... but there is another way!
 
 Simply use CMock to mock the static member methods and a C++ mocking framework
-to handle the virtual methods. (Yes, you can mix mocks from CMock and a C++
-mocking framework together in the same test!)
+to handle the virtual methods. CMock does NOT mock non-static members. For those,
+you'll need an actual C++ mocking framework. (Yes, you can mix mocks from CMock 
+and a C++ mocking framework together in the same test!)
 
 Keep in mind that since C++ mocking frameworks often link the real object to the
 unit test too, we need to resolve multiple definition errors with something like

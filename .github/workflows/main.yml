@@ -11,42 +11,161 @@ on:
     branches: [ master ]
 
 jobs:
-  # Job: Unit test suite
-  unit-tests:
-    name: "Unit Tests"
-    runs-on: ubuntu-latest
+  # Job: Ruby unit tests across all supported Ruby versions and OSes.
+  # These are fast (no C compilation) and verify the generator logic is Ruby-version-portable.
+  ruby-tests:
+    name: "Ruby Tests (${{ matrix.os }}, Ruby ${{ matrix.ruby }})"
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         ruby: ['3.0', '3.1', '3.2', '3.3']
+        exclude:
+          # create sparse matrix to avoid pointless duplication
+          - os: macos-latest
+            ruby: '3.0'
+          - os: macos-latest
+            ruby: '3.1'
+          - os: macos-latest
+            ruby: '3.2'
+          - os: windows-latest
+            ruby: '3.0'
+          - os: windows-latest
+            ruby: '3.1'
+          - os: windows-latest
+            ruby: '3.2'
     steps:
-      # Install Multilib
-      - name: Install Multilib
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install --assume-yes --quiet gcc-multilib
-
-      # Checks out repository under $GITHUB_WORKSPACE
       - name: Checkout Latest Repo
-        uses: actions/checkout@v2
-        with: 
+        uses: actions/checkout@v4
+        with:
           submodules: recursive
 
-      # Setup Ruby Testing Tools to do tests on multiple ruby version
-      - name: Setup Ruby Testing Tools
+      - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
 
-      # Install Ruby Testing Tools
-      - name: Setup Ruby Testing Tools
+      - name: Install Ruby Dependencies
         run: |
-          sudo gem install rspec
-          sudo gem install rubocop -v 1.57.2
-          sudo gem install bundler
-          bundle update
-          bundle install 
+          gem install bundler
+          bundle install
 
-      # Run Tests
-      - name: Run All Unit Tests
+      - name: Run Ruby Unit Tests
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
         run: |
-          cd test && rake ci
+          cd test && rake test:unit
+
+      - name: Run Style Check
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
+        run: |
+          cd test && rake style:check
+
+  # Job: C compilation and system tests — only needs to run on one Ruby version per OS,
+  # since the generated C code and runtime behavior don't vary with the Ruby version.
+  c-tests:
+    name: "C Tests (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      # Install Multilib (Linux only)
+      - name: Install Multilib
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --assume-yes --quiet gcc-multilib
+
+      # Add MinGW GCC to PATH (Windows only — MSYS2 is pre-installed on the runner)
+      - name: Add GCC to PATH
+        if: matrix.os == 'windows-latest'
+        run: echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Checkout Latest Repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Install Ruby Dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Run C Unit Tests
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
+        run: cd test && rake test:c
+
+      - name: Run System Tests
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
+        run: cd test && rake test:system
+
+      - name: Run Examples
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
+        run: cd test && rake test:examples
+
+  # Job: Valgrind memory-leak check (Linux/gcc_64 only, latest Ruby)
+  valgrind:
+    name: "Valgrind Memory Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --assume-yes --quiet gcc-multilib valgrind
+
+      - name: Checkout Latest Repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Install Ruby Dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      # Build and run C unit tests, then re-run the executable under valgrind.
+      # test:system clobbers the build directory, so check TestCMockC before that happens.
+      - name: Build and Run C Unit Tests
+        run: cd test && rake config[gcc_64_valgrind] test:c
+
+      - name: Valgrind Check - C Unit Tests
+        run: |
+          valgrind --leak-check=full --track-origins=yes --error-exitcode=1 \
+            test/system/build/TestCMockC.exe
+
+      # Build and run system tests, then re-run each executable under valgrind.
+      - name: Build and Run System Tests
+        run: cd test && rake config[gcc_64_valgrind] test:system
+
+      - name: Valgrind Check - System Tests
+        run: |
+          failed=0
+          for exe in test/system/build/test_*.exe; do
+            echo "Checking: $exe"
+            # Use exit code 42 to distinguish valgrind errors from Unity test failures.
+            # Some executables intentionally contain tests expected to fail (testing CMock's
+            # error-handling), so Unity exits non-zero. The `|| exit_code=$?` prevents bash's
+            # set -e from aborting the script on Unity's non-zero exit, while still capturing
+            # valgrind's own error exit code (42) separately.
+            exit_code=0
+            valgrind --leak-check=full --track-origins=yes --error-exitcode=42 "$exe" || exit_code=$?
+            [ $exit_code -eq 42 ] && failed=1
+          done
+          exit $failed

@@ -80,12 +80,11 @@ class CMockGeneratorPluginReturnThruPtr
       arg_name = arg[:name]
       next unless @utils.ptr_or_str?(arg[:type]) && !(arg[:const?])
 
-      dest_cast = arg[:volatile?] ? '(void*)(CMOCK_MEM_PTR_AS_INT)' : '(void*)'
       lines << "  if (Mock.#{function[:name]}_IgnoreBool && cmock_call_instance != NULL &&\n"
       lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Used)\n"
       lines << "  {\n"
       lines << "    UNITY_TEST_ASSERT_NOT_NULL(#{arg_name}, cmock_line, CMockStringPtrIsNULL);\n"
-      lines << "    CMOCK_MEMCPY(#{dest_cast}#{arg_name}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
+      lines << "    CMOCK_MEMCPY((void*)#{arg_name}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
       lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Size);\n"
       lines << "  }\n"
     end
@@ -136,11 +135,10 @@ class CMockGeneratorPluginReturnThruPtr
       arg_name = arg[:name]
       next unless @utils.ptr_or_str?(arg[:type]) && !(arg[:const?])
 
-      dest_cast = arg[:volatile?] ? '(void*)(CMOCK_MEM_PTR_AS_INT)' : '(void*)'
       lines << "  if (cmock_call_instance->ReturnThruPtr_#{arg_name}_Used)\n"
       lines << "  {\n"
       lines << "    UNITY_TEST_ASSERT_NOT_NULL(#{arg_name}, cmock_line, CMockStringPtrIsNULL);\n"
-      lines << "    CMOCK_MEMCPY(#{dest_cast}#{arg_name}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
+      lines << "    CMOCK_MEMCPY((void*)#{arg_name}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
       lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Size);\n"
       lines << "  }\n"
     end
