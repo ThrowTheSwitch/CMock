@@ -51,11 +51,17 @@ jobs:
           gem install bundler
           bundle install
 
-      - name: Run Ruby Unit Tests and Style Check
+      - name: Run Ruby Unit Tests
         env:
           NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
         run: |
-          cd test && rake test:unit style:check
+          cd test && rake test:unit
+
+      - name: Run Style Check
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
+        run: |
+          cd test && rake style:check
 
   # Job: C compilation and system tests — only needs to run on one Ruby version per OS,
   # since the generated C code and runtime behavior don't vary with the Ruby version.
@@ -102,7 +108,12 @@ jobs:
       - name: Run System Tests
         env:
           NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
-        run: cd test && rake test:system test:examples
+        run: cd test && rake test:system
+
+      - name: Run Examples
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
+        run: cd test && rake test:examples
 
   # Job: Valgrind memory-leak check (Linux/gcc_64 only, latest Ruby)
   valgrind:
