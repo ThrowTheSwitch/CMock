@@ -11,9 +11,10 @@ on:
     branches: [ master ]
 
 jobs:
-  # Job: Unit test suite
-  unit-tests:
-    name: "Unit Tests"
+  # Job: Ruby unit tests across all supported Ruby versions and OSes.
+  # These are fast (no C compilation) and verify the generator logic is Ruby-version-portable.
+  ruby-tests:
+    name: "Ruby Tests (${{ matrix.os }}, Ruby ${{ matrix.ruby }})"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -31,6 +32,37 @@ jobs:
           - os: windows-latest
             ruby: '3.2'
     steps:
+      - name: Checkout Latest Repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Install Ruby Dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Run Ruby Unit Tests and Style Check
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
+        run: |
+          cd test && rake test:unit style:check
+
+  # Job: C compilation and system tests — only needs to run on one Ruby version per OS,
+  # since the generated C code and runtime behavior don't vary with the Ruby version.
+  c-tests:
+    name: "C Tests (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
       # Install Multilib (Linux only)
       - name: Install Multilib
         if: matrix.os == 'ubuntu-latest'
@@ -43,30 +75,26 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      # Checks out repository under $GITHUB_WORKSPACE
       - name: Checkout Latest Repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      # Setup Ruby
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby }}
+          ruby-version: '3.3'
 
-      # Install Ruby dependencies
       - name: Install Ruby Dependencies
         run: |
           gem install bundler
           bundle install
 
-      # Run Tests
-      - name: Run All Unit Tests
+      - name: Run C and System Tests
         env:
           NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
         run: |
-          cd test && rake ci
+          cd test && rake test:c test:system test:examples
 
   # Job: Valgrind memory-leak check (Linux/gcc_64 only, latest Ruby)
   valgrind:
@@ -114,9 +142,11 @@ jobs:
             echo "Checking: $exe"
             # Use exit code 42 to distinguish valgrind errors from Unity test failures.
             # Some executables intentionally contain tests expected to fail (testing CMock's
-            # error-handling), so Unity exits non-zero. --error-exitcode=42 only fires when
-            # valgrind itself detects errors, letting Unity's exit code pass through otherwise.
-            valgrind --leak-check=full --track-origins=yes --error-exitcode=42 "$exe"
-            [ $? -eq 42 ] && failed=1
+            # error-handling), so Unity exits non-zero. The `|| exit_code=$?` prevents bash's
+            # set -e from aborting the script on Unity's non-zero exit, while still capturing
+            # valgrind's own error exit code (42) separately.
+            exit_code=0
+            valgrind --leak-check=full --track-origins=yes --error-exitcode=42 "$exe" || exit_code=$?
+            [ $exit_code -eq 42 ] && failed=1
           done
           exit $failed
