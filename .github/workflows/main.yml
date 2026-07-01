@@ -24,9 +24,13 @@ jobs:
         exclude:
           # create sparse matrix to avoid pointless duplication
           - os: macos-latest
+            ruby: '3.0'
+          - os: macos-latest
             ruby: '3.1'
           - os: macos-latest
             ruby: '3.2'
+          - os: windows-latest
+            ruby: '3.0'
           - os: windows-latest
             ruby: '3.1'
           - os: windows-latest
@@ -90,11 +94,15 @@ jobs:
           gem install bundler
           bundle install
 
-      - name: Run C and System Tests
+      - name: Run C Unit Tests
         env:
           NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
-        run: |
-          cd test && rake test:c test:system test:examples
+        run: cd test && rake test:c
+
+      - name: Run System Tests
+        env:
+          NO_COLOR: ${{ matrix.os == 'windows-latest' && '1' || '' }}
+        run: cd test && rake test:system test:examples
 
   # Job: Valgrind memory-leak check (Linux/gcc_64 only, latest Ruby)
   valgrind:
