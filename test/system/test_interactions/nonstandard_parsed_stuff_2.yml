@@ -40,7 +40,8 @@
         test()
         {
           unsigned char a[] = { 1, 2, 3, 4, 5, 6 };
-          unsigned char** pa = (unsigned char**)(&a);
+          unsigned char* aa[] = { &a[0], &a[1], &a[2], &a[3], &a[4], &a[5], &a[6], &a[7] };
+          unsigned char** pa = (unsigned char**)(aa);
 
           bar_ExpectAndReturn(pa);
           foo_Expect(pa);
@@ -54,9 +55,11 @@
         test()
         {
           unsigned char a[] = { 1, 2, 3, 4, 5, 6 };
+          unsigned char* aa[] = { &a[0], &a[1], &a[2], &a[3], &a[4], &a[5], &a[6], &a[7] };
           unsigned char b[] = { 5, 6, 7, 8, 9, 0 };
-          unsigned char** pa = (unsigned char**)(&a);
-          unsigned char** pb = (unsigned char**)(&b);
+          unsigned char* bb[] = { &b[0], &b[1], &b[2], &b[3], &b[4], &b[5], &b[6], &b[7] };
+          unsigned char** pa = (unsigned char**)(aa);
+          unsigned char** pb = (unsigned char**)(bb);
 
           bar_ExpectAndReturn(pa);
           foo_Expect(pb);

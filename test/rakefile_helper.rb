@@ -194,7 +194,21 @@ module RakefileHelpers
     result.join(' ')
   end
 
-  def compile(file, extra_defines = [])
+  def compiler_basename
+    exe = $unity_cfg[:tools][:test_compiler][:executable]
+    File.basename(exe.is_a?(Array) ? exe.join : exe.to_s)
+  end
+
+  def extra_flags_for_compiler(flags_config)
+    return [] unless flags_config
+
+    basename = compiler_basename
+    flags_config.each_with_object([]) do |(compiler_key, flags), result|
+      result.concat(Array(flags)) if basename.include?(compiler_key.to_s)
+    end
+  end
+
+  def compile(file, extra_defines = [], extra_flags = [])
     tool       = $unity_cfg[:tools][:test_compiler]
     ext        = $unity_cfg[:extension][:object] || '.o'
     build_root = $proj[:project][:build_root] || 'build/'
@@ -206,6 +220,7 @@ module RakefileHelpers
                                   $proj[:paths][:include],
                                   all_defines(extra_defines),
                                   file, obj_file)
+    cmd_str += ' ' + extra_flags.join(' ') unless extra_flags.empty?
     execute(cmd_str)
     File.basename(obj_file)
   end
@@ -356,6 +371,9 @@ module RakefileHelpers
       test         = SYSTEST_GENERATED_FILES_PATH + test_base + C_EXTENSION
       cmock_config = name + '_cmock.yml'
 
+      yaml_content = load_yaml(yaml)
+      extra_flags  = extra_flags_for_compiler((yaml_content || {})[:flags])
+
       report "Executing system tests in #{File.basename(test)}..."
 
       # Detect dependencies and build required modules
@@ -369,17 +387,17 @@ module RakefileHelpers
         end
         # Compile corresponding source file if it exists
         src_file = find_source_file(header, include_dirs)
-        obj_list << compile(src_file) unless src_file.nil?
+        obj_list << compile(src_file, [], extra_flags) unless src_file.nil?
       end
 
       # Generate and build the test suite runner
       runner_name = test_base + '_runner.c'
       runner_path = $proj[:paths][:source].first + runner_name
       UnityTestRunnerGenerator.new(SYSTEST_GENERATED_FILES_PATH + cmock_config).run(test, runner_path)
-      obj_list << compile(runner_path)
+      obj_list << compile(runner_path, [], extra_flags)
 
       # Build the test module
-      obj_list << compile(test)
+      obj_list << compile(test, [], extra_flags)
 
       # Link the test executable
       link_it(test_base, obj_list)
@@ -498,6 +516,9 @@ module RakefileHelpers
       end
     end
 
+    compile_config = load_yaml(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml')
+    extra_flags = extra_flags_for_compiler((compile_config || {})[:flags])
+
     report "\n"
     report "------------------------------------\n"
     report "SYSTEM TEST MOCK COMPILATION SUMMARY\n"
@@ -507,7 +528,7 @@ module RakefileHelpers
       mock_filename = 'mock_' + File.basename(header).ext('.c')
       CMock.new(SYSTEST_COMPILE_MOCKABLES_PATH + 'config.yml').setup_mocks(header)
       report "Compiling #{mock_filename}..."
-      compile(SYSTEST_GENERATED_FILES_PATH + mock_filename)
+      compile(SYSTEST_GENERATED_FILES_PATH + mock_filename, [], extra_flags)
       pass_count += 1
     end
     report "#{pass_count} Tests 0 Failures 0 Ignored\nOK\n"

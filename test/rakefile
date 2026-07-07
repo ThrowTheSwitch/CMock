@@ -14,7 +14,7 @@ require './rakefile_helper'
 
 include RakefileHelpers
 
-DEFAULT_CONFIG_FILE = 'gcc_64.yml'
+DEFAULT_CONFIG_FILE = 'gcc.yml'
 CMOCK_TEST_ROOT = File.expand_path(File.dirname(__FILE__))
 
 SYSTEM_TEST_SUPPORT_DIRS = [

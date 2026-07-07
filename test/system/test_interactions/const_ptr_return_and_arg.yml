@@ -10,6 +10,15 @@
   :plugins:
   - # none
 
+# We are purposefully trying various (sometimes pointless) configurations
+# of const, so that we can ensure cmock handles them all, for compilers that
+# accept that style. Ignore this warning so it can be tested
+:flags:
+  :gcc:
+    - -Wno-ignored-qualifiers
+  :clang:
+    - -Wno-ignored-qualifiers
+
 :systest:
   :types: |
 

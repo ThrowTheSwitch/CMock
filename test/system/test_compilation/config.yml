@@ -6,6 +6,12 @@
 # =========================================================================
 
 ---
+:flags:
+  :gcc:
+    - -Wno-ignored-qualifiers
+  :clang:
+    - -Wno-ignored-qualifiers
+
 :cmock:
   :plugins: []
   :includes: []
