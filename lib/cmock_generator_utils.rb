@@ -43,11 +43,15 @@ class CMockGeneratorUtils
       base_type = arg_type_with_const(arg).sub(/\*$/, '').strip
       dims_str = arg[:array_dims].map { |d| "[#{d}]" }.join
       "#{base_type} (*#{arg[:name]})#{dims_str}"
-    elsif arg[:array_dims]
+    elsif arg[:array_dims] && arg[:array_dims].length > 1
+      # Multi-dimensional array (e.g. int matrix[13][4]): must preserve trailing
+      # dimensions so the parameter type decays correctly (int (*)[4], not int*).
       base_type = arg_type_with_const(arg).sub(/\*$/, '').strip
       dims_str = arg[:array_dims].map { |d| "[#{d}]" }.join
       "#{base_type} #{arg[:name]}#{dims_str}"
     else
+      # Plain param or 1D array param: arg[:type] is already the pointer type
+      # (parser converts T name[N] -> T*), so arg_type_with_const gives T*.
       "#{arg_type_with_const(arg)} #{arg[:name]}"
     end
   end

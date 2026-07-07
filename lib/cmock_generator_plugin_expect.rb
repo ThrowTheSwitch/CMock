@@ -51,11 +51,11 @@ class CMockGeneratorPluginExpect
     elsif function[:return][:void?]
       lines << "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _Expect (not AndReturn)\");\n" if @error_stubs
       lines << "#define #{function[:name]}_Expect(#{function[:args_call]}) #{function[:name]}_CMockExpect(__LINE__, #{function[:args_call]})\n"
-      lines << "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]});\n"
+      lines << "void #{function[:name]}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{helper_args_string(function)});\n"
     else
       lines << "#define #{function[:name]}_Expect(#{function[:args_call]}) TEST_FAIL_MESSAGE(\"#{function[:name]} requires _ExpectAndReturn\");\n" if @error_stubs
       lines << "#define #{function[:name]}_ExpectAndReturn(#{function[:args_call]}, cmock_retval) #{function[:name]}_CMockExpectAndReturn(__LINE__, #{function[:args_call]}, cmock_retval)\n"
-      lines << "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]});\n"
+      lines << "void #{function[:name]}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{helper_args_string(function)}, #{function[:return][:str]});\n"
     end
     lines
   end
@@ -86,12 +86,12 @@ class CMockGeneratorPluginExpect
                if function[:args_string] == 'void'
                  "void #{func_name}_CMockExpect(UNITY_LINE_TYPE cmock_line)\n{\n"
                else
-                 "void #{func_name}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{function[:args_string]})\n{\n"
+                 "void #{func_name}_CMockExpect(UNITY_LINE_TYPE cmock_line, #{helper_args_string(function)})\n{\n"
                end
              elsif function[:args_string] == 'void'
                "void #{func_name}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:return][:str]})\n{\n"
              else
-               "void #{func_name}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{function[:args_string]}, #{function[:return][:str]})\n{\n"
+               "void #{func_name}_CMockExpectAndReturn(UNITY_LINE_TYPE cmock_line, #{helper_args_string(function)}, #{function[:return][:str]})\n{\n"
              end
     lines << "  TEST_MESSAGE(\"CMock: #{func_name}_#{function[:return][:void?] ? 'Expect' : 'ExpectAndReturn'} called\");\n" if @debug_output
     lines << @utils.code_add_base_expectation(func_name)
@@ -106,5 +106,18 @@ class CMockGeneratorPluginExpect
     "    UNITY_SET_DETAIL(CMockString_#{function[:name]});\n" \
     "    UNITY_TEST_FAIL(cmock_line, CMockStringCalledLess);\n" \
     "  }\n"
+  end
+
+  private
+
+  # Build args string for generated _CMockExpect/_CMockExpectAndReturn helper signatures.
+  # Converts flat array parameters (e.g. POINT_T a[N]) to pointer notation (POINT_T* a)
+  # to avoid GCC -Wstringop-overflow, which treats static array sizes in function
+  # parameters as bounds hints and errors when callers pass smaller objects.
+  def helper_args_string(function)
+    return function[:args_string] if function[:args_string] == 'void'
+    return function[:args_string] unless function[:args]&.any? { |m| m.is_a?(Hash) && m[:array_dims] }
+
+    function[:args].map { |m| CMockGeneratorUtils.arg_declaration(m) }.join(', ')
   end
 end
