@@ -20,7 +20,7 @@ void Timer_Reset(void)
   AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
   AT91C_BASE_TC0->TC_IDR = 0xffffffff;
   dummy = AT91C_BASE_TC0->TC_SR;
-  dummy = dummy;
+  (void)dummy;
 }
 
 void Timer_ConfigureMode(void)

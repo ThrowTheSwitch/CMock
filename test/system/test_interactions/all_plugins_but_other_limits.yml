@@ -200,9 +200,7 @@
       :code: |
         test()
         {
-          const char* constretval = "This is a\0 silly string";
-          char* retval = (char*)constretval;
-          bars_ExpectAndReturn(retval);
+          bars_ExpectAndReturn("This is a\0 silly string");
           foos_Expect("This is a\0 wacky string");
 
           function_c();
@@ -213,9 +211,7 @@
       :code: |
         test()
         {
-          const char* constretval = "This is a silly string";
-          char* retval = (char*)constretval;
-          bars_ExpectAndReturn(retval);
+          bars_ExpectAndReturn("This is a silly string");
           foos_Expect("This is a wacky string");
 
           function_c();
@@ -274,9 +270,7 @@
       :code: |
         test()
         {
-          const char* constretval = "This is a\0 silly string";
-          char* retval = (char*)constretval;
-          bars_ExpectAndReturn(retval);
+          bars_ExpectAndReturn("This is a\0 silly string");
           foos_ExpectAndThrow("This is a\0 wacky string", 55);
           foos_Expect("err");
 
@@ -288,9 +282,7 @@
       :code: |
         test()
         {
-          const char* constretval = "This is a\0 silly string";
-          char* retval = (char*)constretval;
-          bars_ExpectAndReturn(retval);
+          bars_ExpectAndReturn("This is a\0 silly string");
           foos_ExpectAndThrow("This is a\0 wacky string", 55);
           foos_Expect("wrong error");
 

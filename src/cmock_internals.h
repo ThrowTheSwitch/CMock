@@ -95,6 +95,11 @@ extern const char* CMockStringMismatch;
     #define CMOCK_MEM_SIZE (32768)
 #endif
 
+/* Cast a volatile pointer to void* for use with CMOCK_MEMCPY or Unity assertion
+ * macros. Routing through CMOCK_MEM_PTR_AS_INT (a pointer-sized integer) avoids
+ * -Wcast-qual without requiring compiler-specific pragmas or C99 intptr_t. */
+#define CMOCK_DEVOLATILE_PTR(p) ((void*)(CMOCK_MEM_PTR_AS_INT)(p))
+
 /* memory copy/set functions used by CMock internals and generated mocks.
  * Override to use custom implementations on targets without standard libc. */
 #if !defined(CMOCK_MEMCPY) || !defined(CMOCK_MEMSET)

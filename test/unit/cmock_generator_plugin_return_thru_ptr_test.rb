@@ -260,7 +260,7 @@ describe CMockGeneratorPluginReturnThruPtr, "Verify CMockGeneratorPluginReturnTh
       "  if (cmock_call_instance->ReturnThruPtr_foo_handle_Used)\n" +
       "  {\n" +
       "    UNITY_TEST_ASSERT_NOT_NULL(foo_handle, cmock_line, CMockStringPtrIsNULL);\n" +
-      "    CMOCK_MEMCPY((void*)foo_handle, (const void*)cmock_call_instance->ReturnThruPtr_foo_handle_Val,\n" +
+      "    CMOCK_MEMCPY(CMOCK_DEVOLATILE_PTR(foo_handle), (const void*)cmock_call_instance->ReturnThruPtr_foo_handle_Val,\n" +
       "      cmock_call_instance->ReturnThruPtr_foo_handle_Size);\n" +
       "  }\n"
 

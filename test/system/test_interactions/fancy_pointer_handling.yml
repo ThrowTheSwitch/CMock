@@ -165,7 +165,7 @@
         test()
         {
           const char* retval = "This is a\0 silly string";
-          bars_ExpectAndReturn((char*)retval);
+          bars_ExpectAndReturn(retval);
           foos_Expect("This is a\0 wacky string");
 
           function_c();
@@ -177,7 +177,7 @@
         test()
         {
           const char* retval = "This is a silly string";
-          bars_ExpectAndReturn((char*)retval);
+          bars_ExpectAndReturn(retval);
           foos_Expect("This is a wacky string");
 
           function_c();

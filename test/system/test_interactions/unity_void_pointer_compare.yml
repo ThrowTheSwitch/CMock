@@ -45,8 +45,8 @@
       :code: |
         test()
         {
-          char* a = (char*)("Hello");
-          char* b = (char*)("Hello");
+          char a[] = "Hello";
+          char b[] = "Hello";
           ret_v_ptr_ExpectAndReturn(a);
           get_v_ptr_Expect(b);
           get_v_ptr_typedefed_Expect((VOID_PTR)b);
@@ -59,8 +59,8 @@
       :code: |
         test()
         {
-          char* a = (char*)("Hello");
-          char* b = (char*)("Hello");
+          char a[] = "Hello";
+          char b[] = "Hello";
           ret_v_ptr_ExpectAndReturn(a);
           get_v_ptr_ExpectWithArray(b,5);
           get_v_ptr_typedefed_ExpectWithArray((VOID_PTR)b,5);
@@ -73,8 +73,8 @@
       :code: |
         test()
         {
-          char* a = (char*)("Hello");
-          char* b = (char*)("Jello");
+          char a[] = "Hello";
+          char b[] = "Jello";
           ret_v_ptr_ExpectAndReturn(a);
           get_v_ptr_Expect(b);
           get_v_ptr_typedefed_Expect((VOID_PTR)b);
@@ -87,8 +87,8 @@
       :code: |
         test()
         {
-          char* a = (char*)("Hello");
-          char* b = (char*)("Hella");
+          char a[] = "Hello";
+          char b[] = "Hella";
           ret_v_ptr_ExpectAndReturn(a);
           get_v_ptr_ExpectWithArray(b,5);
           get_v_ptr_typedefed_ExpectWithArray((VOID_PTR)b,5);

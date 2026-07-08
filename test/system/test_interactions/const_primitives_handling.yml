@@ -68,8 +68,9 @@
       :code: |
         test()
         {
+          char wrong_param2 = 'X';
           foo_Expect( A, B, C );
-          exercise_const1( (const char*)B, (char * const)A, C );
+          exercise_const1( (const char*)B, &wrong_param2, C );
         }
 
     - :pass: FALSE
@@ -87,7 +88,7 @@
         test()
         {
           bar_Expect( A, B, C );
-          exercise_const2( A, (char * const)C, (const char *)B );
+          exercise_const2( C, B, A );
         }
 
 

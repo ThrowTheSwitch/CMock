@@ -96,7 +96,7 @@
         test()
         {
           const char* retval = "moe";
-          foo_char_strings_ExpectAndReturn("larry", "curly", (char*)retval);
+          foo_char_strings_ExpectAndReturn("larry", "curly", retval);
           TEST_ASSERT_EQUAL_STRING("moe", function_d("larry", "curly"));
         }
 

@@ -72,6 +72,11 @@ class CMockGeneratorPluginReturnThruPtr
     lines
   end
 
+  def as_void_ptr(arg, arg_name)
+    # volatile pointers use CMOCK_DEVOLATILE_PTR to avoid -Wcast-qual
+    arg[:volatile?] ? "CMOCK_DEVOLATILE_PTR(#{arg_name})" : "(void*)#{arg_name}"
+  end
+
   def mock_precheck_return_thru_ptr(function)
     return '' unless @ignore_used
 
@@ -84,7 +89,7 @@ class CMockGeneratorPluginReturnThruPtr
       lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Used)\n"
       lines << "  {\n"
       lines << "    UNITY_TEST_ASSERT_NOT_NULL(#{arg_name}, cmock_line, CMockStringPtrIsNULL);\n"
-      lines << "    CMOCK_MEMCPY((void*)#{arg_name}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
+      lines << "    CMOCK_MEMCPY(#{as_void_ptr(arg, arg_name)}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
       lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Size);\n"
       lines << "  }\n"
     end
@@ -138,7 +143,7 @@ class CMockGeneratorPluginReturnThruPtr
       lines << "  if (cmock_call_instance->ReturnThruPtr_#{arg_name}_Used)\n"
       lines << "  {\n"
       lines << "    UNITY_TEST_ASSERT_NOT_NULL(#{arg_name}, cmock_line, CMockStringPtrIsNULL);\n"
-      lines << "    CMOCK_MEMCPY((void*)#{arg_name}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
+      lines << "    CMOCK_MEMCPY(#{as_void_ptr(arg, arg_name)}, (const void*)cmock_call_instance->ReturnThruPtr_#{arg_name}_Val,\n"
       lines << "      cmock_call_instance->ReturnThruPtr_#{arg_name}_Size);\n"
       lines << "  }\n"
     end

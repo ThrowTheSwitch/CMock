@@ -14,7 +14,6 @@
     - './system/generated/'
   :include:
     - './system/generated/'
-    - '../examples/test/'
     - '../src/'
     - '../vendor/unity/src/'
     - '../vendor/c_exception/lib/'

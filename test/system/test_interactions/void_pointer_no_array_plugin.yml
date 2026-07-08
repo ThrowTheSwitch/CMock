@@ -54,7 +54,7 @@
       :code: |
         test()
         {
-          char* a = (char*)("Hello");
+          char a[] = "Hello";
           get_v_ptr_Expect(a);
           function_a(a);
         }
@@ -84,7 +84,7 @@
       :code: |
         test()
         {
-          char* a = (char*)("Hello");
+          char a[] = "Hello";
           get_v_ptr_Expect(NULL);
           function_a(a);
         }
@@ -94,7 +94,7 @@
       :code: |
         test()
         {
-          char* a = (char*)("Hello");
+          char a[] = "Hello";
           get_const_v_ptr_Expect(a);
           function_b(a);
         }
@@ -115,7 +115,7 @@
       :code: |
         test()
         {
-          char* a = (char*)("Hello");
+          char a[] = "Hello";
           get_my_void_ptr_Expect(a);
           function_c(a);
         }
