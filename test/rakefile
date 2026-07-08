@@ -29,6 +29,7 @@ end
 
 $cmock_test_config_file = DEFAULT_CONFIG_FILE
 $cmock_test_overlay_file = nil
+$cmock_test_seed = nil
 
 task :prep_system_tests => SYSTEM_TEST_SUPPORT_DIRS
 task :default => [:test]
@@ -39,6 +40,12 @@ desc "Load configuration"
 task :config, [:config_file, :cmock_overlay] do |t, args|
   $cmock_test_config_file = args[:config_file]
   $cmock_test_overlay_file = args[:cmock_overlay]
+end
+
+desc "Fix the minitest random seed for repeatable Ruby unit test ordering"
+task :seed, [:seed_value] do |t, args|
+  $cmock_test_seed = args[:seed_value]
+  ENV['TESTOPTS'] = "#{ENV['TESTOPTS']} --seed=#{$cmock_test_seed}".strip
 end
 
 task :config_toolchains do 
