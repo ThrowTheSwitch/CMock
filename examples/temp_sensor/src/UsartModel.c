@@ -14,7 +14,7 @@
 #include <math.h>
 
 char formattedTemperature[32];
-char* wakeup = "It's Awesome Time!\n";
+char wakeup[] = "It's Awesome Time!\n";
 
 uint8 UsartModel_GetBaudRateRegisterSetting(void)
 {

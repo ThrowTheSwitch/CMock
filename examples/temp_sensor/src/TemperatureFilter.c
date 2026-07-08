@@ -43,7 +43,7 @@ void TemperatureFilter_ProcessInput(float temperature)
     else
     {
       /* Otherwise apply our low-pass filter to smooth the values */
-      temperatureInCelcius = (temperatureInCelcius * 0.75f) + (temperature * 0.25);
+      temperatureInCelcius = (temperatureInCelcius * 0.75f) + (temperature * 0.25f);
     }
   }
 }

@@ -40,5 +40,6 @@ void testTransmitStringShouldSendDesiredStringOutUsingUsart(void)
   Usart_PutChar_Expect('l');
   Usart_PutChar_Expect('o');
   
-  UsartHardware_TransmitString("hello");
+  char msg[] = "hello";
+  UsartHardware_TransmitString(msg);
 }

@@ -22,9 +22,10 @@ void tearDown(void)
 
 void testShouldInitializeHardwareWhenInitCalled(void)
 {
+  char wakeup[] = "Hey there!";
   UsartModel_GetBaudRateRegisterSetting_ExpectAndReturn(4);
-  UsartModel_GetWakeupMessage_ExpectAndReturn("Hey there!");
-  UsartHardware_TransmitString_Expect("Hey there!");
+  UsartModel_GetWakeupMessage_ExpectAndReturn(wakeup);
+  UsartHardware_TransmitString_Expect(wakeup);
   UsartHardware_Init_Expect(4);
 
   UsartConductor_Init();
@@ -39,9 +40,10 @@ void testRunShouldNotDoAnythingIfSchedulerSaysItIsNotTimeYet(void)
 
 void testRunShouldGetCurrentTemperatureAndTransmitIfSchedulerSaysItIsTime(void)
 {
+  char temperature[] = "hey there";
   TaskScheduler_DoUsart_ExpectAndReturn(TRUE);
-  UsartModel_GetFormattedTemperature_ExpectAndReturn("hey there");
-  UsartHardware_TransmitString_Expect("hey there");
+  UsartModel_GetFormattedTemperature_ExpectAndReturn(temperature);
+  UsartHardware_TransmitString_Expect(temperature);
 
   UsartConductor_Run();
 }

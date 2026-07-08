@@ -43,7 +43,16 @@ void Timer_EnableInterrupt(void)
 
 static inline void SetInterruptHandler(void)
 {
+  /* Assigning a function pointer to a void* interrupt vector register is
+   * intentional embedded hardware code; suppress the pedantic warning. */
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
   AT91C_BASE_AIC->AIC_SVR[AT91C_ID_TC0] = Timer_InterruptHandler;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 }
 
 static inline void ConfigureInterruptSourceModeRegister(void)
