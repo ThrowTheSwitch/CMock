@@ -197,7 +197,7 @@ void* CMock_Guts_GetAddressFor(CMOCK_MEM_INDEX_TYPE index)
  *-------------------------------------------------------*/
 CMOCK_MEM_INDEX_TYPE CMock_Guts_MemBytesCapacity(void)
 {
-    return (sizeof(CMock_Guts_Buffer) - CMOCK_MEM_ALIGN_SIZE);
+    return (CMock_Guts_BufferSize - CMOCK_MEM_ALIGN_SIZE);
 }
 
 /*-------------------------------------------------------
