@@ -48,6 +48,18 @@ Other:
   - Added verification that CMock features pass Valgrind (Verifies #506)
   - Documented custom type support (#124)
 
+#### Major Code/Doc Contributors
+
+These individuals contributed significant features, bugfixes, and improvements.
+
+  - Mark VanderVoord
+  - Roland Stahn
+  - bal-stan
+
+#### Also, thanks for your contributions!
+
+Matt Sullivan, Peter Backeman, ml-physec
+
 ### CMock 2.6.0 (January 2025)
 
 New Features:
