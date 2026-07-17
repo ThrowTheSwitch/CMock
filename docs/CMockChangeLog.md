@@ -20,7 +20,7 @@ New Features:
   - Significant improvements to array and pointer handling:
     - Arrays are now passed as arrays. Yes, even multidimensional ones. (Fixes [#69](https://github.com/ThrowTheSwitch/CMock/issues/69)
 , [#119](https://github.com/ThrowTheSwitch/CMock/issues/119), [#213](https://github.com/ThrowTheSwitch/CMock/issues/213), [#422](https://github.com/ThrowTheSwitch/CMock/issues/422))
-    - Array plugin now supports comparing `char*` (string) arguments as byte arrays via `_ExpectWithArray`, while still treating them as strings via `_Expect` (Fixes #262 and #177)
+    - Array plugin now supports comparing `char*` (string) arguments as byte arrays via `_ExpectWithArray`, while still treating them as strings via `_Expect` (Fixes [#262](https://github.com/ThrowTheSwitch/CMock/issues/262) and [#177](https://github.com/ThrowTheSwitch/CMock/issues/177))
     - Improved automatic detection of pointer/length argument pairs (Fixes [#520](https://github.com/ThrowTheSwitch/CMock/issues/520))
     - When a pointer is auto-paired with a size argument, `_ExpectWithArrayExtended` is also generated as a fallback to allow explicit depth override (Fixes [#476](https://github.com/ThrowTheSwitch/CMock/issues/476))
     - `void*` arguments now default to pointer comparison without the array plugin, and to byte-by-byte comparison when the array plugin is active (Fixes [#400](https://github.com/ThrowTheSwitch/CMock/issues/400))
