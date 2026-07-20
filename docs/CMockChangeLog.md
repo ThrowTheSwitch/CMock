@@ -18,35 +18,36 @@ Prior to 2008, the project was an internal project and not released to the publi
 New Features:
 
   - Significant improvements to array and pointer handling:
-    - Arrays are now passed as arrays. Yes, even multidimensional ones. (Fixes #69, #119, #213, #422)
-    - Array plugin now supports comparing `char*` (string) arguments as byte arrays via `_ExpectWithArray`, while still treating them as strings via `_Expect` (Fixes #262 and #177)
-    - Improved automatic detection of pointer/length argument pairs (Fixes #520)
-    - When a pointer is auto-paired with a size argument, `_ExpectWithArrayExtended` is also generated as a fallback to allow explicit depth override (Fixes #476)
-    - `void*` arguments now default to pointer comparison without the array plugin, and to byte-by-byte comparison when the array plugin is active (Fixes #400)
-    - Handles *simple* preprocessor features like #if 1 and #if 0 (Fixes #163)
-    - Ignores static assertions of various types (Fixes #128)
-    - Added option to trace all mock setup and mocked calls (Implements #403)
+    - Arrays are now passed as arrays. Yes, even multidimensional ones. (Fixes [#69](https://github.com/ThrowTheSwitch/CMock/issues/69)
+, [#119](https://github.com/ThrowTheSwitch/CMock/issues/119), [#213](https://github.com/ThrowTheSwitch/CMock/issues/213), [#422](https://github.com/ThrowTheSwitch/CMock/issues/422))
+    - Array plugin now supports comparing `char*` (string) arguments as byte arrays via `_ExpectWithArray`, while still treating them as strings via `_Expect` (Fixes [#262](https://github.com/ThrowTheSwitch/CMock/issues/262) and [#177](https://github.com/ThrowTheSwitch/CMock/issues/177))
+    - Improved automatic detection of pointer/length argument pairs (Fixes [#520](https://github.com/ThrowTheSwitch/CMock/issues/520))
+    - When a pointer is auto-paired with a size argument, `_ExpectWithArrayExtended` is also generated as a fallback to allow explicit depth override (Fixes [#476](https://github.com/ThrowTheSwitch/CMock/issues/476))
+    - `void*` arguments now default to pointer comparison without the array plugin, and to byte-by-byte comparison when the array plugin is active (Fixes [#400](https://github.com/ThrowTheSwitch/CMock/issues/400))
+    - Handles *simple* preprocessor features like #if 1 and #if 0 (Fixes [#163](https://github.com/ThrowTheSwitch/CMock/issues/163))
+    - Ignores static assertions of various types (Fixes [#128](https://github.com/ThrowTheSwitch/CMock/issues/128))
+    - Added option to trace all mock setup and mocked calls (Implements [#403](https://github.com/ThrowTheSwitch/CMock/issues/403))
   - Significant improvements to header parsing speed
 
 Significant Bugfixes:
 
-  - Fixed matching of pointer/len argument pairs in reverse order (Fixes #479)
-  - Fixed handling of array of pointers or a pointer to an array (Fixes #450)
-  - Fixed const and pointer order handling issues (Fixes #484 and #485)
-  - Fixed handling of skeleton paths (Fixes #488)
-  - Fixed handling of memory alignment issues (Fixes #178)
-  - Fixed handling of failures in teardown (#67)
-  - Improved handling of function-looking structs (Fixes #513 and #334)
-  - Improved handling of function-looking macros (Fixes #502)
-  - Improved handling of volatiles (Fixes #110 and #135)
-  - Improved handling of stub and callback counters (Fixes #132)
-  - Improved handling and testing of Windows (Fixes #435)
+  - Fixed matching of pointer/len argument pairs in reverse order (Fixes [#479](https://github.com/ThrowTheSwitch/CMock/issues/479))
+  - Fixed handling of array of pointers or a pointer to an array (Fixes [#450](https://github.com/ThrowTheSwitch/CMock/issues/450))
+  - Fixed const and pointer order handling issues (Fixes [#484](https://github.com/ThrowTheSwitch/CMock/issues/484) and [#485](https://github.com/ThrowTheSwitch/CMock/issues/485))
+  - Fixed handling of skeleton paths (Fixes [#488](https://github.com/ThrowTheSwitch/CMock/issues/488))
+  - Fixed handling of memory alignment issues (Fixes [#178](https://github.com/ThrowTheSwitch/CMock/issues/178))
+  - Fixed handling of failures in teardown ([#67](https://github.com/ThrowTheSwitch/CMock/issues/67))
+  - Improved handling of function-looking structs (Fixes [#513](https://github.com/ThrowTheSwitch/CMock/issues/513) and [#334](https://github.com/ThrowTheSwitch/CMock/issues/334))
+  - Improved handling of function-looking macros (Fixes [#502](https://github.com/ThrowTheSwitch/CMock/issues/502))
+  - Improved handling of volatiles (Fixes #110 and [#135](https://github.com/ThrowTheSwitch/CMock/issues/135))
+  - Improved handling of stub and callback counters (Fixes [#132](https://github.com/ThrowTheSwitch/CMock/issues/132))
+  - Improved handling and testing of Windows (Fixes [#435](https://github.com/ThrowTheSwitch/CMock/issues/435))
 
 Other:
 
-  - Added verification that memory errors are reported and stop tests (Verifies #463)
-  - Added verification that CMock features pass Valgrind (Verifies #506)
-  - Documented custom type support (#124)
+  - Added verification that memory errors are reported and stop tests (Verifies [#463](https://github.com/ThrowTheSwitch/CMock/issues/463))
+  - Added verification that CMock features pass Valgrind (Verifies [#506](https://github.com/ThrowTheSwitch/CMock/issues/506))
+  - Documented custom type support ([#124](https://github.com/ThrowTheSwitch/CMock/issues/124))
 
 #### Major Code/Doc Contributors
 
