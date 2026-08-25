@@ -137,10 +137,11 @@ File.open(TEST_MAKEFILE, 'w') do |mkfile|
     mkfile.puts ''
 
     # Collect mocks to generate
-    system_mocks = cfg[:includes][:system].select { |name| name =~ MOCK_MATCHER }
-    raise 'Mocking of system headers is not yet supported!' unless system_mocks.empty?
+    local_mocks = cfg[:includes][:headers].select do |name|
+      raise 'Mocking of system headers is not yet supported!' if name =~ /^</
 
-    local_mocks = cfg[:includes][:local].select { |name| name =~ MOCK_MATCHER }
+      (name =~ MOCK_MATCHER)
+    end
 
     module_names_to_mock = local_mocks.map { |name| name.sub(/#{MOCK_PREFIX}/, '').to_s }
     headers_to_mock = []
