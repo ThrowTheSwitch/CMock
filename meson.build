@@ -6,7 +6,7 @@
 #
 project('cmock', 'c',
     license: 'MIT',
-    meson_version: '>=0.53.0',
+    meson_version: '>=0.54.0',
     subproject_dir : 'vendor',
     default_options: ['werror=true', 'c_std=c11']
 )
