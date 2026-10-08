@@ -547,6 +547,17 @@ from the defaults. We've tried to specify what the defaults are below.
 
   * default: true
 
+* `:mock_name_include_folder`:
+  Name a mock by the folder it is generated into as well as its filename. The
+  folder is the path below `:mock_path`, built from `:subdir` and any folder
+  given to `setup_mocks`. A mock of "config.h" generated into `uart/` gets an
+  include guard and Init, Verify and Destroy functions named `uart_Mockconfig`
+  rather than `Mockconfig`. This lets two mocks of the same filename coexist in
+  one test. A test should include such a mock by that same folder, and Unity's
+  test runner generator needs its option of the same name enabled to match.
+
+  * default: false
+
 * `:mock_path`:
   The directory where you would like the mock files generated to be
   placed.
