@@ -22,6 +22,7 @@ class CMockGenerator
     @fail_on_unexpected_calls = @config.fail_on_unexpected_calls
     @exclude_setjmp_h = @config.exclude_setjmp_h
     @subdir = @config.subdir
+    @name_include_folder = @config.mock_name_include_folder
     @debug_output = @config.debug_output
 
     @includes_h_pre_orig_header  = ((@config.includes || []) + (@config.includes_h_pre_orig_header || [])).uniq.map { |h| h =~ /</ ? h : "\"#{h}\"" }
@@ -62,12 +63,15 @@ class CMockGenerator
     # adds a trailing slash to the folder output
     mock_folder = File.join(mock_folder, '') if mock_folder
 
+    # optionally fold the folder into the mock name to keep same-named headers distinct
+    identity = @name_include_folder && mock_folder ? mock_folder.sub(/\A(?:\.[\/\\])+/, '') + mock_name : mock_name
+
     # create out mock project from incoming data
     mock_project = {
       :module_name  => module_name,
       :module_ext   => (module_ext || '.h'),
       :mock_name    => mock_name,
-      :clean_name   => TypeSanitizer.sanitize_c_identifier(mock_name),
+      :clean_name   => TypeSanitizer.sanitize_c_identifier(identity),
       :folder       => mock_folder,
       :parsed_stuff => parsed_stuff,
       :skeleton     => false

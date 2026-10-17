@@ -15,6 +15,7 @@ class CMockConfig
       :skeleton_path               => '',
       :weak                        => '',
       :subdir                      => nil,
+      :mock_name_include_folder    => false,
       :plugins                     => [],
       :strippables                 => ['(?:__attribute__\s*\([ (]*.*?[ )]*\)+)'],
       :attributes                  => %w[__ramfunc __irq __fiq register extern],

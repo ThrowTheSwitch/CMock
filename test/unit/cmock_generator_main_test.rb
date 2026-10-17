@@ -47,6 +47,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :includes_c_pre_header, nil
     @config.expect :includes_c_post_header, nil
     @config.expect :subdir, nil
+    @config.expect :mock_name_include_folder, false
     @config.expect :fail_on_unexpected_calls, true
     @config.expect :treat_inlines, :exclude
     @config.expect :exclude_setjmp_h, false
@@ -69,6 +70,7 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @config.expect :includes_c_pre_header, nil
     @config.expect :includes_c_post_header, nil
     @config.expect :subdir, nil
+    @config.expect :mock_name_include_folder, false
     @config.expect :fail_on_unexpected_calls, true
     @config.expect :treat_inlines, :exclude
     @config.expect :exclude_setjmp_h, false
@@ -424,6 +426,35 @@ describe CMockGenerator, "Verify CMockGenerator Module" do
     @cmock_generator_strict.create_extern_declarations(output)
 
     assert_equal(expected, output.flatten)
+  end
+
+  def capture_mock_project(generator, folder)
+    captured = nil
+    generator.define_singleton_method(:create_mock_subdir) { |project| captured = project }
+    generator.define_singleton_method(:create_mock_header_file) { |_project| }
+    generator.define_singleton_method(:create_mock_source_file) { |_project| }
+    generator.create_mock("config", {}, ".h", folder)
+    captured
+  end
+
+  it "name a mock by its filename alone by default" do
+    project = capture_mock_project(@cmock_generator, "drivers/uart")
+
+    assert_equal("Mockconfig", project[:clean_name])
+    assert_equal("drivers/uart/", project[:folder])
+  end
+
+  it "name a mock by its folder when configured to" do
+    @cmock_generator.instance_variable_set(:@name_include_folder, true)
+
+    assert_equal("drivers_uart_Mockconfig", capture_mock_project(@cmock_generator, "drivers/uart")[:clean_name])
+    assert_equal("drivers_uart_Mockconfig", capture_mock_project(@cmock_generator, "./drivers/uart")[:clean_name])
+  end
+
+  it "name a mock by its filename when configured to use a folder but given none" do
+    @cmock_generator.instance_variable_set(:@name_include_folder, true)
+
+    assert_equal("Mockconfig", capture_mock_project(@cmock_generator, nil)[:clean_name])
   end
 
   it "create mock verify functions in source file when no functions specified" do
